@@ -145,7 +145,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/09/29/2.Cuda%E5%B9%B6%E8%A1%8C%E8%AE%A1%E7%AE%97%E6%A8%A1%E5%9E%8B/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/09/29/2.CUDA%E5%B9%B6%E8%A1%8C%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -159,7 +159,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/09/29/2.Cuda%E5%B9%B6%E8%A1%8C%E8%AE%A1%E7%AE%97%E6%A8%A1%E5%9E%8B/" class="post-title-link" itemprop="url">Untitled</a>
+            <a href="/2024/09/29/2.CUDA%E5%B9%B6%E8%A1%8C%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/" class="post-title-link" itemprop="url">2.CUDA并行程序设计</a>
         </h2>
 
         <div class="post-meta">
@@ -170,7 +170,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2024-09-29 22:09:12 / Modified: 23:18:21" itemprop="dateCreated datePublished" datetime="2024-09-29T22:09:12+08:00">2024-09-29</time>
+              <time title="Created: 2024-09-29 23:30:27 / Modified: 23:36:43" itemprop="dateCreated datePublished" datetime="2024-09-29T23:30:27+08:00">2024-09-29</time>
             </span>
 
           
@@ -185,7 +185,7 @@
 
       
           <blockquote>
-<p>&lt;大规模并行处理器编程实战&gt;读书笔记</p>
+<p> &lt;大规模并行处理器编程实战&gt;读书笔记</p>
 </blockquote>
 <h4 id="Intro-to-GPU"><a href="#Intro-to-GPU" class="headerlink" title="Intro to GPU"></a>Intro to GPU</h4><p>GPU是Graphics Processing Unit, 由于图形渲染任务具有高度的并行性, 这种具有高度并行化的设备就成了游戏等图形渲染任务的宠儿.</p>
 <p>首先辨识一下GPU和CPU各自的擅长部分, 在实际场景选择硬件时需要考虑各自的优缺点:</p>
@@ -208,14 +208,14 @@
 <blockquote>
 <p>为什么深度学习需要GPU: 举个简单的例子, 卷积计算是高度并行的, 也就是说数据之间没有先后的依赖性, 而且数据吞吐量需求大.往常的CPU尽管线程可以达到32(我的), 但是还是不如GPU的并行性, 下一节会提到.</p>
 </blockquote>
-<h4 id="GPU体系结构"><a href="#GPU体系结构" class="headerlink" title="GPU体系结构"></a>GPU体系结构</h4><p><img src="C:\Users\Alfred\Desktop\1709537005226.png" alt="1709537005226"></p>
+<h4 id="GPU体系结构"><a href="#GPU体系结构" class="headerlink" title="GPU体系结构"></a>GPU体系结构</h4><p>![1](C:\Users\Alfred\hexo\source\images\2.CUDA并行程序设计\1 (1).png)</p>
 <p>上图是一个GPU的基本架构, 可以先划分为两个部分, 一部分是global memory也就是储存数据的部分 , 另一部分是计算部分.</p>
 <p>在计算部分 又可以继续细分为一个多层的结构, 最大的构建块, 构建块由两个叫做Streaming Multiprocessor(简称SM)多核的流处理器组成, SM还包含多个Streaming Processor(简称SP),就是那些最小的灰色方块,  是不是可以直观感受到线程数量之多.</p>
 <blockquote>
 <p>那如何使用这个机器, 是不是需要非常复杂的代码来对每个线程进行分配, 还是说批量分配, 下一节会提到</p>
 </blockquote>
 <h4 id="并行程序架构"><a href="#并行程序架构" class="headerlink" title="并行程序架构"></a>并行程序架构</h4><p>要使用GPU, 就不得不使用Cuda C语言(其实也还有其他的,比如OpenCL, 但是英伟达的芯片应用范围广, 且学习的是思维, 具体的语言只是载体), Cuda C是按照下图来调配GPU和CPU的</p>
-<p><img src="C:\Users\Alfred\Desktop\142331315894995.png" alt="142331315894995"></p>
+<p>![2](C:\Users\Alfred\hexo\source\images\2.CUDA并行程序设计\1 (2).png)</p>
 <p>首先, 我们的程序会在NVCC编译器上编译, 我们指示这个编译器, 哪些程序是分配给CPU运行的, 就交给主机(也就是上图的HOST), 分配给GPU的就交给显卡设备(是Device), 两者配合就达成了完整的程序效果.</p>
 <p>上节说到并行的计算步骤就交给GPU, 比如我给你下面的问题</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#知道了<span class="type">int</span> a[<span class="number">100</span>],b[<span class="number">100</span>];求<span class="type">int</span> c[<span class="number">100</span>],其中c[i]=a[i]+b[i] i=<span class="number">0.</span><span class="number">.99</span></span><br></pre></td></tr></table></figure>
@@ -253,7 +253,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/09/28/1.Seq2Seq/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/09/29/1.Seq2Seq/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -267,7 +267,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/09/28/1.Seq2Seq/" class="post-title-link" itemprop="url">Untitled</a>
+            <a href="/2024/09/29/1.Seq2Seq/" class="post-title-link" itemprop="url">1.Seq2Seq</a>
         </h2>
 
         <div class="post-meta">
@@ -276,8 +276,9 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2024-09-28 22:09:34" itemprop="dateCreated datePublished" datetime="2024-09-28T22:09:34+08:00">2024-09-28</time>
+              <time title="Created: 2024-09-29 23:30:27 / Modified: 23:33:41" itemprop="dateCreated datePublished" datetime="2024-09-29T23:30:27+08:00">2024-09-29</time>
             </span>
 
           
