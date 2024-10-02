@@ -242,7 +242,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2024-10-02 17:45:02" itemprop="dateModified" datetime="2024-10-02T17:45:02+08:00">2024-10-02</time>
+                <time title="Modified: 2024-10-02 17:46:41" itemprop="dateModified" datetime="2024-10-02T17:46:41+08:00">2024-10-02</time>
               </span>
 
           
@@ -284,7 +284,7 @@
 <blockquote>
 <p> 观察下图, 当我走到左边第一个节点2的时候,我调用dfs(i+1),我的i+1子问题(也就是2对应的子树)全部解决后, 需要对2节点回溯到1节点, 这就是一个归的过程, 也就是递归的精髓</p>
 </blockquote>
-<p><img src="/../img/3.png" alt="3"></p>
+<p><img src="/..%5Cimg%5C3.png" alt="3"></p>
 <p>另一种思路就是站在<strong>答案的角度</strong>,判断下一个选的的是什么, 而每一次都是都是添加元素都是出创建一个新的路径,如下</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">def dfs(i):</span><br><span class="line">    #获得边界条件</span><br><span class="line">    subset.append(path.copy())</span><br><span class="line">    if i==n:</span><br><span class="line">    	return</span><br><span class="line"></span><br><span class="line">   for j in range(i,n):</span><br><span class="line">        path.append(nums[i])</span><br><span class="line">        dfs(j+1)</span><br><span class="line">        path.pop()</span><br></pre></td></tr></table></figure>
 
