@@ -20,17 +20,17 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="&lt;大规模并行处理器编程实战&gt;读书笔记,更新计划:10-1晚更新dim3部分  Intro to GPUGPU是Graphics Processing Unit, 由于图形渲染任务具有高度的并行性, 这种具有高度并行化的设备就成了游戏等图形渲染任务的宠儿. 首先辨识一下GPU和CPU各自的擅长部分, 在实际场景选择硬件时需要考虑各自的优缺点:    GPU CPU    并行, 数据">
+  <meta name="description" content="&lt;大规模并行处理器编程实战&gt;读书笔记,晚上更新cuda储存器  Intro to GPUGPU是Graphics Processing Unit, 由于图形渲染任务具有高度的并行性, 这种具有高度并行化的设备就成了游戏等图形渲染任务的宠儿. 首先辨识一下GPU和CPU各自的擅长部分, 在实际场景选择硬件时需要考虑各自的优缺点:    GPU CPU    并行, 数据的吞吐量大 缩">
 <meta property="og:type" content="article">
 <meta property="og:title" content="CUDA并行程序设计">
 <meta property="og:url" content="http://example.com/2024/09/29/2.CUDA%E5%B9%B6%E8%A1%8C%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/index.html">
 <meta property="og:site_name" content="Alfred&#39;s Blog">
-<meta property="og:description" content="&lt;大规模并行处理器编程实战&gt;读书笔记,更新计划:10-1晚更新dim3部分  Intro to GPUGPU是Graphics Processing Unit, 由于图形渲染任务具有高度的并行性, 这种具有高度并行化的设备就成了游戏等图形渲染任务的宠儿. 首先辨识一下GPU和CPU各自的擅长部分, 在实际场景选择硬件时需要考虑各自的优缺点:    GPU CPU    并行, 数据">
+<meta property="og:description" content="&lt;大规模并行处理器编程实战&gt;读书笔记,晚上更新cuda储存器  Intro to GPUGPU是Graphics Processing Unit, 由于图形渲染任务具有高度的并行性, 这种具有高度并行化的设备就成了游戏等图形渲染任务的宠儿. 首先辨识一下GPU和CPU各自的擅长部分, 在实际场景选择硬件时需要考虑各自的优缺点:    GPU CPU    并行, 数据的吞吐量大 缩">
 <meta property="og:locale">
 <meta property="og:image" content="http://example.com/img/1.png">
 <meta property="og:image" content="http://example.com/img/2.png">
 <meta property="article:published_time" content="2024-09-29T15:30:27.000Z">
-<meta property="article:modified_time" content="2024-10-01T13:32:00.769Z">
+<meta property="article:modified_time" content="2024-10-02T09:34:08.308Z">
 <meta property="article:author" content="Alfred">
 <meta property="article:tag" content="HPC">
 <meta name="twitter:card" content="summary">
@@ -189,7 +189,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2024-10-01 21:32:00" itemprop="dateModified" datetime="2024-10-01T21:32:00+08:00">2024-10-01</time>
+                <time title="Modified: 2024-10-02 17:34:08" itemprop="dateModified" datetime="2024-10-02T17:34:08+08:00">2024-10-02</time>
               </span>
 
           
@@ -204,7 +204,7 @@
 
       
         <blockquote>
-<p> &lt;大规模并行处理器编程实战&gt;读书笔记,更新计划:10-1晚更新dim3部分</p>
+<p> &lt;大规模并行处理器编程实战&gt;读书笔记,晚上更新cuda储存器</p>
 </blockquote>
 <h4 id="Intro-to-GPU"><a href="#Intro-to-GPU" class="headerlink" title="Intro to GPU"></a>Intro to GPU</h4><p>GPU是Graphics Processing Unit, 由于图形渲染任务具有高度的并行性, 这种具有高度并行化的设备就成了游戏等图形渲染任务的宠儿.</p>
 <p>首先辨识一下GPU和CPU各自的擅长部分, 在实际场景选择硬件时需要考虑各自的优缺点:</p>
@@ -255,7 +255,30 @@
 <li><p>看到上面的代码可以发现, 程序是CPU执行一段, GPU执行一段</p>
 </li>
 </ol>
-<p>接下来, 我们需要做一个更加复杂的例子, 来学习一下 &lt;&lt;&lt;&gt;&gt;&gt;框框里面<strong>更加灵活的线程分配</strong></p>
+<p>接下来, 我们需要做一个更加复杂的例子, 来学习一下 &lt;&lt;&lt;&gt;&gt;&gt;框框里面<strong>更加灵活的线程分配</strong>,也就是CUDA的线程组织</p>
+<h4 id="线程组织"><a href="#线程组织" class="headerlink" title="线程组织"></a>线程组织</h4><p><strong>抽象结构</strong></p>
+<p>上一节提到<code>&lt;&lt;&lt;ceil(n/256), 256&gt;&gt;&gt;</code>这样的分配机制, 其实这个本质上是一种语法糖, 简化了语法的写法, 但是当意识到有更加复杂的写法时,我们需要敏锐地发现新的程序的拓展性, 而CUDA的哲学正好包含了这种复杂性.</p>
+<p>一般情况下, <strong>一个网格时由线程块组成的三维数组, 一个线程块是由线程组成的三维数组</strong>,cuda使用dim3这种结构体来描述</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dim3 <span class="title function_">dimBlock</span><span class="params">(<span class="built_in">ceil</span>(n/<span class="number">256</span>),<span class="number">1</span>,<span class="number">1</span>)</span>;</span><br><span class="line">dim3 <span class="title function_">dimGrid</span><span class="params">(<span class="number">256</span>,<span class="number">1</span>,<span class="number">1</span>)</span>;</span><br><span class="line">vecAddKernel&lt;&lt;&lt;dimBlock,dimGrid&gt;&gt;&gt;(...);</span><br></pre></td></tr></table></figure>
+
+<p>可以发现<code>&lt;&lt;&lt;ceil(n/256), 256&gt;&gt;&gt;</code>是<code>dimBlock(ceil(n/256),1,1)</code>后两个参为1的默认表达形式, 也就是<strong>未使用的维度字段需要明确设置为1</strong></p>
+<p>于是每个线程就通过(1,1,1)这样的形式来确定在块中的位置, 需要注意的是, (1,1,1)对应的是(z,y,x)的反转的维度标识, 原因等会儿会提到</p>
+<p>那为什么需要进行这样的三维扩展呢?他其实是为了更加灵活的分配线程块, 比如我现在有一个二维的图像, 那为他分配一个二维的线程块结构会比较方便</p>
+<h5 id="实际存储"><a href="#实际存储" class="headerlink" title="实际存储"></a>实际存储</h5><p>有时候不能将抽象的事物当成真实世界一比一的映射,  比如C语言中的二维数组, 他其实是使用线性连续的储存单元储存的. </p>
+<p>在上面的结构中也是一样, 要寻找一个线程的时候,需要通过一个线程块总的宽gridDim.x(,y,z)乘(z,y,x)的id来索引</p>
+<h5 id="矩阵乘法例子"><a href="#矩阵乘法例子" class="headerlink" title="矩阵乘法例子"></a>矩阵乘法例子</h5><p>现在我们来看一个比向量加法更加复杂的例子, 矩阵乘法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">给定两个矩阵(都是x*x的) ,每个线程负责答案中一个element的计算</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">#<span class="meta"># in main</span></span><br><span class="line">... 在main函数中分配地址等</span><br><span class="line">dim3 <span class="title function_">threadsPerBlock</span><span class="params">(<span class="number">16</span>, <span class="number">16</span>)</span>;</span><br><span class="line">dim3 <span class="title function_">numBlocks</span><span class="params">(<span class="number">1</span>, <span class="number">1</span>)</span>;</span><br><span class="line">matrixMultiplication&lt;&lt;&lt;numBlocks, threadsPerBlock&gt;&gt;&gt;(dev_a, dev_b, dev_c);</span><br><span class="line">...</span><br><span class="line">   </span><br><span class="line">#<span class="meta"># in matrixMulti</span></span><br><span class="line">__global__ <span class="type">void</span> <span class="title function_">matrixMultiplication</span><span class="params">(<span class="type">int</span> *a, <span class="type">int</span> *b, <span class="type">int</span> *c)</span> &#123;</span><br><span class="line">    <span class="type">int</span> row = blockIdx.y * blockDim.y + threadIdx.y;</span><br><span class="line">    <span class="type">int</span> col = blockIdx.x * blockDim.x + threadIdx.x;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (row &lt; N &amp;&amp; col &lt; N) &#123;</span><br><span class="line">        <span class="type">int</span> sum = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; N; i++) &#123;</span><br><span class="line">            sum += a[row * N + i] * b[i * N + col];</span><br><span class="line">        &#125;</span><br><span class="line">        c[row * N + col] = sum;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到row和col参数中的映射过程</p>
+<p>那cuda是怎么知道,我一个线程执行函数里面的所有步骤,而不是一个i来分配一个线程:  这就需要提到核函数也就是kernel函数,cuda默认一个核函数只给一个线程执行</p>
+<h5 id="同步机制"><a href="#同步机制" class="headerlink" title="同步机制"></a>同步机制</h5><p>有的线程快有的慢,那如何<strong>协调</strong>多个线程之间的步伐呢,这就衍生出cuda的线程同步机制,也就是栅栏机制:</p>
+<p>cuda将线程块作为资源分配的基本单位,(在实际硬件中就是多个线程块被分配到一个SM上)在这个线程块中可以使用<code>__syncthreads()</code>函数来实现所有线程的同步, 也就是无论线程是返回还是开始的节奏都是同步的</p>
+<h5 id="容许时延"><a href="#容许时延" class="headerlink" title="容许时延"></a>容许时延</h5><p>在实际应用中,大量需要计算的数据涌入GPU,大多时候会超过GPU可以提供的计算资源,这是GPU就维护一个表来储存等待的任务, 当一个线程执行完就轮到下一个任务执行</p>
+<p>这里就要引入另一个抽象概念,Warp,一个SM可以划分为多个Warp</p>
+<p>在这些Warp中使用SIMD(single instruction multiple data)也就是一个操作对多个数据, warp中的多个线程使用同一个操作执行多个数据</p>
+<p>为什么引入这个概念, 这是cuda进行更小颗粒度的任务划分,呼应了我在第一段提到的<strong>等待</strong>,当一个warp里面的指令需要等待数据(主机还没传过来)的时候, device会自动叫准备好的操作上来先算, 这就是GPU的容许时延, 这也是GPU不像CPU引入大量缓存和分支预测机制的原因</p>
 
     </div>
 
@@ -336,7 +359,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Intro-to-GPU"><span class="nav-number">1.</span> <span class="nav-text">Intro to GPU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#GPU%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">GPU体系结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E7%A8%8B%E5%BA%8F%E6%9E%B6%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">并行程序架构</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Intro-to-GPU"><span class="nav-number">1.</span> <span class="nav-text">Intro to GPU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#GPU%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">GPU体系结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E7%A8%8B%E5%BA%8F%E6%9E%B6%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">并行程序架构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%BB%84%E7%BB%87"><span class="nav-number">4.</span> <span class="nav-text">线程组织</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E5%AD%98%E5%82%A8"><span class="nav-number">4.1.</span> <span class="nav-text">实际存储</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95%E4%BE%8B%E5%AD%90"><span class="nav-number">4.2.</span> <span class="nav-text">矩阵乘法例子</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6"><span class="nav-number">4.3.</span> <span class="nav-text">同步机制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%B9%E8%AE%B8%E6%97%B6%E5%BB%B6"><span class="nav-number">4.4.</span> <span class="nav-text">容许时延</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -350,7 +373,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">3</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

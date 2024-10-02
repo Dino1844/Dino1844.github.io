@@ -150,63 +150,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/01/4.%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AE%97%E6%B3%95%E5%AE%9E%E8%B7%B5/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Alfred">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Alfred's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/10/01/4.%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AE%97%E6%B3%95%E5%AE%9E%E8%B7%B5/" class="post-title-link" itemprop="url">Untitled</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2024-10-01 21:32:26" itemprop="dateCreated datePublished" datetime="2024-10-01T21:32:26+08:00">2024-10-01</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh">
     <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/01/1.Seq2Seq/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -440,7 +383,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2024-10-01 21:32:00" itemprop="dateModified" datetime="2024-10-01T21:32:00+08:00">2024-10-01</time>
+                <time title="Modified: 2024-10-02 17:34:08" itemprop="dateModified" datetime="2024-10-02T17:34:08+08:00">2024-10-02</time>
               </span>
 
           
@@ -455,7 +398,7 @@
 
       
           <blockquote>
-<p> &lt;大规模并行处理器编程实战&gt;读书笔记,更新计划:10-1晚更新dim3部分</p>
+<p> &lt;大规模并行处理器编程实战&gt;读书笔记,晚上更新cuda储存器</p>
 </blockquote>
 <h4 id="Intro-to-GPU"><a href="#Intro-to-GPU" class="headerlink" title="Intro to GPU"></a>Intro to GPU</h4><p>GPU是Graphics Processing Unit, 由于图形渲染任务具有高度的并行性, 这种具有高度并行化的设备就成了游戏等图形渲染任务的宠儿.</p>
 <p>首先辨识一下GPU和CPU各自的擅长部分, 在实际场景选择硬件时需要考虑各自的优缺点:</p>
@@ -506,7 +449,30 @@
 <li><p>看到上面的代码可以发现, 程序是CPU执行一段, GPU执行一段</p>
 </li>
 </ol>
-<p>接下来, 我们需要做一个更加复杂的例子, 来学习一下 &lt;&lt;&lt;&gt;&gt;&gt;框框里面<strong>更加灵活的线程分配</strong></p>
+<p>接下来, 我们需要做一个更加复杂的例子, 来学习一下 &lt;&lt;&lt;&gt;&gt;&gt;框框里面<strong>更加灵活的线程分配</strong>,也就是CUDA的线程组织</p>
+<h4 id="线程组织"><a href="#线程组织" class="headerlink" title="线程组织"></a>线程组织</h4><p><strong>抽象结构</strong></p>
+<p>上一节提到<code>&lt;&lt;&lt;ceil(n/256), 256&gt;&gt;&gt;</code>这样的分配机制, 其实这个本质上是一种语法糖, 简化了语法的写法, 但是当意识到有更加复杂的写法时,我们需要敏锐地发现新的程序的拓展性, 而CUDA的哲学正好包含了这种复杂性.</p>
+<p>一般情况下, <strong>一个网格时由线程块组成的三维数组, 一个线程块是由线程组成的三维数组</strong>,cuda使用dim3这种结构体来描述</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dim3 <span class="title function_">dimBlock</span><span class="params">(<span class="built_in">ceil</span>(n/<span class="number">256</span>),<span class="number">1</span>,<span class="number">1</span>)</span>;</span><br><span class="line">dim3 <span class="title function_">dimGrid</span><span class="params">(<span class="number">256</span>,<span class="number">1</span>,<span class="number">1</span>)</span>;</span><br><span class="line">vecAddKernel&lt;&lt;&lt;dimBlock,dimGrid&gt;&gt;&gt;(...);</span><br></pre></td></tr></table></figure>
+
+<p>可以发现<code>&lt;&lt;&lt;ceil(n/256), 256&gt;&gt;&gt;</code>是<code>dimBlock(ceil(n/256),1,1)</code>后两个参为1的默认表达形式, 也就是<strong>未使用的维度字段需要明确设置为1</strong></p>
+<p>于是每个线程就通过(1,1,1)这样的形式来确定在块中的位置, 需要注意的是, (1,1,1)对应的是(z,y,x)的反转的维度标识, 原因等会儿会提到</p>
+<p>那为什么需要进行这样的三维扩展呢?他其实是为了更加灵活的分配线程块, 比如我现在有一个二维的图像, 那为他分配一个二维的线程块结构会比较方便</p>
+<h5 id="实际存储"><a href="#实际存储" class="headerlink" title="实际存储"></a>实际存储</h5><p>有时候不能将抽象的事物当成真实世界一比一的映射,  比如C语言中的二维数组, 他其实是使用线性连续的储存单元储存的. </p>
+<p>在上面的结构中也是一样, 要寻找一个线程的时候,需要通过一个线程块总的宽gridDim.x(,y,z)乘(z,y,x)的id来索引</p>
+<h5 id="矩阵乘法例子"><a href="#矩阵乘法例子" class="headerlink" title="矩阵乘法例子"></a>矩阵乘法例子</h5><p>现在我们来看一个比向量加法更加复杂的例子, 矩阵乘法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">给定两个矩阵(都是x*x的) ,每个线程负责答案中一个element的计算</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">#<span class="meta"># in main</span></span><br><span class="line">... 在main函数中分配地址等</span><br><span class="line">dim3 <span class="title function_">threadsPerBlock</span><span class="params">(<span class="number">16</span>, <span class="number">16</span>)</span>;</span><br><span class="line">dim3 <span class="title function_">numBlocks</span><span class="params">(<span class="number">1</span>, <span class="number">1</span>)</span>;</span><br><span class="line">matrixMultiplication&lt;&lt;&lt;numBlocks, threadsPerBlock&gt;&gt;&gt;(dev_a, dev_b, dev_c);</span><br><span class="line">...</span><br><span class="line">   </span><br><span class="line">#<span class="meta"># in matrixMulti</span></span><br><span class="line">__global__ <span class="type">void</span> <span class="title function_">matrixMultiplication</span><span class="params">(<span class="type">int</span> *a, <span class="type">int</span> *b, <span class="type">int</span> *c)</span> &#123;</span><br><span class="line">    <span class="type">int</span> row = blockIdx.y * blockDim.y + threadIdx.y;</span><br><span class="line">    <span class="type">int</span> col = blockIdx.x * blockDim.x + threadIdx.x;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (row &lt; N &amp;&amp; col &lt; N) &#123;</span><br><span class="line">        <span class="type">int</span> sum = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; N; i++) &#123;</span><br><span class="line">            sum += a[row * N + i] * b[i * N + col];</span><br><span class="line">        &#125;</span><br><span class="line">        c[row * N + col] = sum;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到row和col参数中的映射过程</p>
+<p>那cuda是怎么知道,我一个线程执行函数里面的所有步骤,而不是一个i来分配一个线程:  这就需要提到核函数也就是kernel函数,cuda默认一个核函数只给一个线程执行</p>
+<h5 id="同步机制"><a href="#同步机制" class="headerlink" title="同步机制"></a>同步机制</h5><p>有的线程快有的慢,那如何<strong>协调</strong>多个线程之间的步伐呢,这就衍生出cuda的线程同步机制,也就是栅栏机制:</p>
+<p>cuda将线程块作为资源分配的基本单位,(在实际硬件中就是多个线程块被分配到一个SM上)在这个线程块中可以使用<code>__syncthreads()</code>函数来实现所有线程的同步, 也就是无论线程是返回还是开始的节奏都是同步的</p>
+<h5 id="容许时延"><a href="#容许时延" class="headerlink" title="容许时延"></a>容许时延</h5><p>在实际应用中,大量需要计算的数据涌入GPU,大多时候会超过GPU可以提供的计算资源,这是GPU就维护一个表来储存等待的任务, 当一个线程执行完就轮到下一个任务执行</p>
+<p>这里就要引入另一个抽象概念,Warp,一个SM可以划分为多个Warp</p>
+<p>在这些Warp中使用SIMD(single instruction multiple data)也就是一个操作对多个数据, warp中的多个线程使用同一个操作执行多个数据</p>
+<p>为什么引入这个概念, 这是cuda进行更小颗粒度的任务划分,呼应了我在第一段提到的<strong>等待</strong>,当一个warp里面的指令需要等待数据(主机还没传过来)的时候, device会自动叫准备好的操作上来先算, 这就是GPU的容许时延, 这也是GPU不像CPU引入大量缓存和分支预测机制的原因</p>
 
       
     </div>
@@ -588,7 +554,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">3</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
