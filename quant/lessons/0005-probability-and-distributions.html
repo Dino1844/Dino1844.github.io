@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0005 · 概率与分布</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.7; color: #1a1a1a; background: #fdfdfb; max-width: 720px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
+  .insight h3 { margin-top: 0; color: #8b5a20; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .formula { text-align: center; font-size: 1.1rem; margin: 1.2rem 0; font-family: 'Inter', sans-serif; color: #333; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+  .phase-summary { background: #f0f8f0; border: 1px solid #c0d8c0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 2rem 0; }
+  .phase-summary h3 { margin-top: 0; color: #3a6a3a; }
+</style>
+</head>
+<body>
+
+<h1>概率与分布——从正态到极值</h1>
+<p class="meta">Lesson 0005 · 第一阶段收官 · 预计 15 分钟</p>
+
+<p>
+  前四课我们反复提到「正态分布假设不对」「肥尾」「极端事件被低估」——这节课来正面回答：<strong>如果不用正态分布，我们该用什么？</strong> 以及：分布的选择如何影响策略设计和风险管理。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回顾·已学内容</h3>
+  <ol style="padding-left:1.2rem; margin-bottom:0;">
+    <li>为什么量化中从收益率出发？（价格非平稳，收益率平稳）</li>
+    <li>趋势跟踪利用什么时间序列性质？（正自相关）</li>
+    <li>肥尾对夏普比率意味着什么？（极端回撤比正态预测频繁得多）</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、正态分布：为什么它无处不在（却不适用于金融）</h2>
+
+<p>
+  正态分布是统计学中最常见的分布，在量化金融中也到处被假定。但需要知道它在什么条件下成立——以及在什么条件下崩溃。
+</p>
+
+<div class="card">
+  <h3>正态分布成立的数学条件</h3>
+  <p style="margin-bottom:0;"><strong>中心极限定理</strong>：大量独立、同分布的随机变量之和，趋向于正态分布。</p>
+</div>
+
+<p>关键假设：<strong>独立、同分布、加和。</strong> 金融收益率三个都不满足：</p>
+
+<table>
+  <tr><th>正态假设</th><th>金融现实</th></tr>
+  <tr><td>收益率相互独立</td><td>有自相关（趋势）+ 波动率聚集</td></tr>
+  <tr><td>分布相同</td><td>牛市和熊市的分布完全不同</td></tr>
+  <tr><td>变量来自加和</td><td>价格是乘积过程（涨 5% 是基于当前价格，不是加固定金额）</td></tr>
+</table>
+
+<p>所以不是正态分布「错了」——是它的前提条件在金融数据上不成立。用正态分布近似日常波动可以接受（±2σ 以内），但用它估算极端风险（±5σ 以外）会差出几个数量级。</p>
+
+<!-- ============================================================ -->
+<h2>二、对数正态：价格的基本模型</h2>
+
+<p>
+  上节课说过价格通常是非平稳的，对数收益率通常是平稳的。这两件事结合起来推出一条重要结论：<strong>价格近似服从对数正态分布。</strong>
+</p>
+
+<div class="formula">
+  如果 r ~ Normal(μ, σ²)，则 P<sub>t</sub> = P<sub>0</sub> × e<sup>r</sup> ~ LogNormal
+</div>
+
+<div class="card">
+  <h3>对数正态的重要特征</h3>
+  <ul style="padding-left:1.2rem;">
+    <li style="margin-bottom:0.4rem;">价格 <strong>永远不为负</strong>——对数正态的下界是 0，这和现实一致（BTC 不会跌到负数）</li>
+    <li style="margin-bottom:0.4rem;">上涨和下跌不对称：涨 100%（翻倍）和跌 50%（腰斩）在 log 空间对称，但从 $100 跌到 $0 需要跌无限多个 50%——永远到不了</li>
+    <li>这就是 Black-Scholes 期权定价模型的底层假设</li>
+  </ul>
+</div>
+
+<div class="insight">
+  <h3>⚡ 但这个模型也错了</h3>
+  <p style="margin-bottom:0;">对数正态仍然假设收益率本身是正态的——它让价格分布更合理，但没有解决肥尾问题。真实数据的尾部比对数正态更肥。所以需要继续往下走。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、学生 t 分布：处理肥尾的第一步</h2>
+
+<p>
+  正态分布太瘦、对数正态也不够肥——实践中最常用的替代是<strong>学生 t 分布</strong>。
+</p>
+
+<div class="card">
+  <h3>学生 t 分布 vs 正态分布</h3>
+  <table>
+    <tr><th>性质</th><th>正态分布</th><th>学生 t 分布</th></tr>
+    <tr><td>尾部</td><td>指数衰减（极快）</td><td>多项式衰减（慢，尾部更肥）</td></tr>
+    <tr><td>参数</td><td>μ, σ</td><td>μ, σ, <strong>ν（自由度）</strong></td></tr>
+    <tr><td>自由度 ν 的作用</td><td>—</td><td>ν 越小 → 尾部越肥；ν → ∞ → 趋近正态</td></tr>
+  </table>
+</div>
+
+<p><strong>自由度 ν 是控制尾部肥度的旋钮。</strong> 用金融数据拟合 t 分布，ν 通常在 3-6 之间（越小越肥）。这意味着什么？</p>
+
+<div class="card">
+  <p><strong>正态分布说</strong>：5σ 事件概率 ≈ 1/3,500,000（千年一遇）</p>
+  <p><strong>t(ν=4) 说</strong>：5σ 事件概率 ≈ 1/500（可能每年发生）</p>
+  <p style="margin-bottom:0;">差距是 7000 倍。</p>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈：ν 可以低到 2-3</h3>
+  <p style="margin-bottom:0;">对 BTC 日收益率拟合 t 分布，ν 通常在 2.5-4 之间。当 ν ≤ 2 时，方差甚至不存在（理论值为无穷）——这意味着用历史标准差来估计 BTC 的风险在数学上就是有问题的。这个事实本身就应该让你对任何「年化波动率 XX%」的数字保持足够的怀疑。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、极值理论：直接关注尾部</h2>
+
+<p>
+  正态、对数正态、t 分布——它们都是在对<strong>整个分布</strong>建模（包括你不关心的中间部分），然后用模型推算尾部。
+</p>
+
+<p><strong>极值理论</strong>换了一个思路：不关心分布的中间 99%，只对尾部的极端值建模。</p>
+
+<div class="card">
+  <h3>两种思路的对比</h3>
+  <table>
+    <tr><th></th><th>传统方法</th><th>极值理论</th></tr>
+    <tr><td>关心什么</td><td>整个收益率分布</td><td>只关心最极端的 1%（或 0.1%）</td></tr>
+    <tr><td>典型问题</td><td>「明天的平均收益是多少？」</td><td>「下个月最惨的那天可能会跌多少？」</td></tr>
+    <tr><td>数学工具</td><td>正态/t 分布拟合</td><td>广义极值分布（GEV）</td></tr>
+  </table>
+</div>
+
+<p><strong>极值理论告诉你</strong>：给定历史数据，下一次「最大回撤」的分布是什么——而不是用标准差去推。这在设置止损、计算保证金需求、评估杠杆上限时远比波动率有用。</p>
+
+<div class="insight">
+  <h3>⚡ 实操意义</h3>
+  <p style="margin-bottom:0;">如果你的策略在回测中有 30% 的最大回撤，极值理论可以帮你回答：「基于这个策略的尾部特性，未来出现 50% 回撤的概率是多少？」这不是从正态推出来的假数字，而是从历史极端值的实际分布推出来的。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>五、对量化策略的三个实操影响</h2>
+
+<table>
+  <tr><th>决策</th><th>正态假设的做法</th><th>肥尾意识的做法</th></tr>
+  <tr><td>设止损</td><td>按 2σ 设（理论上覆盖 95%）</td><td>按历史最大不利偏移 + 缓冲</td></tr>
+  <tr><td>杠杆</td><td>按波动率倒数线性缩放</td><td>保守估算，留足爆仓安全垫</td></tr>
+  <tr><td>评估策略</td><td>只看夏普比率</td><td>夏普 + 最大回撤 + 偏度 + 极端 VaR</td></tr>
+</table>
+
+<p>一个高夏普但偏度极负（经常小赚、偶尔暴亏）的策略，在正态里评价很好，在肥尾世界里是炸弹。</p>
+
+<!-- ============================================================ -->
+<div class="phase-summary">
+  <h3>📚 第一阶段总结：地基五课</h3>
+  <table>
+    <tr><td>0001</td><td>金融市场基础</td><td>交易什么、在哪交易、怎么交易</td></tr>
+    <tr><td>0002</td><td>收益与风险</td><td>log return、波动率、夏普、最大回撤</td></tr>
+    <tr><td>0003</td><td>金融数据的本性</td><td>肥尾、波动率聚集、相关性崩溃</td></tr>
+    <tr><td>0004</td><td>时间序列基础</td><td>自相关、趋势、平稳性、均值回归</td></tr>
+    <tr><td>0005</td><td>概率与分布</td><td>正态 → 对数正态 → t → 极值理论</td></tr>
+  </table>
+  <p style="margin-bottom:0;">第二阶段预告：<strong>线性回归 → 组合理论 → 回测方法论</strong></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 学生 t 分布的自由度 ν 越小意味着什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">分布越来越接近正态</span>
+    <span class="opt" data-answer="correct">尾部越来越肥，极端事件概率越大</span>
+    <span class="opt" data-answer="wrong">均值为零</span>
+    <span class="opt" data-answer="wrong">方差减小</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 对数正态分布相比正态分布最重要的改进是什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="correct">价格不能为负，且涨跌在百分比上对称而非金额上对称</span>
+    <span class="opt" data-answer="wrong">计算更简单</span>
+    <span class="opt" data-answer="wrong">解决了肥尾问题</span>
+    <span class="opt" data-answer="wrong">使收益率变得独立</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. 极值理论和传统分布建模的根本区别是什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">极值理论用更多参数</span>
+    <span class="opt" data-answer="correct">极值理论只对尾部建模，不关心分布的中间部分</span>
+    <span class="opt" data-answer="wrong">极值理论假设正态分布</span>
+    <span class="opt" data-answer="wrong">极值理论不需要数据</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. （综合·回顾）一个策略夏普 2.0、最大回撤 65%。用前五课的知识，最合理的怀疑是什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">数据是编的</span>
+    <span class="opt" data-answer="correct">收益率有极度肥尾——大量小赚掩盖了极少但巨大的亏损，夏普被尾部风险拉高了</span>
+    <span class="opt" data-answer="wrong">波动率算错了</span>
+    <span class="opt" data-answer="wrong">无风险利率太高</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 推荐阅读</h3>
+  <p><strong>Ruppert & Matteson —《金融统计与数据分析》(Statistics and Data Analysis for Financial Engineering)</strong>，第 2 章（收益率）、第 15 章（极值理论）。</p>
+  <p>这本书是量化金融统计学最实用的教材。第 2 章用真实数据对比了正态、t 分布和实际收益率分布，第 15 章给了极值理论的可操作实现。放在第二阶段开始前翻阅正合适。</p>
+</div>
+
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 延伸</h3>
+  <p><strong>Nassim Taleb —《随机漫步的傻瓜》(Fooled by Randomness)</strong>。</p>
+  <p>比《黑天鹅》更个人化，直接讲「为什么聪明人总是低估随机性」。读完它你对任何「夏普 2.0」「年化收益 50%」的数字都会有条件反射式的怀疑。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="reminder">
+  <strong>💬 有问题随时问。</strong> 五节课下来你应该已经建立了一个审视量化策略的批判性框架。第二阶段会更偏「动手前的准备」——回归分析怎么在金融数据上做、组合理论怎么理解、回测的坑有哪些。有任何一节课不够清楚的地方，现在是最好的追问时机。
+</div>
+
+<div class="nav">
+  前四课：<a href="0001-financial-markets-basics.html">0001</a> ·
+  <a href="0002-returns-and-risk.html">0002</a> ·
+  <a href="0003-nature-of-financial-data.html">0003</a> ·
+  <a href="0004-time-series-basics.html">0004</a><br>
+  下一阶段：<a href="#">0006 · 线性回归——金融应用与陷阱</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

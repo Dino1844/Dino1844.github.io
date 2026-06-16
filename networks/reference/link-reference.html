@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>链路层参考卡</title>
+<style>
+  :root {
+    --bg: #fffff8; --text: #111; --muted: #666; --accent: #c44; --link: #246; --rule: #ddd;
+    --code-bg: #f4f4f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "Songti SC", Georgia, serif;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+  }
+  article { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+  h1 { font-size: 1.4rem; margin-bottom: 0.3rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--rule); }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.1rem; margin: 1.8rem 0 0.5rem; color: var(--accent); border-bottom: 1px solid var(--rule); padding-bottom: 0.2rem; }
+  h3 { font-size: 0.95rem; margin: 1.2rem 0 0.3rem; }
+  table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.85rem; }
+  th { background: #f5f5f0; padding: 0.4rem 0.6rem; text-align: left; border-bottom: 2px solid var(--rule); }
+  td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--rule); }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 2px; font-size: 0.9em; font-family: "JetBrains Mono", "Fira Code", monospace; }
+  pre { background: var(--code-bg); padding: 0.6rem 0.8rem; border-radius: 4px; font-size: 0.82rem; overflow-x: auto; margin: 0.8rem 0; }
+  pre code { background: none; padding: 0; }
+  .card { background: #fafaf5; border: 1px solid var(--rule); border-radius: 4px; padding: 0.8rem 1rem; margin: 0.8rem 0; font-size: 0.88rem; }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  footer a { color: var(--link); }
+</style>
+</head>
+<body>
+<article>
+
+<h1>链路层参考卡</h1>
+<div class="meta">
+  参考文档 · <a href="../index.html">← 概念地图</a> · <a href="glossary.html">术语表</a> ·
+  <a href="../lessons/0005-link-layer-deep-dive.html">📖 完整课程</a>
+</div>
+
+<h2>核心职责</h2>
+<p>在同一段物理链路上，将数据从一个设备传到相邻设备。使用 MAC 地址寻址，每一跳重新封装帧。</p>
+
+<h2>以太网帧结构</h2>
+<pre><code>┌──────────┬────────────┬──────────┬──────────┬────────────────┬──────┐
+│ 前导码   │ 目的 MAC   │ 源 MAC   │ 类型     │ 数据           │ CRC  │
+│ 8 bytes  │ 6 bytes    │ 6 bytes  │ 2 bytes  │ 46–1500 bytes  │ 4 B  │
+└──────────┴────────────┴──────────┴──────────┴────────────────┴──────┘</code></pre>
+
+<table>
+  <tr><th>字段</th><th>大小</th><th>说明</th></tr>
+  <tr><td>前导码</td><td>8 B</td><td>同步发送方和接收方的时钟，帧定界符</td></tr>
+  <tr><td>目的 MAC</td><td>6 B</td><td>接收方 MAC；全 F 为广播 (FF:FF:FF:FF:FF:FF)</td></tr>
+  <tr><td>源 MAC</td><td>6 B</td><td>发送方 MAC</td></tr>
+  <tr><td>类型</td><td>2 B</td><td><code>0x0800</code>=IPv4, <code>0x0806</code>=ARP, <code>0x86DD</code>=IPv6</td></tr>
+  <tr><td>数据</td><td>46–1500 B</td><td>MTU=1500（常见）。不足46则padding</td></tr>
+  <tr><td>CRC</td><td>4 B</td><td>循环冗余校验，错误则丢弃</td></tr>
+</table>
+
+<h2>ARP 地址解析协议</h2>
+
+<div class="card">
+  <strong>作用：</strong>已知 IP，查 MAC。<br>
+  <strong>过程：</strong>广播请求 → 目标单播响应 → 缓存（<code>arp -a</code> 查看）<br>
+  <strong>安全：</strong>无认证，可被 ARP 欺骗攻击
+</div>
+
+<h2>交换机 vs 其它设备</h2>
+
+<table>
+  <tr><th>设备</th><th>工作层</th><th>查什么表</th><th>转发依据</th><th>隔离什么</th></tr>
+  <tr><td>集线器 Hub</td><td>物理层</td><td>无</td><td>无条件广播</td><td>无</td></tr>
+  <tr><td>交换机 Switch</td><td>链路层</td><td>MAC 表</td><td>目标 MAC</td><td>冲突域</td></tr>
+  <tr><td>路由器 Router</td><td>网络层</td><td>路由表</td><td>目标 IP</td><td>广播域</td></tr>
+</table>
+
+<h2>交换机自学习</h2>
+<ol>
+  <li>收到帧 → 记录 <strong>源 MAC → 端口</strong> 映射</li>
+  <li>查目标 MAC：已知端口 → 精确转发；未知 → <strong>泛洪</strong>（除接收口外全发）</li>
+  <li>条目老化：通常 <strong>5 分钟</strong>无活动则删除</li>
+</ol>
+
+<h2>CSMA/CD vs CSMA/CA</h2>
+
+<table>
+  <tr><th></th><th>CSMA/CD (以太网)</th><th>CSMA/CA (WiFi)</th></tr>
+  <tr><td>策略</td><td>冲突检测</td><td>冲突避免</td></tr>
+  <tr><td>检测方式</td><td>边说边听</td><td>无法同时收发 → 使用退避+RTS/CTS</td></tr>
+  <tr><td>重传</td><td>发生冲突后随机退避</td><td>链路层 ACK + 重传</td></tr>
+  <tr><td>现状</td><td>交换式以太网中几乎无冲突</td><td>WiFi 中始终存在</td></tr>
+</table>
+
+<h2>常见 CLI 命令</h2>
+
+<table>
+  <tr><th>命令</th><th>作用</th></tr>
+  <tr><td><code>arp -a</code></td><td>查看 ARP 缓存表（IP → MAC 映射）</td></tr>
+  <tr><td><code>ip link</code> / <code>ifconfig</code></td><td>查看网络接口的 MAC 地址和状态</td></tr>
+  <tr><td><code>arping -I eth0 192.168.1.1</code></td><td>手动发送 ARP 请求</td></tr>
+  <tr><td><code>tcpdump -i eth0 arp</code></td><td>抓取 ARP 包</td></tr>
+  <tr><td><code>ip neigh</code></td><td>查看邻居表（IPv6 NDP + IPv4 ARP）</td></tr>
+</table>
+
+<h2>关键数字</h2>
+
+<div class="card">
+  <strong>MAC 地址长度：</strong>48 位 (6 字节)<br>
+  <strong>以太网 MTU：</strong>1500 字节 (标准) / 9000 字节 (Jumbo Frame)<br>
+  <strong>最短帧：</strong>64 字节<br>
+  <strong>MAC 表老化时间：</strong>~300 秒 (5 分钟，厂商可调)<br>
+  <strong>ARP 缓存老化：</strong>~60–300 秒（OS 相关）
+</div>
+
+<footer>
+  <p>计算机网络学习工作区 · <a href="../index.html">概念地图</a> · <a href="../MISSION.md">Mission</a></p>
+</footer>
+
+</article>
+</body>
+</html>

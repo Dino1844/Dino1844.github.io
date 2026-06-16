@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数学参考手册 · AI 算法工程师必备数学</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #8b4513;
+    --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc;
+    --code-bg: #f7f4ef;
+    --c-linalg: #4a7bab; --c-calc: #c44d4d; --c-prob: #5b8c5a; --c-geom: #8b5aa6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Palatino', 'Noto Serif SC', 'Source Han Serif SC', Georgia, serif;
+    background: var(--bg); color: var(--text); line-height: 1.75;
+    max-width: 840px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem;
+  }
+  header { margin-bottom: 2rem; padding-bottom: 1.2rem; border-bottom: 2px solid var(--border); }
+  header h1 { font-size: 2rem; margin-bottom: 0.3rem; }
+  header .subtitle { color: var(--muted); font-style: italic; }
+
+  .toc { font-size: 0.9rem; line-height: 2; margin: 1.5rem 0; columns: 2; }
+  @media (max-width: 600px) { .toc { columns: 1; } }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  h2 {
+    font-size: 1.3rem; margin: 2.5rem 0 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border);
+    color: #1a1a1a;
+  }
+  h3 {
+    font-size: 1.05rem; margin: 1.6rem 0 0.5rem; color: #333;
+    padding: 0.3rem 0.6rem; border-left: 3px solid var(--border);
+  }
+
+  .concept {
+    background: white; border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem 1.3rem; margin: 1rem 0;
+  }
+  .concept h4 {
+    font-size: 1rem; margin-bottom: 0.3rem; color: #1a1a1a;
+  }
+  .concept .tag {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 0.1em 0.5em; border-radius: 3px; color: white;
+    display: inline-block; margin-bottom: 0.5rem;
+  }
+  .tag-la { background: var(--c-linalg); }
+  .tag-calc { background: var(--c-calc); }
+  .tag-prob { background: var(--c-prob); }
+  .tag-geom { background: var(--c-geom); }
+
+  .concept .def { font-weight: 600; color: var(--accent); }
+  .concept .intuition { font-size: 0.92rem; color: #444; margin: 0.4rem 0; }
+  .concept .intuition::before { content: "🧠 "; }
+  .concept .example { font-size: 0.9rem; background: var(--code-bg); padding: 0.5rem 0.8rem; border-radius: 5px; margin: 0.5rem 0; }
+  .concept .example::before { content: "🌰 "; }
+  .concept .used-in { font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem; }
+  .concept .used-in::before { content: "📍 课程中出现："; }
+  .concept .used-in a { color: var(--accent); }
+
+  .formula-block { text-align: center; margin: 0.8rem 0; }
+
+  footer {
+    margin-top: 3rem; padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem; color: var(--muted);
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📐 数学参考手册</h1>
+  <div class="subtitle">课程中出现的所有数学概念的定义、直觉、手算例子和用法索引</div>
+</header>
+
+<div class="toc">
+  <a href="#sec-linalg">向量与矩阵</a><br>
+  <a href="#gradient">· 梯度 Gradient</a><br>
+  <a href="#jacobian">· 雅可比矩阵 Jacobian</a><br>
+  <a href="#hessian">· 海森矩阵 Hessian</a><br>
+  <a href="#trace">· 迹 Trace</a><br>
+  <a href="#outer">· 外积 Outer Product</a><br>
+  <a href="#det">· 行列式 Determinant</a><br>
+  <a href="#posdef">· 正定/半正定矩阵</a><br>
+  <a href="#inverse">· 矩阵的逆</a><br>
+  <a href="#sec-calc">微积分</a><br>
+  <a href="#chain">· 链式法则 Chain Rule</a><br>
+  <a href="#taylor">· 泰勒展开 Taylor Expansion</a><br>
+  <a href="#ibp">· 分部积分 Integration by Parts</a><br>
+  <a href="#divergence">· 散度 Divergence</a><br>
+  <a href="#sec-prob">概率</a><br>
+  <a href="#expectation">· 期望 Expectation</a><br>
+  <a href="#variance">· 方差与协方差 Variance &amp; Covariance</a><br>
+  <a href="#kl">· KL 散度 KL Divergence</a><br>
+  <a href="#sec-geom">几何（概念层）</a><br>
+  <a href="#metric">· 黎曼度量 Riemannian Metric</a><br>
+  <a href="#manifold">· 流形 Manifold</a><br>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec-linalg">向量与矩阵</h2>
+
+<!-- Gradient -->
+<div class="concept" id="gradient">
+  <span class="tag tag-calc">微积分</span>
+  <h4>梯度 Gradient — $\nabla f(\mathbf{x})$</h4>
+  <p class="def">定义：一个标量函数 $f: \mathbb{R}^d \to \mathbb{R}$ 对所有输入变量的偏导数组成的<strong>列向量</strong>。</p>
+  <div class="formula-block">
+    $$\nabla f(\mathbf{x}) = \begin{pmatrix} \frac{\partial f}{\partial x_1} \\ \frac{\partial f}{\partial x_2} \\ \vdots \\ \frac{\partial f}{\partial x_d} \end{pmatrix}$$
+  </div>
+  <p class="intuition">梯度指向 $f$ <strong>增长最快</strong>的方向，梯度的长度是那个方向上的增长率。如果你站在一座山上，梯度是上山最陡的方向；负梯度是下山最陡的方向（就是梯度下降走的方向）。</p>
+  <div class="example">
+    $f(x, y) = x^2 + 3y^2$，则 $\nabla f = \begin{pmatrix} 2x \\ 6y \end{pmatrix}$。<br>
+    在 $(1, 1)$ 处，$\nabla f = (2, 6)^\top$——往 $y$ 方向走比往 $x$ 方向走增长快 3 倍。
+  </div>
+  <p class="used-in">
+    梯度下降 (L0002 §1)；Score function $\nabla_{\mathbf{x}} \log p(\mathbf{x})$ (L0001 §2)；
+    参数 score $\nabla_{\boldsymbol{\theta}} \log p$ (L0002 §2)
+  </p>
+</div>
+
+<!-- Jacobian -->
+<div class="concept" id="jacobian">
+  <span class="tag tag-la">线性代数</span> <span class="tag tag-calc">微积分</span>
+  <h4>雅可比矩阵 Jacobian — $\mathbf{J}_\mathbf{f}(\mathbf{x})$</h4>
+  <p class="def">定义：一个<strong>向量值</strong>函数 $\mathbf{f}: \mathbb{R}^d \to \mathbb{R}^m$ 对所有输入-输出对的偏导数组成的 $m \times d$ 矩阵。</p>
+  <div class="formula-block">
+    $$\mathbf{J}_\mathbf{f}(\mathbf{x}) = \begin{pmatrix}
+    \frac{\partial f_1}{\partial x_1} & \frac{\partial f_1}{\partial x_2} & \cdots & \frac{\partial f_1}{\partial x_d} \\
+    \frac{\partial f_2}{\partial x_1} & \frac{\partial f_2}{\partial x_2} & \cdots & \frac{\partial f_2}{\partial x_d} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    \frac{\partial f_m}{\partial x_1} & \frac{\partial f_m}{\partial x_2} & \cdots & \frac{\partial f_m}{\partial x_d}
+    \end{pmatrix}$$
+  </div>
+  <p class="intuition">
+    <strong>梯度是 Jacobian 的特例：</strong>当 $m=1$（输出是标量）时，Jacobian 就是梯度的转置（$1 \times d$ 行向量）。
+    当 $\mathbf{f}$ 是一个从 $\mathbb{R}^d$ 到 $\mathbb{R}^d$ 的映射（比如 score function $\mathbf{s}: \mathbb{R}^d \to \mathbb{R}^d$），
+    Jacobian 是一个 $d \times d$ 的方阵——第 $i$ 行是第 $i$ 个输出对所有输入的梯度。
+  </p>
+  <div class="example">
+    $\mathbf{f}(x, y) = \begin{pmatrix} x^2 + y \\ xy \end{pmatrix}$（$\mathbb{R}^2 \to \mathbb{R}^2$）<br>
+    $\mathbf{J}_\mathbf{f} = \begin{pmatrix} 2x & 1 \\ y & x \end{pmatrix}$。<br>
+    在 $(1, 2)$ 处，$\mathbf{J}_\mathbf{f} = \begin{pmatrix} 2 & 1 \\ 2 & 1 \end{pmatrix}$。
+  </div>
+  <p class="used-in">
+    $\nabla_{\mathbf{x}} \mathbf{s}_\theta(\mathbf{x})$：score 网络的 Jacobian，其迹出现在 score matching 损失中 (L0001 §4)；<br>
+    Normalizing Flow 的变量替换公式用到 Jacobian 行列式 (算法卡片·Flow)
+  </p>
+</div>
+
+<!-- Hessian -->
+<div class="concept" id="hessian">
+  <span class="tag tag-la">线性代数</span> <span class="tag tag-calc">微积分</span>
+  <h4>海森矩阵 Hessian — $\mathbf{H}_f(\mathbf{x})$ 或 $\nabla^2 f(\mathbf{x})$</h4>
+  <p class="def">定义：标量函数 $f: \mathbb{R}^d \to \mathbb{R}$ 的所有<strong>二阶偏导数</strong>组成的 $d \times d$ 对称矩阵。</p>
+  <div class="formula-block">
+    $$\mathbf{H}_f(\mathbf{x}) = \begin{pmatrix}
+    \frac{\partial^2 f}{\partial x_1^2} & \frac{\partial^2 f}{\partial x_1 \partial x_2} & \cdots \\
+    \frac{\partial^2 f}{\partial x_2 \partial x_1} & \frac{\partial^2 f}{\partial x_2^2} & \cdots \\
+    \vdots & \vdots & \ddots
+    \end{pmatrix}$$
+  </div>
+  <p class="intuition">
+    <strong>Hessian = 梯度的 Jacobian。</strong>如果梯度告诉你「哪个方向最陡」，Hessian 告诉你「梯度本身在怎么变化」。
+    Hessian 的对角线元素是「曲率」——函数在该方向是 convex（正曲率，像碗）还是 concave（负曲率，像山）。
+    在优化中，Hessian 的特征值告诉你 loss landscape 不同方向的「陡峭程度」。
+  </p>
+  <div class="example">
+    $f(x, y) = x^2 + 3y^2$，$\mathbf{H}_f = \begin{pmatrix} 2 & 0 \\ 0 & 6 \end{pmatrix}$。<br>
+    在 $y$ 方向曲率是 $x$ 方向的 3 倍——这就是为什么普通梯度下降在峡谷中震荡（L0002 §1 的核心问题）。
+  </div>
+  <p class="used-in">
+    牛顿法用 Hessian 做 pre-conditioning：$\Delta\boldsymbol{\theta} = -\mathbf{H}^{-1}\nabla f$ (L0002 §6)；<br>
+    Fisher 信息 = 负期望 Hessian：$\mathbf{F} = -\mathbb{E}_p[\nabla_{\boldsymbol{\theta}}^2 \log p]$ (L0002 §2.4)
+  </p>
+</div>
+
+<!-- Trace -->
+<div class="concept" id="trace">
+  <span class="tag tag-la">线性代数</span>
+  <h4>迹 Trace — $\operatorname{tr}(\mathbf{A})$</h4>
+  <p class="def">定义：方阵 $\mathbf{A} \in \mathbb{R}^{n \times n}$ 的对角线元素之和。</p>
+  <div class="formula-block">
+    $$\operatorname{tr}(\mathbf{A}) = \sum_{i=1}^n A_{ii}$$
+  </div>
+  <p class="intuition">
+    <strong>迹 = 所有特征值之和。</strong>如果 $\mathbf{A}$ 是一个 Jacobian 矩阵，迹就是所有输出变量关于「它自己对应的输入变量」的偏导之和。
+    在物理/几何中，这正好是<strong>散度</strong>（divergence）：$\nabla \cdot \mathbf{f} = \operatorname{tr}(\mathbf{J}_\mathbf{f})$。
+    散度 > 0 意味着向量场在「膨胀」（向外流），散度 < 0 意味着在「收缩」（向里汇聚）。
+  </p>
+  <div class="example">
+    $\mathbf{A} = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}$，$\operatorname{tr}(\mathbf{A}) = 1 + 4 = 5$。<br>
+    特征值：$\lambda_1 \approx 5.37, \lambda_2 \approx -0.37$，和 = 5 ✓
+  </div>
+  <p class="used-in">
+    Score matching 损失：$\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta)$ 是 score 场的散度 (L0001 §4)
+  </p>
+</div>
+
+<!-- Outer Product -->
+<div class="concept" id="outer">
+  <span class="tag tag-la">线性代数</span>
+  <h4>外积 Outer Product — $\mathbf{u} \mathbf{v}^\top$</h4>
+  <p class="def">定义：列向量 $\mathbf{u} \in \mathbb{R}^m$ 和列向量 $\mathbf{v} \in \mathbb{R}^n$ 的外积是一个 $m \times n$ 矩阵。</p>
+  <div class="formula-block">
+    $$(\mathbf{u} \mathbf{v}^\top)_{ij} = u_i \cdot v_j$$
+  </div>
+  <p class="intuition">
+    <strong>外积 ≠ 内积。</strong>内积 $\mathbf{u}^\top \mathbf{v}$ 是一个标量（向量点乘）。
+    外积 $\mathbf{u} \mathbf{v}^\top$ 是一个矩阵——每一行是 $u_i$ 倍的 $\mathbf{v}^\top$，每一列是 $v_j$ 倍的 $\mathbf{u}$。
+    矩阵的秩为 1（所有行成比例）。
+  </p>
+  <div class="example">
+    $\mathbf{u} = \begin{pmatrix} 2 \\ 3 \end{pmatrix}, \mathbf{v} = \begin{pmatrix} 1 \\ 4 \end{pmatrix}$<br>
+    内积：$\mathbf{u}^\top \mathbf{v} = 2 \times 1 + 3 \times 4 = 14$（一个数）<br>
+    外积：$\mathbf{u} \mathbf{v}^\top = \begin{pmatrix} 2\times 1 & 2\times 4 \\ 3\times 1 & 3\times 4 \end{pmatrix} = \begin{pmatrix} 2 & 8 \\ 3 & 12 \end{pmatrix}$（一个矩阵）
+  </div>
+  <p class="used-in">
+    Fisher 信息矩阵的定义：$\mathbf{F} = \mathbb{E}[\nabla\log p \cdot \nabla\log p^\top]$ (L0002 §2.2)
+  </p>
+</div>
+
+<!-- Determinant -->
+<div class="concept" id="det">
+  <span class="tag tag-la">线性代数</span>
+  <h4>行列式 Determinant — $\det(\mathbf{A})$ 或 $|\mathbf{A}|$</h4>
+  <p class="def">定义：方阵 $\mathbf{A}$ 的一个标量值，描述该矩阵代表的线性变换对体积的缩放因子。</p>
+  <p class="intuition">
+    如果把空间中的单位立方体经过 $\mathbf{A}$ 变换，$\det(\mathbf{A})$ 就是变换后的体积。
+    $\det = 0$ → 变换把空间「压扁」了（降维，不可逆）。
+    $\det < 0$ → 变换翻转了空间的定向（镜像）。
+  </p>
+  <div class="example">
+    2×2 矩阵：$\det\begin{pmatrix} a & b \\ c & d \end{pmatrix} = ad - bc$。<br>
+    $\mathbf{A} = \begin{pmatrix} 2 & 0 \\ 0 & 3 \end{pmatrix}$，$\det = 6$——面积放大 6 倍。<br>
+    $\mathbf{A} = \begin{pmatrix} 1 & 2 \\ 2 & 4 \end{pmatrix}$，$\det = 1\times 4 - 2\times 2 = 0$——两行成比例，矩阵不可逆。
+  </div>
+  <p class="used-in">
+    Normalizing Flow 的变量替换公式：$p_X(\mathbf{x}) = p_Z(\mathbf{z}) \left|\det \frac{\partial f^{-1}}{\partial \mathbf{x}}\right|$ (算法卡片·Flow)
+  </p>
+</div>
+
+<!-- Positive Definite -->
+<div class="concept" id="posdef">
+  <span class="tag tag-la">线性代数</span>
+  <h4>正定 / 半正定矩阵 Positive (Semi-)Definite</h4>
+  <p class="def">
+    一个对称矩阵 $\mathbf{A} \in \mathbb{R}^{d \times d}$ 是：<br>
+    · <strong>正定 (PD)</strong>：对所有非零向量 $\mathbf{v} \neq \mathbf{0}$，$\mathbf{v}^\top \mathbf{A} \mathbf{v} > 0$<br>
+    · <strong>半正定 (PSD)</strong>：对所有 $\mathbf{v}$，$\mathbf{v}^\top \mathbf{A} \mathbf{v} \geq 0$
+  </p>
+  <p class="intuition">
+    等价于<strong>所有特征值都 > 0（PD）或 ≥ 0（PSD）</strong>。半正定矩阵定义了某种「广义距离」：$d^2 = \mathbf{v}^\top \mathbf{A} \mathbf{v}$ 永远非负。
+    协方差矩阵、Fisher 矩阵都是半正定的——这保证了它们定义的「信息量」或「方差」在任何方向上都非负。
+  </p>
+  <div class="example">
+    $\mathbf{A} = \begin{pmatrix} 2 & 0 \\ 0 & 6 \end{pmatrix}$：正定（特征值 2, 6 > 0）<br>
+    $\mathbf{B} = \begin{pmatrix} 1 & 0.9 \\ 0.9 & 1 \end{pmatrix}$：正定（特征值 1.9, 0.1 > 0）<br>
+    $\mathbf{C} = \begin{pmatrix} 1 & 2 \\ 2 & 1 \end{pmatrix}$：不是正定（特征值 3, -1）
+  </div>
+  <p class="used-in">
+    Fisher 矩阵的半正定性保证了自然梯度方向不会「倒退」——$\nabla\mathcal{L}^\top (-\mathbf{F}^{-1}\nabla\mathcal{L}) \leq 0$ (L0002 §2.4)
+  </p>
+</div>
+
+<!-- Matrix Inverse -->
+<div class="concept" id="inverse">
+  <span class="tag tag-la">线性代数</span>
+  <h4>矩阵的逆 Matrix Inverse — $\mathbf{A}^{-1}$</h4>
+  <p class="def">定义：对于可逆方阵 $\mathbf{A}$，$\mathbf{A}^{-1}$ 是唯一满足 $\mathbf{A}\mathbf{A}^{-1} = \mathbf{A}^{-1}\mathbf{A} = \mathbf{I}$ 的矩阵。</p>
+  <p class="intuition">
+    如果 $\mathbf{A}$ 把一个向量「拉伸/旋转」了，$\mathbf{A}^{-1}$ 把它「还原」回去。
+    在自然梯度中，$\mathbf{F}^{-1}$ 的作用是：
+    如果 Fisher 在某方向很大（该参数对分布影响大），$\mathbf{F}^{-1}$ 在那个方向就很小——缩小步长。
+    本质上是在<strong>做坐标变换</strong>，把弯曲的概率空间拉平。
+  </p>
+  <div class="example">
+    对角矩阵的逆：$\begin{pmatrix} a & 0 \\ 0 & b \end{pmatrix}^{-1} = \begin{pmatrix} 1/a & 0 \\ 0 & 1/b \end{pmatrix}$（$a,b \neq 0$）<br>
+    不可逆 = 行列式为零 = 存在冗余维度（比如两个参数对分布的影响完全一样）。
+  </div>
+  <p class="used-in">
+    自然梯度下降：$\Delta\boldsymbol{\theta} = -\eta \mathbf{F}^{-1} \nabla\mathcal{L}$ (L0002 §4)
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec-calc">微积分</h2>
+
+<!-- Chain Rule -->
+<div class="concept" id="chain">
+  <span class="tag tag-calc">微积分</span>
+  <h4>链式法则 Chain Rule</h4>
+  <p class="def">
+    单变量：若 $h(x) = f(g(x))$，则 $h'(x) = f'(g(x)) \cdot g'(x)$。<br>
+    多变量：若 $\mathbf{h}(\mathbf{x}) = \mathbf{f}(\mathbf{g}(\mathbf{x}))$，则 $\mathbf{J}_\mathbf{h}(\mathbf{x}) = \mathbf{J}_\mathbf{f}(\mathbf{g}(\mathbf{x})) \cdot \mathbf{J}_\mathbf{g}(\mathbf{x})$。
+  </p>
+  <p class="intuition">
+    「变化的传播」——$g$ 的变化引起 $f$ 的变化。$f$ 对 $x$ 的敏感度 = $f$ 对 $g$ 的敏感度 × $g$ 对 $x$ 的敏感度。
+    神经网络的反向传播就是链式法则的高效实现。
+  </p>
+  <div class="example">
+    $h(x) = \log(x^2 + 1)$。<br>
+    设 $g(x) = x^2 + 1$，$f(g) = \log g$。<br>
+    $h'(x) = \frac{1}{g(x)} \cdot 2x = \frac{2x}{x^2+1}$。
+  </div>
+  <p class="used-in">
+    反向传播 (贯穿)；Score 的恒等式 $\nabla\log p = \frac{\nabla p}{p}$ (L0001 §2.4)；<br>
+    重参数化下 Fisher 矩阵的变换 (L0002 §2.4)
+  </p>
+</div>
+
+<!-- Taylor Expansion -->
+<div class="concept" id="taylor">
+  <span class="tag tag-calc">微积分</span>
+  <h4>泰勒展开 Taylor Expansion</h4>
+  <p class="def">用一个函数在某点的值和各阶导数来<strong>多项式逼近</strong>该函数在附近的值。</p>
+  <div class="formula-block">
+    $$f(\mathbf{x} + \Delta\mathbf{x}) \approx f(\mathbf{x}) + \nabla f(\mathbf{x})^\top \Delta\mathbf{x} + \frac{1}{2} \Delta\mathbf{x}^\top \mathbf{H}_f(\mathbf{x}) \Delta\mathbf{x} + \cdots$$
+  </div>
+  <p class="intuition">
+    <strong>零阶：</strong>$f(\mathbf{x} + \Delta\mathbf{x}) \approx f(\mathbf{x})$（函数不变）——太粗糙。<br>
+    <strong>一阶：</strong>$f(\mathbf{x} + \Delta\mathbf{x}) \approx f(\mathbf{x}) + \nabla f^\top \Delta\mathbf{x}$（线性近似，梯度下降的基础）。<br>
+    <strong>二阶：</strong>再加 Hessian 的二次型——描述了函数的<strong>弯曲程度</strong>。
+  </p>
+  <div class="example">
+    $\log(1 + \varepsilon) \approx \varepsilon - \frac{\varepsilon^2}{2} + \frac{\varepsilon^3}{3} - \cdots$（$\log$ 的麦克劳林级数）
+  </div>
+  <p class="used-in">
+    KL 散度的二阶展开：$D_{\text{KL}}(p_{\boldsymbol{\theta}} \| p_{\boldsymbol{\theta}+d\boldsymbol{\theta}}) \approx \frac{1}{2} d\boldsymbol{\theta}^\top \mathbf{F} d\boldsymbol{\theta}$ (L0002 §3)
+  </p>
+</div>
+
+<!-- Integration by Parts -->
+<div class="concept" id="ibp">
+  <span class="tag tag-calc">微积分</span>
+  <h4>分部积分 Integration by Parts</h4>
+  <p class="def">一维：$\int_a^b u(x) v'(x)\, dx = [u(x)v(x)]_a^b - \int_a^b u'(x) v(x)\, dx$。高维推广到散度定理。</p>
+  <p class="intuition">
+    分部积分把「被积函数中的一个因子求导」转移到另一个因子上。在 score matching 中，这个技巧让你把
+    $\mathbb{E}[\mathbf{s}_\theta^\top \nabla\log p]$（需要知道 $\nabla\log p$）转化为 $-\mathbb{E}[\operatorname{tr}(\nabla\mathbf{s}_\theta)]$
+    （只需要 $\mathbf{s}_\theta$ 自己的导数）。<strong>等于把「不知道的 $\nabla\log p$」交换成了「可计算的 $\nabla\mathbf{s}_\theta$」。</strong>
+  </p>
+  <div class="example">
+    $\int x e^x dx = x e^x - \int 1 \cdot e^x dx = x e^x - e^x + C$
+  </div>
+  <p class="used-in">
+    Hyvärinen score matching 推导的核心步骤 (L0001 §4.3)
+  </p>
+</div>
+
+<!-- Divergence -->
+<div class="concept" id="divergence">
+  <span class="tag tag-calc">微积分</span> <span class="tag tag-la">线性代数</span>
+  <h4>散度 Divergence — $\nabla \cdot \mathbf{f}$</h4>
+  <p class="def">向量场 $\mathbf{f}: \mathbb{R}^d \to \mathbb{R}^d$ 的散度是一个标量函数，等于 Jacobian 的迹。</p>
+  <div class="formula-block">
+    $$\nabla \cdot \mathbf{f}(\mathbf{x}) = \sum_{i=1}^d \frac{\partial f_i}{\partial x_i} = \operatorname{tr}(\mathbf{J}_\mathbf{f}(\mathbf{x}))$$
+  </div>
+  <p class="intuition">
+    散度衡量向量场在某一点是「向外发散」（正散度，像喷泉）还是「向内汇聚」（负散度，像排水口）。
+    对于 score 场 $\mathbf{s}(\mathbf{x}) = \nabla\log p(\mathbf{x})$，散度在概率 mode 附近为<strong>负</strong>（score 向量都指向 mode，向内汇聚）；
+    在概率极小值（鞍点/反 mode）附近散度为<strong>正</strong>。
+  </p>
+  <div class="example">
+    $\mathbf{f}(x, y) = \begin{pmatrix} x \\ -y \end{pmatrix}$，$\nabla \cdot \mathbf{f} = \frac{\partial}{\partial x}(x) + \frac{\partial}{\partial y}(-y) = 1 - 1 = 0$（处处无散，这是一个鞍点场）。
+  </div>
+  <p class="used-in">
+    Score matching 损失：$\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta) = \nabla \cdot \mathbf{s}_\theta$ (L0001 §4)
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec-prob">概率</h2>
+
+<!-- Expectation -->
+<div class="concept" id="expectation">
+  <span class="tag tag-prob">概率</span>
+  <h4>期望 Expectation — $\mathbb{E}_{p}[f(\mathbf{x})]$</h4>
+  <p class="def">函数 $f$ 在分布 $p$ 下的加权平均。</p>
+  <div class="formula-block">
+    $$\mathbb{E}_{p(\mathbf{x})}[f(\mathbf{x})] = \int f(\mathbf{x})\, p(\mathbf{x})\, d\mathbf{x} \quad \text{或离散：} \sum_{\mathbf{x}} f(\mathbf{x})\, p(\mathbf{x})$$
+  </div>
+  <p class="intuition">
+    「如果按照分布 $p$ 反复抽样，$f(\mathbf{x})$ 的平均值是多少？」在机器学习中，我们通常用有限样本的平均来近似期望
+    （蒙特卡洛估计）：$\mathbb{E}_p[f] \approx \frac{1}{N}\sum_{i=1}^N f(\mathbf{x}^{(i)})$。
+  </p>
+  <div class="example">
+    均匀骰子各面概率 $1/6$，点数平方的期望：$\mathbb{E}[X^2] = \frac{1}{6}(1+4+9+16+25+36) = 91/6 \approx 15.2$。
+  </div>
+  <p class="used-in">
+    Fisher 矩阵定义 (L0002 §2.2)；Score matching 损失 (L0001 §4)；所有损失函数
+  </p>
+</div>
+
+<!-- Variance & Covariance -->
+<div class="concept" id="variance">
+  <span class="tag tag-prob">概率</span>
+  <h4>方差与协方差 Variance &amp; Covariance</h4>
+  <p class="def">
+    <strong>方差：</strong>$\operatorname{Var}[X] = \mathbb{E}[(X - \mathbb{E}[X])^2]$——随机变量偏离均值的程度。<br>
+    <strong>协方差：</strong>$\operatorname{Cov}[X, Y] = \mathbb{E}[(X - \mathbb{E}[X])(Y - \mathbb{E}[Y])]$——两个变量「一起变」的程度。<br>
+    <strong>协方差矩阵：</strong>对随机向量 $\mathbf{X} \in \mathbb{R}^d$，$\operatorname{Cov}[\mathbf{X}] = \mathbb{E}[(\mathbf{X} - \boldsymbol{\mu})(\mathbf{X} - \boldsymbol{\mu})^\top]$，是一个 $d \times d$ 半正定矩阵。
+  </p>
+  <p class="intuition">
+    协方差矩阵的对角线是每个分量的方差（$\sigma_i^2$），非对角线是分量之间的协方差。
+    如果 $\operatorname{Cov}[X_i, X_j] > 0$，$X_i$ 和 $X_j$ 倾向于同升同降。
+    <strong>Fisher 矩阵就是参数 score 的协方差矩阵。</strong>
+  </p>
+  <div class="example">
+    $\mathbf{X} = (X_1, X_2)$，$\operatorname{Cov}[\mathbf{X}] = \begin{pmatrix} \operatorname{Var}[X_1] & \operatorname{Cov}[X_1, X_2] \\ \operatorname{Cov}[X_2, X_1] & \operatorname{Var}[X_2] \end{pmatrix}$
+  </div>
+  <p class="used-in">
+    Fisher 矩阵 = $\operatorname{Cov}_{p}[\nabla_{\boldsymbol{\theta}} \log p]$ (L0002 §2.2)
+  </p>
+</div>
+
+<!-- KL Divergence -->
+<div class="concept" id="kl">
+  <span class="tag tag-prob">概率</span> <span class="tag tag-geom">几何</span>
+  <h4>KL 散度 Kullback–Leibler Divergence — $D_{\text{KL}}(p \| q)$</h4>
+  <p class="def">衡量两个概率分布 $p$（真实）和 $q$（模型）之间差异的非对称量。</p>
+  <div class="formula-block">
+    $$D_{\text{KL}}(p \| q) = \mathbb{E}_{p(\mathbf{x})}\left[ \log \frac{p(\mathbf{x})}{q(\mathbf{x})} \right] = \int p(\mathbf{x}) \log \frac{p(\mathbf{x})}{q(\mathbf{x})}\, d\mathbf{x}$$
+  </div>
+  <p class="intuition">
+    <strong>不对称：</strong>$D_{\text{KL}}(p \| q) \neq D_{\text{KL}}(q \| p)$。<br>
+    $D_{\text{KL}}(p \| q)$：用 $q$ 来压缩 $p$，额外需要的平均编码长度。如果 $q$ 在 $p$ 概率高的地方概率低 → KL 很大（严重惩罚「遗漏」）。<br>
+    $D_{\text{KL}}(q \| p)$：如果 $q$ 在 $p$ 概率为零的地方概率不为零 → KL 很大（严重惩罚「编造」）。
+  </p>
+  <div class="example">
+    $p = \mathcal{N}(0, 1)$，$q = \mathcal{N}(\mu, \sigma^2)$：<br>
+    $D_{\text{KL}}(p \| q) = \log\sigma + \frac{1+\mu^2}{2\sigma^2} - \frac{1}{2}$
+  </div>
+  <p class="used-in">
+    KL 二阶展开 = Fisher 度量 (L0002 §3.2)；VAE 的 ELBO (算法卡片·VAE)
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec-geom">几何（概念层）</h2>
+
+<!-- Riemannian Metric -->
+<div class="concept" id="metric">
+  <span class="tag tag-geom">几何</span>
+  <h4>黎曼度量 Riemannian Metric</h4>
+  <p class="def">在弯曲空间（流形）上每一点定义「无穷小距离」的方式，由度规矩阵 $\mathbf{G}(\mathbf{x})$ 给出。</p>
+  <div class="formula-block">
+    $$ds^2 = d\mathbf{x}^\top \mathbf{G}(\mathbf{x})\, d\mathbf{x} = \sum_{i,j} G_{ij}(\mathbf{x})\, dx_i\, dx_j$$
+  </div>
+  <p class="intuition">
+    在平直欧氏空间里 $\mathbf{G} = \mathbf{I}$——走 $dx$ 就移动距离 $|dx|$。
+    但在弯曲空间里，不同方向的「单位距离」不一样。一个经典例子是地球表面：在赤道附近经度差 1° 对应的实际距离
+    <strong>大于</strong>两极附近同样经度差的距离。这就是度规矩阵 $\mathbf{G}$ 依赖于位置。
+    <strong>在概率分布空间中，$\mathbf{G}(\boldsymbol{\theta}) = \mathbf{F}(\boldsymbol{\theta})$（Fisher 矩阵）。</strong>
+  </p>
+  <div class="example">
+    二维中 $\mathbf{G} = \text{diag}(1, \sigma^2)$ 的曲面：$x$ 方向是平的，但 $y$ 方向的「真实距离」随 $y$ 的绝对值增大而放大。
+  </div>
+  <p class="used-in">
+    Fisher 度量定义概率空间的几何 (L0002 §3)
+  </p>
+</div>
+
+<!-- Manifold -->
+<div class="concept" id="manifold">
+  <span class="tag tag-geom">几何</span>
+  <h4>流形 Manifold</h4>
+  <p class="def">局部看起来像 $\mathbb{R}^d$ 但全局可能弯曲的空间。每一个概率分布族 $\{p_{\boldsymbol{\theta}} : \boldsymbol{\theta} \in \Theta\}$ 定义了一个<strong>统计流形</strong>。</p>
+  <p class="intuition">
+    地球表面是一个 2 维流形——局部你感觉它是平的（你脚下的地），但全局它是一个球。
+    统计流形上的「点」是分布本身（比如 $\mathcal{N}(0, 1)$ 和 $\mathcal{N}(1, 2)$ 是两个不同的点），
+    「距离」由 KL 散度/ Fisher 度量来定义。<strong>自然梯度 = 在统计流形上沿测地线走。</strong>
+  </p>
+  <div class="example">
+    一维高斯的统计流形是上半平面 $\{(\mu, \sigma) : \mu \in \mathbb{R}, \sigma > 0\}$，Fisher 度量 $\mathbf{F} = \text{diag}(1/\sigma^2, 2/\sigma^2)$ 让它成为一个<strong>双曲空间</strong>（负常曲率）。
+  </div>
+  <p class="used-in">
+    L0002 的核心概念
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<footer>
+  <p>
+    本手册随课程进展持续扩充。每个概念只录入了<strong>在已有课程中实际出现</strong>的部分——更深的分支（如特征分解、SVD、凸优化对偶等）将在后续课程中用到时补充。
+  </p>
+  <p style="margin-top: 0.5rem;">
+    <a href="../lessons/0000-the-mathematical-landscape.html">← L0000 · 地貌</a> &emsp;
+    <a href="../lessons/0001-the-score-function.html">L0001 · Score</a> &emsp;
+    <a href="../lessons/0002-information-geometry.html">L0002 · 信息几何</a> &emsp;
+    <a href="algorithm-cards.html">📇 算法卡片</a> &emsp;
+    <a href="../MISSION.md">🎯 Mission</a>
+  </p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>复杂度速查表</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Noto Sans SC',sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:800px;margin:0 auto;padding:32px 24px 64px;background:#fdfdfd}
+  h1{font-size:1.8rem;font-weight:700;margin-bottom:.5em}
+  h2{font-size:1.2rem;font-weight:600;margin:1.6em 0 .5em;border-bottom:2px solid #e9ecef;padding-bottom:.25em}
+  code{font-family:'JetBrains Mono','SF Mono',monospace;font-size:.88em;background:#f1f3f5;padding:.1em .3em;border-radius:3px}
+  pre{font-family:'JetBrains Mono','SF Mono',monospace;font-size:.8rem;line-height:1.5;background:#1e1e2e;color:#cdd6f4;padding:16px 20px;border-radius:6px;overflow-x:auto;margin:.8em 0}
+  pre .kw{color:#cba6f7}pre .fn{color:#89b4fa}pre .num{color:#fab387}pre .cmt{color:#6c7086;font-style:italic}
+  table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:.9em}
+  th,td{border:1px solid #dee2e6;padding:7px 12px;text-align:left}
+  th{background:#f1f3f5;font-weight:600}
+  .note{background:#fff9db;border-left:3px solid #f08c00;padding:10px 16px;margin:.8em 0;border-radius:0 4px 4px 0;font-size:.9em}
+  @media print{body{font-size:11px;color:#000}pre{background:#f8f9fa;color:#000;border:1px solid #ccc}}
+</style>
+</head>
+<body>
+
+<h1>📐 复杂度速查表</h1>
+<p>关联课程：<a href="../lessons/0000-complexity-analysis-stl.html">Lesson 0000</a></p>
+
+<h2>大 O 定义</h2>
+<p>T(n) = O(f(n)) ⇔ ∃C, n₀ &gt; 0 使得对所有 n ≥ n₀，T(n) ≤ C·f(n)。<br><strong>直觉：</strong>描述增长趋势的<strong>上界</strong>，忽略常数和低阶项。</p>
+
+<h2>复杂度阶级（n = 输入规模）</h2>
+<table>
+<tr><th>阶级</th><th>n=100</th><th>n=10³</th><th>n=10⁴</th><th>n=10⁵</th><th>n=10⁶</th><th>典型算法</th></tr>
+<tr><td>O(1)</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>数组下标、哈希查找</td></tr>
+<tr><td>O(log n)</td><td>7</td><td>10</td><td>13</td><td>17</td><td>20</td><td>二分查找、平衡树</td></tr>
+<tr><td>O(√n)</td><td>10</td><td>32</td><td>100</td><td>316</td><td>1000</td><td>试除法</td></tr>
+<tr><td>O(n)</td><td>100</td><td>10³</td><td>10⁴</td><td>10⁵</td><td>10⁶</td><td>线性扫描</td></tr>
+<tr><td>O(n log n)</td><td>700</td><td>10⁴</td><td>1.3×10⁵</td><td>1.7×10⁶</td><td>2×10⁷</td><td>归并/快排</td></tr>
+<tr><td>O(n²)</td><td>10⁴</td><td>10⁶</td><td>10⁸</td><td style="color:#c92a2a">10¹⁰ ❌</td><td style="color:#c92a2a">10¹² ❌</td><td>枚举数对</td></tr>
+<tr><td>O(2ⁿ)</td><td>10³⁰ ❌</td><td colspan="4" style="color:#c92a2a">不可行</td><td>递归斐波那契</td></tr>
+<tr><td>O(n!)</td><td>10¹⁵⁸ ❌</td><td colspan="4" style="color:#c92a2a">不可行</td><td>全排列枚举</td></tr>
+</table>
+
+<h2>数据范围 → 所需复杂度</h2>
+<table>
+<tr><th>n ≤</th><th>可用复杂度</th><th>解法线索</th></tr>
+<tr><td>10</td><td>O(n!), O(2ⁿ)</td><td>暴力回溯、全排列</td></tr>
+<tr><td>20</td><td>O(2ⁿ)</td><td>状态压缩 DP、子集枚举</td></tr>
+<tr><td>100</td><td>O(n³)</td><td>Floyd-Warshall、区间 DP</td></tr>
+<tr><td>10³</td><td>O(n²)</td><td>简单 DP、枚举数对</td></tr>
+<tr><td>10⁵</td><td>O(n log n)</td><td>排序、堆、二分</td></tr>
+<tr><td>10⁶</td><td>O(n)</td><td>线性扫描、计数</td></tr>
+<tr><td>10⁹</td><td>O(log n), O(1)</td><td>二分查找、数学</td></tr>
+</table>
+
+<h2>分析四步法</h2>
+<ol>
+  <li><strong>确定变量</strong> — 谁是 n？</li>
+  <li><strong>找最内层操作</strong> — 执行最多次的语句</li>
+  <li><strong>计算执行次数</strong> — 用 n 表示</li>
+  <li><strong>忽略常数和低阶</strong> — O(n²+n) → O(n²)</li>
+</ol>
+
+<h2>递归复杂度（主定理）</h2>
+<p>对 T(n) = a·T(n/b) + f(n)：</p>
+<table>
+<tr><th>f(n) vs n<sup>log_b a</sup></th><th>T(n)</th><th>例子</th></tr>
+<tr><td>f(n) 增长更慢</td><td>Θ(n<sup>log_b a</sup>)</td><td>Strassen 矩阵乘法</td></tr>
+<tr><td>同阶</td><td>Θ(n<sup>log_b a</sup> · log n)</td><td>归并排序(a=2,b=2,f=n)</td></tr>
+<tr><td>f(n) 增长更快</td><td>Θ(f(n))</td><td>—</td></tr>
+</table>
+
+<h2>常见 STL 操作复杂度</h2>
+<table>
+<tr><th>操作</th><th>复杂度</th></tr>
+<tr><td><code>vector::push_back</code></td><td>均摊 O(1)</td></tr>
+<tr><td><code>vector::insert(begin, x)</code></td><td>O(n)</td></tr>
+<tr><td><code>unordered_map::find / insert / erase</code></td><td>均摊 O(1)</td></tr>
+<tr><td><code>map::find / insert / erase</code></td><td>O(log n)</td></tr>
+<tr><td><code>sort(begin, end)</code></td><td>O(n log n)</td></tr>
+<tr><td><code>lower_bound / upper_bound</code></td><td>O(log n)（需要有序）</td></tr>
+<tr><td><code>priority_queue::push / pop</code></td><td>O(log n)</td></tr>
+<tr><td><code>stack/queue::push/pop</code></td><td>O(1)</td></tr>
+</table>
+
+<h2>一句秒记</h2>
+<div class="note">
+  <strong>C++ 每秒约 10⁷~10⁸ 次简单运算。</strong>n=10⁵ → 必须 ≤ O(n log n)；n=10³ → O(n²) 可行。
+</div>
+
+</body>
+</html>

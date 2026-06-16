@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0002 — 双指针（数组篇）：相向指针与读写指针</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;font-size:17px;line-height:1.7;color:#1a1a1a;max-width:820px;margin:0 auto;padding:48px 24px 120px;background:#fdfdfd}
+  h1{font-size:2rem;font-weight:700;margin-bottom:.2em;letter-spacing:-.02em;color:#111}
+  h2{font-size:1.3rem;font-weight:600;margin:2.2em 0 .6em;color:#222;border-bottom:2px solid #e9ecef;padding-bottom:.3em}
+  h3{font-size:1.08rem;font-weight:600;margin:1.5em 0 .4em;color:#333}
+  p{margin-bottom:.9em}
+  ul,ol{margin:0 0 1em 1.5em}li{margin-bottom:.35em}
+  code{font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;font-size:.88em;background:#f1f3f5;padding:.1em .35em;border-radius:3px}
+  pre{font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;font-size:.82rem;line-height:1.55;background:#1e1e2e;color:#cdd6f4;padding:20px 24px;border-radius:8px;overflow-x:auto;margin:1.2em 0}
+  pre .kw{color:#cba6f7}pre .fn{color:#89b4fa}pre .num{color:#fab387}pre .cmt{color:#6c7086;font-style:italic}pre .type{color:#f9e2af}pre .pp{color:#f38ba8}
+  .box{padding:16px 22px;margin:1.2em 0;border-radius:6px;font-size:.94em}
+  .box-i{background:#fff9db;border-left:4px solid #f08c00}
+  .box-d{background:#e7f5ff;border-left:4px solid #1971c2}
+  .box-e{background:#fff0f0;border-left:4px solid #c92a2a}
+  .box-g{background:#ebfbee;border-left:4px solid #2b8a3e}
+  table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9em}
+  th,td{border:1px solid #dee2e6;padding:7px 12px;text-align:left}
+  th{background:#f1f3f5;font-weight:600}
+  .quiz{background:#f0f4ff;border:1px solid #bac8ff;border-radius:8px;padding:22px;margin:2em 0}
+  .quiz h3{margin-top:0;color:#364fc7}
+  .quiz label{display:block;margin:5px 0;padding:7px 10px;border-radius:4px;cursor:pointer}
+  .quiz label:hover{background:#dbe4ff}
+  .quiz input[type="radio"]{margin-right:8px}
+  .quiz button{margin-top:10px;background:#364fc7;color:#fff;border:none;padding:9px 22px;border-radius:5px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .quiz button:hover{background:#2b3fa8}
+  .quiz .fb{margin-top:10px;font-weight:600;min-height:1.3em}
+  .quiz .fb.correct{color:#2b8a3e}.quiz .fb.incorrect{color:#c92a2a}
+  .nav{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid #dee2e6;font-size:.9em}
+  .nav a{color:#364fc7;text-decoration:none}.nav a:hover{text-decoration:underline}
+  .tag{display:inline-block;background:#e9ecef;color:#495057;padding:2px 10px;border-radius:12px;font-size:.8rem;font-weight:500;margin-right:6px}
+  .toc{background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;padding:16px 24px;margin:1.5em 0;font-size:.93em}.toc ol{margin-bottom:0}
+  .proof{background:#f3f0ff;border:2px solid #9775fa;border-radius:8px;padding:20px 24px;margin:1.4em 0}
+  .proof h3{margin-top:0;color:#6741d9}
+  @media print{body{font-size:12px;color:#000}pre{background:#f8f9fa;color:#000;border:1px solid #ccc}.quiz,.nav{display:none}}
+</style>
+</head>
+<body>
+
+<h1>Lesson 0002 — 双指针（数组篇）：相向指针与读写指针</h1>
+
+<p><span class="tag">双指针</span><span class="tag">相向指针</span><span class="tag">读写指针</span><span class="tag">正确性证明</span><span class="tag">5 题</span></p>
+
+<div class="toc">
+<strong>📑 本课目录</strong>
+<ol>
+  <li><a href="#s1">双指针的本质：用两个指针编码搜索约束</a></li>
+  <li><a href="#s2">模式一：相向（对撞）指针 — 完整理论</a></li>
+  <li><a href="#s3">相向指针题 1：Two Sum II — 最纯粹的形式</a></li>
+  <li><a href="#s4">相向指针题 2：3Sum — 嵌套对撞</a></li>
+  <li><a href="#s5">相向指针题 3：盛水容器 — 贪心剪枝</a></li>
+  <li><a href="#s6">模式二：读写指针 — 原地修改数组</a></li>
+  <li><a href="#s7">读写指针题 1：移动零</a></li>
+  <li><a href="#s8">读写指针题 2：删除有序数组中的重复项</a></li>
+  <li><a href="#s9">易错点与调试技巧</a></li>
+  <li><a href="#s10">测验</a></li>
+</ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 双指针的本质：用两个指针编码搜索约束</h2>
+
+<p>回顾 Lesson 0001 的结论：优化的本质是<strong>缩小搜索空间</strong>。单指针遍历时，我们的搜索空间是一个一维的线；双指针用一个迂回的语法说了一件简单的事：<strong>不是所有数对都需要检查</strong>。</p>
+
+<p>具体来说，双指针技术的三个底层原理：</p>
+
+<table>
+<tr><th>原理</th><th>含义</th><th>体现</th></tr>
+<tr><td><strong>有序性</strong></td><td>数据被排序后，某个方向上的变化是单调的</td><td>相向指针：sum 太大→右指针左移</td></tr>
+<tr><td><strong>不变量</strong></td><td>循环每步都保持某个性质成立</td><td>读写指针：[0, slow) 始终是处理好的区域</td></tr>
+<tr><td><strong>剪枝安全性</strong></td><td>能证明被跳过的候选不可能比已知解更好</td><td>盛水容器：证明矮柱可以安全放弃</td></tr>
+</table>
+
+<div class="box box-i">
+  <strong>🧠 面试中「看到什么想双指针」：</strong><br>
+  1. 题目涉及<strong>两个位置</strong>的关系（两数之和、容器两端）<br>
+  2. 数据<strong>已经有序</strong>或<strong>排序后不影响答案</strong><br>
+  3. 要求<strong>原地修改</strong>数组（in-place）<br>
+  4. 从<strong>两端</strong>同时向中间操作（回文串、接雨水）
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 模式一：相向（对撞）指针 — 完整理论</h2>
+
+<h3>2.1 模板</h3>
+
+<pre><span class="cmt">// 相向指针通用模板</span>
+<span class="type">int</span> l = <span class="num">0</span>, r = n - <span class="num">1</span>;
+<span class="kw">while</span> (l &lt; r) {
+    <span class="cmt">// 根据 nums[l] 和 nums[r] 的关系决定移动哪个指针</span>
+    <span class="kw">if</span> (<span class="cmt">/* 条件：通常和 nums[l] + nums[r] 或 min(nums[l], nums[r]) 有关 */</span>) {
+        <span class="cmt">// 更新答案...</span>
+    }
+    <span class="kw">if</span> (<span class="cmt">/* 应该移动左指针 */</span>) l++;
+    <span class="kw">else</span> r--;
+}</pre>
+
+<h3>2.2 为什么它是对的：循环不变量论证</h3>
+
+<div class="proof">
+<h3>📐 相向指针的正确性证明（通用框架）</h3>
+
+<p>设问题是：在有序数组中找到满足条件 P 的数对 (i, j)。</p>
+
+<p><strong>声明（不变量）：</strong>在 while 循环的每一步开始前，<strong>如果存在满足 P 的数对 (i*, j*)，那么一定有 l ≤ i* ≤ j* ≤ r</strong>。</p>
+
+<p><strong>初始化：</strong>l=0, r=n-1，显然满足。</p>
+
+<p><strong>保持：</strong>假设当前满足不变量。当我们根据某个规则移动 l 或 r 时，需要证明<strong>被移过的位置不可能是答案的一部分</strong>。</p>
+
+<p><strong>关键论证（以 Two Sum 为例）：</strong>如果 nums[l] + nums[r] &lt; target，由于 nums 有序，nums[l] + 任何 ≤ nums[r] 的数都 ≤ nums[l] + nums[r] &lt; target。所以 nums[l] 不可能是答案的一部分，l++ 是安全的。</p>
+
+<p><strong>终止：</strong>当 l ≥ r 时，搜索空间为空，如果还没找到答案则不存在。</p>
+</div>
+
+<p>这个证明框架适用于<strong>所有相向指针问题</strong>。每道题的具体差异只在于「移动哪个指针」的判断条件和对应的安全性论证。</p>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 相向指针题 1：Two Sum II — 最纯粹的形式</h2>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+  <strong>LeetCode 167. Two Sum II — Input Array Is Sorted</strong><br>
+  给定一个<strong>已排序</strong>的数组，找出两个数使它们的和等于 target。返回下标（1-indexed）。
+</blockquote>
+
+<p>这是<strong>相向指针最纯粹的形态</strong>：数据天然有序，只需要不断将当前和与 target 比较来移动指针。</p>
+
+<pre><span class="type">vector</span>&lt;<span class="type">int</span>&gt; <span class="fn">twoSum</span>(<span class="type">vector</span>&lt;<span class="type">int</span>&gt;& numbers, <span class="type">int</span> target) {
+    <span class="type">int</span> l = <span class="num">0</span>, r = numbers.<span class="fn">size</span>() - <span class="num">1</span>;
+    <span class="kw">while</span> (l &lt; r) {
+        <span class="type">int</span> sum = numbers[l] + numbers[r];
+        <span class="kw">if</span> (sum == target) <span class="kw">return</span> {l + <span class="num">1</span>, r + <span class="num">1</span>};
+        <span class="kw">else if</span> (sum &lt; target) l++;   <span class="cmt">// 和太小 → 需要一个更大的数 → 左指针右移</span>
+        <span class="kw">else</span> r--;                        <span class="cmt">// 和太大 → 需要一个更小的数 → 右指针左移</span>
+    }
+    <span class="kw">return</span> {};
+}</pre>
+
+<p><strong>复杂度：</strong>O(n) 时间、O(1) 空间。对比哈希表解法的 O(n)/O(n)，这在空间上更优。</p>
+
+<div class="box box-d">
+  <strong>与 Two Sum (无序版) 的选择：</strong><br>
+  - 无序 + 返回下标 → 哈希表 O(n)/O(n)<br>
+  - 无序 + 返回值 → 排序 + 相向指针 O(n log n)/O(1)<br>
+  - 已排序 → 相向指针 O(n)/O(1)（无需哈希表！）
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 相向指针题 2：3Sum — 嵌套对撞</h2>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+  <strong>LeetCode 15. 3Sum（Hot 100）</strong><br>
+  找出所有和为 0 的不重复三元组。
+</blockquote>
+
+<p>3Sum 的思想在 Lesson 0001 中作为「排序创造结构」的例子介绍过。这里从<strong>双指针的视角</strong>深入分析内层的相向指针是如何工作的。</p>
+
+<h3>4.1 结构拆解</h3>
+
+<pre><span class="cmt">// 3Sum = 外层遍历固定第一个数 + 内层相向指针找剩下两个数</span>
+<span class="fn">sort</span>(nums.<span class="fn">begin</span>(), nums.<span class="fn">end</span>());
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n - <span class="num">2</span>; i++) {
+    <span class="kw">if</span> (i &gt; <span class="num">0</span> && nums[i] == nums[i-<span class="num">1</span>]) <span class="kw">continue</span>;  <span class="cmt">// 去重：跳过相同起点</span>
+    <span class="cmt">// ↓ 内层就是 Two Sum II，target = -nums[i]</span>
+    <span class="type">int</span> l = i + <span class="num">1</span>, r = n - <span class="num">1</span>;
+    <span class="kw">while</span> (l &lt; r) {
+        <span class="type">int</span> sum = nums[i] + nums[l] + nums[r];
+        <span class="kw">if</span> (sum == <span class="num">0</span>) { <span class="cmt">/* 记录 + 去重 */</span> }
+        <span class="kw">else if</span> (sum &lt; <span class="num">0</span>) l++;
+        <span class="kw">else</span> r--;
+    }
+}</pre>
+
+<h3>4.2 去重的正确性论证</h3>
+
+<p>去重是 3Sum 最容易出错的点。<strong>为什么跳过相同元素不会漏解？</strong></p>
+
+<pre><span class="cmt">// 外层去重：</span>
+<span class="kw">if</span> (i &gt; <span class="num">0</span> && nums[i] == nums[i-<span class="num">1</span>]) <span class="kw">continue</span>;
+<span class="cmt">// 证明：当处理 nums[i-1] 时，已经找到了所有「第一个数为 nums[i-1]」的三元组。
+//       nums[i] == nums[i-1]，所以「第一个数为 nums[i]」的三元组 = 已找到的三元组。
+//       跳过 nums[i] 不会遗漏任何新三元组。</span>
+
+<span class="cmt">// 内层去重：</span>
+<span class="kw">while</span> (l &lt; r && nums[l] == nums[l+<span class="num">1</span>]) l++;
+<span class="kw">while</span> (l &lt; r && nums[r] == nums[r-<span class="num">1</span>]) r--;
+<span class="cmt">// 证明：找到一个解后，如果第二/第三个数有重复，跳过它们不会遗漏新解，
+//       因为固定第一个数后，第二个数确定则第三个也确定。</span></pre>
+
+<h3>4.3 时间复杂度分析</h3>
+
+<p>外循环 O(n)，内层相向指针 O(n)，总 O(n²)。排序 O(n log n) 不是瓶颈。</p>
+
+<p><strong>空间复杂度 O(1)</strong>（不计输出）。这体现了相向指针相比哈希表的一个优势：不需要额外空间。</p>
+
+<div class="box box-i">
+  <strong>4Sum 的推广：</strong>k-Sum 问题可以用<strong>递归固定 + 最内层相向指针</strong>的模式解决。k-Sum 的时间复杂度是 O(n<sup>k-1</sup>)。3Sum → O(n²)，4Sum → O(n³)，依此类推。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 相向指针题 3：盛水容器 — 贪心剪枝</h2>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+  <strong>LeetCode 11. Container With Most Water（Hot 100）</strong><br>
+  选两条线使得容器盛水最多。面积 = 宽度 × min(左高, 右高)。
+</blockquote>
+
+<p>这道题的相向指针与 Two Sum 的<strong>核心区别</strong>在移动规则：Two Sum 根据 sum 与 target 的关系移动；盛水容器根据<strong>两边高度</strong>的贪心策略移动。</p>
+
+<h3>5.1 完整代码与注释</h3>
+
+<pre><span class="type">int</span> <span class="fn">maxArea</span>(<span class="type">vector</span>&lt;<span class="type">int</span>&gt;& height) {
+    <span class="type">int</span> l = <span class="num">0</span>, r = height.<span class="fn">size</span>() - <span class="num">1</span>, ans = <span class="num">0</span>;
+    <span class="kw">while</span> (l &lt; r) {
+        ans = <span class="fn">max</span>(ans, (r - l) * <span class="fn">min</span>(height[l], height[r]));
+        <span class="kw">if</span> (height[l] &lt; height[r]) l++;  <span class="cmt">// 淘汰较矮的边</span>
+        <span class="kw">else</span> r--;
+    }
+    <span class="kw">return</span> ans;
+}</pre>
+
+<h3>5.2 为什么「淘汰矮的」一定安全？</h3>
+
+<div class="proof">
+<h3>📐 盛水容器的剪枝正确性证明</h3>
+
+<p>设当前指针为 (L, R)，且 h[L] ≤ h[R]（左边更矮）。</p>
+
+<p><strong>断言：</strong>以 L 为左壁的<strong>任何</strong>容器 (L, R')（其中 L &lt; R' &lt; R），其面积 ≤ 当前面积 area(L, R)。</p>
+
+<p><strong>证明：</strong></p>
+<ol>
+  <li>area(L, R') = (R' - L) × min(h[L], h[R'])</li>
+  <li>因为 R' &lt; R，所以 (R' - L) &lt; (R - L)（宽度变小）</li>
+  <li>因为 h[L] ≤ h[R]，所以 min(h[L], h[R']) ≤ h[L]（高度受限于左壁）</li>
+  <li>因此 area(L, R') ≤ (R - L) × h[L] = area(L, R)</li>
+</ol>
+<p>所以<strong>左壁 L 的最优搭档就是当前 R</strong>（宽度最大时）。L 已经不可能贡献更大的面积了，可以安全地 l++ 淘汰它。</p>
+</div>
+
+<div class="box box-i">
+  <strong>与 Two Sum 的对比：</strong><br>
+  - Two Sum：移动规则由<strong>与 target 比较</strong>驱动（sum &lt; target → l++）<br>
+  - 盛水容器：移动规则由<strong>高度贪心</strong>驱动（谁矮淘汰谁）<br>
+  - 共同点：都能严格证明移动是安全的，不会错过最优解
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 模式二：读写指针 — 原地修改数组</h2>
+
+<h3>6.1 模板</h3>
+
+<pre><span class="cmt">// 读写指针通用模板（用于原地修改数组）</span>
+<span class="cmt">// slow: 下一个「已处理好的元素」应该放的位置</span>
+<span class="cmt">// fast: 当前正在扫描的元素</span>
+<span class="type">int</span> slow = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="type">int</span> fast = <span class="num">0</span>; fast &lt; n; fast++) {
+    <span class="kw">if</span> (<span class="cmt">/* nums[fast] 应该被保留 */</span>) {
+        nums[slow] = nums[fast];  <span class="cmt">// 搬到前面</span>
+        slow++;                     <span class="cmt">// 扩大「已处理」区域</span>
+    }
+}
+<span class="cmt">// 此时 slow 就是新数组的长度，[0, slow) 是处理结果</span></pre>
+
+<h3>6.2 不变量分析</h3>
+
+<div class="proof">
+<h3>📐 读写指针的循环不变量</h3>
+<p><strong>在每轮循环结束时：</strong></p>
+<ul>
+  <li><code>[0, slow)</code> 是<strong>已经处理好的元素</strong>，满足题目要求</li>
+  <li><code>[slow, fast]</code> 是<strong>已被覆盖/可废弃</strong>的元素</li>
+  <li><code>[fast+1, n)</code> 是<strong>尚未扫描</strong>的元素</li>
+</ul>
+<p>当 fast 扫描完整个数组后，[0, slow) 就是最终答案。</p>
+</div>
+
+<p>读写指针的优雅之处在于：<strong>fast 负责探索，slow 负责建设</strong>。fast 每到一处，根据规则决定要不要把 fast 处的东西「搬运」到 slow 处。</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 读写指针题 1：移动零</h2>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+  <strong>LeetCode 283. Move Zeroes（Hot 100）</strong><br>
+  给定 <code>nums = [0,1,0,3,12]</code>，将所有 0 移到末尾，同时保持<strong>非零元素的相对顺序</strong>。必须<strong>原地</strong>操作。
+</blockquote>
+
+<pre><span class="cmt">// 思路：slow 指向「下一个非零元素应该放的位置」</span>
+<span class="cmt">//       fast 扫描所有元素，遇到非零就搬到 slow 处</span>
+<span class="type">int</span> slow = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="type">int</span> fast = <span class="num">0</span>; fast &lt; n; fast++) {
+    <span class="kw">if</span> (nums[fast] != <span class="num">0</span>) {
+        <span class="fn">swap</span>(nums[slow], nums[fast]);  <span class="cmt">// 非零元素搬到前面</span>
+        slow++;
+    }
+}
+<span class="cmt">// 循环结束后，[0, slow) 全是非零，[slow, n) 全是零</span></pre>
+
+<div class="box box-d">
+  <strong>执行过程可视化（nums = [0,1,0,3,12]）：</strong><br>
+  fast=0: nums[0]=0 → 跳过，slow 仍为 0<br>
+  fast=1: nums[1]=1 → swap(0,1) → [1,0,0,3,12], slow=1<br>
+  fast=2: nums[2]=0 → 跳过<br>
+  fast=3: nums[3]=3 → swap(1,3) → [1,3,0,0,12], slow=2<br>
+  fast=4: nums[4]=12 → swap(2,4) → [1,3,12,0,0], slow=3<br>
+  结束：[0,3) = [1,3,12] 非零，[3,5) = [0,0] 全是零 ✅
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 读写指针题 2：删除有序数组中的重复项</h2>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+  <strong>LeetCode 26. Remove Duplicates from Sorted Array</strong><br>
+  给定有序数组，原地删除重复元素，返回新长度。
+</blockquote>
+
+<pre><span class="cmt">// 思路：[0, slow) 存放不重复的元素
+//       fast 扫描，遇到「不等于 nums[slow-1]」的数就保留</span>
+<span class="type">int</span> slow = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="type">int</span> fast = <span class="num">0</span>; fast &lt; n; fast++) {
+    <span class="kw">if</span> (slow == <span class="num">0</span> || nums[fast] != nums[slow - <span class="num">1</span>]) {
+        nums[slow] = nums[fast];
+        slow++;
+    }
+}
+<span class="kw">return</span> slow;</pre>
+
+<div class="box box-i">
+  <strong>变体推广：</strong>如果允许每个元素最多出现两次（80. Remove Duplicates II），只需把判断条件改为 <code>slow &lt; 2 || nums[fast] != nums[slow-2]</code>。读写指针的不变量论证可以自然地处理这类推广。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 易错点与调试技巧</h2>
+
+<h3>相向指针常犯的错误</h3>
+<table>
+<tr><th>错误</th><th>后果</th><th>正确做法</th></tr>
+<tr><td><code>while (l &lt;= r)</code></td><td>l==r 时单元素被当作一对（无意义）</td><td>用 <code>l &lt; r</code></td></tr>
+<tr><td>在 3Sum 中忘记内层去重</td><td>结果包含重复三元组</td><td>找到解后跳过所有相同的 l 和 r</td></tr>
+<tr><td>盛水容器：移动高的而不是矮的</td><td>可能错过最优解</td><td>证明过「淘汰矮的」才安全</td></tr>
+<tr><td>不小心同时移动两个指针</td><td>跳过潜在答案</td><td>每步只移动一个指针（除非找到答案）</td></tr>
+</table>
+
+<h3>读写指针常犯的错误</h3>
+<table>
+<tr><th>错误</th><th>后果</th><th>正确做法</th></tr>
+<tr><td>用 <code>nums[fast] != nums[fast-1]</code> 判断</td><td>当 fast 跳过元素后，fast-1 可能已被覆盖</td><td>用 <code>nums[fast] != nums[slow-1]</code></td></tr>
+<tr><td>忘记 slow 初始值</td><td>结果不正确</td><td>分析「已处理区域」的初始大小</td></tr>
+</table>
+
+<h3>调试口诀</h3>
+<pre><span class="cmt">// 相向指针卡住时，打印每步的 (l, r, nums[l], nums[r])</span>
+<span class="kw">while</span> (l &lt; r) {
+    <span class="cmt">// printf("l=%d r=%d nums[l]=%d nums[r]=%d\n", l, r, nums[l], nums[r]);</span>
+    <span class="cmt">// ...</span>
+}
+
+<span class="cmt">// 读写指针卡住时，打印每步的 (slow, fast) 和数组状态</span>
+<span class="kw">for</span> (<span class="type">int</span> fast = <span class="num">0</span>; fast &lt; n; fast++) {
+    <span class="cmt">// printf("slow=%d fast=%d | ", slow, fast);</span>
+    <span class="cmt">// for (int x : nums) printf("%d ", x); printf("\n");</span>
+}</pre>
+
+<!-- ============================================================ -->
+<h2 id="s10">10. 测验</h2>
+
+<div class="quiz" id="q1">
+<h3>Q1：相向指针的循环不变量是什么？</h3>
+<label><input type="radio" name="q1" value="a">A. nums[l] 和 nums[r] 的和一定等于 target</label>
+<label><input type="radio" name="q1" value="b">B. 如果存在答案，则答案的下标一定在 [l, r] 之间</label>
+<label><input type="radio" name="q1" value="c">C. l 和 r 一定分别指向最小和最大元素</label>
+<label><input type="radio" name="q1" value="d">D. 数组一定是从小到大排列的</label>
+<button onclick="checkQ1()">提交</button>
+<div class="fb" id="f1"></div>
+</div>
+
+<div class="quiz" id="q2">
+<h3>Q2：盛水容器问题中，如果 height[l] == height[r]，应该移动哪个？</h3>
+<label><input type="radio" name="q2" value="a">A. 一定移动左指针</label>
+<label><input type="radio" name="q2" value="b">B. 一定移动右指针</label>
+<label><input type="radio" name="q2" value="c">C. 移动任意一个都安全——两边高度相同，任意一边被淘汰都不会错过最优解</label>
+<label><input type="radio" name="q2" value="d">D. 此时应该停止循环</label>
+<button onclick="checkQ2()">提交</button>
+<div class="fb" id="f2"></div>
+</div>
+
+<div class="quiz" id="q3">
+<h3>Q3：读写指针中，为什么用 nums[fast] != nums[slow-1] 而不是 nums[fast] != nums[fast-1]？</h3>
+<label><input type="radio" name="q3" value="a">A. 两者等价，只是写法不同</label>
+<label><input type="radio" name="q3" value="b">B. 因为 slow-1 指向的是「已保留区域的最后一个元素」，它才是真正有效的比较对象；fast-1 指向的元素可能已经被覆盖或忽略了</label>
+<label><input type="radio" name="q3" value="c">C. 因为 fast 总是大于 slow</label>
+<label><input type="radio" name="q3" value="d">D. 因为题目要求必须用 slow-1</label>
+<button onclick="checkQ3()">提交</button>
+<div class="fb" id="f3"></div>
+</div>
+
+<!-- ============================================================ -->
+
+<h2>本课覆盖题目</h2>
+<table>
+<tr><th>题号</th><th>题目</th><th>模式</th><th>难度</th><th>复杂度</th></tr>
+<tr><td>167</td><td>Two Sum II — Input Array Is Sorted</td><td>相向指针</td><td>Easy</td><td>O(n) / O(1)</td></tr>
+<tr><td>15</td><td>3Sum 🌟</td><td>嵌套相向指针</td><td>Medium</td><td>O(n²) / O(1)</td></tr>
+<tr><td>11</td><td>Container With Most Water 🌟</td><td>相向+贪心</td><td>Medium</td><td>O(n) / O(1)</td></tr>
+<tr><td>283</td><td>Move Zeroes 🌟</td><td>读写指针</td><td>Easy</td><td>O(n) / O(1)</td></tr>
+<tr><td>26</td><td>Remove Duplicates from Sorted Array</td><td>读写指针</td><td>Easy</td><td>O(n) / O(1)</td></tr>
+</table>
+<p style="font-size:.85em;color:#666">🌟 = Hot 100</p>
+
+<h2>专项练习</h2>
+<ul>
+  <li>LeetCode 上独立 AC：167、15、11、283、26（目标 40 分钟内完成 5 题）</li>
+  <li>进阶：80. Remove Duplicates II（每个元素最多出现两次）、75. Sort Colors（荷兰旗三指针）</li>
+  <li>用自己的话写出相向指针的循环不变量证明（不要抄本文的）</li>
+  <li>预习：下一课将深入滑动窗口——一种特殊的同向双指针</li>
+</ul>
+
+<div class="box box-g">
+  <strong>💬 有问题？</strong>双指针的难点不在于代码（代码很短），而在于<strong>理解为什么对</strong>。如果你对某道题的指针移动规则有疑问，把具体的 (l, r, nums[l], nums[r]) 值发给我，我们来模拟每一步。
+</div>
+
+<div class="nav">
+  <a href="0001-brute-force-to-optimal.html">← 上一课：从暴力到最优</a>
+  <a href="0003-sliding-window.html">下一课：滑动窗口 →</a>
+</div>
+
+<script>
+function checkQ1(){var f=document.getElementById('f1');var s=document.querySelector('input[name="q1"]:checked');if(!s){f.textContent='请选择';f.className='fb incorrect';return}if(s.value==='b'){f.textContent='✅ 正确！不变量是：如果答案存在，则其下标 ∈ [l, r]。循环的每一步都保证「被移出区间的指针不可能是答案」。';f.className='fb correct'}else{f.textContent='❌ 再想想。不变量是关于搜索范围的断言——指针的移动不会把潜在答案排除在 [l, r] 之外。';f.className='fb incorrect'}}
+function checkQ2(){var f=document.getElementById('f2');var s=document.querySelector('input[name="q2"]:checked');if(!s){f.textContent='请选择';f.className='fb incorrect';return}if(s.value==='c'){f.textContent='✅ 正确！两边高度相同时，任意一边被淘汰都可以安全论证。所以移动哪边都行。';f.className='fb correct'}else{f.textContent='❌ 当 height[l]==height[r] 时，移动任意一个都已在代码中通过 else 分支处理。证明是对称的。';f.className='fb incorrect'}}
+function checkQ3(){var f=document.getElementById('f3');var s=document.querySelector('input[name="q3"]:checked');if(!s){f.textContent='请选择';f.className='fb incorrect';return}if(s.value==='b'){f.textContent='✅ 正确！[0, slow) 是已保留区域。判断 nums[fast] 是否重复，应该和已保留的最后一个元素（nums[slow-1]）比较。';f.className='fb correct'}else{f.textContent='❌ 想想 fast=2, slow=1 但 nums[1] 已经被覆盖的情况。fast-1 位置的值可能已不可靠。';f.className='fb incorrect'}}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0003 · 金融数据的本性</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.7; color: #1a1a1a; background: #fdfdfb; max-width: 720px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
+  .insight h3 { margin-top: 0; color: #8b5a20; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+  .danger { color: #c44; }
+</style>
+</head>
+<body>
+
+<h1>金融数据的本性</h1>
+<p class="meta">Lesson 0003 · 2026-06-15 · 预计 15 分钟</p>
+
+<p>
+  上节课我们学了用波动率衡量风险、用夏普比率比较策略——这些工具都隐含一个假设：
+  <strong>收益率服从正态分布。</strong> 但真实的金融数据不是正态的。差得很远。这节课就来拆解金融数据的三个核心特征——肥尾、波动率聚集、相关性不稳定——以及它们为什么对量化策略至关重要。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回顾·上节课</h3>
+  <ol style="padding-left:1.2rem; margin-bottom:0;">
+    <li>量化分析中为什么默认用对数收益率而不是简单收益率？</li>
+    <li>夏普比率为 1 是什么意思？</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、肥尾：极端事件比你想象的多得多</h2>
+
+<p>
+  正态分布告诉你：日收益率超过 3 个标准差的事件，理论上约 370 个交易日才发生一次。超过 5 个标准差？约 7000 年一次。
+</p>
+
+<p><strong>现实呢？</strong></p>
+
+<div class="card">
+  <h3>BTC 的"应该千年一遇"事件</h3>
+  <table>
+    <tr><th>日期</th><th>日收益率</th><th>相当于几个 σ</th><th>正态分布说</th></tr>
+    <tr><td>2020-03-12</td><td>−37%</td><td>~8σ</td><td>宇宙寿命内不应发生</td></tr>
+    <tr><td>2021-05-19</td><td>−14%</td><td>~4σ</td><td>约 16,000 年一次</td></tr>
+    <tr><td>2022-11-09</td><td>−15%（FTX）</td><td>~4.5σ</td><td>约 150,000 年一次</td></tr>
+  </table>
+  <p style="margin-bottom:0;">三年内出现了三次「理论上几万年才该来一次」的事件。不是运气差——是假设本身就错了。</p>
+</div>
+
+<p>
+  <strong>肥尾的本质</strong>：真实收益率分布在中间（±1σ）比正态分布略窄，但在两端的极端值比正态分布多得多——尾部比正态"肥"。这意味着：
+</p>
+
+<div class="insight">
+  <h3>⚡ 对量化的影响</h3>
+  <ul style="padding-left:1.2rem;">
+    <li>基于正态假设的 VaR（风险价值）严重低估真实风险</li>
+    <li>回测中看起来稳定的策略，可能在一次 5σ 事件中爆仓</li>
+    <li>基于均值-方差（mean-variance）的优化会把钱配置给尾部风险最大的资产</li>
+  </ul>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈：肥尾的极端案例</h3>
+  <p style="margin-bottom:0;">美股也有肥尾（1987 年黑色星期一约 −20%，~20σ），但币圈的尾部更肥。原因包括：杠杆清算链式反应、交易所挤兑、监管新闻的瞬时冲击。在币圈做量化，如果不考虑尾部风险，策略的生命周期通常不超过一个完整的牛熊周期。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>二、波动率聚集：风险和收益的时间结构</h2>
+
+<p>
+  正态假设的另一个隐含前提：每天的收益率<strong>相互独立</strong>——今天的波动和昨天无关，每天的方差都一样。
+</p>
+
+<p>这也是错的。看你熟悉的 BTC：</p>
+
+<div class="card">
+  <p style="margin-bottom:0;">
+    2021 年牛市 → 日波动 4-6%<br>
+    2023 年横盘 → 日波动 1-2%<br>
+    <strong>高波动时段聚集在一起，低波动时段也聚集在一起。</strong>
+  </p>
+</div>
+
+<p>
+  这就是<strong>波动率聚集</strong>：市场不是随机地在「平静」和「狂暴」之间跳来跳去——<strong>平静之后大概率还是平静，狂暴之后大概率继续狂暴。</strong>
+</p>
+
+<div class="insight">
+  <h3>⚡ 对量化的影响</h3>
+  <ul style="padding-left:1.2rem;">
+    <li>用一个常数波动率（如历史 1 年的 std）来衡量当前风险是错误的——当前波动率可能远高于或远低于这个常数</li>
+    <li>策略的仓位应该<strong>动态调整</strong>——高波动时降仓位，低波动时可以适当放大</li>
+    <li>这就是为什么 GARCH 模型和 EWMA（指数加权移动平均）在金融中如此重要——它们给近期数据更高权重</li>
+  </ul>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈：波动率季节</h3>
+  <p style="margin-bottom:0;">币圈的波动率聚集有清晰的宏观驱动：减半周期前后、监管政策密集期、杠杆清算潮——这些不是随机噪声，而是<strong>可预期的波动率聚集。</strong>理解这个，是币圈量化最大的 edge 来源之一。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、相关性不是常数</h2>
+
+<p>
+  最后这个对策略设计影响最大。我们通常用相关系数来衡量两个资产「同涨同跌」的程度。这个系数通常是这样算的：
+</p>
+
+<div class="card">
+  <p style="margin-bottom:0;"><strong>「过去 12 个月，BTC 和 ETH 的相关系数是 0.72。」</strong></p>
+</div>
+
+<p>问题是这个 0.72 在下一场危机中毫无意义：</p>
+
+<table>
+  <tr><th>时期</th><th>BTC-ETH 相关系数</th></tr>
+  <tr><td>2020 年牛市</td><td>~0.65</td></tr>
+  <tr><td>2021 年 5 月暴跌</td><td>~0.90</td></tr>
+  <tr><td>2022 年 FTX 崩盘</td><td>~0.95</td></tr>
+</table>
+
+<p><strong>危机来临时，相关性趋近于 1。</strong> 你以为分散了风险（买了 BTC + ETH），崩盘时它们一起暴跌——所谓的「分散化」在市场最需要它的时候消失了。</p>
+
+<div class="insight">
+  <h3>⚡ 对量化的影响</h3>
+  <ul style="padding-left:1.2rem;">
+    <li>基于历史相关性的组合优化（均值-方差）在危机中失效</li>
+    <li>不要用相关性矩阵来评估真实分散化程度——要看你持仓背后的共同风险因子</li>
+    <li>真正有效的分散化是跨因子的（如：趋势跟踪 + 波动率套利 + 资金费率），而不是同一因子上换标的</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、总结：这三个特性合在一起意味着什么</h2>
+
+<div class="card">
+  <table>
+    <tr><th>教科书假设</th><th>现实</th><th>后果</th></tr>
+    <tr><td>收益率服从正态分布</td><td><strong>肥尾</strong></td><td>极端回撤比模型预测频繁得多</td></tr>
+    <tr><td>波动率是常数</td><td><strong>波动率聚集</strong></td><td>静态仓位管理会在大波动中被击穿</td></tr>
+    <tr><td>相关性稳定</td><td><strong>危机时趋向 1</strong></td><td>表面分散化在熊市中消失</td></tr>
+  </table>
+</div>
+
+<p>
+  这也是为什么纯学术的量化方法（比如直接套用 Markowitz 均值-方差模型）在实盘中常常翻车。
+  实战量化需要在每一步都考虑这些真实数据特性。
+</p>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 「肥尾」指的是什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">收益率分布的中位数偏离正态</span>
+    <span class="opt" data-answer="correct">极端收益率的发生频率远高于正态分布的预测</span>
+    <span class="opt" data-answer="wrong">价格长期呈上涨趋势</span>
+    <span class="opt" data-answer="wrong">波动率缓慢下降</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 波动率聚集意味着什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">波动率长期趋向于均值</span>
+    <span class="opt" data-answer="correct">高波动之后更可能继续高波动，低波动之后更可能继续低波动</span>
+    <span class="opt" data-answer="wrong">所有资产的波动率最终会趋于一致</span>
+    <span class="opt" data-answer="wrong">波动率以年为单位周期性循环</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. （回顾）两个策略夏普比率一样，但一个最大回撤 15%，另一个 55%。可能的原因是？</p>
+  <div class="options">
+    <span class="opt" data-answer="correct">第二个策略收益率有更肥的尾部，均值掩盖了极端事件</span>
+    <span class="opt" data-answer="wrong">夏普比率算错了</span>
+    <span class="opt" data-answer="wrong">最大回撤不影响夏普，所以无法解释</span>
+    <span class="opt" data-answer="wrong">第二个策略收益均值更高</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. 你同时持有 BTC 和 ETH 来「分散风险」。这个策略最大的问题是什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">这两种资产的夏普比率太低</span>
+    <span class="opt" data-answer="correct">危机时它们的相关性趋向于 1，分散效果在最需要时消失</span>
+    <span class="opt" data-answer="wrong">流动性不足</span>
+    <span class="opt" data-answer="wrong">交易费用太高</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 推荐阅读</h3>
+  <p><strong>Nassim Taleb —《黑天鹅》(The Black Swan)</strong>，特别是第三部分：「极端斯坦与平均斯坦」。</p>
+  <p>Taleb 不是量化交易者，但他对肥尾世界的阐述比大多数量化教材更深刻。这本书会改变你看待风险和概率的方式。</p>
+</div>
+
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 进阶论文</h3>
+  <p><strong>Cont, Rama (2001) — "Empirical Properties of Asset Returns: Stylized Facts and Statistical Issues"</strong></p>
+  <p>这篇论文系统总结了金融收益率数据的统计特征（stylized facts），包括肥尾、波动率聚集、杠杆效应等。量化研究者必读。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="reminder">
+  <strong>💬 有问题随时问。</strong> 肥尾、波动率聚集和相关性的概念一旦真正理解，你再看任何回测报告、策略曲线、风险指标，都会多一层批判性思维——「这些数字背后有没有被肥尾忽悠？」
+</div>
+
+<div class="nav">
+  上一课：<a href="0002-returns-and-risk.html">0002 · 收益与风险</a><br>
+  下一课预告：<a href="#">0004 · 时间序列基础——趋势、平稳性与均值回归</a><br>
+  参考资料：<a href="../reference/glossary.html">金融术语表</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

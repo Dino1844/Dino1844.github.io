@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0004 · 时间序列基础</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.7; color: #1a1a1a; background: #fdfdfb; max-width: 720px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
+  .insight h3 { margin-top: 0; color: #8b5a20; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .formula { text-align: center; font-size: 1.1rem; margin: 1.2rem 0; font-family: 'Inter', sans-serif; color: #333; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+</style>
+</head>
+<body>
+
+<h1>时间序列基础</h1>
+<p class="meta">Lesson 0004 · 2026-06-15 · 预计 15 分钟</p>
+
+<p>
+  前几课我们把收益率当作一串独立的数字来分析（算均值、算标准差）。但金融数据最核心的特征——也是量化策略的源头——是<strong>它们在时间上不独立</strong>。今天的收益率和昨天有关系。这节课就来建立时间序列的三个基本概念——趋势、平稳性、均值回归——每个量化策略归根结底都在利用其中至少一个。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回顾·上节课</h3>
+  <ol style="padding-left:1.2rem; margin-bottom:0;">
+    <li>「肥尾」对夏普比率的最大威胁是什么？</li>
+    <li>波动率聚集意味着我们应该用什么样的波动率估计？（等权还是不等权）</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、自相关：今天的收益在告诉你明天的什么</h2>
+
+<p>
+  时间序列的核心问题只有一个：<strong>过去的观测值能否预测未来？</strong>
+</p>
+
+<p>统计学上，这个问题通过<strong>自相关</strong>来回答：</p>
+
+<div class="formula">
+  自相关(lag=k) = Corr(r<sub>t</sub>, r<sub>t−k</sub>)
+</div>
+
+<p>
+  你拿今天的收益率，和 1 天前、2 天前、5 天前的收益率分别算相关系数。如果 lag=1 的自相关是正的，意味着「昨天涨，今天更可能继续涨」——这就是<strong>趋势</strong>的数学本质。如果 lag=1 的自相关是负的，意味着「昨天涨，今天更可能跌」——这是<strong>均值回归</strong>的数学本质。
+</p>
+
+<div class="card">
+  <h3>金融数据中自相关的典型模式</h3>
+  <table>
+    <tr><th>Lag</th><th>BTC 日收益自相关</th><th>解读</th></tr>
+    <tr><td>1 天</td><td>~0.02（接近零）</td><td>日级别几乎没有可预测性</td></tr>
+    <tr><td>5 天</td><td>~0.05（微弱正向）</td><td>周级别有极微弱趋势</td></tr>
+    <tr><td>20 天</td><td>~0.08（弱正向）</td><td>月度趋势开始可见</td></tr>
+  </table>
+  <p style="margin-bottom:0;">
+    注意一个关键事实：<strong>收益率本身的自相关通常很弱。</strong>如果日收益有很强的自相关，那所有人都能用它赚钱，这个信号会迅速被套利消除。
+  </p>
+</div>
+
+<p>
+  但<strong>波动率的自相关非常强</strong>——这就是上节课的波动率聚集，后面会再回到这个话题。
+</p>
+
+<!-- ============================================================ -->
+<h2>二、趋势：当价格有「惯性」</h2>
+
+<p>
+  <strong>趋势</strong>在数学上就是正的自相关：上涨之后更可能继续上涨，下跌之后更可能继续下跌。这不是金融理论该预测的东西（有效市场假说认为价格应该随机游走），但它是金融历史上最稳健的经验规律之一——<strong>动量效应</strong>在几乎所有资产类别、几乎所有时间尺度上都存在。
+</p>
+
+<div class="card">
+  <h3>趋势为什么存在？</h3>
+  <p>学术界争论了几十年，没有定论。但有三个主流解释：</p>
+  <ol>
+    <li style="margin-bottom:0.4rem;"><strong>信息传播缓慢</strong>——重大消息不是瞬间被所有人消化，而是逐步扩散。早期反应者买入 → 价格上涨 → 后来者跟随 → 继续上涨。</li>
+    <li style="margin-bottom:0.4rem;"><strong>行为偏差</strong>——投资者倾向于外推近期趋势（"这个币在涨，还会继续涨"）。锚定效应和处置效应加强了趋势。</li>
+    <li><strong>风险补偿</strong>——趋势跟踪策略在市场崩盘时表现好（做空），但在震荡市中回撤严重。趋势溢价可能是对「承受震荡期痛苦」的补偿。</li>
+  </ol>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈：趋势的放大版</h3>
+  <p style="margin-bottom:0;">币圈的动量效应比传统市场更强。原因：散户占比高（行为偏差更大）、信息不对称严重（叙事传播慢）、杠杆正反馈循环（涨 → 空头被清算 → 强制买入 → 继续涨）。在币圈，简单的移动平均交叉策略历史上比在股票市场效果好得多——但也意味着趋势突然断裂时的反转也更猛烈。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、平稳性：建模的入场券</h2>
+
+<p>这是时间序列分析中最重要但也最容易被忽视的概念。</p>
+
+<p><strong>平稳</strong>意味着序列的统计性质（均值、方差、自相关）不随时间变化。下图帮助理解：</p>
+
+<div class="card">
+  <table>
+    <tr><th>序列类型</th><th>均值</th><th>方差</th><th>举例</th><th>能否直接建模</th></tr>
+    <tr><td>严格平稳</td><td>恒定</td><td>恒定</td><td>日收益率</td><td>✅ 可以</td></tr>
+    <tr><td>趋势平稳</td><td>随时间变化</td><td>可能恒定</td><td>价格（长期上涨）</td><td>❌ 需先去趋势</td></tr>
+    <tr><td>非平稳</td><td>变化</td><td>变化</td><td>有结构性变化的序列</td><td>❌ 需差分/变换</td></tr>
+  </table>
+</div>
+
+<div class="insight">
+  <h3>⚡ 关键直觉</h3>
+  <p style="margin-bottom:0;"><strong>价格是非平稳的。</strong>BTC 五年前 $10,000，现在 $60,000——均值变了，方差也变了。这意味着你不能直接用价格建模。但 <strong>收益率通常是平稳的</strong>——BTC 的日收益率五年前是 ±4%，现在还是 ±4%。这就是为什么量化分析中一切从收益率出发，而不是从价格出发。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、均值回归：趋势的反面</h2>
+
+<p>
+  <strong>均值回归</strong>在数学上就是负的自相关：偏离均值后，有回到均值的倾向。如果趋势是「惯性」，均值回归就是「弹簧」。
+</p>
+
+<div class="two-col">
+  <div>
+    <p><strong>趋势策略：</strong></p>
+    <p>买涨的，卖跌的<br>追着价格走</p>
+  </div>
+  <div>
+    <p><strong>均值回归策略：</strong></p>
+    <p>买跌的，卖涨的<br>赌价格弹回来</p>
+  </div>
+</div>
+
+<p>两种策略在不同时间尺度上成立：</p>
+
+<table>
+  <tr><th>时间尺度</th><th>主导效应</th><th>策略方向</th></tr>
+  <tr><td>秒 ~ 分钟（微观结构）</td><td>均值回归</td><td>Bid-Ask 弹跳，做市商赚价差</td></tr>
+  <tr><td>小时 ~ 天</td><td>混合，不稳定</td><td>难以捕捉</td></tr>
+  <tr><td>周 ~ 月（中频）</td><td>趋势（动量）</td><td>趋势跟踪，移动平均线</td></tr>
+  <tr><td>月 ~ 年（低频）</td><td>均值回归</td><td>价值因子（PE 回归均值等）</td></tr>
+</table>
+
+<div class="crypto-note">
+  <h3>🔗 币圈：均值回归在哪？</h3>
+  <p style="margin-bottom:0;">币圈的均值回归机会集中在两类场景：（1）<strong>资金费率极端值</strong>——费率飙升后通常均值回归，因为套利者进场；（2）<strong>跨交易所价差</strong>——同一个币在不同 CEX 上的价格会短暂偏离，然后迅速回归。中频趋势（周~月）仍然是币圈一致性最强的 alpha 来源。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>五、整合：一个策略的本质</h2>
+
+<p>现在可以把任何量化策略拆解为它在利用时间序列的哪个性质：</p>
+
+<div class="card">
+  <table>
+    <tr><th>策略类别</th><th>利用的性质</th><th>一句话</th></tr>
+    <tr><td>趋势跟踪（时间序列动量）</td><td>正自相关</td><td>涨了做多，跌了做空</td></tr>
+    <tr><td>横截面动量</td><td>相对强度的自相关</td><td>在一堆资产里做多最强的、做空最弱的</td></tr>
+    <tr><td>均值回归（反转）</td><td>负自相关</td><td>涨多了空它，跌多了买它</td></tr>
+    <tr><td>做市 / HFT</td><td>极短尺度均值回归</td><td>两边挂单赚 Bid-Ask 价差</td></tr>
+    <tr><td>波动率目标</td><td>波动率自相关</td><td>高波动自动降仓，低波动放大仓位</td></tr>
+    <tr><td>GARCH / 波动率预测</td><td>波动率自相关</td><td>预测未来颠簸程度，辅助仓位管理</td></tr>
+    <tr><td>协整 / 配对交易</td><td>价差平稳</td><td>两个资产价差偏离后赌回归</td></tr>
+    <tr><td>Carry（资金费率套利等）</td><td>利差持续性</td><td>做空高费率合约 + 现货对冲，稳吃费率</td></tr>
+    <tr><td>波动率套利</td><td>隐含波动率 > 实际波动率</td><td>卖期权 + 动态对冲，赚「保险费」</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>新增详解</h3>
+
+  <p><strong>横截面动量</strong>——和时间序列动量的区别：时间序列动量只看「这个币自己过去涨没涨」；横截面动量看「这个币在同类里排名第几」。学术发现横截面动量的夏普通常比时间序列动量更高，因为做多强势资产 + 做空弱势资产天然对冲了市场 beta。</p>
+
+  <p><strong>波动率目标</strong>——不是预测方向。你设定一个目标波动率（如 20%），当前波动率高就降仓，低就加仓。逻辑：波动率聚集 → 今天高波动明天大概率也高 → 今天降仓明天少亏。这东西简单到只有一行公式，但加在任何趋势策略上都能提升夏普 0.2-0.3。</p>
+
+  <p><strong>Carry（套息/利差）</strong>——不赌方向，赌「资本是有成本的」。币圈最典型的就是资金费率套利：做空高费率的永续合约同时现货买入对冲，每 8 小时稳吃费率。费率存在持续溢价（因为投机者愿意付），套利者赚的就是这个溢价。</p>
+
+  <p><strong>波动率套利</strong>——期权领域策略。市场对期权的定价（隐含波动率）系统性高于实际发生的波动率——相当于人们习惯性多付保险费来买保护。策略做空期权同时动态对冲 delta，赚这个溢价。需要期权定价知识，后续课程会覆盖。</p>
+</div>
+
+<p>这个框架是你未来学习每个具体策略时的参照系——看到一个策略，先问：「它在赌什么性质？什么情况下这个假设会崩？」</p>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 量化分析中从收益率出发而不从价格出发，最根本的原因是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">收益率数据更小，好计算</span>
+    <span class="opt" data-answer="correct">价格非平稳而收益率通常平稳</span>
+    <span class="opt" data-answer="wrong">交易所只提供收益率数据</span>
+    <span class="opt" data-answer="wrong">收益率去掉了通胀影响</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 你发现一个策略在分钟级数据上巨亏但在日线上大赚。最可能的解释是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">数据有错误</span>
+    <span class="opt" data-answer="correct">分钟级以均值回归为主，日线以趋势为主——策略可能是一个趋势跟踪策略</span>
+    <span class="opt" data-answer="wrong">过拟合</span>
+    <span class="opt" data-answer="wrong">交易费用在分钟级更高</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. （回顾）「波动率聚集」在自相关视角下意味着什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="correct">收益率平方或绝对值的自相关性很强且为正</span>
+    <span class="opt" data-answer="wrong">收益率的自相关很强且为正</span>
+    <span class="opt" data-answer="wrong">收益率没有任何自相关</span>
+    <span class="opt" data-answer="wrong">价格的自相关为负</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. 资金费率从 −0.01% 飙升到 +0.15%，你预计接下来？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">费率会持续攀升，趋势为王</span>
+    <span class="opt" data-answer="correct">费率更可能均值回归——套利者被高费率吸引进场，压低费率</span>
+    <span class="opt" data-answer="wrong">费率会保持在高位</span>
+    <span class="opt" data-answer="wrong">无法判断</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 推荐阅读</h3>
+  <p><strong>Tsay, Ruey S. —《金融时间序列分析》(Analysis of Financial Time Series)</strong>，第 1–2 章。</p>
+  <p>量化金融领域时间序列分析的标准教材。前两章用清晰的例子讲了平稳性、自相关函数（ACF）和随机游走，是通往后面所有高级模型（ARIMA、GARCH、协整）的必经之路。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="reminder">
+  <strong>💬 有问题随时问。</strong> 自相关的计算、平稳性检验（ADF 检验是怎么做的）、趋势和均值回归的边界在哪里——任何一点都可以深挖。下一课会进入概率与分布，这些时间序列概念会在那里和「随机过程」对接。</div>
+
+<div class="nav">
+  上三课：<a href="0001-financial-markets-basics.html">0001 · 市场基础</a> &nbsp;|&nbsp;
+  <a href="0002-returns-and-risk.html">0002 · 收益与风险</a> &nbsp;|&nbsp;
+  <a href="0003-nature-of-financial-data.html">0003 · 金融数据的本性</a><br>
+  下一课预告：<a href="#">0005 · 概率与分布——从正态到极值</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 4 课：IP 网络层 —— 跨越网络的逐跳路由</title>
+<style>
+  :root {
+    --bg: #fffff8; --text: #111; --muted: #666; --accent: #c44; --link: #246;
+    --rule: #ddd; --highlight: #fff8e1; --code-bg: #f4f4f0; --box-bg: #fafaf5;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "Songti SC", Georgia, "Times New Roman", serif;
+    background: var(--bg); color: var(--text); line-height: 1.75;
+  }
+  article { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: 0.03em; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.2rem; margin: 2.2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--rule); color: #333; }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 0.5rem; color: #444; }
+  p { margin: 0.8rem 0; }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.92em; font-family: "JetBrains Mono", "Fira Code", "SF Mono", monospace; }
+  pre { background: var(--code-bg); padding: 0.8rem 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; margin: 1rem 0; }
+  pre code { background: none; padding: 0; }
+
+  .sidenote {
+    background: var(--highlight); border-left: 3px solid #e6c840;
+    padding: 0.6rem 1rem; margin: 1rem 0; font-size: 0.88rem; color: #5a4a20;
+  }
+  .sidenote strong { color: #8a6d20; }
+
+  .stack-indicator {
+    margin: 1.5rem 0; display: flex; flex-direction: column; align-items: center; font-size: 0.82rem;
+  }
+  .stack-indicator .layer {
+    padding: 0.35rem 3rem; border: 1px solid var(--rule); margin: 1px 0;
+    border-radius: 3px; background: #fff; color: var(--muted);
+  }
+  .stack-indicator .layer.current {
+    background: #2c3e50; color: #fff; font-weight: 600; border-color: #2c3e50;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+  th { background: #f5f5f0; padding: 0.5rem 0.7rem; text-align: left; border-bottom: 2px solid var(--rule); font-weight: 600; }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--rule); }
+
+  /* Hop animation */
+  .hop-diagram {
+    margin: 1.5rem 0; overflow-x: auto; padding: 0.5rem 0;
+  }
+  .hop-row {
+    display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem;
+    font-family: "JetBrains Mono", "Fira Code", monospace; margin: 0.4rem 0;
+  }
+  .hop-row .node {
+    background: #e8eef4; border: 1px solid #bcc8d8; border-radius: 4px;
+    padding: 0.35rem 0.5rem; white-space: nowrap;
+  }
+  .hop-row .arrow { color: var(--accent); font-weight: 700; }
+  .hop-row .label { font-size: 0.72rem; color: var(--muted); }
+
+  .sup { margin: 2rem 0; padding: 1.5rem; border: 2px dashed var(--rule); border-radius: 8px; background: #fafdf8; }
+  .sup h2 { border: none; margin-top: 0; color: #5a8a3a; }
+  .sup h3 { color: #5a8a3a; }
+  .quiz {
+    margin: 2.5rem 0; padding: 1.5rem; border: 1px solid var(--rule);
+    border-radius: 6px; background: #fdfdf8;
+  }
+  .quiz h2 { margin-top: 0; border: none; padding-bottom: 0; }
+  .quiz .q { margin: 1.2rem 0; }
+  .quiz .q > p { font-weight: 600; margin-bottom: 0.3rem; }
+  .quiz .q label { display: block; padding: 0.35rem 0; cursor: pointer; font-size: 0.9rem; }
+  .quiz .q input[type="radio"] { margin-right: 0.5rem; }
+  .quiz button {
+    margin-top: 1rem; padding: 0.5rem 1.5rem;
+    background: var(--accent); color: #fff; border: none; border-radius: 4px;
+    cursor: pointer; font-size: 0.9rem; font-family: inherit;
+  }
+  .quiz button:hover { opacity: 0.9; }
+  .quiz .feedback { margin-top: 0.5rem; font-size: 0.88rem; min-height: 1.5rem; }
+  .quiz .feedback.correct { color: #2a7d2a; }
+  .quiz .feedback.incorrect { color: #c44; }
+
+  .lesson-nav {
+    display: flex; justify-content: space-between; margin-top: 3rem;
+    padding-top: 1.5rem; border-top: 1px solid var(--rule); font-size: 0.9rem;
+  }
+  .source-box {
+    margin: 2rem 0; padding: 1rem 1.2rem;
+    background: #f0f4f8; border-radius: 6px; font-size: 0.9rem;
+  }
+  .source-box h3 { margin-top: 0; }
+
+  /* CIDR visual */
+  .cidr-visual {
+    display: flex; margin: 1rem 0; font-family: "JetBrains Mono", monospace;
+    font-size: 1rem; flex-wrap: wrap; gap: 1px;
+  }
+  .cidr-visual .bit {
+    width: 1.6rem; height: 1.8rem; display: flex; align-items: center;
+    justify-content: center; border-radius: 2px; font-size: 0.85rem;
+  }
+  .cidr-visual .bit.net { background: #d4e0f0; color: #246; }
+  .cidr-visual .bit.host { background: #f0e8d4; color: #864; }
+</style>
+</head>
+<body>
+
+<article>
+
+<h1>第 4 课：IP 网络层 —— 跨越网络的逐跳路由</h1>
+<div class="meta">
+  计算机网络 · <a href="../index.html">← 概念地图</a> · 约 25 分钟 ·
+  <a href="../reference/glossary.html">术语表</a>
+</div>
+
+<div class="stack-indicator">
+  <div class="layer">应用层 &nbsp; HTTP · DNS · TLS</div>
+  <div class="layer">传输层 &nbsp; TCP · UDP</div>
+  <div class="layer current">◀ 网络层 &nbsp; IP · BGP · OSPF ◀ 本课</div>
+  <div class="layer">链路层 &nbsp; Ethernet · ARP · MAC</div>
+  <div class="layer">物理层 &nbsp; 网线 · 光纤 · 无线电</div>
+</div>
+
+<p>
+  你已经知道：链路层用 MAC 地址在同一个局域网里传帧，MAC 地址出不了局域网。那么问题来了——<strong>一个包要从北京的笔记本电脑发到旧金山的服务器，中间要经过十几个不同的局域网，怎么知道每一跳该往哪走？</strong>
+</p>
+
+<p>这就是网络层（IP 层）的全部工作。</p>
+
+<div class="sidenote">
+  <strong>🎯 本课目标：</strong>理解 IP 地址的分层结构、CIDR 子网划分、路由表的查找逻辑、BGP/OSPF 两种路由协议的分工、NAT 的原理与代价，以及 traceroute 如何利用 TTL 探测路径。学完后你应该能解释「一个 IP 包从北京到旧金山，每一跳到底发生了什么」。
+</div>
+
+<!-- ==================== IP ADDRESS ==================== -->
+
+<h2>1. IP 地址 —— 分层的全球定位系统</h2>
+
+<p>
+  和 MAC 地址不同，IP 地址是<strong>分层的</strong>。一个 IPv4 地址 32 位，分成两部分：
+</p>
+
+<pre><code>192.168.1.5  =  11000000 10101000 00000001 00000101
+
+如果前 24 位是网络号：
+  └─────── 网络号 ───────┘└── 主机号 ──┘
+  11000000 10101000 00000001   00000101</code></pre>
+
+<p>
+  分层的含义：<strong>同一网络内的所有 IP，前缀一样。</strong>就像同一个小区的所有房间，地址都从「XX 路 XX 小区」开始，快递员不需要知道每个房间在哪，只需要知道怎么把货送到这个小区。
+</p>
+
+<p>路由器的核心逻辑就是：<strong>只看网络号，不管主机号。</strong>一个路由器不用记住地球上每台设备的 IP，只需要知道「去某个网段该走哪个出口」。</p>
+
+<h3>CIDR：无类别域间路由</h3>
+
+<p>
+  <code>192.168.1.0/24</code> 表示「前 24 位是网络号，后 8 位是主机号」。这就是 CIDR 记法。它能表示的地址范围：
+</p>
+
+<div class="cidr-visual">
+  <span class="bit net">1</span><span class="bit net">1</span><span class="bit net">0</span><span class="bit net">0</span>
+  <span class="bit net">0</span><span class="bit net">0</span><span class="bit net">0</span><span class="bit net">0</span>
+  <span class="bit net">1</span><span class="bit net">0</span><span class="bit net">1</span><span class="bit net">0</span>
+  <span class="bit net">1</span><span class="bit net">0</span><span class="bit net">0</span><span class="bit net">0</span>
+  <span class="bit net">0</span><span class="bit net">0</span><span class="bit net">0</span><span class="bit net">0</span>
+  <span class="bit net">0</span><span class="bit net">0</span><span class="bit net">0</span><span class="bit net">0</span>
+  <span class="bit net">0</span><span class="bit net">1</span>
+  <span class="bit host">0</span><span class="bit host">0</span><span class="bit host">0</span><span class="bit host">0</span>
+  <span class="bit host">0</span><span class="bit host">1</span><span class="bit host">0</span><span class="bit host">1</span>
+</div>
+<div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;">
+  <span style="color:#246;">■</span> 网络号（24 位 = 蓝色，路由器关心的）&nbsp;&nbsp;
+  <span style="color:#864;">■</span> 主机号（8 位 = 土色，路由器不关心的）&nbsp;&nbsp;
+  范围：192.168.1.0 – 192.168.1.255
+</div>
+
+<p>CIDR 的好处：路由表里不需要为 192.168.1.1、192.168.1.2……各写一条，<strong>一条 <code>192.168.1.0/24</code> 就覆盖了 256 个地址</strong>。这就是路由表能保持较小的秘诀——前缀聚合。</p>
+
+<div class="sidenote">
+  <strong>📍 关键对照：</strong>IP 地址是分层的（XX 网段 / XX 主机），所以路由表可以聚合，能支持全球规模。MAC 地址是扁平的，所以交换机 MAC 表没法聚合，只能支持局域网规模。这是整个互联网可扩展性的基础。
+</div>
+
+<!-- ==================== ROUTING ==================== -->
+
+<h2>2. 路由表 —— 最长前缀匹配</h2>
+
+<p>每台路由器（以及你的电脑）都有一张路由表。核心逻辑极其简单：</p>
+
+<pre><code>目标 IP 包到了 → 查路由表 → 看哪个条目匹配 → 从对应接口发出去</code></pre>
+
+<p>路由表大概长这样（简化）：</p>
+
+<table>
+  <tr><th>目标网段</th><th>下一跳</th><th>出口接口</th></tr>
+  <tr><td>192.168.1.0/24</td><td>（直连）</td><td>eth0</td></tr>
+  <tr><td>10.0.0.0/8</td><td>10.0.0.1</td><td>eth1</td></tr>
+  <tr><td>0.0.0.0/0</td><td>192.168.1.1（网关）</td><td>eth0</td></tr>
+</table>
+
+<p>查表规则叫<strong>最长前缀匹配</strong>：一条 IP 包的目的地址可能匹配多条路由，<strong>选前缀最长的（最具体的）那条</strong>。</p>
+
+<p>比如目标 IP 是 <code>192.168.1.5</code>：它同时匹配第 1 条（/24）和第 3 条（/0）。选第 1 条——/24 比 /0 更具体。<code>0.0.0.0/0</code> 是默认路由，匹配所有地址但优先级最低——相当于「实在不知道往哪走，就丢给网关」。</p>
+
+<div class="sidenote">
+  <strong>💡 查看你自己的路由表：</strong>终端里打 <code>ip route</code> 或 <code>route -n</code>。你会看到一条 <code>0.0.0.0/0</code> 指向你的路由器（通常是 192.168.1.1）——这就是你上网的「默认出口」。
+</div>
+
+<!-- ==================== HOP BY HOP ==================== -->
+
+<h2>3. 逐跳转发 —— 每一跳 MAC 变，IP 不变</h2>
+
+<p>这是最核心的图景。假设主机 A 在北京（192.168.1.5）ping 服务器 B 在旧金山（203.0.113.10）：</p>
+
+<div class="hop-diagram">
+  <div class="hop-row">
+    <span class="node">A<br>192.168.1.5<br>MAC: aa</span>
+    <span class="arrow">→ 帧 →</span>
+    <span class="node">R1<br>（网关）<br>MAC: bb</span>
+    <span class="arrow">→ 帧 →</span>
+    <span class="node">R2<br>（ISP）<br>MAC: cc</span>
+    <span class="arrow">→ … →</span>
+    <span class="node">R-N<br>（最后一跳）<br>MAC: xx</span>
+    <span class="arrow">→ 帧 →</span>
+    <span class="node">B<br>203.0.113.10<br>MAC: zz</span>
+  </div>
+  <div class="hop-row" style="margin-top:0.5rem;">
+    <span class="label">源 IP: 192.168.1.5 → 目的 IP: 203.0.113.10（始终不变）</span>
+  </div>
+  <div class="hop-row">
+    <span class="label">源 MAC: aa→bb</span>
+    <span class="label" style="margin-left:30px;">源 MAC: bb→cc</span>
+    <span class="label" style="margin-left:36px;">源 MAC: xx→zz</span>
+  </div>
+</div>
+
+<p>这个图里藏着网络层最重要的设计洞见：</p>
+
+<ul>
+  <li><strong>IP 地址端到端不变</strong>——源 IP 和目的 IP 在整个旅程中始终如一。这就是"逻辑地址"的含义：它标识「最终目的地」的身份</li>
+  <li><strong>MAC 地址逐跳重写</strong>——每一跳，帧的源 MAC 变成当前路由器的出口 MAC，目的 MAC 变成下一跳的 MAC。旧帧被拆掉，新帧被封装</li>
+  <li><strong>每台路由器查自己的路由表</strong>——R1 只看「去 203.0.113.0/24 应该走哪个出口」，完全不知道后面还有多少跳</li>
+</ul>
+
+<div class="sidenote">
+  <strong>🔑 这就是为什么分层这么重要：</strong>链路层只需要关心"当前这一跳怎么把帧发到隔壁"，网络层关心"穿过整个网络的完整路径"。两层各管各的，换 WiFi 或换光纤对 IP 层完全不可见。
+</div>
+
+<!-- ==================== ROUTING PROTOCOLS ==================== -->
+
+<h2>4. 路由表从哪来？BGP 与 OSPF 的分工</h2>
+
+<p>路由表不会凭空出现。它来自<strong>路由协议</strong>。而这些协议分成两大类，对应两种完全不同的场景：</p>
+
+<table>
+  <tr><th></th><th>IGP（内部网关协议）</th><th>EGP（外部网关协议）</th></tr>
+  <tr><td>代表</td><td>OSPF, IS-IS</td><td>BGP</td></tr>
+  <tr><td>作用范围</td><td>一个 AS 内部</td><td>AS 之间</td></tr>
+  <tr><td>类比</td><td>公司内部怎么找到某个部门</td><td>不同公司之间怎么交换邮件</td></tr>
+  <tr><td>核心目标</td><td>找到最短/最快的路径</td><td>找到符合<strong>策略</strong>的路径</td></tr>
+  <tr><td>典型规模</td><td>几十到几百台路由器</td><td>全球几十万个前缀</td></tr>
+</table>
+
+<h3>什么是 AS（自治系统）？</h3>
+
+<p>互联网不是一张扁平的大网。它是由成千上万个<strong>自治系统（AS）</strong>组成的。每个 AS 是一个机构管理的网络——中国电信是一个 AS（AS4134），Google 是一个 AS（AS15169），你的公司也可以有自己的 AS。</p>
+
+<p>每个 AS 内部用 OSPF 管理自己的路由器（"我家内部怎么走"），AS 之间用 BGP 交换路由信息（"去你家的货从哪个口进"）。</p>
+
+<h3>BGP 不讲速度，讲策略</h3>
+
+<p>OSPF 像高德地图——自动算出最短路径。BGP 像一个<strong>政治外交系统</strong>：</p>
+
+<ul>
+  <li>「中国电信说去 Google 的流量走这条链路」</li>
+  <li>「但我们公司和中国联通有商业协议，优先走那条链路」</li>
+  <li>「这个 AS 我们不信任，不收它的路由」</li>
+</ul>
+
+<p>BGP 不是选最快的路，而是选<strong>符合商业关系和政策的路</strong>。这就是为什么有时候两台服务器物理上很近、但网络延迟很高——因为 BGP 策略把流量绕了远路。</p>
+
+<!-- ==================== NAT ==================== -->
+
+<h2>5. NAT —— 一个"打补丁"的协议，却撑起了整个互联网</h2>
+
+<p>IPv4 地址只有 32 位——大约 43 亿个。全球设备早就超过这个数了。NAT（网络地址转换）是 1990 年代的应急方案，但现在每家每户都在用：</p>
+
+<pre><code>你的手机: 192.168.1.5 ─┐
+你的电脑: 192.168.1.6 ─┤ 私有 IP（局域网内唯一，全球不唯一）
+你的电视: 192.168.1.7 ─┘
+                         │
+                    ┌────┴─────┐
+                    │  路由器   │  公网 IP: 123.45.67.89（全球唯一）
+                    │  (NAT)   │
+                    └────┬─────┘
+                         │
+                    互联网
+</code></pre>
+
+<p>NAT 路由器维护一张映射表：</p>
+
+<table>
+  <tr><th>内部 IP:端口</th><th>外部 IP:端口</th><th>目标</th></tr>
+  <tr><td>192.168.1.5:54321</td><td>123.45.67.89:60001</td><td>google.com:443</td></tr>
+  <tr><td>192.168.1.6:54322</td><td>123.45.67.89:60002</td><td>github.com:443</td></tr>
+</table>
+
+<p>你的手机往 google.com 发包，源 IP 是 192.168.1.5——这在公网上无效。NAT 路由器把源 IP 替换成自己的公网 IP（123.45.67.89），并记下这个映射。回复到达时，再反向替换回来。</p>
+
+<div class="sidenote">
+  <strong>⚠️ NAT 的代价：破坏了端到端原则。</strong>有了 NAT，外部无法主动向内部设备发起连接（除非在 NAT 上手动配置端口转发）。这就是为什么 P2P 软件、VoIP、在线游戏经常需要 STUN/TURN 这类 NAT 穿透技术。
+</div>
+
+<!-- ==================== TTL AND TRACEROUTE ==================== -->
+
+<h2>6. TTL 与 traceroute —— 防止包永远流浪</h2>
+
+<p>IP 包头里有一个字段叫 <strong>TTL（Time To Live）</strong>。每经过一个路由器，TTL 减 1。减到 0，路由器丢弃这个包，并回复一个 ICMP "Time Exceeded" 消息给源地址。</p>
+
+<p>这个设计有两个用途：</p>
+
+<ol>
+  <li><strong>防止路由环路</strong>——如果路由配错了形成环路，包不会永远转圈</li>
+  <li><strong>traceroute</strong>——故意利用 TTL 来探测路径上的每一跳</li>
+</ol>
+
+<p><code>traceroute</code> 的原理非常狡猾：</p>
+
+<pre><code>先发一个 TTL=1 的包 → 第一跳路由器 TTL 减到 0 → 路由器回复 "Time Exceeded"
+                                        → 知道了第一跳是谁！
+再发一个 TTL=2 的包 → 第二跳路由器 TTL 减到 0 → 路由器回复
+                                        → 知道了第二跳是谁！
+……依此类推，直到到达目的地</code></pre>
+
+<p>在你的终端试试：<code>traceroute google.com</code>（Linux/Mac）或 <code>tracert google.com</code>（Windows）。你会看到包经过的每一跳以及每跳的延迟。</p>
+
+<!-- ==================== PUTTING IT ALL TOGETHER ==================== -->
+
+<h2>7. 完整图景：一个 IP 包的旅程</h2>
+
+<p>把本课所有概念串起来——主机 A ping 谷歌的 DNS（8.8.8.8）：</p>
+
+<ol>
+  <li><strong>A 查路由表</strong>：8.8.8.8 不在本地子网 → 匹配 <code>0.0.0.0/0</code> → 发给默认网关 192.168.1.1</li>
+  <li><strong>链路层封装</strong>：ARP 拿到网关的 MAC，封装帧 → 发给交换机 → 到网关</li>
+  <li><strong>网关（家用路由器）</strong>：拆帧，查路由表 → 匹配到 ISP 的路由 → NAT 把源 IP 从 192.168.1.5 改成公网 IP → 封装新帧发出去</li>
+  <li><strong>ISP 路由器</strong>：拆帧，查路由表 → OSPF 说去 Google 走这个出口 → 封装新帧发出</li>
+  <li><strong>……跨越多个 ISP 和 AS……</strong>：BGP 在 AS 之间交换路由信息，确保每个 AS 知道怎么到 8.8.8.0/24</li>
+  <li><strong>最后一跳路由器</strong>：拆帧 → 发现 8.8.8.8 在本网段直连 → ARP 拿到 8.8.8.8 的 MAC → 封装帧发出</li>
+  <li><strong>Google 的服务器</strong>：收到帧 → 校验通过 → 交给 IP 层 → 交给 ICMP → 回复 Echo Reply → 整条路径反着走一遍</li>
+</ol>
+
+<p>每一跳：MAC 变、TTL 减 1、查路由表、转发。源 IP 和目的 IP 始终是 192.168.1.5（或被 NAT 改过的）和 8.8.8.8。<strong>这就是互联网最核心的转发机制。</strong></p>
+
+<div class="sidenote">
+  <strong>🧩 对接链路层知识：</strong>还记得第 5 课里交换机「自学习、泛洪、老化」吗？路由器也在做类似的事，但在网络层——它交换的不是 MAC 信息，而是「去 X 网段走哪个出口」的路由信息。交换机关心的是一栋楼里的房间号，路由器关心的是跨城市的快递路线。
+</div>
+
+<!-- ==================== SUPPLEMENT: ROUTING ALGORITHMS ==================== -->
+<div class="sup">
+<h2>📚 补充：路由算法原理 —— 路由表从哪来</h2>
+
+<p>第 4 课讲了"路由器查路由表决定下一跳"，但路由表的内容是<strong>怎么算出来的</strong>？这由路由算法决定。两大类：<strong>链路状态</strong>（全局信息）和<strong>距离向量</strong>（邻居交换）。</p>
+
+<h3>Dijkstra 算法 —— 链路状态路由（OSPF 的核心）</h3>
+
+<p>每个路由器<strong>知道整张网络拓扑图</strong>（通过泛洪 LSA 获得），然后各自跑 Dijkstra 算法，算出去所有目的地的最短路径。</p>
+
+<div style="background:#f4f4f0;padding:0.8rem;border-radius:4px;font-size:0.82rem;margin:0.8rem 0;line-height:1.7;">
+  <strong>Dijkstra 的核心思想（贪心）：</strong><br>
+  1. 初始化：自己距离=0，其他节点未知<br>
+  2. 选当前距离最小的节点，标记为"已确定"<br>
+  3. 通过这个节点<strong>松弛</strong>它的所有邻居（如果经由我到邻居比你当前记录的距离更短，就更新）<br>
+  4. 重复 2–3 直到所有节点确定<br>
+</div>
+
+<p>O(|V|²) 时间复杂度。OSPF 用的正是这个——因为一个 AS 内部路由器数量有限（几百台），全局拓扑已知，Dijkstra 算一遍很快。</p>
+
+<h3>Bellman-Ford / 距离向量 —— BGP 的数学基础</h3>
+
+<p>路由器<strong>不知道整张图的拓扑</strong>，只知道邻居告诉自己的距离向量（"我到 X 网段的距离是 Y"），然后更新自己的表。</p>
+
+<div style="background:#f4f4f0;padding:0.8rem;border-radius:4px;font-size:0.82rem;margin:0.8rem 0;line-height:1.7;">
+  <strong>Bellman-Ford 方程：</strong><br>
+  d<sub>x</sub>(y) = min<sub>v</sub> { cost(x, v) + d<sub>v</sub>(y) }<br>
+  翻译：我到 y 的最短距离 = min( 我到每个邻居的距离 + 邻居到 y 的距离 )
+</div>
+
+<h3>「计数到无穷」问题 —— 为什么 RIP 被淘汰了</h3>
+
+<p>距离向量有一个经典 bug。假设 A—B—C 三个节点串连。A 和 C 之间的链路断了，B 告诉 A "我到 C 的距离是 2"（因为 B 还记着旧路由），A 更新自己为 3，B 看到 A 说 3 就更新自己为 4，A 再看到 B 说 4 就更新为 5……<strong>循环到无穷</strong>。</p>
+
+<p>这就是为什么 RIP（基于距离向量）有"最大跳数 15"的限制——超过 15 就算不可达，强行打断无穷循环。OSPF 没有这个问题。</p>
+
+<h3>为什么 BGP 不用 Dijkstra？</h3>
+
+<table>
+  <tr><th></th><th>OSPF（Dijkstra）</th><th>BGP（路径向量）</th></tr>
+  <tr><td>知道全局拓扑？</td><td>是（AS 内部）</td><td>否（互联网太大，没人知道全貌）</td></tr>
+  <tr><td>优化目标</td><td>最短路径</td><td>符合策略的路径</td></tr>
+  <tr><td>规模</td><td>几百台路由器</td><td>全球几十万前缀</td></tr>
+  <tr><td>算法</td><td>Dijkstra</td><td>路径向量（类似 Bellman-Ford + 完整路径防环路 + 策略过滤）</td></tr>
+</table>
+
+<p>BGP 不能跑 Dijkstra 有根本原因：<strong>没有人知道全球互联网的完整拓扑</strong>，也没有人有权为全局计算最优路径——每个 AS 是自治的，BGP 只交换可达性信息。</p>
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+
+<h2>🧪 检验一下</h2>
+
+<div class="quiz" id="quiz1">
+
+  <div class="q" id="q1">
+    <p>Q1: 一个 IP 包从北京发到旧金山，沿途经过多台路由器。在这个过程中，什么保持不变？</p>
+    <label><input type="radio" name="q1" value="a"> 源 MAC 地址和目的 MAC 地址都不变</label>
+    <label><input type="radio" name="q1" value="b"> 源 IP 地址和目的 IP 地址保持不变</label>
+    <label><input type="radio" name="q1" value="c"> TTL 值保持不变</label>
+    <label><input type="radio" name="q1" value="d"> 帧的 CRC 校验和保持不变</label>
+  </div>
+
+  <div class="q" id="q2">
+    <p>Q2: 路由表中有两条都能匹配目标 IP：<code>10.0.0.0/8 → eth1</code> 和 <code>10.1.0.0/16 → eth2</code>。目标 IP 是 10.1.2.3，路由器会从哪个接口发出？</p>
+    <label><input type="radio" name="q2" value="a"> eth1，因为 /8 比 /16 覆盖更广</label>
+    <label><input type="radio" name="q2" value="b"> eth2，因为 /16 前缀更长，匹配更具体</label>
+    <label><input type="radio" name="q2" value="c"> 随机选一个</label>
+    <label><input type="radio" name="q2" value="d"> 两条都发</label>
+  </div>
+
+  <div class="q" id="q3">
+    <p>Q3: BGP 和 OSPF 的分工是什么？</p>
+    <label><input type="radio" name="q3" value="a"> BGP 负责域内，OSPF 负责域间</label>
+    <label><input type="radio" name="q3" value="b"> BGP 负责域间（AS 之间），OSPF 负责域内（AS 内部）</label>
+    <label><input type="radio" name="q3" value="c"> BGP 用于有线网络，OSPF 用于无线网络</label>
+    <label><input type="radio" name="q3" value="d"> BGP 选最快路径，OSPF 选符合策略的路径</label>
+  </div>
+
+  <div class="q" id="q4">
+    <p>Q4: NAT 的主要作用是什么？</p>
+    <label><input type="radio" name="q4" value="a"> 加速 IP 包的转发速度</label>
+    <label><input type="radio" name="q4" value="b"> 让多台设备共享一个公网 IP 上网</label>
+    <label><input type="radio" name="q4" value="c"> 加密 IP 包的负载内容</label>
+    <label><input type="radio" name="q4" value="d"> 替代 DNS 把域名翻译成 IP</label>
+  </div>
+
+  <div class="q" id="q5">
+    <p>Q5: traceroute 利用了什么机制来探测路径上的每一跳？</p>
+    <label><input type="radio" name="q5" value="a"> 每跳路由器主动向源地址报告自己的存在</label>
+    <label><input type="radio" name="q5" value="b"> 发送递增 TTL 的包，利用 TTL 超时触发路由器回复</label>
+    <label><input type="radio" name="q5" value="c"> 在 IP 包头中记录每一跳的 IP 地址</label>
+    <label><input type="radio" name="q5" value="d"> 使用 ARP 广播询问路径上的所有路由器</label>
+  </div>
+
+  <button onclick="checkQuiz()">提交答案</button>
+  <div class="feedback" id="quiz-feedback"></div>
+</div>
+
+<!-- ==================== SOURCE ==================== -->
+
+<div class="source-box">
+  <h3>📖 推荐阅读</h3>
+  <p>
+    <strong>Kurose &amp; Ross, <em>Computer Networking</em> (8th Ed), Chapter 4: The Network Layer: Data Plane</strong>（转发与路由表）和 <strong>Chapter 5: The Network Layer: Control Plane</strong>（路由协议 BGP/OSPF）。<br>
+    <a href="https://gaia.cs.umass.edu/kurose_ross/online_lectures.htm" target="_blank">→ 在线讲座</a>
+  </p>
+  <p style="margin-top:0.5rem">
+    <strong>动手实验：</strong>打开终端，依次执行 <code>traceroute -n 8.8.8.8</code>、<code>ip route</code>、<code>ip addr</code>。把本课的概念和你看到的真实输出对应起来。
+  </p>
+</div>
+
+<!-- ==================== NEXT ==================== -->
+
+<div class="lesson-nav">
+  <a href="0005-link-layer-deep-dive.html">← 第 5 课：链路层</a>
+  <a href="../index.html">回到概念地图 ↑</a>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">
+  🤔 追问你的 AI 教师：「BGP 的路径选择到底是怎么做的？」「IPv6 为什么能解决 NAT 问题？」「ICMP 除了 ping 和 traceroute 还有什么用？」
+</p>
+
+</article>
+
+<script>
+const answers = { q1: 'b', q2: 'b', q3: 'b', q4: 'b', q5: 'b' };
+function checkQuiz() {
+  let correct = 0, total = Object.keys(answers).length;
+  for (let [qid, ans] of Object.entries(answers)) {
+    const selected = document.querySelector(`input[name="${qid}"]:checked`);
+    if (selected && selected.value === ans) correct++;
+  }
+  const fb = document.getElementById('quiz-feedback');
+  if (correct === total) {
+    fb.textContent = `✅ ${correct}/${total} 全对！你对 IP 网络层已经有了系统级的理解。`;
+    fb.className = 'feedback correct';
+  } else if (correct >= 3) {
+    fb.textContent = `⚠️ ${correct}/${total} 正确。回头看一下逐跳转发那节的图，注意 IP 和 MAC 各自的变化规律。`;
+    fb.className = 'feedback incorrect';
+  } else {
+    fb.textContent = `❌ ${correct}/${total} 正确。建议重读第 2 节（路由表与最长前缀匹配）和第 3 节（逐跳转发），这两块是网络层的心智核心。`;
+    fb.className = 'feedback incorrect';
+  }
+}
+</script>
+
+</body>
+</html>

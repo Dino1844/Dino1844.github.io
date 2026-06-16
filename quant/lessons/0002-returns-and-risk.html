@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0002 · 收益与风险</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.7; color: #1a1a1a; background: #fdfdfb; max-width: 720px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .formula { text-align: center; font-size: 1.15rem; margin: 1.2rem 0; font-family: 'Inter', sans-serif; color: #333; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+  .danger { color: #c44; }
+</style>
+</head>
+<body>
+
+<h1>收益与风险</h1>
+<p class="meta">Lesson 0002 · 2026-06-15 · 预计 15 分钟</p>
+
+<p>
+  昨天我们知道了市场上有什么、怎么交易。今天要学的是量化策略最基本的两个量：
+  <strong>你赚了多少？</strong>（收益）和 <strong>你冒了多大险？</strong>（风险）。
+  这是所有策略评估、比较和优化的共同语言。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回顾·上节课</h3>
+  <p style="margin-bottom:0.5rem;">在开始新内容之前，先激活上节课的记忆：</p>
+  <ol style="padding-left:1.2rem; margin-bottom:0;">
+    <li>IPO 发生在哪个市场？（一级 / 二级 / OTC）</li>
+    <li>你要在 CEX 上买入 BTC，最低的成交价对应买方还是卖方？（Bid / Ask）</li>
+    <li>OHLCV 中哪个价格被金融理论认为最接近"市场共识价"？</li>
+  </ol>
+  <p style="font-size:0.85rem; color:#888; margin:0.5rem 0 0;">答案在测验区。先回忆再对答案——回忆越费力，记得越牢。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、收益：你赚了多少</h2>
+
+<p>
+  价格在变化，但价格本身没法直接比较。BTC 从 $60,000 涨到 $63,000 和 ETH 从 $1,800 涨到 $1,890——绝对涨了 $3,000 vs $90，但哪个涨得更多？<strong>收益率把价格变化标准化为百分比</strong>，让你可以在不同资产之间做公平比较。
+</p>
+
+<h3>简单收益率</h3>
+<div class="formula">
+  R<sub>t</sub> = (P<sub>t</sub> − P<sub>t−1</sub>) / P<sub>t−1</sub>
+</div>
+<p>最简单的形式：本期价格比上期涨（或跌）了百分之几。</p>
+
+<table>
+  <tr><th>日期</th><th>BTC 价格</th><th>简单收益率</th></tr>
+  <tr><td>周一</td><td>$62,000</td><td>—</td></tr>
+  <tr><td>周二</td><td>$65,100</td><td>+5.0%</td></tr>
+  <tr><td>周三</td><td>$61,845</td><td>−5.0%</td></tr>
+  <tr><td>周四</td><td>$64,937</td><td>+5.0%</td></tr>
+</table>
+
+<p>
+  注意一个细节：先涨 5% 再跌 5%，你不会回到原点——$62,000 × 1.05 × 0.95 = <strong>$61,845</strong>，比起点少了 $155。这个不对称性在量化建模中很重要。
+</p>
+
+<h3>对数收益率</h3>
+<div class="formula">
+  r<sub>t</sub> = ln(P<sub>t</sub> / P<sub>t−1</sub>) = ln(P<sub>t</sub>) − ln(P<sub>t−1</sub>)
+</div>
+
+<p>量化中更常用<strong>对数收益率</strong>（log return）。为什么？三个原因：</p>
+
+<div class="card">
+  <ol>
+    <li style="margin-bottom:0.5rem;"><strong>可加性</strong>——简单收益率乘起来麻烦，对数收益率直接相加。周一+周二的总收益 = r<sub>周一</sub> + r<sub>周二</sub></li>
+    <li style="margin-bottom:0.5rem;"><strong>对称性</strong>——涨 5% 再跌 5%，在 log return 世界里正好抵消：ln(1.05) + ln(0.95) = −0.00125（几乎为零）</li>
+    <li><strong>正态性假设</strong>——很多金融模型（Black-Scholes 期权定价等）假设收益率服从正态分布，log return 比 simple return 更接近这个假设</li>
+  </ol>
+</div>
+
+<p>
+  在实际应用中，小幅度变化时两者几乎一样（±4% 以内差异 < 0.1%）。量化分析中默认用 log return，除非有特殊理由。
+</p>
+
+<!-- ============================================================ -->
+<h2>二、风险：你冒了多大险</h2>
+
+<p>收益告诉你赚了多少。但两个策略可能赚得一样多，风险却天差地别——这才是量化选策略的关键。</p>
+
+<h3>波动率：风险的第一定义</h3>
+<div class="formula">
+  σ = std(r<sub>1</sub>, r<sub>2</sub>, …, r<sub>n</sub>)
+</div>
+<p>
+  <strong>波动率 = 收益率的标准差。</strong> 这是金融中对"风险"最基础的量化定义：收益率波动越大，不确定性越大。
+</p>
+
+<div class="card">
+  <h3>为什么用标准差衡量风险？</h3>
+  <p>假设你有两个策略，过去 100 天的日收益均值都是 +0.1%：</p>
+  <table>
+    <tr><th>策略</th><th>日收益范围</th><th>年化波动率</th><th>直觉</th></tr>
+    <tr><td>A</td><td>−0.5% ~ +0.7%</td><td>~10%</td><td>稳，像债券</td></tr>
+    <tr><td>B</td><td>−5% ~ +5%</td><td>~60%</td><td>猛，像山寨币</td></tr>
+  </table>
+  <p style="margin-bottom:0;">同样的平均回报，A 让你睡得着，B 让你失眠。波动率量化了这个差异。</p>
+</div>
+
+<h3>年化波动率</h3>
+<p>日收益率的标准差 × √365（币圈用 365，因为 24/7 交易；股票用 √252 个交易日）。</p>
+
+<div class="crypto-note">
+  <h3>🔗 币圈对照</h3>
+  <table>
+    <tr><th>资产</th><th>年化波动率（约）</th></tr>
+    <tr><td>标普 500</td><td>15–20%</td></tr>
+    <tr><td>黄金</td><td>15–18%</td></tr>
+    <tr><td>BTC</td><td>50–80%</td></tr>
+    <tr><td>ETH</td><td>70–100%</td></tr>
+    <tr><td>山寨币</td><td>100–200%+</td></tr>
+  </table>
+  <p style="margin-bottom:0;">币圈的风险是传统资产的 3–10 倍。这意味着同样的收益率数字背后，币圈策略承担了高得多的风险。在币圈做量化，波动率管理是第一优先级。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、收益与风险的统一：夏普比率</h2>
+
+<p>如果只看收益，高杠杆的山寨币策略可能年化 +200%，但这忽略了你可能一夜归零的风险。<strong>夏普比率把收益和风险放在一起比较。</strong></p>
+
+<div class="formula">
+  Sharpe = (R<sub>策略</sub> − R<sub>无风险</sub>) / σ<sub>策略</sub>
+</div>
+
+<p>
+  <strong>分子</strong>：你比无风险利率多赚了多少（超额收益）<br>
+  <strong>分母</strong>：你为此冒了多大波动<br>
+  <strong>含义</strong>：每承担一单位风险，你获得多少超额回报
+</p>
+
+<div class="card">
+  <h3>直觉例子</h3>
+  <table>
+    <tr><th>策略</th><th>年化收益</th><th>年化波动</th><th>无风险利率</th><th>夏普比率</th></tr>
+    <tr><td>X</td><td>+30%</td><td>60%</td><td>5%</td><td>0.42</td></tr>
+    <tr><td>Y</td><td>+15%</td><td>12%</td><td>5%</td><td>0.83</td></tr>
+  </table>
+  <p style="margin-bottom:0;">
+    X 赚得多，但每冒 1% 的波动才赚 0.42% 的超额收益。<br>
+    Y 赚得少，但稳——夏普几乎是 X 的两倍。<strong>Y 是更好的策略。</strong>
+  </p>
+</div>
+
+<p>夏普比率 > 1 算不错，> 2 算优秀，> 3 几乎没人能持续做到。现实中很多币圈策略夏普 < 1。</p>
+
+<div class="crypto-note">
+  <h3>🔗 币圈的无风险利率</h3>
+  <p style="margin-bottom:0;">传统金融用国债利率（~5%）。币圈常用稳定币借贷利率（如 Aave 上 USDC 存款利率，~5–15% 不等）。但币圈的无风险利率本身波动大，不是真正的"无风险"——这是算币圈夏普时的一个常见争议。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、另一个重要的风险视角：最大回撤</h2>
+
+<p>波动率衡量的是"颠簸"，但很多交易者更关心另一个问题：<strong>最惨的时候，我从顶到底亏了多少？</strong></p>
+
+<div class="formula">
+  Max Drawdown = (峰顶 − 谷底) / 峰顶
+</div>
+
+<p>
+  如果你的净值从 $100,000 涨到 $150,000，然后跌到 $90,000——<br>
+  最大回撤 = (150,000 − 90,000) / 150,000 = <strong>40%</strong>。
+</p>
+
+<p>最大回撤直接对应一个心理事实：<strong>你能承受多大的账户缩水而不割肉离场？</strong>很多策略历史夏普很好，但最大回撤 60%——真人根本拿不住。</p>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 量化分析中默认使用对数收益率的一个核心原因是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">计算更简单，不需要除法</span>
+    <span class="opt" data-answer="correct">多期收益率可以直接相加，且更接近正态分布</span>
+    <span class="opt" data-answer="wrong">数值总是比简单收益率大</span>
+    <span class="opt" data-answer="wrong">交易所规定的标准格式</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 策略 A 年化收益 +20%，年化波动 15%；策略 B 年化收益 +50%，年化波动 60%。无风险利率 5%。哪个策略的夏普比率更高？</p>
+  <div class="options">
+    <span class="opt" data-answer="correct">策略 A（夏普 = 1.0）</span>
+    <span class="opt" data-answer="wrong">策略 B（夏普 = 0.75）</span>
+    <span class="opt" data-answer="wrong">两个一样</span>
+    <span class="opt" data-answer="wrong">夏普不考虑无风险利率</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. （回顾·上节课）你要在 CEX 上<strong>立即卖出</strong> BTC，成交价对应什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="correct">Bid——买方愿意支付的最高价</span>
+    <span class="opt" data-answer="wrong">Ask——卖方愿意接受的最低价</span>
+    <span class="opt" data-answer="wrong">Last Price——最近成交价</span>
+    <span class="opt" data-answer="wrong">Spread 的中点</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. 你的净值从 $100K 涨到 $200K，再跌到 $80K。最大回撤是多少？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">20%</span>
+    <span class="opt" data-answer="wrong">50%</span>
+    <span class="opt" data-answer="correct">60%</span>
+    <span class="opt" data-answer="wrong">80%</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 推荐阅读</h3>
+  <p><strong>Bodie, Kane & Marcus —《投资学》(Investments)</strong>，第 5 章（Risk, Return, and the Historical Record）。</p>
+  <p>这一章详细讲了如何从历史数据中提取收益率和波动率的估计值，以及不同资产类别的历史风险收益特征。本章的图表比任何文字都更有说服力。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="reminder">
+  <strong>💬 有疑问随时问。</strong> 对数收益率的直觉、夏普比率的计算、最大回撤和波动率的区别——任何一点不清楚都可以深挖。这些概念会在后续每一节课中反复出现，现在建立清晰直觉非常重要。
+</div>
+
+<div class="nav">
+  上一课：<a href="0001-financial-markets-basics.html">0001 · 金融市场基础</a><br>
+  下一课预告：<a href="#">0003 · 金融数据的本性——肥尾、波动率聚集与相关性</a><br>
+  参考资料：<a href="../reference/glossary.html">金融术语表（已更新）</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

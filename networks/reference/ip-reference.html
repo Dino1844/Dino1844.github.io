@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IP 网络层参考卡</title>
+<style>
+  :root {
+    --bg: #fffff8; --text: #111; --muted: #666; --accent: #c44; --link: #246; --rule: #ddd;
+    --code-bg: #f4f4f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "Songti SC", Georgia, serif;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+  }
+  article { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+  h1 { font-size: 1.4rem; margin-bottom: 0.3rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--rule); }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.1rem; margin: 1.8rem 0 0.5rem; color: var(--accent); border-bottom: 1px solid var(--rule); padding-bottom: 0.2rem; }
+  h3 { font-size: 0.95rem; margin: 1.2rem 0 0.3rem; }
+  table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.85rem; }
+  th { background: #f5f5f0; padding: 0.4rem 0.6rem; text-align: left; border-bottom: 2px solid var(--rule); }
+  td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--rule); }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 2px; font-size: 0.9em; font-family: "JetBrains Mono", "Fira Code", monospace; }
+  pre { background: var(--code-bg); padding: 0.6rem 0.8rem; border-radius: 4px; font-size: 0.82rem; overflow-x: auto; margin: 0.8rem 0; }
+  pre code { background: none; padding: 0; }
+  .card { background: #fafaf5; border: 1px solid var(--rule); border-radius: 4px; padding: 0.8rem 1rem; margin: 0.8rem 0; font-size: 0.88rem; }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  footer a { color: var(--link); }
+</style>
+</head>
+<body>
+<article>
+
+<h1>IP 网络层参考卡</h1>
+<div class="meta">
+  参考文档 · <a href="../index.html">← 概念地图</a> · <a href="glossary.html">术语表</a> ·
+  <a href="../lessons/0004-ip-routing-deep-dive.html">📖 完整课程</a>
+</div>
+
+<h2>核心职责</h2>
+<p>将 IP 包从源主机<strong>端到端</strong>送达目的主机。采用<strong>逐跳转发</strong>：每台路由器根据目标 IP 查路由表，决定下一跳。只提供尽力而为（best-effort）服务，不保证可靠。</p>
+
+<h2>IPv4 包头结构（简化）</h2>
+<pre><code>┌──────────┬──────────┬────────────┬────────────┬──────────┬──────────┐
+│ 版本+头长 │  服务类型  │   总长度    │    标识     │ 标志+片偏移│   TTL    │
+│  1 byte   │  1 byte   │  2 bytes   │  2 bytes   │  2 bytes  │ 1 byte   │
+├──────────┼──────────┼────────────┼────────────┼──────────┼──────────┤
+│   协议    │   校验和   │          源 IP (4 bytes)                       │
+│  1 byte   │  2 bytes  │                                               │
+├──────────┴──────────┼─────────────────────────────────────────────────┤
+│                      目的 IP (4 bytes)                                  │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────┤
+│                      选项 (可选, 0–40 bytes)                            │
+└───────────────────────────────────────────────────────────────────────┘</code></pre>
+
+<table>
+  <tr><th>字段</th><th>大小</th><th>说明</th></tr>
+  <tr><td>TTL</td><td>1 B</td><td>每跳减 1，归零即丢弃。防环路 + traceroute</td></tr>
+  <tr><td>协议</td><td>1 B</td><td>上层协议：6=TCP, 17=UDP, 1=ICMP</td></tr>
+  <tr><td>校验和</td><td>2 B</td><td>仅校验 IP 头（数据部分不管），每跳需重算（因为 TTL 变了）</td></tr>
+  <tr><td>总长度</td><td>2 B</td><td>最大 65535 字节，但链路 MTU 通常限制为 1500</td></tr>
+</table>
+
+<h2>CIDR 与子网划分</h2>
+
+<div class="card">
+  <strong>CIDR 记法：</strong><code>192.168.1.0/24</code> = 前 24 位网络号，后 8 位主机号<br>
+  <strong>地址范围：</strong>192.168.1.0 – 192.168.1.255（网络地址 .0 和广播地址 .255 保留）<br>
+  <strong>可用主机：</strong>2<sup>(32−前缀长度)</sup> − 2<br>
+  <strong>/24 → 254 台 · /16 → 65534 台 · /8 → ~1677 万台</strong>
+</div>
+
+<h2>路由表与最长前缀匹配</h2>
+
+<div class="card">
+  <strong>规则：</strong>目标 IP 可能匹配多条路由 → 选<strong>前缀最长（最具体）</strong>的那条<br>
+  <strong><code>0.0.0.0/0</code>：</strong>默认路由，匹配所有地址，优先级最低<br>
+  <strong>查看命令：</strong><code>ip route</code> 或 <code>route -n</code>
+</div>
+
+<h2>路由协议对比</h2>
+
+<table>
+  <tr><th></th><th>OSPF</th><th>BGP</th></tr>
+  <tr><td>类型</td><td>IGP（内部网关协议）</td><td>EGP（外部网关协议）</td></tr>
+  <tr><td>作用域</td><td>单个 AS 内部</td><td>AS 之间</td></tr>
+  <tr><td>算法</td><td>Dijkstra 最短路径</td><td>路径向量 + 策略过滤</td></tr>
+  <tr><td>优化目标</td><td>最短路径（链路代价）</td><td>符合商业策略</td></tr>
+  <tr><td>收敛速度</td><td>快（秒级）</td><td>慢（分钟级）</td></tr>
+  <tr><td>规模</td><td>几百台路由器</td><td>全球 ~100 万条路由</td></tr>
+</table>
+
+<h2>NAT 网络地址转换</h2>
+
+<div class="card">
+  <strong>作用：</strong>多台设备共享一个公网 IP<br>
+  <strong>机制：</strong>出站时替换源 IP+端口，维护映射表，入站时还原<br>
+  <strong>代价：</strong>破坏端到端原则 → 外部无法主动发起连接 → 需要 NAT 穿透<br>
+  <strong>私有地址段：</strong>10.0.0.0/8 · 172.16.0.0/12 · 192.168.0.0/16
+</div>
+
+<h2>ICMP 核心用途</h2>
+
+<table>
+  <tr><th>类型</th><th>用途</th><th>触发的工具</th></tr>
+  <tr><td>Echo Request / Reply (0,8)</td><td>测试连通性</td><td><code>ping</code></td></tr>
+  <tr><td>Time Exceeded (11)</td><td>TTL 归零通知</td><td><code>traceroute</code></td></tr>
+  <tr><td>Destination Unreachable (3)</td><td>目标不可达（无路由/端口/禁止）</td><td>自动产生</td></tr>
+  <tr><td>Redirect (5)</td><td>建议更好的路由</td><td>自动产生</td></tr>
+</table>
+
+<h2>IPv4 vs IPv6</h2>
+
+<table>
+  <tr><th></th><th>IPv4</th><th>IPv6</th></tr>
+  <tr><td>地址长度</td><td>32 位</td><td>128 位</td></tr>
+  <tr><td>地址数量</td><td>~43 亿</td><td>~340 澗</td></tr>
+  <tr><td>包头</td><td>可变长（20–60 B，复杂）</td><td>固定 40 B（简化）</td></tr>
+  <tr><td>NAT</td><td>普遍需要</td><td>不再需要</td></tr>
+  <tr><td>分片</td><td>路由器可分片</td><td>仅发送端分片</td></tr>
+  <tr><td>校验和</td><td>有</td><td>无（让链路层和传输层做）</td></tr>
+  <tr><td>ARP</td><td>需要</td><td>被 NDP 替代</td></tr>
+</table>
+
+<h2>常见 CLI 命令</h2>
+
+<table>
+  <tr><th>命令</th><th>作用</th></tr>
+  <tr><td><code>ip addr</code> / <code>ifconfig</code></td><td>查看本机 IP 地址</td></tr>
+  <tr><td><code>ip route</code> / <code>route -n</code></td><td>查看路由表</td></tr>
+  <tr><td><code>ping 8.8.8.8</code></td><td>测试网络层连通性</td></tr>
+  <tr><td><code>traceroute -n 8.8.8.8</code></td><td>追踪路径上的每一跳</td></tr>
+  <tr><td><code>tcpdump -i eth0 icmp</code></td><td>抓取 ICMP 包</td></tr>
+  <tr><td><code>nslookup example.com</code></td><td>DNS 查询（应用层，但常用于网络排错）</td></tr>
+</table>
+
+<footer>
+  <p>计算机网络学习工作区 · <a href="../index.html">概念地图</a> · <a href="../MISSION.md">Mission</a></p>
+</footer>
+
+</article>
+</body>
+</html>

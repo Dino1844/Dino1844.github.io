@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 2 课：DNS —— 互联网的电话簿</title>
+<style>
+  :root { --bg: #fffff8; --text: #111; --muted: #666; --accent: #c44; --link: #246; --rule: #ddd; --highlight: #fff8e1; --code-bg: #f4f4f0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Noto Serif CJK SC","Source Han Serif SC","STSong","Songti SC",Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; }
+  article { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.2rem; margin: 2.2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--rule); color: #333; }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 0.5rem; color: #444; }
+  p { margin: 0.8rem 0; }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; } li { margin: 0.35rem 0; }
+  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.92em; font-family: "JetBrains Mono","Fira Code",monospace; }
+  pre { background: var(--code-bg); padding: 0.8rem 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.84rem; line-height: 1.5; margin: 1rem 0; }
+  pre code { background: none; padding: 0; }
+  .sidenote { background: var(--highlight); border-left: 3px solid #e6c840; padding: 0.6rem 1rem; margin: 1rem 0; font-size: 0.88rem; color: #5a4a20; }
+  .sidenote strong { color: #8a6d20; }
+  .stack-indicator { margin: 1.5rem 0; display: flex; flex-direction: column; align-items: center; font-size: 0.82rem; }
+  .stack-indicator .layer { padding: 0.35rem 3rem; border: 1px solid var(--rule); margin: 1px 0; border-radius: 3px; background: #fff; color: var(--muted); }
+  .stack-indicator .layer.current { background: #2c3e50; color: #fff; font-weight: 600; border-color: #2c3e50; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+  th { background: #f5f5f0; padding: 0.5rem 0.7rem; text-align: left; border-bottom: 2px solid var(--rule); font-weight: 600; }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--rule); }
+
+  /* DNS resolution tree */
+  .dns-tree { margin: 1.2rem 0; }
+  .dns-tree .dns-row { display: flex; align-items: center; gap: 0.4rem; margin: 0.3rem 0; font-size: 0.82rem; }
+  .dns-tree .dns-node { padding: 0.35rem 0.7rem; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+  .dns-tree .dns-node.root { background: #f0e0d0; color: #6e4a1a; }
+  .dns-tree .dns-node.tld  { background: #e0e4f0; color: #1a3a6e; }
+  .dns-tree .dns-node.auth { background: #d8ecd8; color: #1a5a1a; }
+  .dns-tree .dns-node.resp { background: #f0e0e8; color: #6e1a3a; }
+  .dns-tree .dns-arr { color: var(--accent); font-weight: 700; font-size: 0.9rem; }
+
+  .sup { margin: 2rem 0; padding: 1.5rem; border: 2px dashed var(--rule); border-radius: 8px; background: #fafdf8; }
+  .sup h2 { border: none; margin-top: 0; color: #5a8a3a; }
+  .sup h3 { color: #5a8a3a; }
+  .quiz { margin: 2.5rem 0; padding: 1.5rem; border: 1px solid var(--rule); border-radius: 6px; background: #fdfdf8; }
+  .quiz h2 { margin-top: 0; border: none; padding-bottom: 0; }
+  .quiz .q { margin: 1.2rem 0; }
+  .quiz .q > p { font-weight: 600; margin-bottom: 0.3rem; }
+  .quiz .q label { display: block; padding: 0.35rem 0; cursor: pointer; font-size: 0.9rem; }
+  .quiz .q input[type="radio"] { margin-right: 0.5rem; }
+  .quiz button { margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
+  .quiz button:hover { opacity: 0.9; }
+  .quiz .feedback { margin-top: 0.5rem; font-size: 0.88rem; min-height: 1.5rem; }
+  .quiz .feedback.correct { color: #2a7d2a; }
+  .quiz .feedback.incorrect { color: #c44; }
+  .lesson-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); font-size: 0.9rem; }
+  .source-box { margin: 2rem 0; padding: 1rem 1.2rem; background: #f0f4f8; border-radius: 6px; font-size: 0.9rem; }
+  .source-box h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+<article>
+
+<h1>第 2 课：DNS —— 互联网的电话簿</h1>
+<div class="meta">计算机网络 · <a href="../index.html">← 概念地图</a> · 约 20 分钟 · <a href="../reference/glossary.html">术语表</a></div>
+
+<div class="stack-indicator">
+  <div class="layer current">◀ 应用层 &nbsp; DNS ◀ 本课</div>
+  <div class="layer">传输层 &nbsp; TCP · UDP</div>
+  <div class="layer">网络层 &nbsp; IP</div>
+  <div class="layer">链路层 &nbsp; Ethernet</div>
+</div>
+
+<p>你已经知道：计算机只认 IP 地址。但没人记 <code>93.184.216.34</code>——我们记 <code>example.com</code>。DNS（Domain Name System）就是把人类可读的域名翻译成机器可读的 IP 地址的<strong>分布式、分层数据库</strong>。</p>
+
+<div class="sidenote"><strong>🎯 本课目标：</strong>理解 DNS 的分层查询过程、递归与迭代的区别、常见记录类型、缓存机制，以及 DNS 的安全与隐私问题。</div>
+
+<h2>1. 域名空间：一棵倒长的树</h2>
+
+<p>DNS 的命名空间是一个<strong>树状结构</strong>，从根开始向下：</p>
+
+<div class="dns-tree">
+  <div class="dns-row" style="justify-content:center;"><span class="dns-node root">根 (Root)</span></div>
+  <div class="dns-row" style="justify-content:center;margin:0.2rem 0;"><span style="font-size:1.2rem;">↓</span></div>
+  <div class="dns-row" style="justify-content:center;gap:1rem;">
+    <span class="dns-node tld">.com</span>
+    <span class="dns-node tld">.org</span>
+    <span class="dns-node tld">.cn</span>
+    <span class="dns-node tld">.io</span>
+    <span class="dns-node tld">...</span>
+  </div>
+  <div class="dns-row" style="justify-content:center;margin:0.2rem 0;"><span style="font-size:1.2rem;">↓</span></div>
+  <div class="dns-row" style="justify-content:center;gap:0.6rem;">
+    <span class="dns-node auth">example.com</span>
+    <span class="dns-node auth">google.com</span>
+    <span class="dns-node auth">github.com</span>
+  </div>
+  <div class="dns-row" style="justify-content:center;margin:0.2rem 0;"><span style="font-size:1.2rem;">↓</span></div>
+  <div class="dns-row" style="justify-content:center;gap:0.6rem;">
+    <span class="dns-node resp">www.example.com</span>
+    <span class="dns-node resp">mail.example.com</span>
+    <span style="color:var(--muted);font-size:0.78rem;">（子域名）</span>
+  </div>
+</div>
+
+<p>全球有 13 组<strong>根域名服务器</strong>（由 ICANN 管理），它们不存储具体域名-IP 映射，只告诉你"去哪个 TLD 服务器找"。13 组听起来很少，但通过 Anycast 技术在全球部署了数千个实例。</p>
+
+<h2>2. 递归查询 vs 迭代查询</h2>
+
+<p>当你的浏览器需要解析 <code>www.example.com</code> 时，有两种查询模式：</p>
+
+<table>
+  <tr><th></th><th>递归查询</th><th>迭代查询</th></tr>
+  <tr><td>谁干活？</td><td>DNS 解析器替你跑完整条链</td><td>DNS 解析器每次只告诉你"下一步去哪"，你自己接着问</td></tr>
+  <tr><td>典型场景</td><td>用户 → 本地 DNS (ISP)</td><td>本地 DNS → 根 → TLD → 权威</td></tr>
+  <tr><td>结果</td><td>返回最终答案</td><td>返回一个"推荐"（referral）</td></tr>
+</table>
+
+<div class="dns-tree">
+  <div style="font-weight:600;margin-bottom:0.3rem;font-size:0.85rem;">解析 www.example.com 的完整过程：</div>
+  <div class="dns-row"><span class="dns-node resp" style="font-size:0.75rem;">你的电脑</span><span class="dns-arr">→递归→</span><span class="dns-node" style="background:#f0f0e8;">本地 DNS (ISP)</span></div>
+  <div class="dns-row"><span style="width:70px;"></span><span class="dns-node" style="background:#f0f0e8;">本地 DNS</span><span class="dns-arr">→迭代→</span><span class="dns-node root" style="font-size:0.75rem;">Root</span><span style="font-size:0.75rem;color:var(--muted);">"去 .com TLD 问"</span></div>
+  <div class="dns-row"><span style="width:70px;"></span><span class="dns-node" style="background:#f0f0e8;">本地 DNS</span><span class="dns-arr">→迭代→</span><span class="dns-node tld" style="font-size:0.75rem;">.com TLD</span><span style="font-size:0.75rem;color:var(--muted);">"去 example.com 权威服务器问"</span></div>
+  <div class="dns-row"><span style="width:70px;"></span><span class="dns-node" style="background:#f0f0e8;">本地 DNS</span><span class="dns-arr">→迭代→</span><span class="dns-node auth" style="font-size:0.75rem;">权威 DNS</span><span style="font-size:0.75rem;color:var(--muted);">"www.example.com 的 IP 是 93.184.216.34"</span></div>
+</div>
+
+<p>关键洞察：<strong>你只发了一次递归请求</strong>，你的本地 DNS 服务器替你跑了三次迭代查询。这就是分布式系统的优雅之处——每一层只负责自己的那部分数据，查询负载被自然地分摊了。</p>
+
+<h2>3. 常见 DNS 记录类型</h2>
+
+<table>
+  <tr><th>类型</th><th>全称</th><th>值</th><th>用途</th></tr>
+  <tr><td><code>A</code></td><td>Address</td><td>IPv4 地址</td><td><code>example.com → 93.184.216.34</code></td></tr>
+  <tr><td><code>AAAA</code></td><td>IPv6 Address</td><td>IPv6 地址</td><td><code>example.com → 2606:2800:220:1:...</code></td></tr>
+  <tr><td><code>CNAME</code></td><td>Canonical Name</td><td>别名指向</td><td><code>www.example.com → example.com</code>（然后再查 A）</td></tr>
+  <tr><td><code>MX</code></td><td>Mail Exchange</td><td>邮件服务器域名 + 优先级</td><td><code>example.com 的邮件发给 mail.example.com</code></td></tr>
+  <tr><td><code>NS</code></td><td>Name Server</td><td>权威 DNS 服务器</td><td><code>example.com 的 DNS 由 ns1.dns.com 管理</code></td></tr>
+  <tr><td><code>TXT</code></td><td>Text</td><td>任意文本</td><td>SPF（发件人验证）、域名所有权验证</td></tr>
+</table>
+
+<div class="sidenote"><strong>⚠️ CNAME 的限制：</strong>CNAME 不能和 MX 或 NS 记录共存——如果 example.com 已经是 CNAME，它就不能同时有 MX 记录。因为 CNAME 的意思是"我不是真的，去查那个名字"，你不可能既"不是真的"又"管邮件"。</div>
+
+<h2>4. DNS 缓存 —— 为什么改域名那么慢？</h2>
+
+<p>DNS 查询结果被<strong>多层缓存</strong>，以减少查询延迟和根/TLD 的负载：</p>
+
+<ol>
+  <li><strong>浏览器缓存</strong>——Chrome 默认缓存 DNS 1 分钟</li>
+  <li><strong>操作系统缓存</strong>——<code>nscd</code> 或 <code>systemd-resolved</code></li>
+  <li><strong>本地 DNS 服务器缓存</strong>——你的路由器或 ISP 的递归解析器</li>
+  <li><strong>TTL（Time To Live）</strong>——由域名的权威服务器设定，告诉各级缓存"这条记录能缓存多久"（常见值：300 秒 – 86400 秒）</li>
+</ol>
+
+<p>这就是为什么改了 DNS 记录后，全世界要等 TTL 过期才能全部看到新地址——即所谓的"DNS 传播时间"。</p>
+
+<h2>5. DNS 安全问题</h2>
+
+<table>
+  <tr><th>攻击</th><th>手法</th><th>防御</th></tr>
+  <tr><td>DNS 劫持</td><td>篡改 DNS 响应，把用户导向钓鱼网站</td><td>DNSSEC（数字签名验证）</td></tr>
+  <tr><td>DNS 缓存投毒</td><td>伪造 DNS 响应注入错误记录到缓存中</td><td>DNSSEC + 源端口随机化</td></tr>
+  <tr><td>DNS 隐私泄露</td><td>ISP 能看到你访问的所有域名</td><td>DoH (DNS over HTTPS) / DoT (DNS over TLS)</td></tr>
+  <tr><td>DDoS 放大攻击</td><td>伪造受害者 IP 发小 DNS 请求，对受害者产生大量响应</td><td>响应速率限制 + 源地址验证</td></tr>
+</table>
+
+<p>DoH（DNS over HTTPS）把 DNS 查询藏在 HTTPS 流量里，和普通 Web 流量混在一起。ISP 看不到你在解析什么域名——但代价是 DNS 解析可能比 ISP 的 DNS 稍慢（HTTPS 握手有开销），而且把 DNS 数据从 ISP 转移到了 DoH 提供商（如 Cloudflare、Google）。</p>
+
+<!-- ==================== SUPPLEMENT: DHCP ==================== -->
+<div class="sup">
+<h2>📚 补充：DHCP —— "我的 IP 地址从哪来？"</h2>
+
+<p>DNS 解决了"知道域名怎么找 IP"，但有一个更前置的问题：<strong>你的电脑开机时，自己的 IP 地址是哪来的？</strong>答案是 DHCP（Dynamic Host Configuration Protocol）。</p>
+
+<h3>DHCP 的四步舞（DORA）</h3>
+
+<table>
+  <tr><th>步骤</th><th>方向</th><th>消息</th><th>含义</th></tr>
+  <tr><td><strong>D</strong>iscover</td><td>客户端 → 广播</td><td>DHCPDISCOVER</td><td>"这里有人能给我 IP 吗？"（UDP 广播到 255.255.255.255:67）</td></tr>
+  <tr><td><strong>O</strong>ffer</td><td>服务器 → 客户端</td><td>DHCPOFFER</td><td>"我有个 192.168.1.100 可以给你，租期 24 小时"</td></tr>
+  <tr><td><strong>R</strong>equest</td><td>客户端 → 广播</td><td>DHCPREQUEST</td><td>"好，我要 192.168.1.100"（广播是告诉其他 DHCP 服务器：别给我了）</td></tr>
+  <tr><td><strong>A</strong>ck</td><td>服务器 → 客户端</td><td>DHCPACK</td><td>"成交。加上子网掩码 255.255.255.0，网关 192.168.1.1，DNS 8.8.8.8"</td></tr>
+</table>
+
+<p>DHCP 给的不仅是 IP 地址，还包括：<strong>子网掩码、默认网关、DNS 服务器地址</strong>——三样东西缺了哪样都上不了网。这就是为什么路由器通常同时扮演 DHCP 服务器的角色。</p>
+
+<h3>租期与续约</h3>
+<p>DHCP 分配的 IP 有<strong>租期（Lease Time）</strong>，通常是 24 小时。到期前客户端会尝试续约（直接发 DHCPREQUEST 给原服务器）。如果续约失败，IP 被回收。这就是为什么你的手机 IP 可能会变——它换了 WiFi 就拿到新 IP。</p>
+
+<h3>DNS vs DHCP 对比</h3>
+<table>
+  <tr><th></th><th>DNS</th><th>DHCP</th></tr>
+  <tr><td>解决的问题</td><td>域名 → IP</td><td>"我没有 IP → 给我一个 IP"</td></tr>
+  <tr><td>谁需要它</td><td>每次访问新域名</td><td>设备加入网络的那一刻</td></tr>
+  <tr><td>查询目标</td><td>全球 DNS 层级系统</td><td>本地网络的 DHCP 服务器（通常是路由器）</td></tr>
+  <tr><td>UDP 端口</td><td>53</td><td>67（服务器）/ 68（客户端）</td></tr>
+  <tr><td>类比</td><td>电话簿：知道名字查号码</td><td>酒店前台：入住时给你房间号</td></tr>
+</table>
+</div>
+
+<h2>🧪 检验一下</h2>
+<div class="quiz" id="quiz1">
+  <div class="q" id="q1"><p>Q1: DNS 系统中的「根域名服务器」存储的是什么？</p>
+    <label><input type="radio" name="q1" value="a"> 所有域名的 IP 地址</label>
+    <label><input type="radio" name="q1" value="b"> 告诉你"去哪个 TLD 服务器查"</label>
+    <label><input type="radio" name="q1" value="c"> 每个国家的地理位置信息</label>
+    <label><input type="radio" name="q1" value="d"> 域名的注册人信息</label></div>
+  <div class="q" id="q2"><p>Q2: 浏览器向本地 DNS 发的是___查询，本地 DNS 向根/TLD/权威发的是___查询。</p>
+    <label><input type="radio" name="q2" value="a"> 递归 / 递归</label>
+    <label><input type="radio" name="q2" value="b"> 迭代 / 迭代</label>
+    <label><input type="radio" name="q2" value="c"> 递归 / 迭代</label>
+    <label><input type="radio" name="q2" value="d"> 迭代 / 递归</label></div>
+  <div class="q" id="q3"><p>Q3: CNAME 记录的作用是什么？</p>
+    <label><input type="radio" name="q3" value="a"> 直接返回 IPv4 地址</label>
+    <label><input type="radio" name="q3" value="b"> 为一个域名指定别名，指向另一个域名</label>
+    <label><input type="radio" name="q3" value="c"> 指定邮件服务器</label>
+    <label><input type="radio" name="q3" value="d"> 验证域名所有权</label></div>
+  <div class="q" id="q4"><p>Q4: DoH (DNS over HTTPS) 主要解决了什么问题？</p>
+    <label><input type="radio" name="q4" value="a"> DNS 查询速度太慢</label>
+    <label><input type="radio" name="q4" value="b"> 域名注册费用太高</label>
+    <label><input type="radio" name="q4" value="c"> ISP 能看到并记录你访问的域名（隐私问题）</label>
+    <label><input type="radio" name="q4" value="d"> CNAME 记录冲突问题</label></div>
+  <div class="q" id="q5"><p>Q5: DHCP 的四步过程（DORA）中，客户端第一步发的是什么？</p>
+    <label><input type="radio" name="q5" value="a"> DHCPREQUEST（直接向服务器要指定 IP）</label>
+    <label><input type="radio" name="q5" value="b"> DHCPOFFER（向服务器提供自己的 IP）</label>
+    <label><input type="radio" name="q5" value="c"> DHCPDISCOVER（广播寻找 DHCP 服务器）</label>
+    <label><input type="radio" name="q5" value="d"> DHCPACK（确认收到 IP 地址）</label></div>
+  <button onclick="checkQuiz()">提交答案</button>
+  <div class="feedback" id="quiz-feedback"></div>
+</div>
+
+<div class="source-box"><h3>📖 推荐阅读</h3>
+  <p><strong>Kurose &amp; Ross, Chapter 2.4: DNS.</strong> · 动手试试：终端里执行 <code>dig +trace www.example.com</code>，你会看到根→TLD→权威的完整查询路径。</p>
+</div>
+
+<div class="lesson-nav">
+  <a href="0001-the-url-journey.html">← 第 1 课：URL 之旅</a>
+  <a href="../index.html">回到概念地图 ↑</a>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">🤔 追问你的 AI 教师：「DNSSEC 如何通过数字签名防止缓存投毒？」「Anycast 是怎么让 13 台根服务器变成几千台的？」</p>
+</article>
+<script>
+const answers={q1:'b',q2:'c',q3:'b',q4:'c',q5:'c'};
+function checkQuiz(){let c=0,t=Object.keys(answers).length;for(let[k,v]of Object.entries(answers)){if(document.querySelector(`input[name="${k}"]:checked`)?.value===v)c++;}const f=document.getElementById('quiz-feedback');f.textContent=c===t?`✅ ${c}/${t} 全对！`:c>=2?`⚠️ ${c}/${t}`:`❌ ${c}/${t}`;f.className='feedback '+(c===t?'correct':'incorrect');}
+</script>
+</body>
+</html>

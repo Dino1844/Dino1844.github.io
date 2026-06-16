@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0000 — 复杂度分析与 STL 工具包</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif; font-size: 17px; line-height: 1.7; color: #1a1a1a; max-width: 800px; margin: 0 auto; padding: 48px 24px 120px; background: #fdfdfd; }
+  h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.2em; letter-spacing: -0.02em; color: #111; }
+  h2 { font-size: 1.3rem; font-weight: 600; margin: 2.2em 0 0.6em; color: #222; border-bottom: 2px solid #e9ecef; padding-bottom: 0.3em; }
+  h3 { font-size: 1.08rem; font-weight: 600; margin: 1.5em 0 0.4em; color: #333; }
+  p { margin-bottom: 0.9em; }
+  ul, ol { margin: 0 0 1em 1.5em; }
+  li { margin-bottom: 0.35em; }
+  code { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace; font-size: 0.88em; background: #f1f3f5; padding: 0.1em 0.35em; border-radius: 3px; }
+  pre { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.55; background: #1e1e2e; color: #cdd6f4; padding: 20px 24px; border-radius: 8px; overflow-x: auto; margin: 1.2em 0; }
+  pre .kw  { color: #cba6f7; } pre .fn  { color: #89b4fa; } pre .num { color: #fab387; }
+  pre .cmt { color: #6c7086; font-style: italic; } pre .str { color: #a6e3a1; }
+  pre .type{ color: #f9e2af; } pre .pp  { color: #f38ba8; }
+
+  .box { padding: 16px 22px; margin: 1.2em 0; border-radius: 6px; font-size: 0.94em; }
+  .box-def { background: #e7f5ff; border-left: 4px solid #1971c2; }
+  .box-ins { background: #fff9db; border-left: 4px solid #f08c00; }
+  .box-err { background: #fff0f0; border-left: 4px solid #c92a2a; }
+  .box-ok  { background: #ebfbee; border-left: 4px solid #2b8a3e; }
+  .box-def strong, .box-ins strong, .box-err strong, .box-ok strong { color: inherit; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 0.9em; }
+  th, td { border: 1px solid #dee2e6; padding: 7px 12px; text-align: left; }
+  th { background: #f1f3f5; font-weight: 600; }
+
+  .quiz { background: #f0f4ff; border: 1px solid #bac8ff; border-radius: 8px; padding: 22px; margin: 2em 0; }
+  .quiz h3 { margin-top: 0; color: #364fc7; }
+  .quiz label { display: block; margin: 5px 0; padding: 7px 10px; border-radius: 4px; cursor: pointer; }
+  .quiz label:hover { background: #dbe4ff; }
+  .quiz input[type="radio"] { margin-right: 8px; }
+  .quiz button { margin-top: 10px; background: #364fc7; color: #fff; border: none; padding: 9px 22px; border-radius: 5px; font-size: 0.95rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .quiz button:hover { background: #2b3fa8; }
+  .quiz .fb { margin-top: 10px; font-weight: 600; min-height: 1.3em; }
+  .quiz .fb.correct { color: #2b8a3e; } .quiz .fb.incorrect { color: #c92a2a; }
+
+  .nav { display: flex; justify-content: space-between; margin-top: 3em; padding-top: 1em; border-top: 1px solid #de2e6; font-size: 0.9em; }
+  .nav a { color: #364fc7; text-decoration: none; } .nav a:hover { text-decoration: underline; }
+  .tag { display: inline-block; background: #e9ecef; color: #495057; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 500; margin-right: 6px; }
+  .toc { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 16px 24px; margin: 1.5em 0; font-size: 0.93em; }
+  .toc ol { margin-bottom: 0; }
+  @media print { body { font-size: 12px; color: #000; } pre { background: #f8f9fa; color: #000; border: 1px solid #ccc; } .quiz, .nav { display: none; } }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0000 — 复杂度分析与 STL 工具包</h1>
+
+<p><span class="tag">复杂度分析</span><span class="tag">STL</span><span class="tag">基础工具</span><span class="tag">第〇阶段</span></p>
+
+<div class="toc">
+<strong>📑 本课目录</strong>
+<ol>
+  <li><a href="#s1">为什么复杂度是算法面试的「通用语言」</a></li>
+  <li><a href="#s2">大 O 标记法：形式化定义与直觉</a></li>
+  <li><a href="#s3">常见复杂度阶级：从 O(1) 到 O(2ⁿ)</a></li>
+  <li><a href="#s4">如何分析一段代码的复杂度：四步法</a></li>
+  <li><a href="#s5">从数据范围反推所需复杂度</a></li>
+  <li><a href="#s6">C++ STL 核心工具：容器与算法复杂度速查</a></li>
+  <li><a href="#s7">真题演练：复杂度分析实战（4 题）</a></li>
+  <li><a href="#s8">测验</a></li>
+</ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 为什么复杂度是算法面试的「通用语言」</h2>
+
+<p>考虑一个问题：<strong>最大子数组和</strong>（LeetCode 53. Maximum Subarray）。</p>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+给定整数数组 <code>nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]</code>，找出具有最大和的连续子数组，返回其最大和。<br>
+答案：<code>6</code>（子数组 <code>[4, -1, 2, 1]</code>）
+</blockquote>
+
+<p>假设 <code>n = 10⁵</code>。以下是三种思路：</p>
+
+<table>
+<tr><th>思路</th><th>方法</th><th>时间复杂度</th><th>n=10⁵ 时能过吗？</th></tr>
+<tr><td>A</td><td>枚举所有子数组起点、终点、求和</td><td>O(n³)</td><td style="color:#c92a2a">❌ 10¹⁵ 次运算，宇宙毁灭</td></tr>
+<tr><td>B</td><td>枚举起点，累加求和</td><td>O(n²)</td><td style="color:#c92a2a">❌ 10¹⁰ 次运算，约 100 秒</td></tr>
+<tr><td>C</td><td>Kadane 算法（动态规划）</td><td>O(n)</td><td style="color:#2b8a3e">✅ 10⁵ 次运算，瞬间</td></tr>
+</table>
+
+<div class="box box-ins">
+  <strong>💡 核心洞察：</strong>算法面试的本质不是「能不能做出来」，而是「做出来的方案能不能在<strong>给定数据范围</strong>内跑通」。复杂度就是衡量这个的<strong>通用语言</strong>。面试官说「你能优化一下吗？」，翻译过来就是「你能降低复杂度阶级吗？」
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 大 O 标记法：形式化定义与直觉</h2>
+
+<h3>形式化定义</h3>
+
+<div class="box box-def">
+  <strong>定义：</strong><code>T(n) = O(f(n))</code> 当且仅当存在正常数 <em>C</em> 和 <em>n₀</em>，使得对所有 <em>n ≥ n₀</em>，有 <code>T(n) ≤ C·f(n)</code>。
+</div>
+
+<p>用人话翻译：<strong>大 O 描述的是增长趋势的上界</strong>。当输入规模 n 足够大时，运行时间的增长<strong>不超过</strong> f(n) 的某个常数倍。</p>
+
+<h3>三个关键直觉</h3>
+
+<ol>
+  <li><strong>忽略常数因子：</strong>O(2n) = O(n)，O(100n²) = O(n²)。因为当 n 足够大时，常数的影响远小于增长阶。</li>
+  <li><strong>只保留最高阶项：</strong>O(n² + n + log n) = O(n²)。因为 n² 的增长远快于其他项。</li>
+  <li><strong>大 O 是上界：</strong>O(n) 的算法也是 O(n²) 的（但我们在面试中说「算法是 O(n) 的」，取最紧的上界）。</li>
+</ol>
+
+<h3>容易混淆的概念</h3>
+
+<table>
+<tr><th>符号</th><th>含义</th><th>类比</th></tr>
+<tr><td>O (大O)</td><td>上界（最多这么快）</td><td>「我最多迟到 10 分钟」</td></tr>
+<tr><td>Ω (大Omega)</td><td>下界（至少这么快）</td><td>「至少需要 5 分钟」</td></tr>
+<tr><td>Θ (大Theta)</td><td>紧确界（刚好这么快）</td><td>「恰好 8 分钟」</td></tr>
+</table>
+
+<p>面试中几乎只说大 O。我们说「这个算法是 O(n log n) 的」，通常隐含这就是 Θ(n log n)。</p>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 常见复杂度阶级：从 O(1) 到 O(2ⁿ)</h2>
+
+<p>以下设 <code>n = 10⁶</code>，假设每秒 10⁸ 次运算：</p>
+
+<table>
+<tr><th>复杂度</th><th>典型算法</th><th>n=10⁶ 运算次数</th><th>运行时间</th></tr>
+<tr><td>O(1)</td><td>哈希表查找、数组下标访问</td><td>1</td><td>瞬时</td></tr>
+<tr><td>O(log n)</td><td>二分查找、平衡树操作</td><td>~20</td><td>瞬时</td></tr>
+<tr><td>O(√n)</td><td>质数判定（试除法）</td><td>1,000</td><td>瞬时</td></tr>
+<tr><td>O(n)</td><td>遍历数组、Kadane</td><td>10⁶</td><td>~0.01s</td></tr>
+<tr><td>O(n log n)</td><td>归并排序、堆排序</td><td>~2×10⁷</td><td>~0.2s</td></tr>
+<tr><td>O(n²)</td><td>冒泡排序、枚举数对</td><td>10¹²</td><td>~3 小时 ❌</td></tr>
+<tr><td>O(2ⁿ)</td><td>递归求斐波那契</td><td>~10³⁰¹⁰³⁰</td><td>宇宙热寂 ❌</td></tr>
+<tr><td>O(n!)</td><td>全排列枚举</td><td>天文数字</td><td>❌❌❌</td></tr>
+</table>
+
+<div class="box box-ins">
+  <strong>🧠 记忆锚点：</strong>假设 n = 10⁶，只有 <strong>O(n log n) 及更低</strong>的复杂度才可接受。如果 n = 10³，O(n²) 也勉强可行。<br>
+  关键公式：<strong>可接受运算次数 ≈ 10⁷ ~ 10⁸（1 秒的 C++ 循环次数）</strong>
+</div>
+
+<h3>对数复杂度精讲</h3>
+
+<p>O(log n) 可能是初学者最难直观理解的。它的本质是：<strong>每次操作将问题规模缩小为原来的一部分</strong>。</p>
+
+<pre><span class="cmt">// 二分查找：每次将搜索范围减半</span>
+<span class="type">int</span> lo = <span class="num">0</span>, hi = n - <span class="num">1</span>;
+<span class="kw">while</span> (lo &lt;= hi) {
+    <span class="type">int</span> mid = lo + (hi - lo) / <span class="num">2</span>;  <span class="cmt">// 防溢出写法</span>
+    <span class="kw">if</span> (nums[mid] == target) <span class="kw">return</span> mid;
+    <span class="kw">else if</span> (nums[mid] &lt; target) lo = mid + <span class="num">1</span>;
+    <span class="kw">else</span> hi = mid - <span class="num">1</span>;
+}</pre>
+
+<p>反转视角：<strong>log₂(n) 就是「n 可以连续除以 2 多少次」</strong>。log₂(10⁶) ≈ 20，所以二分查找最多 20 步就能从 100 万个数中找到目标。</p>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 如何分析一段代码的复杂度：四步法</h2>
+
+<h3>步骤 1：确定变量</h3>
+<p>谁是 n？可能是数组长度、链表长度、树的节点数、字符串长度等。如果输入有多个维度（如矩阵 m×n），复杂度可能包含多个变量。</p>
+
+<h3>步骤 2：找最内层操作</h3>
+<p>找到执行次数最多的那段代码（通常是嵌套最深的循环体）。</p>
+
+<h3>步骤 3：分析该操作的执行次数（用 n 表示）</h3>
+
+<pre><span class="cmt">// 例 1：O(n)</span>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++) sum += nums[i];  <span class="cmt">// 循环体执行 n 次</span>
+
+<span class="cmt">// 例 2：O(n²)</span>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+    <span class="kw">for</span> (<span class="type">int</span> j = <span class="num">0</span>; j &lt; n; j++)
+        cnt++;  <span class="cmt">// 循环体执行 n² 次</span>
+
+<span class="cmt">// 例 3：O(n²) 中的 O(n²) —— 很多人会错！</span>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+    <span class="kw">for</span> (<span class="type">int</span> j = i + <span class="num">1</span>; j &lt; n; j++)
+        cnt++;  <span class="cmt">// 执行 n(n-1)/2 次，仍是 O(n²)</span>
+
+<span class="cmt">// 例 4：O(n log n)</span>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++) {          <span class="cmt">// 外循环 n 次</span>
+    <span class="type">int</span> x = i;
+    <span class="kw">while</span> (x &gt; <span class="num">0</span>) { x /= <span class="num">2</span>; cnt++; }  <span class="cmt">// 内循环 log(i) 次 → 总共 O(n log n)</span>
+}</pre>
+
+<h3>步骤 4：忽略常数和低阶项</h3>
+<pre><span class="cmt">// 这段代码的复杂度？</span>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++) sum += nums[i];            <span class="cmt">// O(n)</span>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+    <span class="kw">for</span> (<span class="type">int</span> j = <span class="num">0</span>; j &lt; n; j++) cnt++;                  <span class="cmt">// O(n²)</span>
+<span class="cmt">// 总复杂度：O(n) + O(n²) = O(n²)</span></pre>
+
+<h3>递归的复杂度：主定理（Master Theorem）速查</h3>
+
+<p>对于形如 <code>T(n) = a·T(n/b) + f(n)</code> 的递归：</p>
+
+<table>
+<tr><th>条件</th><th>复杂度</th><th>例子</th></tr>
+<tr><td>f(n) = O(n<sup>log_b a - ε</sup>)</td><td>T(n) = Θ(n<sup>log_b a</sup>)</td><td>—</td></tr>
+<tr><td>f(n) = Θ(n<sup>log_b a</sup>)</td><td>T(n) = Θ(n<sup>log_b a</sup> · log n)</td><td>归并排序: a=2,b=2,f(n)=n → O(n log n)</td></tr>
+<tr><td>f(n) = Ω(n<sup>log_b a + ε</sup>)</td><td>T(n) = Θ(f(n))</td><td>—</td></tr>
+</table>
+
+<div class="box box-ok">
+  <strong>面试中最常用的结论：</strong>归并排序/快速排序 = O(n log n)；二叉树遍历 = O(n)（每个节点访问一次）；回溯 = O(k·分支数^深度)，通常指数级。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 从数据范围反推所需复杂度</h2>
+
+<p>这是面试中<strong>最实用</strong>的技能。看到题目给出数据范围，你应该立刻知道需要什么复杂度的算法：</p>
+
+<table>
+<tr><th>数据范围 n</th><th>可接受的最坏复杂度</th><th>常见算法</th></tr>
+<tr><td>n ≤ 10</td><td>O(n!), O(2ⁿ)</td><td>全排列、暴力回溯</td></tr>
+<tr><td>n ≤ 20</td><td>O(2ⁿ)</td><td>状态压缩 DP、子集枚举</td></tr>
+<tr><td>n ≤ 100</td><td>O(n³)</td><td>Floyd-Warshall、区间 DP</td></tr>
+<tr><td>n ≤ 10³</td><td>O(n²)</td><td>枚举数对、简单 DP</td></tr>
+<tr><td>n ≤ 10⁵</td><td>O(n log n)</td><td>排序、堆、二分查找、大多数 Hot 100</td></tr>
+<tr><td>n ≤ 10⁶</td><td>O(n)</td><td>线性扫描、计数排序、Kadane</td></tr>
+<tr><td>n ≤ 10⁹</td><td>O(log n) 或 O(1)</td><td>二分查找、数学公式</td></tr>
+</table>
+
+<div class="box box-ins">
+  <strong>🎯 LeetCode 题目特征：</strong>Hot 100 中绝大多数题目的数据范围是 <strong>n ≤ 10⁵</strong>，这意味着你的算法必须是 <strong>O(n log n) 或更优</strong>。如果你写出了一个 O(n²) 的算法，大概率会 TLE（超时）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. C++ STL 核心工具：容器与算法复杂度速查</h2>
+
+<p>面试中你不需要从头实现数据结构。STL 是你的武器库，但你必须知道每件武器的<strong>复杂度代价</strong>。</p>
+
+<h3>6.1 序列容器</h3>
+
+<table>
+<tr><th>容器</th><th>用途</th><th>随机访问</th><th>头部插入</th><th>尾部插入</th><th>中部插入</th><th>查找</th></tr>
+<tr><td><code>vector&lt;T&gt;</code></td><td>动态数组（最常用）</td><td>O(1)</td><td>O(n)</td><td>O(1)*</td><td>O(n)</td><td>O(n)</td></tr>
+<tr><td><code>deque&lt;T&gt;</code></td><td>双端队列</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>O(n)</td><td>O(n)</td></tr>
+<tr><td><code>list&lt;T&gt;</code></td><td>双向链表</td><td>—</td><td>O(1)</td><td>O(1)</td><td>O(1)**</td><td>O(n)</td></tr>
+<tr><td><code>string</code></td><td>字符串</td><td>O(1)</td><td>O(n)</td><td>O(1)*</td><td>O(n)</td><td>O(n)</td></tr>
+</table>
+
+<p style="font-size:0.85em;color:#666">* vector/string 尾部插入是<strong>均摊</strong> O(1)（扩容时偶尔 O(n)）。** list 需要先通过遍历找到位置（O(n)），插入本身是 O(1)。</p>
+
+<h3>6.2 关联容器</h3>
+
+<table>
+<tr><th>容器</th><th>底层</th><th>插入</th><th>查找</th><th>删除</th><th>有序？</th></tr>
+<tr><td><code>unordered_map&lt;K,V&gt;</code></td><td>哈希表</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>❌</td></tr>
+<tr><td><code>unordered_set&lt;T&gt;</code></td><td>哈希表</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>❌</td></tr>
+<tr><td><code>map&lt;K,V&gt;</code></td><td>红黑树</td><td>O(log n)</td><td>O(log n)</td><td>O(log n)</td><td>✅</td></tr>
+<tr><td><code>set&lt;T&gt;</code></td><td>红黑树</td><td>O(log n)</td><td>O(log n)</td><td>O(log n)</td><td>✅</td></tr>
+</table>
+
+<div class="box box-err">
+  <strong>⚠️ 常见陷阱：</strong><br>
+  1. <code>mp[key]</code> 如果 key 不存在会<strong>插入默认值</strong>！检查是否存在请用 <code>mp.find(key)</code> 或 <code>mp.count(key)</code><br>
+  2. <code>unordered_map</code> 最坏情况 O(n)（哈希碰撞），但题目基本不会刻意卡。保险起见可了解 <code>gp_hash_table</code> 或使用 <code>map</code>
+</div>
+
+<h3>6.3 适配器容器</h3>
+
+<table>
+<tr><th>容器</th><th>底层</th><th>push</th><th>pop</th><th>top/front</th><th>典型场景</th></tr>
+<tr><td><code>stack&lt;T&gt;</code></td><td>deque</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>DFS 非递归、括号匹配、单调栈</td></tr>
+<tr><td><code>queue&lt;T&gt;</code></td><td>deque</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>BFS、层序遍历</td></tr>
+<tr><td><code>priority_queue&lt;T&gt;</code></td><td>二叉堆</td><td>O(log n)</td><td>O(log n)</td><td>O(1)</td><td>Top K、Dijkstra、数据流中位数</td></tr>
+</table>
+
+<h3>6.4 常用算法（&lt;algorithm&gt;）</h3>
+
+<table>
+<tr><th>算法</th><th>复杂度</th><th>用途</th></tr>
+<tr><td><code>sort(begin, end)</code></td><td>O(n log n)</td><td>排序（快速排序的混合变体）</td></tr>
+<tr><td><code>stable_sort(begin, end)</code></td><td>O(n log n)</td><td>稳定排序</td></tr>
+<tr><td><code>lower_bound(begin, end, x)</code></td><td>O(log n)</td><td>第一个 ≥ x 的位置（要求有序）</td></tr>
+<tr><td><code>upper_bound(begin, end, x)</code></td><td>O(log n)</td><td>第一个 &gt; x 的位置（要求有序）</td></tr>
+<tr><td><code>binary_search(begin, end, x)</code></td><td>O(log n)</td><td>x 是否存在（要求有序）</td></tr>
+<tr><td><code>reverse(begin, end)</code></td><td>O(n)</td><td>反转区间</td></tr>
+<tr><td><code>max_element / min_element</code></td><td>O(n)</td><td>找最大/最小元素</td></tr>
+<tr><td><code>next_permutation(begin, end)</code></td><td>O(n)</td><td>下一个排列</td></tr>
+<tr><td><code>nth_element(begin, nth, end)</code></td><td>O(n) 平均</td><td>部分排序（第 k 小）</td></tr>
+</table>
+
+<h3>6.5 必备的技巧写法</h3>
+
+<pre><span class="cmt">// 1. vector 预分配（避免反复扩容）</span>
+<span class="type">vector</span>&lt;<span class="type">int</span>&gt; v; v.<span class="fn">reserve</span>(n);
+
+<span class="cmt">// 2. 原地构造（避免临时对象）</span>
+v.<span class="fn">emplace_back</span>(x, y);  <span class="cmt">// 优于 v.push_back({x, y})</span>
+
+<span class="cmt">// 3. 结构绑定遍历（C++17）</span>
+<span class="kw">for</span> (<span class="kw">auto</span>& [key, val] : mp) { ... }
+
+<span class="cmt">// 4. 自定义排序</span>
+<span class="fn">sort</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), [](<span class="type">int</span> a, <span class="type">int</span> b) { <span class="kw">return</span> a &gt; b; });
+
+<span class="cmt">// 5. lambda 捕获（DFS/回溯必备）</span>
+<span class="kw">auto</span> dfs = [&](<span class="type">int</span> u, <span class="type">int</span> parent) -&gt; <span class="type">void</span> {
+    <span class="kw">for</span> (<span class="type">int</span> v : adj[u]) {
+        <span class="kw">if</span> (v != parent) <span class="fn">dfs</span>(v, u);
+    }
+};
+<span class="fn">dfs</span>(<span class="num">0</span>, -<span class="num">1</span>);
+</pre>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 真题演练：复杂度分析实战</h2>
+
+<h3>题目 1：最大子数组和（LeetCode 53）</h3>
+
+<p><strong>题眼：</strong>n ≤ 10⁵，必须 O(n log n) 以内</p>
+
+<pre><span class="cmt">// 解法 A：暴力枚举（O(n³)）—— TLE</span>
+<span class="type">int</span> ans = INT_MIN;
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+    <span class="kw">for</span> (<span class="type">int</span> j = i; j &lt; n; j++) {
+        <span class="type">int</span> sum = <span class="num">0</span>;
+        <span class="kw">for</span> (<span class="type">int</span> k = i; k &lt;= j; k++) sum += nums[k];
+        ans = <span class="fn">max</span>(ans, sum);
+    }
+
+<span class="cmt">// 解法 B：前缀和优化（O(n²)）—— 仍然 TLE</span>
+<span class="type">vector</span>&lt;<span class="type">int</span>&gt; pre(n + <span class="num">1</span>, <span class="num">0</span>);
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++) pre[i+<span class="num">1</span>] = pre[i] + nums[i];
+<span class="type">int</span> ans = INT_MIN;
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+    <span class="kw">for</span> (<span class="type">int</span> j = i; j &lt; n; j++)
+        ans = <span class="fn">max</span>(ans, pre[j+<span class="num">1</span>] - pre[i]);
+
+<span class="cmt">// 解法 C：Kadane 算法（O(n)）—— ✅ AC</span>
+<span class="type">int</span> cur = <span class="num">0</span>, ans = INT_MIN;
+<span class="kw">for</span> (<span class="type">int</span> x : nums) {
+    cur = <span class="fn">max</span>(cur + x, x);  <span class="cmt">// 要么扩展，要么从头开始</span>
+    ans = <span class="fn">max</span>(ans, cur);
+}</pre>
+
+<div class="box box-ins">
+  <strong>复杂度分析：</strong>Kadane 算法 O(n) 时间、O(1) 空间。为什么对？<strong>不变量：</strong>cur 始终是「以当前位置结尾」的最大子数组和。递推：以 i 结尾的最大子数组，要么是以 i-1 结尾的最大子数组 + nums[i]，要么是 nums[i] 单独成段。
+</div>
+
+<h3>题目 2：Two Sum（LeetCode 1）</h3>
+
+<p><strong>题眼：</strong>n ≤ 10⁴，O(n²) 勉强可过但 O(n) 才是面试标准</p>
+
+<pre><span class="cmt">// 解法 A：暴力 O(n²)，空间 O(1)</span>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+    <span class="kw">for</span> (<span class="type">int</span> j = i+<span class="num">1</span>; j &lt; n; j++)
+        <span class="kw">if</span> (nums[i] + nums[j] == target) <span class="kw">return</span> {i, j};
+
+<span class="cmt">// 解法 B：排序 + 双指针 O(n log n)，空间 O(n)（存原下标）</span>
+<span class="cmt">// 适用场景：返回的是值而非下标</span>
+
+<span class="cmt">// 解法 C：哈希表 O(n)，空间 O(n)——面试最优解</span>
+<span class="type">unordered_map</span>&lt;<span class="type">int</span>, <span class="type">int</span>&gt; mp;
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+    <span class="kw">if</span> (mp.<span class="fn">count</span>(target - nums[i])) <span class="kw">return</span> {mp[target - nums[i]], i};
+    mp[nums[i]] = i;
+}</pre>
+
+<table>
+<tr><th>解法</th><th>时间</th><th>空间</th><th>n=10⁴</th><th>评价</th></tr>
+<tr><td>暴力</td><td>O(n²)</td><td>O(1)</td><td>10⁸ ≈ 1s</td><td>会过但面试不过</td></tr>
+<tr><td>排序+双指针</td><td>O(n log n)</td><td>O(n)</td><td>~1.3×10⁵</td><td>可行，但需证明下标正确</td></tr>
+<tr><td>哈希表</td><td>O(n)</td><td>O(n)</td><td>10⁴</td><td>最优，经典空间换时间</td></tr>
+</table>
+
+<h3>题目 3：斐波那契数列（LeetCode 509）</h3>
+
+<p><strong>题眼：</strong>同一个问题，不同实现方式有截然不同的复杂度</p>
+
+<pre><span class="cmt">// 实现 A：朴素递归 O(2ⁿ)——n=40 就卡死</span>
+<span class="type">int</span> <span class="fn">fib</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> n;
+    <span class="kw">return</span> <span class="fn">fib</span>(n-<span class="num">1</span>) + <span class="fn">fib</span>(n-<span class="num">2</span>);
+}
+<span class="cmt">// T(n) = T(n-1) + T(n-2) + O(1) → T(n) = O(φⁿ) ≈ O(1.618ⁿ)</span>
+
+<span class="cmt">// 实现 B：记忆化搜索 O(n)——正确利用空间</span>
+<span class="type">int</span> memo[<span class="num">31</span>]; <span class="cmt">// memset to -1</span>
+<span class="type">int</span> <span class="fn">fib</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> n;
+    <span class="kw">if</span> (memo[n] != -<span class="num">1</span>) <span class="kw">return</span> memo[n];
+    <span class="kw">return</span> memo[n] = <span class="fn">fib</span>(n-<span class="num">1</span>) + <span class="fn">fib</span>(n-<span class="num">2</span>);
+}
+
+<span class="cmt">// 实现 C：自底向上 DP O(n)，空间 O(1)</span>
+<span class="type">int</span> <span class="fn">fib</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> n;
+    <span class="type">int</span> a = <span class="num">0</span>, b = <span class="num">1</span>;
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">2</span>; i &lt;= n; i++) {
+        <span class="type">int</span> c = a + b; a = b; b = c;
+    }
+    <span class="kw">return</span> b;
+}</pre>
+
+<div class="box box-ins">
+  <strong>复杂度跃迁：</strong>O(φⁿ) → O(n) → O(n) 但空间 O(1)。同一个数学问题的三种实现跨越了<strong>可解与不可解</strong>的鸿沟。这就是复杂度分析的意义。
+</div>
+
+<h3>题目 4：二分查找的三种写法（边界分析）</h3>
+
+<p>二分查找看似简单，但边界写错就会死循环或漏元素。<strong>三种标准写法</strong>覆盖所有场景：</p>
+
+<pre><span class="cmt">// 写法 1：查找 target（闭区间）——最常用</span>
+<span class="type">int</span> lo = <span class="num">0</span>, hi = n - <span class="num">1</span>;
+<span class="kw">while</span> (lo &lt;= hi) {
+    <span class="type">int</span> mid = lo + (hi - lo) / <span class="num">2</span>;
+    <span class="kw">if</span> (nums[mid] == target) <span class="kw">return</span> mid;
+    <span class="kw">else if</span> (nums[mid] &lt; target) lo = mid + <span class="num">1</span>;
+    <span class="kw">else</span> hi = mid - <span class="num">1</span>;
+}
+
+<span class="cmt">// 写法 2：查找第一个 ≥ target 的位置（lower_bound）</span>
+<span class="type">int</span> lo = <span class="num">0</span>, hi = n;  <span class="cmt">// 左闭右开</span>
+<span class="kw">while</span> (lo &lt; hi) {
+    <span class="type">int</span> mid = lo + (hi - lo) / <span class="num">2</span>;
+    <span class="kw">if</span> (nums[mid] &lt; target) lo = mid + <span class="num">1</span>;
+    <span class="kw">else</span> hi = mid;
+}
+
+<span class="cmt">// 写法 3：查找第一个 &gt; target 的位置（upper_bound）</span>
+<span class="type">int</span> lo = <span class="num">0</span>, hi = n;
+<span class="kw">while</span> (lo &lt; hi) {
+    <span class="type">int</span> mid = lo + (hi - lo) / <span class="num">2</span>;
+    <span class="kw">if</span> (nums[mid] &lt;= target) lo = mid + <span class="num">1</span>;
+    <span class="kw">else</span> hi = mid;
+}</pre>
+
+<div class="box box-err">
+  <strong>⚠️ 最容易犯的错误：</strong><br>
+  1. <code>mid = (lo + hi) / 2</code> —— lo+hi 可能溢出！用 <code>lo + (hi - lo) / 2</code><br>
+  2. 闭区间写 <code>while (lo &lt; hi)</code> —— 会漏掉单元素情况<br>
+  3. 循环内忘了 <code>+1</code> 或 <code>-1</code> —— 导致死循环
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 测验</h2>
+
+<div class="quiz" id="q1">
+<h3>Q1：以下代码的时间复杂度是？</h3>
+<pre><span class="kw">for</span> (<span class="type">int</span> i = <span class="num">1</span>; i &lt;= n; i *= <span class="num">2</span>)
+    <span class="kw">for</span> (<span class="type">int</span> j = <span class="num">0</span>; j &lt; i; j++)
+        cnt++;</pre>
+<label><input type="radio" name="q1" value="a">A. O(n log n)</label>
+<label><input type="radio" name="q1" value="b">B. O(n)</label>
+<label><input type="radio" name="q1" value="c">C. O(n²)</label>
+<label><input type="radio" name="q1" value="d">D. O(log n)</label>
+<button onclick="checkQ1()">提交</button>
+<div class="fb" id="f1"></div>
+</div>
+
+<div class="quiz" id="q2">
+<h3>Q2：LeetCode 上 n = 10⁵，以下哪个复杂度的算法一定会 TLE？</h3>
+<label><input type="radio" name="q2" value="a">A. O(n²) 且常数很小</label>
+<label><input type="radio" name="q2" value="b">B. O(n log n) 且使用平衡树</label>
+<label><input type="radio" name="q2" value="c">C. O(n √n)</label>
+<label><input type="radio" name="q2" value="d">D. O(n log n) 且使用哈希表</label>
+<button onclick="checkQ2()">提交</button>
+<div class="fb" id="f2"></div>
+</div>
+
+<div class="quiz" id="q3">
+<h3>Q3：关于 unordered_map 的 mp[key]，以下说法哪个正确？</h3>
+<label><input type="radio" name="q3" value="a">A. 如果 key 不存在，返回默认值但不修改 map</label>
+<label><input type="radio" name="q3" value="b">B. 如果 key 不存在，会插入 {key, default} 并返回该默认值的引用</label>
+<label><input type="radio" name="q3" value="c">C. 如果 key 不存在，抛出 out_of_range 异常</label>
+<label><input type="radio" name="q3" value="d">D. mp[key] 和 mp.find(key) 行为完全相同</label>
+<button onclick="checkQ3()">提交</button>
+<div class="fb" id="f3"></div>
+</div>
+
+<!-- ============================================================ -->
+
+<h2>本课覆盖的 Hot 100 题目</h2>
+<table>
+<tr><th>题号</th><th>题目</th><th>本课角色</th><th>关键复杂度</th></tr>
+<tr><td>1</td><td>Two Sum</td><td>哈希表 O(n) vs 暴力 O(n²)</td><td>O(n)</td></tr>
+<tr><td>53</td><td>Maximum Subarray</td><td>Kadane 算法 O(n)</td><td>O(n)</td></tr>
+<tr><td>509*</td><td>Fibonacci Number</td><td>递归爆炸 vs 记忆化</td><td>O(n)</td></tr>
+</table>
+<p style="font-size:0.85em;color:#666">*509 不在 Hot 100 中，但它是理解复杂度阶级的经典案例。本课的主要目的不是刷题，而是建立复杂度直觉。</p>
+
+<h2>专项练习</h2>
+<ul>
+  <li>在纸上分析 10 段代码片段的复杂度（不看答案），养成条件反射</li>
+  <li>打开 LeetCode，随机选 5 道 Easy 题，每题只看数据范围，预测需要什么复杂度，再去看题解验证</li>
+  <li>熟记 STL 常用操作的复杂度：<code>sort</code>、<code>lower_bound</code>、<code>unordered_map::find</code>、<code>vector::push_back</code></li>
+</ul>
+
+<h2>参考资源</h2>
+<ul>
+  <li>📖 <a href="../reference/complexity-cheatsheet.html">参考文档：复杂度速查表</a></li>
+  <li>📖 <a href="../reference/stl-cheatsheet.html">参考文档：C++ STL 面试速查表</a></li>
+  <li>📖 <a href="https://en.cppreference.com/w/">cppreference.com</a> — STL 的权威参考</li>
+  <li>📖 CLRS 第 3 章：复杂度分析的形式化处理</li>
+  <li>📖 <a href="https://oi-wiki.org/basic/complexity/">OI Wiki：复杂度分析</a></li>
+</ul>
+
+<div class="box box-ok">
+  <strong>💬 有问题？</strong>这课信息量很大，不需要一次全部记下来。把复杂度阶级对照表和 STL 复杂度表当作<strong>字典</strong>，做题时随时回来查。有任何疑问（比如某段代码的复杂度到底怎么分析），直接在对话中问我。
+</div>
+
+<div class="nav">
+  <span></span>
+  <a href="0001-brute-force-to-optimal.html">下一课：从暴力到最优 —— 搜索空间与优化思维 →</a>
+</div>
+
+<script>
+function checkQ1() {
+  var f = document.getElementById('f1');
+  var s = document.querySelector('input[name="q1"]:checked');
+  if (!s) { f.textContent = '请选择一个答案'; f.className = 'fb incorrect'; return; }
+  if (s.value === 'b') {
+    f.textContent = '✅ 正确！外循环 i=1,2,4,...,n，运行 O(log n) 次。内循环执行 i 次。总和 = 1+2+4+...+n ≈ 2n-1 = O(n)。';
+    f.className = 'fb correct';
+  } else {
+    f.textContent = '❌ 再想想。外循环是 i *= 2（O(log n) 次），内循环执行 i 次。总和是几何级数 1+2+4+...+n ≈ 2n-1。';
+    f.className = 'fb incorrect';
+  }
+}
+function checkQ2() {
+  var f = document.getElementById('f2');
+  var s = document.querySelector('input[name="q2"]:checked');
+  if (!s) { f.textContent = '请选择一个答案'; f.className = 'fb incorrect'; return; }
+  if (s.value === 'a') {
+    f.textContent = '✅ 正确！n=10⁵ 时 n² = 10¹⁰，远超 10⁷~10⁸ 的 1 秒限制。不管常数多小，10¹⁰ 都无法通过。';
+    f.className = 'fb correct';
+  } else {
+    f.textContent = '❌ 再想想。n log n (10⁵×17 ≈ 1.7×10⁶) 和 n√n (10⁵×316 ≈ 3.2×10⁷) 都可以。只有 10¹⁰ 不行。';
+    f.className = 'fb incorrect';
+  }
+}
+function checkQ3() {
+  var f = document.getElementById('f3');
+  var s = document.querySelector('input[name="q3"]:checked');
+  if (!s) { f.textContent = '请选择一个答案'; f.className = 'fb incorrect'; return; }
+  if (s.value === 'b') {
+    f.textContent = '✅ 正确！mp[key] 在 key 不存在时会插入 {key, V()} 并返回引用。这是最常见的陷阱！';
+    f.className = 'fb correct';
+  } else {
+    f.textContent = '❌ 再想想。mp[key] 会修改 map。如果不想插入而只是查找，用 mp.find(key)。';
+    f.className = 'fb incorrect';
+  }
+}
+</script>
+
+</body>
+</html>

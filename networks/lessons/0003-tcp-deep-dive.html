@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 3 课：TCP —— 在不可靠的 IP 之上构建可靠传输</title>
+<style>
+  :root {
+    --bg: #fffff8; --text: #111; --muted: #666; --accent: #c44; --link: #246;
+    --rule: #ddd; --highlight: #fff8e1; --code-bg: #f4f4f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "Songti SC", Georgia, serif;
+    background: var(--bg); color: var(--text); line-height: 1.75;
+  }
+  article { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: 0.03em; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.2rem; margin: 2.2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--rule); color: #333; }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 0.5rem; color: #444; }
+  p { margin: 0.8rem 0; }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.92em; font-family: "JetBrains Mono","Fira Code","SF Mono",monospace; }
+  pre { background: var(--code-bg); padding: 0.8rem 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.84rem; line-height: 1.5; margin: 1rem 0; }
+  pre code { background: none; padding: 0; }
+
+  .sidenote {
+    background: var(--highlight); border-left: 3px solid #e6c840;
+    padding: 0.6rem 1rem; margin: 1rem 0; font-size: 0.88rem; color: #5a4a20;
+  }
+  .sidenote strong { color: #8a6d20; }
+
+  .stack-indicator {
+    margin: 1.5rem 0; display: flex; flex-direction: column; align-items: center; font-size: 0.82rem;
+  }
+  .stack-indicator .layer {
+    padding: 0.35rem 3rem; border: 1px solid var(--rule); margin: 1px 0;
+    border-radius: 3px; background: #fff; color: var(--muted);
+  }
+  .stack-indicator .layer.current {
+    background: #2c3e50; color: #fff; font-weight: 600; border-color: #2c3e50;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+  th { background: #f5f5f0; padding: 0.5rem 0.7rem; text-align: left; border-bottom: 2px solid var(--rule); font-weight: 600; }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--rule); }
+
+  /* ===== VISUAL DIAGRAM: Timeline (handshake / teardown) ===== */
+  .seq-diagram {
+    margin: 1.5rem 0;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .seq-diagram .seq-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #fafaf5;
+  }
+  .seq-diagram .seq-header .sh {
+    padding: 0.7rem 1rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .seq-diagram .seq-header .sh.left  { background: #e3ecf5; color: #1e5080; border-right: 1px solid var(--rule); }
+  .seq-diagram .seq-header .sh.right { background: #f2e9dd; color: #704e20; }
+
+  .seq-diagram .seq-step {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    border-top: 1px solid #eee;
+    min-height: 52px;
+  }
+  .seq-diagram .seq-step .arrow-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    background: #fdfdf8;
+  }
+  .seq-diagram .seq-step .arrow-cell svg { display: block; }
+  .seq-diagram .seq-step .msg-cell {
+    padding: 0.5rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 0.82rem;
+  }
+  .seq-diagram .seq-step .msg-cell.left  { text-align: right; align-items: flex-end; }
+  .seq-diagram .seq-step .msg-cell.right { text-align: left;  align-items: flex-start; }
+  .seq-diagram .seq-step .msg-cell .tag {
+    font-family: "JetBrains Mono","Fira Code",monospace;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    letter-spacing: 0.03em;
+  }
+  .seq-diagram .seq-step .msg-cell.left  .tag { background: #dce8f4; color: #1e5080; }
+  .seq-diagram .seq-step .msg-cell.right .tag { background: #f0e4d4; color: #704e20; }
+  .seq-diagram .seq-step .msg-cell .detail {
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin-top: 0.12rem;
+  }
+  .seq-diagram .seq-step .state-bar {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 0.7rem;
+    font-family: "JetBrains Mono","Fira Code",monospace;
+    color: var(--muted);
+    padding: 0.15rem;
+    letter-spacing: 0.05em;
+    background: #fdfdf8;
+    border-top: 1px dotted #eee;
+  }
+
+  /* ===== VISUAL DIAGRAM: Packet exchange ===== */
+  .pkt-ex {
+    margin: 1.2rem 0;
+  }
+  .pkt-ex .pkt-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.5rem 0;
+  }
+  .pkt-ex .pkt-row .pkt {
+    background: #e8eef6;
+    border: 1px solid #c0d0e4;
+    border-radius: 5px;
+    padding: 0.35rem 0.7rem;
+    font-family: "JetBrains Mono","Fira Code",monospace;
+    font-size: 0.8rem;
+  }
+  .pkt-ex .pkt-row .pkt.ack { background: #f4ede2; border-color: #dcccb0; }
+  .pkt-ex .pkt-row .pkt-ar {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .pkt-ex .pkt-row .pkt-note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-left: 0.3rem;
+  }
+
+  /* ===== VISUAL DIAGRAM: Sliding window ===== */
+  .win {
+    margin: 1.2rem 0;
+    font-family: "JetBrains Mono","Fira Code",monospace;
+  }
+  .win .win-blocks {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    margin: 0.5rem 0;
+  }
+  .win .win-blocks .blk {
+    width: 42px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 0.73rem;
+    font-weight: 600;
+  }
+  .win .win-blocks .blk.done  { background: #c4dcc4; color: #2a5a2a; }
+  .win .win-blocks .blk.fly   { background: #d4e0f0; color: #1a4a6e; }
+  .win .win-blocks .blk.ready { background: #fafaf2; color: #999; border: 1px dashed #ccc; }
+  .win .win-blocks .blk.wait  { background: #f6f6f2; color: #ccc; }
+  .win .win-labels {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+  }
+  .win .win-labels span { width: 42px; text-align: center; }
+
+  /* ===== VISUAL DIAGRAM: cwnd bar chart ===== */
+  .cwnd-viz {
+    margin: 1.2rem 0;
+  }
+  .cwnd-viz .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 90px;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .cwnd-viz .bars .b {
+    flex: 1;
+    min-width: 16px;
+    border-radius: 2px 2px 0 0;
+  }
+  .cwnd-viz .bars .b.ss  { background: #7eb8da; }
+  .cwnd-viz .bars .b.ca  { background: #5ea85e; }
+  .cwnd-viz .bars .b.fr  { background: #e6b840; }
+  .cwnd-viz .bars .b.loss { background: #d94a4a; height: 5px; align-self: flex-end; }
+  .cwnd-viz .xlabels {
+    display: flex;
+    gap: 3px;
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-family: "JetBrains Mono",monospace;
+    margin-top: 0.25rem;
+  }
+  .cwnd-viz .xlabels span { flex: 1; min-width: 16px; text-align: center; }
+  .cwnd-viz .leg {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.4rem;
+    font-size: 0.74rem;
+    flex-wrap: wrap;
+  }
+  .cwnd-viz .leg span { display: inline-flex; align-items: center; gap: 0.25rem; }
+  .cwnd-viz .leg .swatch {
+    width: 10px; height: 10px; border-radius: 2px; display: inline-block;
+  }
+  .cwnd-viz .leg .swatch.ss-s  { background: #7eb8da; }
+  .cwnd-viz .leg .swatch.ca-s  { background: #5ea85e; }
+  .cwnd-viz .leg .swatch.fr-s  { background: #e6b840; }
+  .cwnd-viz .leg .swatch.ls-s  { background: #d94a4a; }
+
+  /* ===== VISUAL DIAGRAM: State machine ===== */
+  .stm {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem 0.8rem;
+    margin: 1.2rem 0;
+  }
+  .stm .node {
+    padding: 0.5rem 0.8rem;
+    border-radius: 5px;
+    font-weight: 600;
+    font-family: "JetBrains Mono","Fira Code",monospace;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+  .stm .node.ss-n  { background: #dce8f4; color: #1e5080; border: 1px solid #b8cce0; }
+  .stm .node.ca-n  { background: #d4e8d4; color: #1a5a1a; border: 1px solid #a8cca8; }
+  .stm .node.fr-n  { background: #faf0d8; color: #7a5a1a; border: 1px solid #e0c890; }
+  .stm .arr {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #888;
+  }
+  .stm .elabel {
+    font-size: 0.68rem;
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+  }
+
+  .sup { margin: 2rem 0; padding: 1.5rem; border: 2px dashed var(--rule); border-radius: 8px; background: #fafdf8; }
+  .sup h2 { border: none; margin-top: 0; color: #5a8a3a; }
+  .sup h3 { color: #5a8a3a; }
+  .quiz {
+    margin: 2.5rem 0; padding: 1.5rem; border: 1px solid var(--rule);
+    border-radius: 6px; background: #fdfdf8;
+  }
+  .quiz h2 { margin-top: 0; border: none; padding-bottom: 0; }
+  .quiz .q { margin: 1.2rem 0; }
+  .quiz .q > p { font-weight: 600; margin-bottom: 0.3rem; }
+  .quiz .q label { display: block; padding: 0.35rem 0; cursor: pointer; font-size: 0.9rem; }
+  .quiz .q input[type="radio"] { margin-right: 0.5rem; }
+  .quiz button {
+    margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: #fff;
+    border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-family: inherit;
+  }
+  .quiz button:hover { opacity: 0.9; }
+  .quiz .feedback { margin-top: 0.5rem; font-size: 0.88rem; min-height: 1.5rem; }
+  .quiz .feedback.correct { color: #2a7d2a; }
+  .quiz .feedback.incorrect { color: #c44; }
+
+  .lesson-nav {
+    display: flex; justify-content: space-between; margin-top: 3rem;
+    padding-top: 1.5rem; border-top: 1px solid var(--rule); font-size: 0.9rem;
+  }
+  .source-box {
+    margin: 2rem 0; padding: 1rem 1.2rem;
+    background: #f0f4f8; border-radius: 6px; font-size: 0.9rem;
+  }
+  .source-box h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<article>
+
+<h1>第 3 课：TCP —— 在不可靠的 IP 之上构建可靠传输</h1>
+<div class="meta">
+  计算机网络 · <a href="../index.html">← 概念地图</a> · 约 30 分钟 ·
+  <a href="../reference/glossary.html">术语表</a>
+</div>
+
+<div class="stack-indicator">
+  <div class="layer">应用层 &nbsp; HTTP · DNS · TLS</div>
+  <div class="layer current">◀ 传输层 &nbsp; TCP · UDP ◀ 本课</div>
+  <div class="layer">网络层 &nbsp; IP · BGP</div>
+  <div class="layer">链路层 &nbsp; Ethernet · ARP</div>
+  <div class="layer">物理层 &nbsp; 网线 · 光纤</div>
+</div>
+
+<p>
+  第 4 课告诉我们：IP 层只做「尽力而为」的转发——包可能丢了、可能重复了、可能后发先至。这就是 TCP 存在的全部意义：<strong>在不可靠的 IP 层之上，给应用程序一个"数据绝对不会出问题"的幻觉。</strong>
+</p>
+
+<div class="sidenote">
+  <strong>🎯 本课目标：</strong>理解 TCP 如何在不可靠的 IP 之上，实现「不丢、不乱、不重复」的可靠字节流传输。含三次握手、序列号/ACK、滑动窗口流量控制、拥塞控制（慢启动/拥塞避免/快速恢复）、四次挥手与 TIME_WAIT。TCP 是面试最高频的考点，值得投入最多时间。
+</div>
+
+<!-- ==================== THE PROBLEM ==================== -->
+
+<h2>1. TCP 要解决哪四个问题？</h2>
+
+<p>IP 层给了你一个「不可靠的包投递服务」。TCP 要在上面造出：</p>
+
+<table>
+  <tr><th>问题</th><th>IP 层的问题</th><th>TCP 的解法</th><th>机制</th></tr>
+  <tr><td>丢包</td><td>路由器缓冲区溢出，包被丢弃</td><td><strong>可靠传输</strong></td><td>ACK + 超时重传</td></tr>
+  <tr><td>乱序</td><td>不同包可能走不同路径</td><td><strong>有序交付</strong></td><td>序列号重排</td></tr>
+  <tr><td>重复</td><td>重传可能导致重复包</td><td><strong>去重</strong></td><td>序列号去重</td></tr>
+  <tr><td>流量/拥塞</td><td>发太快会压垮接收方或网络</td><td><strong>流量控制 + 拥塞控制</strong></td><td>滑动窗口 + 拥塞窗口</td></tr>
+</table>
+
+<p>这四个问题，<strong>序列号（Sequence Number）</strong>是解决前三个的基础。拥塞控制是 TCP 最精巧的部分——也是最常被问到的。</p>
+
+<!-- ==================== THREE-WAY HANDSHAKE ==================== -->
+
+<h2>2. 三次握手 —— 为什么要三次？</h2>
+
+<p>TCP 是<strong>面向连接</strong>的：传输数据之前，双方必须先建立连接。这个过程叫三次握手：</p>
+
+<div class="seq-diagram">
+  <div class="seq-header">
+    <div class="sh left">客户端（主动打开）</div>
+    <div class="sh right">服务器（被动监听）</div>
+  </div>
+  <div class="seq-step">
+    <div class="msg-cell left">
+      <span class="tag">SYN, seq=x</span>
+      <span class="detail">"我想和你建立连接，我的初始序列号是 x"</span>
+    </div>
+    <div class="arrow-cell">
+      <svg width="32" height="18" viewBox="0 0 32 18"><line x1="2" y1="9" x2="28" y2="9" stroke="#1e5080" stroke-width="1.8"/><polygon points="28,5 28,13 32,9" fill="#1e5080"/></svg>
+    </div>
+    <div class="msg-cell right"></div>
+  </div>
+  <div class="seq-step">
+    <div class="state-bar">SYN-SENT &nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SYN-RCVD</div>
+  </div>
+  <div class="seq-step">
+    <div class="msg-cell left"></div>
+    <div class="arrow-cell">
+      <svg width="32" height="18" viewBox="0 0 32 18"><line x1="30" y1="9" x2="4" y2="9" stroke="#704e20" stroke-width="1.8"/><polygon points="4,5 4,13 0,9" fill="#704e20"/></svg>
+    </div>
+    <div class="msg-cell right">
+      <span class="tag">SYN+ACK, seq=y, ack=x+1</span>
+      <span class="detail">"好的，我的初始序列号是 y，我收到了你的 x"</span>
+    </div>
+  </div>
+  <div class="seq-step">
+    <div class="msg-cell left">
+      <span class="tag">ACK, ack=y+1</span>
+      <span class="detail">"我收到了你的确认"</span>
+    </div>
+    <div class="arrow-cell">
+      <svg width="32" height="18" viewBox="0 0 32 18"><line x1="2" y1="9" x2="28" y2="9" stroke="#1e5080" stroke-width="1.8"/><polygon points="28,5 28,13 32,9" fill="#1e5080"/></svg>
+    </div>
+    <div class="msg-cell right"></div>
+  </div>
+  <div class="seq-step">
+    <div class="state-bar">ESTABLISHED &nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ESTABLISHED</div>
+  </div>
+</div>
+
+<h3>为什么不是两次？</h3>
+
+<p>核心原因：<strong>防止旧的、延迟的 SYN 包导致错误建立连接。</strong></p>
+
+<p>想象一个场景：客户端发了一个 SYN，但它因为网络拥塞在半路上滞留了很久。客户端以为丢了，重发了一个 SYN，这次正常完成了通信。如果只用两次握手（客户端发 SYN → 服务器回 SYN-ACK 就算连接建立），当那个<strong>旧的、迟到的 SYN</strong>终于到达服务器时，服务器会单方面认为连接建立了——但客户端根本不知道这事，白白占用服务器资源。</p>
+
+<p>三次握手让<strong>双方都确认了对方的收发能力</strong>：</p>
+<ul>
+  <li>客户端通过收到 SYN-ACK 确认：我发的 SYN 服务器收到了，服务器也能发</li>
+  <li>服务器通过收到 ACK 确认：我发的 SYN-ACK 客户端收到了</li>
+</ul>
+
+<div class="sidenote">
+  <strong>🔑 另一个关键作用：同步初始序列号。</strong>三次握手不仅建立连接，还交换了双方的初始序列号（ISN）。序列号不是从 0 开始——而是从随机值开始，这是为了安全（防止序列号预测攻击）和防止与旧连接的包混淆。
+</div>
+
+<!-- ==================== SEQ AND ACK ==================== -->
+
+<h2>3. 序列号与 ACK —— 可靠传输的基石</h2>
+
+<p>TCP 把数据看作一个<strong>字节流</strong>。每个字节有一个编号——序列号。确认号的意思是：<strong>「我已经收到了前 N 个字节，下一个期待第 N+1 号字节。」</strong></p>
+
+<p>这不同于「第几个包」的思维模型。TCP 的 ACK 是<strong>累计确认</strong>：ACK 1000 的意思是「0–999 号字节全部收到」。如果收到了 1000–1999 但中间缺了 500–999，ACK 依然是 500——不会跳过未收到的部分。</p>
+
+<div class="pkt-ex">
+  <div class="pkt-row">
+    <span style="font-weight:600;font-size:0.82rem;min-width:42px;">主机 A</span>
+    <span class="pkt">seq=1, 100 bytes</span>
+    <span class="pkt-ar">→</span>
+    <span style="font-weight:600;font-size:0.82rem;min-width:42px;">主机 B</span>
+    <span class="pkt-note">B 收到字节 1–100</span>
+  </div>
+  <div class="pkt-row">
+    <span></span>
+    <span class="pkt">seq=101, 100 bytes</span>
+    <span class="pkt-ar">→</span>
+    <span></span>
+    <span class="pkt-note">B 收到字节 101–200</span>
+  </div>
+  <div class="pkt-row">
+    <span></span>
+    <span class="pkt">seq=201, 100 bytes</span>
+    <span class="pkt-ar">→</span>
+    <span></span>
+    <span class="pkt-note">B 收到字节 201–300</span>
+  </div>
+  <div class="pkt-row">
+    <span></span>
+    <span class="pkt ack">ack=301</span>
+    <span class="pkt-ar">←</span>
+    <span></span>
+    <span class="pkt-note">"前 300 字节收到了，下一个期待 301"</span>
+  </div>
+</div>
+
+<p>如果 B 只收到了 seq=1 和 seq=201（丢了 seq=101 那个包），B 的 ACK 仍然是 101。这就会触发 A 重传 seq=101。</p>
+
+<div class="sidenote">
+  <strong>⚠️ 常见误区：</strong>ACK 号不等于 seq+1。ACK 号 = seq + 收到的字节数。如果 seq=100 且发了 200 字节，正确的 ACK 是 300。
+</div>
+
+<!-- ==================== FLOW CONTROL ==================== -->
+
+<h2>4. 滑动窗口 —— 我不要你发太快</h2>
+
+<p>发送方不能无限制发送。接收方有一个<strong>接收缓冲区</strong>，如果满了还要硬塞，数据就丢了。TCP 用<strong>滑动窗口</strong>做流量控制——接收方在 ACK 中告诉发送方「我的窗口还有多大」。</p>
+
+<div class="win">
+  <div style="font-size:0.82rem;margin-bottom:0.5rem;">发送方的发送窗口（总窗口 = 4096 字节，8 个段，每段 512 字节）：</div>
+  <div class="win-blocks">
+    <div class="blk done">0</div>
+    <div class="blk done">1</div>
+    <div class="blk done">2</div>
+    <div class="blk fly">3</div>
+    <div class="blk fly">4</div>
+    <div class="blk ready">5</div>
+    <div class="blk ready">6</div>
+    <div class="blk ready">7</div>
+    <div class="blk wait">8</div>
+    <div class="blk wait">9</div>
+    <div class="blk wait">10</div>
+  </div>
+  <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:0.3rem;font-size:0.72rem;">
+    <span style="width:126px;text-align:center;color:#2a5a2a;">← 已发送已确认</span>
+    <span style="width:84px;text-align:center;color:#1a4a6e;">在飞</span>
+    <span style="width:126px;text-align:center;color:#999;">可发未发</span>
+    <span style="width:126px;text-align:center;color:#ccc;">等窗口滑动</span>
+  </div>
+  <div style="margin-top:0.5rem;font-size:0.78rem;color:var(--muted);">
+    ▸ 窗口左沿在段 3，右沿在段 8。段 3 ACK 回来后，左沿右移，右沿也跟着右移——这就是"滑动"。
+  </div>
+</div>
+
+<p>发送方保证「已发送但未确认」的数据量 ≤ 接收方的窗口大小。如果接收方处理不过来了，窗口缩小甚至到 0（零窗口），发送方停止发送。</p>
+
+<!-- ==================== CONGESTION CONTROL ==================== -->
+
+<h2>5. 拥塞控制 —— TCP 最精妙的设计</h2>
+
+<p>流量控制管的是「接收方会不会被淹死」。拥塞控制管的是<strong>「网络管道本身会不会被堵死」</strong>。</p>
+
+<p>发送方维护一个<strong>拥塞窗口（cwnd）</strong>——它猜测网络目前能承受多少「在飞」的数据。实际发送量 = min(接收方窗口, 拥塞窗口)。</p>
+
+<h3>慢启动（Slow Start）</h3>
+
+<p>TCP 连接刚建立时，它不知道网络能承受多少流量。不能一上来就灌满。慢启动的策略是<strong>从 1 个 MSS 开始，指数增长</strong>：每收到一个 ACK，cwnd + 1。结果是每个 RTT 翻一倍。</p>
+
+<div class="cwnd-viz">
+  <div class="bars">
+    <div class="b ss" style="height:5%;"></div>
+    <div class="b ss" style="height:10%;"></div>
+    <div class="b ss" style="height:20%;"></div>
+    <div class="b ss" style="height:40%;"></div>
+    <div class="b ss" style="height:55%;"></div>
+    <div class="b ss" style="height:70%;"></div>
+    <div class="b ca" style="height:78%;"></div>
+    <div class="b ca" style="height:84%;"></div>
+    <div class="b ca" style="height:90%;"></div>
+    <div class="b loss" style="height:5%;"></div>
+    <div class="b fr" style="height:42%;"></div>
+    <div class="b fr" style="height:46%;"></div>
+    <div class="b fr" style="height:50%;"></div>
+    <div class="b ca" style="height:55%;"></div>
+    <div class="b ca" style="height:60%;"></div>
+  </div>
+  <div class="xlabels">
+    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+    <span>6</span><span>7</span><span>8</span><span>9</span><span>×</span>
+    <span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+  </div>
+  <div class="leg">
+    <span><span class="swatch ss-s"></span> 慢启动（指数）</span>
+    <span><span class="swatch ca-s"></span> 拥塞避免（线性）</span>
+    <span><span class="swatch fr-s"></span> 快速恢复</span>
+    <span><span class="swatch ls-s"></span> 丢包 (×)</span>
+  </div>
+</div>
+
+<p>虽然是"指数"增长，但起点很低（1 MSS），所以叫"慢启动"——<strong>慢在起点，快在增速</strong>。</p>
+
+<h3>拥塞避免（Congestion Avoidance）</h3>
+
+<p>cwnd 不能永远指数增长。到达<strong>慢启动阈值（ssthresh）</strong>后，进入拥塞避免阶段——<strong>每 RTT 只加 1 MSS</strong>（线性增长），谨慎试探瓶颈。</p>
+
+<h3>丢包了怎么办？</h3>
+
+<table>
+  <tr><th>检测方式</th><th>触发条件</th><th>TCP 的反应</th></tr>
+  <tr><td><strong>超时重传 (RTO)</strong></td><td>ACK 等了很久都没来</td><td><strong>严重拥塞</strong> → cwnd = 1，ssthresh = cwnd/2，重新慢启动</td></tr>
+  <tr><td><strong>快速重传</strong></td><td>连续收到 3 个重复 ACK</td><td><strong>轻微拥塞</strong> → cwnd 减半，ssthresh = cwnd/2，进入快速恢复</td></tr>
+</table>
+
+<p>TCP Reno 拥塞控制的状态机：</p>
+
+<div class="stm">
+  <div class="node ss-n">慢启动<br>Slow Start</div>
+  <div class="arr">→</div>
+  <div class="elabel">超过 ssthresh</div>
+  <div class="arr">→</div>
+  <div class="node ca-n">拥塞避免<br>Cong. Avoid.</div>
+  <div class="arr">→</div>
+  <div class="elabel">3 个重复 ACK</div>
+  <div class="arr">→</div>
+  <div class="node fr-n">快速恢复<br>Fast Recovery</div>
+</div>
+<div style="text-align:center;margin:0.3rem 0 0.8rem;font-size:0.72rem;color:var(--muted);">
+  ↑ 超时（cwnd→1）&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  ↑ 超时（cwnd→1）&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  ↑ 超时（cwnd→1）
+</div>
+
+<div class="sidenote">
+  <strong>💡 为什么三个重复 ACK 就算轻微拥塞？</strong>一个重复 ACK 可能只是包乱序了。两个也可能是。但<strong>连续三个</strong>重复 ACK 几乎不可能只是因为乱序——后面一定有个包丢了。此时不必等 RTO 超时（几百毫秒），直接重传 + 减半 cwnd。这就是"快速"二字的含义。
+</div>
+
+<!-- ==================== FOUR-WAY TEARDOWN ==================== -->
+
+<h2>6. 四次挥手 —— TIME_WAIT 之谜</h2>
+
+<p>TCP 是全双工的：数据可以向两个方向独立流动。断开连接需要双方<strong>各自关闭自己的发送方向</strong>，所以是四次：</p>
+
+<div class="seq-diagram">
+  <div class="seq-header">
+    <div class="sh left">主动关闭方</div>
+    <div class="sh right">被动关闭方</div>
+  </div>
+  <div class="seq-step">
+    <div class="msg-cell left">
+      <span class="tag">FIN, seq=u</span>
+      <span class="detail">"我说完了，不再发数据了"</span>
+    </div>
+    <div class="arrow-cell">
+      <svg width="32" height="18" viewBox="0 0 32 18"><line x1="2" y1="9" x2="28" y2="9" stroke="#1e5080" stroke-width="1.8"/><polygon points="28,5 28,13 32,9" fill="#1e5080"/></svg>
+    </div>
+    <div class="msg-cell right"></div>
+  </div>
+  <div class="seq-step">
+    <div class="msg-cell left"></div>
+    <div class="arrow-cell">
+      <svg width="32" height="18" viewBox="0 0 32 18"><line x1="30" y1="9" x2="4" y2="9" stroke="#704e20" stroke-width="1.8"/><polygon points="4,5 4,13 0,9" fill="#704e20"/></svg>
+    </div>
+    <div class="msg-cell right">
+      <span class="tag">ACK, ack=u+1</span>
+      <span class="detail">"知道了"</span>
+    </div>
+  </div>
+  <div class="seq-step">
+    <div class="state-bar">半关闭：客户端→服务器方向已关闭，服务器可能还有数据要发</div>
+  </div>
+  <div class="seq-step">
+    <div class="msg-cell left"></div>
+    <div class="arrow-cell">
+      <svg width="32" height="18" viewBox="0 0 32 18"><line x1="30" y1="9" x2="4" y2="9" stroke="#704e20" stroke-width="1.8"/><polygon points="4,5 4,13 0,9" fill="#704e20"/></svg>
+    </div>
+    <div class="msg-cell right">
+      <span class="tag">FIN, seq=v</span>
+      <span class="detail">"我也说完了"</span>
+    </div>
+  </div>
+  <div class="seq-step">
+    <div class="msg-cell left">
+      <span class="tag">ACK, ack=v+1</span>
+      <span class="detail">"知道了"</span>
+    </div>
+    <div class="arrow-cell">
+      <svg width="32" height="18" viewBox="0 0 32 18"><line x1="2" y1="9" x2="28" y2="9" stroke="#1e5080" stroke-width="1.8"/><polygon points="28,5 28,13 32,9" fill="#1e5080"/></svg>
+    </div>
+    <div class="msg-cell right"></div>
+  </div>
+  <div class="seq-step">
+    <div class="state-bar">TIME_WAIT (等 2MSL)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CLOSED</div>
+  </div>
+</div>
+
+<h3>为什么有 TIME_WAIT？必须等 2MSL？</h3>
+
+<p>主动关闭方发出最后一个 ACK 后，进入 <strong>TIME_WAIT</strong> 状态，等待 <strong>2MSL</strong>（Maximum Segment Lifetime，约 60 秒）：</p>
+
+<ol>
+  <li><strong>防止最后一个 ACK 丢失。</strong>如果 ACK 丢了，被动方会重发 FIN。TIME_WAIT 让主动方还能回复 ACK</li>
+  <li><strong>让旧连接的残余包在网络上消亡。</strong>等 2MSL 确保这个连接的所有包都过期了，新连接不会混淆</li>
+</ol>
+
+<div class="sidenote">
+  <strong>⚠️ 面试高频：</strong>服务端如果看到大量 TIME_WAIT 连接，通常是短连接太多或 keep-alive 没开。大量 TIME_WAIT 会耗尽端口号。
+</div>
+
+<!-- ==================== TCP VS UDP ==================== -->
+
+<h2>7. TCP vs UDP —— 什么场景不用 TCP？</h2>
+
+<table>
+  <tr><th></th><th>TCP</th><th>UDP</th></tr>
+  <tr><td>连接</td><td>面向连接（三次握手）</td><td>无连接（直接发）</td></tr>
+  <tr><td>可靠性</td><td>保证送达、有序、不重复</td><td>不保证任何事</td></tr>
+  <tr><td>速度</td><td>握手 + ACK 有开销</td><td>零开销</td></tr>
+  <tr><td>头部大小</td><td>20–60 字节</td><td>固定 8 字节</td></tr>
+  <tr><td>流量/拥塞控制</td><td>有</td><td>无（应用层自己管）</td></tr>
+  <tr><td>适用场景</td><td>Web 浏览、文件传输、邮件</td><td>视频通话、DNS、在线游戏、IoT</td></tr>
+</table>
+
+<p>选择 UDP 的场景有几个共同点：容忍丢包但不容忍延迟（视频/游戏）、需要广播/组播、或者想在应用层自己管可靠性（如 QUIC/HTTP3）。</p>
+
+<!-- ==================== SUPPLEMENT: RELIABLE TRANSPORT THEORY ==================== -->
+<div class="sup">
+<h2>📚 补充：可靠传输的算法基础 —— TCP 为什么这样设计</h2>
+
+<p>TCP 的可靠传输不是凭空发明的。在它之前，学术界已经研究了三种经典的可靠传输算法，TCP 融合了它们的优点。理解这些基础算法，TCP 的序列号、ACK、滑动窗口就不再是"记忆"而是"推导"。</p>
+
+<h3>Stop-and-Wait（停等协议）</h3>
+<p>发一个包 → 等 ACK → 收到 ACK 再发下一个。如果超时，重发同一个包。</p>
+
+<div style="background:#f4f4f0;padding:0.8rem;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:0.8rem;margin:0.8rem 0;line-height:1.8;">
+  发送方：发 P0 ──→ 等... ←── ACK0 → 发 P1 ──→ 等... X 丢了！ 超时！→ 发 P1 ──→ ←── ACK1
+</div>
+
+<p><strong>问题：利用率极低。</strong>假设 RTT=30ms，带宽=1Gbps，包大小=1KB。Stop-and-Wait 的实际吞吐量 = 1KB/30ms ≈ 267Kbps——只用到了 1Gbps 的 0.026%。大量时间花在"等 ACK"上。</p>
+
+<div class="sidenote"><strong>💡 管道化（Pipelining）：</strong>解决利用率低的方法很简单——不等 ACK 回复，连续发多个包。这就是 Go-Back-N 和 Selective Repeat 的思路。</div>
+
+<h3>Go-Back-N（回退 N 步）</h3>
+<p>发送方维护一个<strong>大小为 N 的窗口</strong>，可以连续发窗口内的所有包，不等 ACK。但接收方<strong>只接受按序到达的包</strong>——乱序的包直接丢弃。如果包 k 丢了，发送方超时后必须<strong>从包 k 开始重传所有后续包</strong>（即使后面的包已经成功到达）。</p>
+
+<div style="background:#f4f4f0;padding:0.8rem;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:0.8rem;margin:0.8rem 0;line-height:1.8;">
+  窗口大小 N=4<br>
+  发送方：发 P0 → P1 → P2 → P3  （全部在飞）<br>
+  接收方：← ACK0 ← ACK1  P2 丢了！ 收到 P3 → 丢弃 P3 → 重复 ACK1<br>
+  发送方：超时！ 重传 P2 → P3 → P4 → P5 （回退到 P2，全部重发）
+</div>
+
+<p><strong>问题：重传浪费。</strong>P3 明明已经到了，因为乱序被丢弃，还需要重传。当丢包率高时，Go-Back-N 退化到接近 Stop-and-Wait。</p>
+
+<h3>Selective Repeat（选择重传）</h3>
+<p>和 Go-Back-N 一样用窗口，但关键区别是：<strong>接收方缓存乱序的包</strong>。只有真正丢失的包才重传——不乱丢已经收到的。</p>
+
+<div style="background:#f4f4f0;padding:0.8rem;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:0.8rem;margin:0.8rem 0;line-height:1.8;">
+  发送方：发 P0 → P1 → P2 → P3<br>
+  接收方：← ACK0 ← ACK1  P2 丢了 → 缓存 P3 → 发 SACK(0-1, 3)<br>
+  发送方：收到 SACK → 只重传 P2<br>
+  接收方：P2 到了 → 拼上 P3 → 一次性交付 P0 P1 P2 P3
+</div>
+
+<h3>TCP 是怎么融合的？</h3>
+
+<table>
+  <tr><th>TCP 机制</th><th>来自哪个算法</th><th>改进</th></tr>
+  <tr><td>累计 ACK（ACK N 表示 N-1 以前全收到）</td><td>Go-Back-N 风格</td><td>—</td></tr>
+  <tr><td>只有丢包才重传（不重传已收到的）</td><td>Selective Repeat 风格</td><td>通过 SACK 选项支持选择性确认</td></tr>
+  <tr><td>单一定时器（一个窗口只设一个超时计时器）</td><td>Go-Back-N 风格</td><td>简化实现</td></tr>
+  <tr><td>快速重传（3 个重复 ACK 触发重传）</td><td>TCP 独创</td><td>不等超时，提前发现丢包</td></tr>
+</table>
+
+<p>TCP 在实践上是 Go-Back-N 和 Selective Repeat 的<strong>混合体</strong>：默认用累计 ACK（Go-Back-N 的简单性），但加上 SACK（Selective Repeat 的效率），再叠加快速重传优化。这就是为什么它既简单、又高效。</p>
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+
+<h2>🧪 检验一下</h2>
+
+<div class="quiz" id="quiz1">
+
+  <div class="q" id="q1">
+    <p>Q1: 为什么 TCP 需要三次握手而不是两次？</p>
+    <label><input type="radio" name="q1" value="a"> 因为 TCP 是全双工的，需要两个方向各握一次手</label>
+    <label><input type="radio" name="q1" value="b"> 防止历史连接（旧的 SYN）被错误建立，同时双方确认彼此的收发能力</label>
+    <label><input type="radio" name="q1" value="c"> 因为三次比两次更安全，能防御 DDoS</label>
+    <label><input type="radio" name="q1" value="d"> 因为 TCP 需要交换双方的拥塞控制参数</label>
+  </div>
+
+  <div class="q" id="q2">
+    <p>Q2: 发送方发了 seq=100, data=200 bytes。正确的 ACK 号是多少？</p>
+    <label><input type="radio" name="q2" value="a"> 100</label>
+    <label><input type="radio" name="q2" value="b"> 101</label>
+    <label><input type="radio" name="q2" value="c"> 200</label>
+    <label><input type="radio" name="q2" value="d"> 300</label>
+  </div>
+
+  <div class="q" id="q3">
+    <p>Q3: 慢启动是「慢」在哪里？</p>
+    <label><input type="radio" name="q3" value="a"> 增速很慢（线性增长）</label>
+    <label><input type="radio" name="q3" value="b"> 起点很低（从 1 MSS 开始），但增速很快（指数增长）</label>
+    <label><input type="radio" name="q3" value="c"> ACK 确认速度很慢</label>
+    <label><input type="radio" name="q3" value="d"> 重传间隔很长</label>
+  </div>
+
+  <div class="q" id="q4">
+    <p>Q4: 收到 3 个重复 ACK 后，TCP 的典型反应是什么？</p>
+    <label><input type="radio" name="q4" value="a"> cwnd 重置为 1，重新慢启动</label>
+    <label><input type="radio" name="q4" value="b"> 忽略，因为可能只是包乱序</label>
+    <label><input type="radio" name="q4" value="c"> cwnd 减半 + 快速重传丢失的包 + 进入快速恢复</label>
+    <label><input type="radio" name="q4" value="d"> 关闭连接，重新三次握手</label>
+  </div>
+
+  <div class="q" id="q5">
+    <p>Q5: TIME_WAIT 状态等待 2MSL 的主要原因是什么？</p>
+    <label><input type="radio" name="q5" value="a"> 等服务器处理完所有数据</label>
+    <label><input type="radio" name="q5" value="b"> 等拥塞窗口完全清空</label>
+    <label><input type="radio" name="q5" value="c"> 防止最后一个 ACK 丢失导致对方无法关闭，并让旧包从网络中消亡</label>
+    <label><input type="radio" name="q5" value="d"> 等待应用程序释放端口</label>
+  </div>
+
+  <button onclick="checkQuiz()">提交答案</button>
+  <div class="feedback" id="quiz-feedback"></div>
+</div>
+
+<!-- ==================== SOURCE ==================== -->
+
+<div class="source-box">
+  <h3>📖 推荐阅读</h3>
+  <p>
+    <strong>Kurose &amp; Ross, <em>Computer Networking</em> (8th Ed), Chapter 3: Transport Layer.</strong><br>
+    TCP 的全部内容。3.5 节（TCP 拥塞控制）是必读经典。<a href="https://gaia.cs.umass.edu/kurose_ross/online_lectures.htm" target="_blank">→ 在线讲座</a>
+  </p>
+  <p style="margin-top:0.5rem">
+    <strong>可视化演示：</strong><a href="https://www.youtube.com/watch?v=cPlq94M454Q" target="_blank">TCP Congestion Control Explained</a> · 用 Wireshark 抓包看三次握手和四次挥手是理解 TCP 最直观的方式。
+  </p>
+</div>
+
+<!-- ==================== NEXT ==================== -->
+
+<div class="lesson-nav">
+  <a href="0004-ip-routing-deep-dive.html">← 第 4 课：IP 网络层</a>
+  <a href="../index.html">回到概念地图 ↑</a>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">
+  🤔 追问你的 AI 教师：「TCP 的 BBR 拥塞控制算法和传统算法有什么本质不同？」「SYN Flood 攻击怎么防？」「QUIC 在哪些方面优于 TCP？」
+</p>
+
+</article>
+
+<script>
+const answers = { q1: 'b', q2: 'd', q3: 'b', q4: 'c', q5: 'c' };
+function checkQuiz() {
+  let correct = 0, total = Object.keys(answers).length;
+  for (let [qid, ans] of Object.entries(answers)) {
+    const selected = document.querySelector(`input[name="${qid}"]:checked`);
+    if (selected && selected.value === ans) correct++;
+  }
+  const fb = document.getElementById('quiz-feedback');
+  if (correct === total) {
+    fb.textContent = `✅ ${correct}/${total} 全对！TCP 的核心机制你都掌握了。这是面试中最有分量的知识。`;
+    fb.className = 'feedback correct';
+  } else if (correct >= 3) {
+    fb.textContent = `⚠️ ${correct}/${total} 正确。重点回顾拥塞控制的状态机和 TIME_WAIT 的原因。`;
+    fb.className = 'feedback incorrect';
+  } else {
+    fb.textContent = `❌ ${correct}/${total} 正确。TCP 信息密集，建议重读三次握手和拥塞控制这两节。`;
+    fb.className = 'feedback incorrect';
+  }
+}
+</script>
+
+</body>
+</html>

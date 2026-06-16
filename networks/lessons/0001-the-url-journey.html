@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 1 课：URL 之旅 —— 浏览器输入网址后发生了什么</title>
+<style>
+  :root {
+    --bg: #fffff8;
+    --text: #111;
+    --muted: #666;
+    --accent: #c44;
+    --link: #246;
+    --rule: #ddd;
+    --highlight: #fff8e1;
+    --code-bg: #f4f4f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "Songti SC", Georgia, "Times New Roman", serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+  }
+
+  article {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.03em;
+  }
+  .meta {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .meta a { color: var(--link); }
+
+  h2 {
+    font-size: 1.15rem;
+    margin: 2rem 0 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--rule);
+    color: #333;
+  }
+  h3 {
+    font-size: 1rem;
+    margin: 1.5rem 0 0.5rem;
+    color: #444;
+  }
+
+  p { margin: 0.8rem 0; }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-size: 0.92em;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", monospace;
+  }
+
+  /* Phase timeline */
+  .timeline {
+    margin: 2rem 0;
+    position: relative;
+    padding-left: 2rem;
+    border-left: 2px solid var(--rule);
+  }
+  .timeline-item {
+    margin-bottom: 1.2rem;
+    position: relative;
+  }
+  .timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -2.45rem;
+    top: 0.5rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #fff;
+  }
+  .timeline-item .phase-name {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .timeline-item .phase-desc {
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+
+  /* Sidenotes (Tufte-style, simplified for mobile) */
+  .sidenote {
+    background: var(--highlight);
+    border-left: 3px solid #e6c840;
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.88rem;
+    color: #5a4a20;
+  }
+  .sidenote strong { color: #8a6d20; }
+
+  /* Quiz */
+  .quiz {
+    margin: 2.5rem 0;
+    padding: 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: #fdfdf8;
+  }
+  .quiz h2 { margin-top: 0; border: none; }
+  .quiz .q {
+    margin: 1.2rem 0;
+  }
+  .quiz .q p { font-weight: 600; }
+  .quiz .q label {
+    display: block;
+    padding: 0.4rem 0;
+    cursor: pointer;
+    font-size: 0.92rem;
+  }
+  .quiz .q input[type="radio"] { margin-right: 0.5rem; }
+  .quiz button {
+    margin-top: 1rem;
+    padding: 0.5rem 1.5rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  .quiz button:hover { opacity: 0.9; }
+  .quiz .feedback {
+    margin-top: 0.5rem;
+    font-size: 0.88rem;
+    min-height: 1.5rem;
+  }
+  .quiz .feedback.correct { color: #2a7d2a; }
+  .quiz .feedback.incorrect { color: #c44; }
+
+  /* Footer nav */
+  .lesson-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.9rem;
+  }
+
+  /* Source recommendation */
+  .source-box {
+    margin: 2rem 0;
+    padding: 1rem 1.2rem;
+    background: #f0f4f8;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  .source-box h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<article>
+
+<h1>第 1 课：URL 之旅全览</h1>
+<div class="meta">
+  计算机网络 · <a href="../index.html">← 返回概念地图</a> · 约 15 分钟
+</div>
+
+<p>
+  你每天在浏览器里输入网址几十次。按下回车的瞬间，你的计算机开始了一场横跨全球的接力赛——从你的键盘，经过操作系统、网卡、路由器、海底光缆，到达万里之外的服务器，再原路返回。<strong>这一切，在几百毫秒内完成。</strong>
+</p>
+
+<p>
+  本课将带你走完这趟旅程的每一个阶段。不需要记住所有细节——你只需要建立一个<strong>全局心智模型</strong>。后续每一课会逐一深入每个阶段。
+</p>
+
+<div class="sidenote">
+  <strong>🎯 本课目标：</strong>学完后，你应该能画出从「输入 URL」到「页面显示」的完整流程图，并说出每一阶段的核心目的。
+</div>
+
+<!-- ==================== TIMELINE ==================== -->
+
+<h2>🗺️ 旅程地图：七个阶段</h2>
+
+<div class="timeline">
+
+  <div class="timeline-item">
+    <div class="phase-name">Phase 1 · 应用层</div>
+    <strong>DNS 解析 —— 把域名翻译成 IP 地址</strong>
+    <div class="phase-desc">
+      计算机不认识 <code>example.com</code>，它只认识 IP 地址如 <code>93.184.216.34</code>。DNS（Domain Name System）就是互联网的电话簿。浏览器先查本地缓存，没有就问操作系统，操作系统问路由器，路由器问 ISP 的 DNS 服务器……层层向上直到找到答案。整个过程是<strong>分级查询</strong>：根域名服务器 → 顶级域名服务器（.com）→ 权威域名服务器。
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <div class="phase-name">Phase 2 · 传输层</div>
+    <strong>TCP 三次握手 —— 建立可靠连接</strong>
+    <div class="phase-desc">
+      拿到 IP 后，浏览器通过 TCP（传输控制协议）与服务器建立连接。TCP 的核心承诺是：<strong>数据不丢、不乱、不重复</strong>。三次握手就是双方互相确认收发能力的过程：<br>
+      ① 客户端 → 服务器：SYN（嘿，能听到吗？）<br>
+      ② 服务器 → 客户端：SYN-ACK（听到了，你能听到我吗？）<br>
+      ③ 客户端 → 服务器：ACK（能听到，开始传数据吧）
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <div class="phase-name">Phase 3 · 传输/应用之间</div>
+    <strong>TLS 握手 —— 建立加密信道（HTTPS）</strong>
+    <div class="phase-desc">
+      如果网址是 <code>https://</code>（现在 90%+ 的网站都是），TCP 连接建立后会立即进行 TLS 握手。双方协商加密算法、验证服务器证书（「你真的是 example.com 吗？」），然后生成只有双方知道的对称密钥。此后所有 HTTP 数据都在这个加密信道中传输，中间人只能看到乱码。
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <div class="phase-name">Phase 4 · 应用层</div>
+    <strong>HTTP 请求-响应 —— 获取资源</strong>
+    <div class="phase-desc">
+      安全信道建立后，浏览器发送 HTTP 请求：<br>
+      <code>GET /index.html HTTP/1.1<br>Host: example.com</code><br>
+      服务器收到后返回响应：<code>HTTP/1.1 200 OK</code>，附上 HTML 内容。一个页面通常包含几十个资源（CSS、JS、图片），浏览器会并行发起多个请求。
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <div class="phase-name">Phase 5 · 网络层</div>
+    <strong>IP 路由 —— 数据在网络中逐跳转发</strong>
+    <div class="phase-desc">
+      HTTP 消息被 TCP 切成数据段，数据段被 IP 层打包成数据包。每个路由器查路由表，把包转发到「离目的地更近」的下一跳。这就像快递经过多个中转站，每个中转站只看下一站的地址，不关心全貌。<strong>IP 层不保证可靠性</strong>——包可能丢失、乱序、重复，这些由 TCP 来兜底。
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <div class="phase-name">Phase 6 · 链路层</div>
+    <strong>链路层 —— 同一网段内的帧传输</strong>
+    <div class="phase-desc">
+      IP 包需要被封装成<strong>帧</strong>才能在物理链路上传输。链路层用 MAC 地址标识同一网络内的设备。ARP 协议负责把 IP 地址翻译成 MAC 地址（「192.168.1.1 的 MAC 地址是多少？」）。交换机根据 MAC 地址转发帧，最终通过网线、光纤或 WiFi 信号到达下一跳路由器。
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <div class="phase-name">Phase 7 · 客户端</div>
+    <strong>浏览器渲染 —— 从 HTML 到像素</strong>
+    <div class="phase-desc">
+      浏览器收到 HTML 后，开始解析、构建 DOM 树和 CSSOM 树，计算布局（每个元素的位置和大小），然后绘制（Paint）成像素，最后通过 GPU 合成（Composite）显示在屏幕上。这个过程可能触发新的网络请求（图片、字体、API 调用），循环继续。
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== THE BIG PICTURE ==================== -->
+
+<h2>🧅 核心心智模型：分层</h2>
+
+<p>
+  这七步可以映射到网络设计的核心思想——<strong>分层</strong>。每一层只关心自己的职责，向上层提供服务，向下层委托细节：
+</p>
+
+<table style="width:100%; border-collapse:collapse; margin:1.2rem 0; font-size:0.9rem;">
+  <thead>
+    <tr style="background:#f5f5f0;">
+      <th style="padding:0.5rem; text-align:left; border-bottom:2px solid var(--rule);">层</th>
+      <th style="padding:0.5rem; text-align:left; border-bottom:2px solid var(--rule);">协议/技术</th>
+      <th style="padding:0.5rem; text-align:left; border-bottom:2px solid var(--rule);">核心问题</th>
+      <th style="padding:0.5rem; text-align:left; border-bottom:2px solid var(--rule);">身份标识</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">应用层</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">HTTP, DNS, TLS</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">数据是什么含义？</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">域名 / URL</td></tr>
+    <tr><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">传输层</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">TCP, UDP</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">数据如何可靠/高效地到达？</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">端口号</td></tr>
+    <tr><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">网络层</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">IP, BGP, OSPF</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">数据如何跨越多个网络？</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">IP 地址</td></tr>
+    <tr><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">链路层</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">Ethernet, WiFi, ARP</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">数据如何在同一个网络内传输？</td><td style="padding:0.5rem; border-bottom:1px solid var(--rule);">MAC 地址</td></tr>
+    <tr><td style="padding:0.5rem;">物理层</td><td style="padding:0.5rem;">网线、光纤、无线电</td><td style="padding:0.5rem;">比特如何在物理介质上传输？</td><td style="padding:0.5rem;">—</td></tr>
+  </tbody>
+</table>
+
+<p>
+  分层的关键洞见：<strong>当你写一个浏览器时，你只需要关心 HTTP，不用管底层是 WiFi 还是光纤。</strong>这就是分层的力量——每一层可以独立演进，只要接口不变。
+</p>
+
+<div class="sidenote">
+  <strong>💡 一个强大的思维技巧：</strong>当你遇到网络问题时，逐层排查。ping 不通？先查 IP 层。能 ping 通但网页打不开？查传输层（端口是否开放）和应用层（HTTP 状态码）。这就是<strong>逐层排查方法论</strong>，后续会专门有一课讲这个。
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+
+<h2>🧪 检验一下</h2>
+
+<div class="quiz" id="quiz1">
+  <div class="q" id="q1">
+    <p>Q1: DNS 解析的作用是什么？</p>
+    <label><input type="radio" name="q1" value="a"> 加密浏览器与服务器之间的通信</label>
+    <label><input type="radio" name="q1" value="b"> 把域名翻译成 IP 地址</label>
+    <label><input type="radio" name="q1" value="c"> 把 HTTP 请求切成数据段</label>
+    <label><input type="radio" name="q1" value="d"> 验证服务器身份</label>
+  </div>
+
+  <div class="q" id="q2">
+    <p>Q2: TCP 三次握手发生在哪个阶段之前？</p>
+    <label><input type="radio" name="q2" value="a"> DNS 解析之前</label>
+    <label><input type="radio" name="q2" value="b"> DNS 解析之后、HTTP 请求之前</label>
+    <label><input type="radio" name="q2" value="c"> HTTP 请求之后</label>
+    <label><input type="radio" name="q2" value="d"> 浏览器渲染之后</label>
+  </div>
+
+  <div class="q" id="q3">
+    <p>Q3: 以下<strong>哪一层</strong>不保证数据可靠性，需要上层来兜底？</p>
+    <label><input type="radio" name="q3" value="a"> 应用层</label>
+    <label><input type="radio" name="q3" value="b"> 传输层 (TCP)</label>
+    <label><input type="radio" name="q3" value="c"> 网络层 (IP)</label>
+    <label><input type="radio" name="q3" value="d"> 没有，所有层都保证可靠性</label>
+  </div>
+
+  <div class="q" id="q4">
+    <p>Q4: 排错时，能 ping 通但网页打不开，问题大概率在哪一层？</p>
+    <label><input type="radio" name="q4" value="a"> 网络层</label>
+    <label><input type="radio" name="q4" value="b"> 传输层或应用层</label>
+    <label><input type="radio" name="q4" value="c"> 链路层</label>
+    <label><input type="radio" name="q4" value="d"> 物理层</label>
+  </div>
+
+  <button onclick="checkQuiz()">提交答案</button>
+  <div class="feedback" id="quiz-feedback"></div>
+</div>
+
+<!-- ==================== SOURCE ==================== -->
+
+<div class="source-box">
+  <h3>📖 推荐阅读</h3>
+  <p>
+    <strong>Kurose &amp; Ross, <em>Computer Networking: A Top-Down Approach</em> (8th Ed), Chapter 1.</strong><br>
+    本章用「浏览器访问网页」这个场景覆盖了整个协议栈，正是本课的学术来源。配套有免费的视频课程和 Wireshark 实验。
+    <a href="https://gaia.cs.umass.edu/kurose_ross/online_lectures.htm" target="_blank">→ 在线讲座</a>
+  </p>
+</div>
+
+<!-- ==================== NEXT ==================== -->
+
+<div class="lesson-nav">
+  <span></span>
+  <a href="0002-dns-deep-dive.html">下一课：DNS 深度解析 →</a>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">
+  🤔 有问题？直接问你的 AI 教师。可以追问「为什么 TCP 需要三次握手而不是两次？」、「TLS 和 TCP 握手为什么要分开？」或其他任何困惑。
+</p>
+
+</article>
+
+<script>
+const answers = {
+  q1: 'b',
+  q2: 'b',
+  q3: 'c',
+  q4: 'b'
+};
+function checkQuiz() {
+  let correct = 0, total = 4;
+  for (let [qid, ans] of Object.entries(answers)) {
+    const selected = document.querySelector(`input[name="${qid}"]:checked`);
+    if (selected && selected.value === ans) correct++;
+  }
+  const fb = document.getElementById('quiz-feedback');
+  if (correct === total) {
+    fb.textContent = `✅ ${correct}/${total} 全对！你对 URL 之旅有了扎实的全局认知。可以继续下一课了。`;
+    fb.className = 'feedback correct';
+  } else if (correct >= total / 2) {
+    fb.textContent = `⚠️ ${correct}/${total} 正确。回头看一下上面的时间线，特别注意各阶段的先后顺序和每层的职责。`;
+    fb.className = 'feedback incorrect';
+  } else {
+    fb.textContent = `❌ ${correct}/${total} 正确。建议把本课再读一遍，尤其关注「分层」那部分的表格。别急着学细节，全局模型要先搭好。`;
+    fb.className = 'feedback incorrect';
+  }
+}
+</script>
+
+</body>
+</html>

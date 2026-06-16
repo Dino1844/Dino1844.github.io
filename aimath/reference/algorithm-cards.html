@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>算法知识卡片 · AI 算法工程师必备数学</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #8b4513;
+    --light-accent: #f5efe6;
+    --muted: #6b6b6b;
+    --border: #e0d8cc;
+    --code-bg: #f7f4ef;
+    --card-bg: #fffdfb;
+    --tag-gan: #e07b39;
+    --tag-vae: #5b8c5a;
+    --tag-ebm: #c44d4d;
+    --tag-flow: #4a7bab;
+    --tag-diff: #8b5aa6;
+    --tag-score: #2d6a4f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Palatino', 'Noto Serif SC', 'Source Han Serif SC', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+  }
+
+  header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border);
+  }
+  header h1 { font-size: 2rem; color: #1a1a1a; margin-bottom: 0.3rem; }
+  header .subtitle { color: var(--muted); font-style: italic; font-size: 0.95rem; }
+  header .nav { margin-top: 0.8rem; font-size: 0.9rem; }
+  header .nav a { color: var(--accent); text-decoration: none; margin-right: 1.2rem; }
+  header .nav a:hover { text-decoration: underline; }
+
+  /* --- Tag filter --- */
+  .filters {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+    margin-bottom: 1.8rem;
+  }
+  .filter-btn {
+    padding: 0.35em 0.9em; font-family: inherit; font-size: 0.85rem;
+    border: 1px solid var(--border); background: white;
+    border-radius: 20px; cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn:hover { background: var(--light-accent); }
+  .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* --- Card --- */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.3rem 1.5rem;
+    margin-bottom: 1.2rem;
+    transition: box-shadow 0.2s, transform 0.15s;
+    position: relative;
+  }
+  .card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .card.hidden { display: none; }
+
+  .card-header {
+    display: flex; align-items: center; gap: 0.7rem;
+    margin-bottom: 0.6rem; flex-wrap: wrap;
+  }
+  .card-header h2 { font-size: 1.25rem; color: #1a1a1a; margin: 0; border: none; }
+  .card-tag {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+    color: white;
+  }
+  .tag-GAN { background: var(--tag-gan); }
+  .tag-VAE { background: var(--tag-vae); }
+  .tag-EBM { background: var(--tag-ebm); }
+  .tag-Flow { background: var(--tag-flow); }
+  .tag-Diff { background: var(--tag-diff); }
+  .tag-Score { background: var(--tag-score); }
+  .card-aliases { font-size: 0.82rem; color: var(--muted); }
+
+  .card-section { margin-top: 0.8rem; }
+  .card-section h4 {
+    font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin-bottom: 0.3rem;
+  }
+  .card-section p, .card-section li { font-size: 0.93rem; }
+
+  .card-essence {
+    background: var(--light-accent);
+    border-left: 3px solid var(--accent);
+    padding: 0.6rem 1rem;
+    margin: 0.8rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.92rem;
+  }
+
+  .card-connections {
+    display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.6rem;
+  }
+  .conn-badge {
+    font-size: 0.78rem; padding: 0.2em 0.6em; border-radius: 12px;
+    background: var(--code-bg); border: 1px solid var(--border);
+    cursor: pointer; transition: background 0.15s;
+  }
+  .conn-badge:hover { background: var(--light-accent); }
+
+  /* --- Relation diagram --- */
+  .relation-map {
+    background: white; border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.5rem; margin: 2rem 0;
+  }
+  .relation-map h3 { font-size: 1.1rem; margin-bottom: 1rem; color: #1a1a1a; }
+  .relation-map svg { width: 100%; height: auto; }
+
+  footer {
+    margin-top: 3rem; padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem; color: var(--muted);
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📇 算法知识卡片</h1>
+  <div class="subtitle">聚焦数学本质，而非工程细节。每张卡片回答一个问题：「这个算法在数学上到底在做什么？」</div>
+  <div class="nav">
+    <a href="../lessons/0000-the-mathematical-landscape.html">← Lesson 0000 · 地貌</a>
+    <a href="../lessons/0001-the-score-function.html">Lesson 0001</a>
+    <a href="../MISSION.md">🎯 Mission</a>
+  </div>
+</header>
+
+<!-- ====== Filter Bar ====== -->
+<div class="filters">
+  <button class="filter-btn active" onclick="filterAll()">全部</button>
+  <button class="filter-btn" onclick="filterBy('GAN')">GAN</button>
+  <button class="filter-btn" onclick="filterBy('VAE')">VAE</button>
+  <button class="filter-btn" onclick="filterBy('EBM')">EBM</button>
+  <button class="filter-btn" onclick="filterBy('Flow')">Normalizing Flow</button>
+  <button class="filter-btn" onclick="filterBy('Diff')">Diffusion</button>
+  <button class="filter-btn" onclick="filterBy('Score')">Score-Based</button>
+</div>
+
+<!-- ====== Relation Map ====== -->
+<div class="relation-map">
+  <h3>🗺️ 算法之间的数学关系</h3>
+  <svg viewBox="0 0 820 380" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#8b4513" />
+      </marker>
+      <marker id="arrowhead-dashed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#999" />
+      </marker>
+    </defs>
+
+    <!-- Central node: Z-problem -->
+    <circle cx="410" cy="50" r="32" fill="#f5efe6" stroke="#8b4513" stroke-width="2"/>
+    <text x="410" y="45" text-anchor="middle" font-size="0.7rem" fill="#8b4513" font-weight="700">Z-问题</text>
+    <text x="410" y="59" text-anchor="middle" font-size="0.62rem" fill="#6b6b6b">配分函数</text>
+
+    <!-- Second tier: strategies -->
+    <rect x="150" y="115" width="130" height="40" rx="8" fill="#fff" stroke="#e07b39" stroke-width="1.5"/>
+    <text x="215" y="140" text-anchor="middle" font-size="0.8rem">隐式建模</text>
+    <line x1="370" y1="78" x2="230" y2="115" stroke="#e07b39" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+    <rect x="345" y="115" width="130" height="40" rx="8" fill="#fff" stroke="#c44d4d" stroke-width="1.5"/>
+    <text x="410" y="140" text-anchor="middle" font-size="0.8rem">绕开 Z</text>
+    <line x1="410" y1="82" x2="410" y2="115" stroke="#c44d4d" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+    <rect x="540" y="115" width="130" height="40" rx="8" fill="#fff" stroke="#4a7bab" stroke-width="1.5"/>
+    <text x="605" y="140" text-anchor="middle" font-size="0.8rem">精确计算 Z</text>
+    <line x1="450" y1="78" x2="590" y2="115" stroke="#4a7bab" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+    <!-- Third tier: algorithms -->
+    <rect x="60" y="200" width="115" height="38" rx="6" fill="#e07b39" opacity="0.12" stroke="#e07b39" stroke-width="1.2"/>
+    <text x="117" y="224" text-anchor="middle" font-size="0.78rem" font-weight="700" fill="#c06a25">GAN</text>
+    <line x1="200" y1="155" x2="140" y2="200" stroke="#e07b39" stroke-width="0.9" stroke-dasharray="4,3" marker-end="url(#arrowhead-dashed)"/>
+
+    <rect x="200" y="200" width="115" height="38" rx="6" fill="#c44d4d" opacity="0.12" stroke="#c44d4d" stroke-width="1.2"/>
+    <text x="257" y="224" text-anchor="middle" font-size="0.78rem" font-weight="700" fill="#a33">EBM</text>
+    <line x1="300" y1="135" x2="268" y2="200" stroke="#c44d4d" stroke-width="0.9" stroke-dasharray="4,3" marker-end="url(#arrowhead-dashed)"/>
+
+    <rect x="340" y="200" width="115" height="38" rx="6" fill="#2d6a4f" opacity="0.12" stroke="#2d6a4f" stroke-width="1.2"/>
+    <text x="397" y="224" text-anchor="middle" font-size="0.78rem" font-weight="700" fill="#1f5c40">Score-Based</text>
+    <line x1="410" y1="155" x2="397" y2="200" stroke="#2d6a4f" stroke-width="0.9" marker-end="url(#arrowhead)"/>
+
+    <rect x="480" y="200" width="115" height="38" rx="6" fill="#8b5aa6" opacity="0.12" stroke="#8b5aa6" stroke-width="1.2"/>
+    <text x="537" y="224" text-anchor="middle" font-size="0.78rem" font-weight="700" fill="#6f3d8a">Diffusion</text>
+
+    <rect x="620" y="200" width="115" height="38" rx="6" fill="#4a7bab" opacity="0.12" stroke="#4a7bab" stroke-width="1.2"/>
+    <text x="677" y="224" text-anchor="middle" font-size="0.78rem" font-weight="700" fill="#2d5f8a">Norm. Flow</text>
+    <line x1="605" y1="155" x2="660" y2="200" stroke="#4a7bab" stroke-width="0.9" marker-end="url(#arrowhead)"/>
+
+    <!-- Horizontal connections between algorithms -->
+    <text x="300" y="265" text-anchor="middle" font-size="0.65rem" fill="#999">对抗训练</text>
+    <line x1="170" y1="238" x2="310" y2="238" stroke="#bbb" stroke-width="0.8" stroke-dasharray="4,3"/>
+
+    <text x="417" y="278" text-anchor="middle" font-size="0.65rem" fill="#999">Score ≡ 负能量梯度</text>
+    <line x1="350" y1="238" x2="480" y2="238" stroke="#bbb" stroke-width="0.8"/>
+
+    <text x="557" y="278" text-anchor="middle" font-size="0.65rem" fill="#999">噪声预测 ≡ Score Matching</text>
+    <line x1="490" y1="238" x2="620" y2="238" stroke="#bbb" stroke-width="0.8"/>
+
+    <!-- VAE -->
+    <rect x="200" y="298" width="115" height="38" rx="6" fill="#5b8c5a" opacity="0.12" stroke="#5b8c5a" stroke-width="1.2"/>
+    <text x="257" y="322" text-anchor="middle" font-size="0.78rem" font-weight="700" fill="#3a6b39">VAE</text>
+    <text x="330" y="322" font-size="0.65rem" fill="#999">ELBO 下界</text>
+    <line x1="315" y1="219" x2="315" y2="298" stroke="#bbb" stroke-width="0.8" stroke-dasharray="4,3"/>
+
+    <text x="430" y="322" font-size="0.68rem" fill="#6b6b6b" font-style="italic">← 都绕 Z，但用不同的数学工具 →</text>
+  </svg>
+</div>
+
+<!-- ================================================================== -->
+<!-- CARDS                                                              -->
+<!-- ================================================================== -->
+
+<!-- GAN -->
+<div class="card" data-tags="GAN" id="card-gan">
+  <div class="card-header">
+    <span class="card-tag tag-GAN">GAN</span>
+    <h2>Generative Adversarial Network</h2>
+    <span class="card-aliases">Goodfellow et al., 2014</span>
+  </div>
+
+  <div class="card-essence">
+    <strong>数学本质：</strong>用一个判别器的梯度来<em>隐式地</em>告诉生成器「真实分布在哪」——不建模 $p(\mathbf{x})$，不碰 $Z$。
+  </div>
+
+  <div class="card-section">
+    <h4>核心公式</h4>
+    <p>$$\min_G \max_D \; \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}}[\log D(\mathbf{x})] + \mathbb{E}_{\mathbf{z} \sim p(\mathbf{z})}[\log(1 - D(G(\mathbf{z})))]$$</p>
+  </div>
+
+  <div class="card-section">
+    <h4>为什么绕开了 $Z$</h4>
+    <p>
+      GAN 从不显式写出 $p_{\text{model}}(\mathbf{x})$。生成器 $G$ 定义了一个<strong>隐式分布</strong>：
+      把简单噪声 $\mathbf{z}$ 推过神经网络，得到样本。这个分布的密度函数 $p_G(\mathbf{x})$ 根本没法写出来——
+      但你也不需要写出来，因为判别器 $D$ 只比较「真假」，不计算概率密度。
+    </p>
+  </div>
+
+  <div class="card-section">
+    <h4>关键洞察</h4>
+    <ul>
+      <li>最优判别器 $D^*(\mathbf{x}) = \frac{p_{\text{data}}(\mathbf{x})}{p_{\text{data}}(\mathbf{x}) + p_G(\mathbf{x})}$ —— 它就是密度比</li>
+      <li>当 $D^*$ 代入后，生成器的损失等价于最小化 $JS(p_{\text{data}} \| p_G)$</li>
+      <li>所以 GAN 在做的其实是：<strong>通过对抗游戏，隐式地最小化分布之间的 divergence</strong></li>
+      <li>问题：$JS$ divergence 在高维空间中容易饱和（两分布支撑集几乎不交 → JS 恒为 $\log 2$）→ 梯度消失</li>
+    </ul>
+  </div>
+
+  <div class="card-connections">
+    <span class="conn-badge">→ WGAN: 用 Wasserstein 距离替代 JS</span>
+    <span class="conn-badge">→ Score-Based: 显式学 score 而非隐式采样</span>
+    <span class="conn-badge">→ EBM: GAN 的判别器 $D$ 可以解释为能量函数</span>
+  </div>
+</div>
+
+<!-- VAE -->
+<div class="card" data-tags="VAE" id="card-vae">
+  <div class="card-header">
+    <span class="card-tag tag-VAE">VAE</span>
+    <h2>Variational Autoencoder</h2>
+    <span class="card-aliases">Kingma & Welling, 2014</span>
+  </div>
+
+  <div class="card-essence">
+    <strong>数学本质：</strong>通过引入隐变量 $\mathbf{z}$，把对 $p(\mathbf{x})$ 的最大似然转化为优化一个<em>可计算的下界</em> (ELBO)。
+  </div>
+
+  <div class="card-section">
+    <h4>核心公式</h4>
+    <p>$$\log p(\mathbf{x}) \geq \underbrace{\mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x})}[\log p_\theta(\mathbf{x}|\mathbf{z})]}_{\text{重建项}} - \underbrace{D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z}))}_{\text{正则项}} = \text{ELBO}$$</p>
+  </div>
+
+  <div class="card-section">
+    <h4>为什么绕开了 $Z$</h4>
+    <p>
+      $\log p(\mathbf{x}) = \log \int p_\theta(\mathbf{x}, \mathbf{z})\, d\mathbf{z}$ —— 这个积分（配分函数在隐变量空间的对应物）不可计算。
+      VAE 的技巧是引入<strong>变分后验</strong> $q_\phi(\mathbf{z}|\mathbf{x})$ 近似真实后验 $p(\mathbf{z}|\mathbf{x})$，
+      用 Jensen 不等式推出 ELBO 下界，优化这个下界就绕开了积分。
+    </p>
+  </div>
+
+  <div class="card-section">
+    <h4>关键洞察</h4>
+    <ul>
+      <li>ELBO = $\log p(\mathbf{x}) - D_{\text{KL}}(q_\phi \| p_{\text{true}})$ —— 最大化 ELBO 就是同时最大化似然 + 逼近真实后验</li>
+      <li>重参数化技巧 (reparameterization)：$\mathbf{z} = \mu_\phi + \sigma_\phi \odot \boldsymbol{\epsilon}$ 让梯度能流过采样</li>
+      <li>VAE 的生成质量不如 GAN 的原因：高斯假设 $p_\theta(\mathbf{x}|\mathbf{z})$ 导致模糊</li>
+      <li>和 Diffusion 的联系：VAE 是一步生成，Diffusion 是 $T$ 步逐渐生成——可以把 Diffusion 看作层级 VAE</li>
+    </ul>
+  </div>
+
+  <div class="card-connections">
+    <span class="conn-badge">→ Diffusion: 多层 VAE，残差去噪</span>
+    <span class="conn-badge">→ VQ-VAE: 离散隐变量</span>
+    <span class="conn-badge">→ Normalizing Flow: 另一种绕积分的方式</span>
+  </div>
+</div>
+
+<!-- EBM -->
+<div class="card" data-tags="EBM" id="card-ebm">
+  <div class="card-header">
+    <span class="card-tag tag-EBM">EBM</span>
+    <h2>Energy-Based Model</h2>
+    <span class="card-aliases">LeCun et al., 2006; 根在统计物理</span>
+  </div>
+
+  <div class="card-essence">
+    <strong>数学本质：</strong>直接建模未归一化概率 $p(\mathbf{x}) \propto e^{-E_\theta(\mathbf{x})}$，<em>接受 $Z$ 不可计算</em>，用 MCMC 采样来绕开它。
+  </div>
+
+  <div class="card-section">
+    <h4>核心公式</h4>
+    <p>$$p_\theta(\mathbf{x}) = \frac{e^{-E_\theta(\mathbf{x})}}{Z(\theta)}, \quad Z(\theta) = \int e^{-E_\theta(\mathbf{x})}\, d\mathbf{x}$$</p>
+  </div>
+
+  <div class="card-section">
+    <h4>训练困境与解法</h4>
+    <p>
+      最大似然的梯度：$\nabla_\theta \log p_\theta(\mathbf{x}) = -\nabla_\theta E_\theta(\mathbf{x}) + \mathbb{E}_{p_\theta}[\nabla_\theta E_\theta(\mathbf{x})]$
+    </p>
+    <p>
+      第一项压低真实数据能量；第二项抬高模型采样处的能量。第二项需要从 $p_\theta$ 采样——这就是为什么 EBM 训练需要 MCMC（如 Langevin 动力学）。
+    </p>
+  </div>
+
+  <div class="card-section">
+    <h4>关键洞察</h4>
+    <ul>
+      <li><strong>Score function 就是负能量梯度：</strong>$\nabla_\mathbf{x} \log p(\mathbf{x}) = -\nabla_\mathbf{x} E(\mathbf{x})$</li>
+      <li>EBM 的 score 直接可算（不需要归一化），所以可以用 Score Matching 训练</li>
+      <li>$E(\mathbf{x})$ 低 → 概率高；$E(\mathbf{x})$ 高 → 概率低。能量函数是概率的「倒数对数」</li>
+      <li>和物理的深层联系：Boltzmann 分布 $p \propto e^{-E/kT}$</li>
+    </ul>
+  </div>
+
+  <div class="card-connections">
+    <span class="conn-badge">→ Score-Based: Score Matching 训练 EBM</span>
+    <span class="conn-badge">→ Diffusion: 退火 Langevin 动力学</span>
+    <span class="conn-badge">→ GAN: 判别器 ≈ 能量函数</span>
+  </div>
+</div>
+
+<!-- Normalizing Flow -->
+<div class="card" data-tags="Flow" id="card-flow">
+  <div class="card-header">
+    <span class="card-tag tag-Flow">Flow</span>
+    <h2>Normalizing Flow</h2>
+    <span class="card-aliases">Rezende & Mohamed, 2015; Dinh et al., 2014</span>
+  </div>
+
+  <div class="card-essence">
+    <strong>数学本质：</strong>唯一<em>不绕开 $Z$</em> 的方法——用可逆变换强行让 $Z$ 可以解析计算（变量替换公式）。
+  </div>
+
+  <div class="card-section">
+    <h4>核心公式</h4>
+    <p>$$\mathbf{x} = f(\mathbf{z}), \quad p_X(\mathbf{x}) = p_Z(\mathbf{z}) \left|\det \frac{\partial f^{-1}}{\partial \mathbf{x}}\right| = p_Z(f^{-1}(\mathbf{x})) \left|\det \frac{\partial f}{\partial \mathbf{z}}\right|^{-1}$$</p>
+  </div>
+
+  <div class="card-section">
+    <h4>为什么不绕 $Z$</h4>
+    <p>
+      变量替换公式告诉你：如果你知道 $\mathbf{z}$ 的分布 $p_Z$（选简单的，如高斯），且 $f$ 可逆，
+      那么 $\mathbf{x}$ 的密度就可以<strong>精确计算</strong>——$Z$ 自动被 Jacobian 行列式处理了。
+      代价是 $f$ 必须可逆且 Jacobian 好算，这严重限制了模型结构。
+    </p>
+  </div>
+
+  <div class="card-section">
+    <h4>关键洞察</h4>
+    <ul>
+      <li>和 VAE 一样，Flow 也优化精确似然 $\log p(\mathbf{x})$——但不需要下界</li>
+      <li>Flow 是<strong>唯一能同时做到精确似然 + 精确采样的方法</strong></li>
+      <li>代价：维度必须保持不变，且 $f$ 可逆——严重限制了 expressivity</li>
+      <li>连续化 Normalizing Flow → Neural ODE → 连续时间动力学</li>
+    </ul>
+  </div>
+
+  <div class="card-connections">
+    <span class="conn-badge">→ VAE: 同为似然方法</span>
+    <span class="conn-badge">→ Score-Based: Flow 的向量场和 score 场的关系</span>
+    <span class="conn-badge">→ Neural ODE: 连续化 Flow</span>
+  </div>
+</div>
+
+<!-- Diffusion / DDPM -->
+<div class="card" data-tags="Diff" id="card-diff">
+  <div class="card-header">
+    <span class="card-tag tag-Diff">Diff</span>
+    <h2>Diffusion Model (DDPM)</h2>
+    <span class="card-aliases">Ho et al., 2020; Sohl-Dickstein et al., 2015</span>
+  </div>
+
+  <div class="card-essence">
+    <strong>数学本质：</strong>在<em>加噪</em>的数据上做 Score Matching。DDPM 的 $\boldsymbol{\epsilon}$-预测损失就是去噪 score matching。
+  </div>
+
+  <div class="card-section">
+    <h4>核心公式</h4>
+    <p>$$\mathcal{L}_{\text{DDPM}} = \mathbb{E}_{t, \mathbf{x}_0, \boldsymbol{\epsilon}} \left[ \|\boldsymbol{\epsilon} - \boldsymbol{\epsilon}_\theta(\sqrt{\bar{\alpha}_t} \mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t} \boldsymbol{\epsilon}, t)\|^2 \right]$$</p>
+  </div>
+
+  <div class="card-section">
+    <h4>为什么等于 Score Matching</h4>
+    <p>
+      定义 $\mathbf{x}_t = \sqrt{\bar{\alpha}_t} \mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t} \boldsymbol{\epsilon}$，则
+      $$\nabla_{\mathbf{x}_t} \log q(\mathbf{x}_t | \mathbf{x}_0) = -\frac{\boldsymbol{\epsilon}}{\sqrt{1-\bar{\alpha}_t}}$$
+      所以预测噪声 $\boldsymbol{\epsilon}$ <strong>就是在估计 score</strong>。DDPM 的损失函数就是 denoising score matching (Vincent, 2011) 的加权版本。
+    </p>
+  </div>
+
+  <div class="card-section">
+    <h4>关键洞察——为什么要加噪</h4>
+    <ul>
+      <li><strong>不加噪的问题：</strong>真实数据分布集中在低维流形上——score 在数据流形之外没有定义（概率为零，score 发散）</li>
+      <li><strong>加噪后：</strong>分布被「涂抹」到整个空间，score 处处有定义且光滑，可以用神经网络学习</li>
+      <li>多尺度加噪 = 在不同「分辨率」上估计 score，从粗到细的 Langevin 采样 = 退火过程</li>
+      <li>这就是为什么 DDPM 不是灵机一动——<strong>它是 Score Matching + 多尺度退火的自然实现</strong></li>
+    </ul>
+  </div>
+
+  <div class="card-connections">
+    <span class="conn-badge">→ Score-Based: 本质相同（Song et al. 2021 统一）</span>
+    <span class="conn-badge">→ VAE: Diffusion = 多层 VAE 的极限</span>
+    <span class="conn-badge">→ EBM: 都基于 score/能量</span>
+  </div>
+</div>
+
+<!-- Score-Based -->
+<div class="card" data-tags="Score" id="card-score">
+  <div class="card-header">
+    <span class="card-tag tag-Score">Score</span>
+    <h2>Score-Based Generative Model</h2>
+    <span class="card-aliases">Song & Ermon, 2019; Song et al., 2021 (SDE 统一)</span>
+  </div>
+
+  <div class="card-essence">
+    <strong>数学本质：</strong>显式地用神经网络学习 score function $\mathbf{s}_\theta(\mathbf{x}) \approx \nabla_\mathbf{x} \log p(\mathbf{x})$，然后用 Langevin 动力学采样。这是<strong>最直接</strong>绕开 $Z$ 的方法。
+  </div>
+
+  <div class="card-section">
+    <h4>核心公式</h4>
+    <p>$$\mathcal{L}_{\text{DSM}} = \mathbb{E}_{\mathbf{x} \sim p, \tilde{\mathbf{x}} \sim q_\sigma(\tilde{\mathbf{x}}|\mathbf{x})} \left[ \left\| \mathbf{s}_\theta(\tilde{\mathbf{x}}) - \nabla_{\tilde{\mathbf{x}}} \log q_\sigma(\tilde{\mathbf{x}} | \mathbf{x}) \right\|^2 \right]$$</p>
+  </div>
+
+  <div class="card-section">
+    <h4>SDE 统一视角 (Song et al., 2021)</h4>
+    <p>
+      正向过程（加噪）：$d\mathbf{x} = \mathbf{f}(\mathbf{x}, t)\, dt + g(t)\, d\mathbf{w}$<br>
+      逆向过程（去噪/采样）：$d\mathbf{x} = [\mathbf{f}(\mathbf{x}, t) - g(t)^2 \nabla_\mathbf{x} \log p_t(\mathbf{x})]\, dt + g(t)\, d\bar{\mathbf{w}}$
+    </p>
+    <p>
+      逆向 SDE 的漂移项<strong>恰好需要 score</strong> $\nabla_\mathbf{x} \log p_t(\mathbf{x})$。
+      一旦你接受了「学 score → 用 SDE 逆向采样」这个框架，扩散模型和 score-based 模型就是<strong>同一个数学结构</strong>的两种实现。
+    </p>
+  </div>
+
+  <div class="card-section">
+    <h4>关键洞察</h4>
+    <ul>
+      <li>Score-Based 模型是<strong>概念上最干净</strong>的绕 $Z$ 方法：只学 score，不碰密度</li>
+      <li>和 EBM 的关系：$E(\mathbf{x}) = -\log p(\mathbf{x})$，所以 score = $-\nabla E$，是同一个东西</li>
+      <li>和 Diffusion 的关系：噪声预测 = score 估计（在加噪分布上）</li>
+      <li>SDE 框架将离散的加噪/去噪推广为<strong>连续时间随机过程</strong>——这是真正的统一</li>
+    </ul>
+  </div>
+
+  <div class="card-connections">
+    <span class="conn-badge">↔ EBM: score = −∇E</span>
+    <span class="conn-badge">↔ Diffusion: 噪声预测 ≡ score</span>
+    <span class="conn-badge">→ SDE 统一: Song et al. 2021</span>
+  </div>
+</div>
+
+<!-- ====== Footer ====== -->
+<footer>
+  <p>
+    这些卡片会随课程进展持续更新。每个算法只记录其<strong>数学本质</strong>和<strong>与其他算法的关系</strong>——工程细节（网络结构、训练技巧、超参调优）不在此处展开。
+  </p>
+  <p style="margin-top: 0.5rem;">
+    <a href="../lessons/0000-the-mathematical-landscape.html">← Lesson 0000 · 地貌</a> &emsp;
+    <a href="../lessons/0001-the-score-function.html">Lesson 0001</a> &emsp;
+    <a href="../MISSION.md">🎯 Mission</a>
+  </p>
+</footer>
+
+<script>
+function filterBy(tag) {
+  document.querySelectorAll('.card').forEach(c => {
+    c.classList.toggle('hidden', !c.dataset.tags.includes(tag));
+  });
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function filterAll() {
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('hidden'));
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>

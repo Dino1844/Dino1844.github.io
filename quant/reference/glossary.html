@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>量化金融术语表</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500&display=swap');
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 17px; line-height: 1.7; color: #1a1a1a; background: #fdfdfb; max-width: 720px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.3rem; }
+  h2 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.8rem; color: #2c2c2c; border-bottom: 1px solid #e0e0d8; padding-bottom: 0.3rem; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  dl { margin: 1rem 0; }
+  dt { font-weight: 600; margin-top: 1rem; color: #2c2c2c; }
+  dd { margin-left: 1.5rem; color: #444; }
+  .en { color: #888; font-size: 0.85em; }
+  .nav { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+</style>
+</head>
+<body>
+<h1>量化金融术语表</h1>
+<p class="meta">持续更新 · 最后更新：2026-06-15</p>
+
+<h2>市场结构</h2>
+<dl>
+  <dt>一级市场 <span class="en">Primary Market</span></dt>
+  <dd>新发行证券的市场。资金从投资者流向发行人（公司/政府）。</dd>
+  <dt>二级市场 <span class="en">Secondary Market</span></dt>
+  <dd>已有证券在投资者之间交易的市场。量化交易的主要场所。</dd>
+  <dt>交易所 <span class="en">Exchange</span></dt>
+  <dd>集中化撮合买卖订单的场所，透明、标准化、受监管。</dd>
+  <dt>场外市场 <span class="en">OTC / Over-the-Counter</span></dt>
+  <dd>买卖双方直接交易，不经过中央交易所。不透明、定制化。</dd>
+</dl>
+
+<h2>资产类别</h2>
+<dl>
+  <dt>股票 <span class="en">Equities / Stocks</span></dt>
+  <dd>公司所有权的一部分。收益来自股价上涨和股息。</dd>
+  <dt>债券 <span class="en">Bonds / Fixed Income</span></dt>
+  <dd>债务工具，到期还本付息。</dd>
+  <dt>ETF <span class="en">Exchange-Traded Fund</span></dt>
+  <dd>交易所交易基金。跟踪某个指数或策略的一篮子资产，像股票一样交易。</dd>
+  <dt>期货 <span class="en">Futures</span></dt>
+  <dd>标准化合约，约定在未来某个日期以约定价格买卖标的资产。</dd>
+  <dt>期权 <span class="en">Options</span></dt>
+  <dd>赋予持有者在未来以约定价格买卖标的资产的<em>权利</em>（非义务）。</dd>
+</dl>
+
+<h2>交易机制</h2>
+<dl>
+  <dt>订单簿 <span class="en">Order Book</span></dt>
+  <dd>交易所维护的买卖订单列表，是所有交易发生的地方。</dd>
+  <dt>Bid（买价）</dt>
+  <dd>买方愿意支付的最高价格。这是你能卖出的价格。</dd>
+  <dt>Ask / Offer（卖价）</dt>
+  <dd>卖方愿意接受的最低价格。这是你能买入的价格。</dd>
+  <dt>Spread（价差）</dt>
+  <dd>Ask − Bid。衡量流动性的关键指标——价差越小，交易成本越低。</dd>
+  <dt>流动性 <span class="en">Liquidity</span></dt>
+  <dd>在不显著影响价格的情况下快速买卖的能力。</dd>
+</dl>
+
+<h2>行情数据</h2>
+<dl>
+  <dt>OHLCV</dt>
+  <dd>Open（开盘价）、High（最高价）、Low（最低价）、Close（收盘价）、Volume（成交量）——K 线的五个要素。</dd>
+  <dt>收盘价 <span class="en">Close Price</span></dt>
+  <dd>给定时间段内的最后一笔成交价。量化中最常用的价格，被认为最接近"市场共识价"。</dd>
+  <dt>成交量 <span class="en">Volume</span></dt>
+  <dd>给定时间段内成交的总数量（股票是股数，期货是手数）。</dd>
+</dl>
+
+<h2>收益与风险</h2>
+<dl>
+  <dt>简单收益率 <span class="en">Simple Return</span></dt>
+  <dd>(P<sub>t</sub> − P<sub>t−1</sub>) / P<sub>t−1</sub>。直观但不可加。</dd>
+  <dt>对数收益率 <span class="en">Log Return</span></dt>
+  <dd>ln(P<sub>t</sub> / P<sub>t−1</sub>)。可加、更对称、更接近正态分布。量化中默认使用。</dd>
+  <dt>波动率 <span class="en">Volatility</span></dt>
+  <dd>收益率的标准差。金融中对"风险"最基本的量化定义。通常年化表示。</dd>
+  <dt>年化波动率 <span class="en">Annualized Volatility</span></dt>
+  <dd>日收益率标准差 × √n（股票 n=252，币圈 n=365）。</dd>
+  <dt>夏普比率 <span class="en">Sharpe Ratio</span></dt>
+  <dd>(策略收益 − 无风险利率) / 波动率。每单位风险换来的超额回报。≥1 不错，≥2 优秀。</dd>
+  <dt>最大回撤 <span class="en">Max Drawdown / MDD</span></dt>
+  <dd>从历史峰值到后续谷底的最大跌幅百分比。衡量最坏情况下的损失。</dd>
+  <dt>无风险利率 <span class="en">Risk-Free Rate</span></dt>
+  <dd>理论上零风险的收益率。传统金融用国债利率，币圈常用稳定币借贷利率（有争议）。</dd>
+</dl>
+
+<h2>时间序列</h2>
+<dl>
+  <dt>自相关 <span class="en">Autocorrelation</span></dt>
+  <dd>序列与其自身滞后值之间的相关性。正自相关→趋势（惯性），负自相关→均值回归（弹簧）。</dd>
+  <dt>平稳性 <span class="en">Stationarity</span></dt>
+  <dd>序列的均值、方差、自相关不随时间变化。价格不平稳，收益率通常平稳——这是量化从收益率出发的根本原因。</dd>
+  <dt>趋势 <span class="en">Trend</span></dt>
+  <dd>正自相关的表现：价格有「惯性」，涨完更可能继续涨。动量策略的数学基础。</dd>
+  <dt>均值回归 <span class="en">Mean Reversion</span></dt>
+  <dd>负自相关的表现：偏离均值后倾向于回归。配对交易和反转策略的基础。</dd>
+  <dt>协整 <span class="en">Cointegration</span></dt>
+  <dd>两个或多个非平稳序列的线性组合是平稳的。配对交易的核心数学工具。</dd>
+</dl>
+
+<h2>数据特性</h2>
+<dl>
+  <dt>肥尾 <span class="en">Fat Tails</span></dt>
+  <dd>极端事件的发生频率远超正态分布预测。真实金融收益率在 ±3σ 以外的概率比正态高数个数量级。</dd>
+  <dt>波动率聚集 <span class="en">Volatility Clustering</span></dt>
+  <dd>高波动时段倾向于连续出现，低波动时段也是——波动率有自相关性，不是独立同分布的。</dd>
+  <dt>相关性崩溃 <span class="en">Correlation Breakdown</span></dt>
+  <dd>资产间的相关性在危机时期趋向于 1，"分散化"在市场最需要时失效。</dd>
+  <dt>GARCH <span class="en">Generalized Autoregressive Conditional Heteroskedasticity</span></dt>
+  <dd>建模波动率聚集的标准工具族。核心思想：今天的高波动意味着明天大概率也高波动。</dd>
+  <dt>EWMA <span class="en">Exponentially Weighted Moving Average</span></dt>
+  <dd>给近期数据更高权重的波动率估计方法，比简单等权更适应波动率聚集。</dd>
+</dl>
+
+<h2>概率与分布</h2>
+<dl>
+  <dt>对数正态分布 <span class="en">Log-Normal Distribution</span></dt>
+  <dd>如果对数收益率服从正态分布，则价格服从对数正态分布。价格永远为正，且涨跌在百分比上对称。</dd>
+  <dt>学生 t 分布 <span class="en">Student's t-Distribution</span></dt>
+  <dd>尾部比正态更肥的分布。自由度 ν 越小尾部越肥，ν → ∞ 时趋近正态。金融数据拟合 ν 通常在 3-6。</dd>
+  <dt>自由度 <span class="en">Degrees of Freedom / ν</span></dt>
+  <dd>控制 t 分布尾部肥度的参数。ν ≤ 2 时方差不存在（无穷大）——此时标准差无意义。</dd>
+  <dt>极值理论 <span class="en">Extreme Value Theory / EVT</span></dt>
+  <dd>不对整个分布建模，只对尾部的极端值建模。用于估算最大回撤、极端 VaR 等尾部风险指标。</dd>
+  <dt>中心极限定理 <span class="en">Central Limit Theorem / CLT</span></dt>
+  <dd>独立同分布随机变量之和趋向正态。金融收益率不满足独立和同分布假设——所以正态近似在尾部失效。</dd>
+  <dt>偏度 <span class="en">Skewness</span></dt>
+  <dd>分布不对称的程度。负偏→左侧尾部更长（暴跌比暴涨多），正偏→右侧尾部更长。</dd>
+</dl>
+
+<div class="nav">
+  <a href="../lessons/0001-financial-markets-basics.html">← Lesson 0001 · 金融市场基础</a> &nbsp;|&nbsp;
+  <a href="../lessons/0002-returns-and-risk.html">← Lesson 0002 · 收益与风险</a> &nbsp;|&nbsp;
+  <a href="../lessons/0003-nature-of-financial-data.html">← Lesson 0003 · 金融数据的本性</a> &nbsp;|&nbsp;
+  <a href="../lessons/0004-time-series-basics.html">← Lesson 0004 · 时间序列基础</a> &nbsp;|&nbsp;
+  <a href="../lessons/0005-probability-and-distributions.html">← Lesson 0005 · 概率与分布</a>
+</div>
+</body>
+</html>

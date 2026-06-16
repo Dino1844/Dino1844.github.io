@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C++ STL 面试速查表</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Noto Sans SC',sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:860px;margin:0 auto;padding:32px 24px 64px;background:#fdfdfd}
+  h1{font-size:1.8rem;font-weight:700;margin-bottom:.5em}
+  h2{font-size:1.2rem;font-weight:600;margin:1.6em 0 .5em;border-bottom:2px solid #e9ecef;padding-bottom:.25em}
+  code{font-family:'JetBrains Mono','SF Mono',monospace;font-size:.88em;background:#f1f3f5;padding:.1em .3em;border-radius:3px}
+  pre{font-family:'JetBrains Mono','SF Mono',monospace;font-size:.8rem;line-height:1.5;background:#1e1e2e;color:#cdd6f4;padding:16px 20px;border-radius:6px;overflow-x:auto;margin:.8em 0}
+  pre .kw{color:#cba6f7}pre .fn{color:#89b4fa}pre .num{color:#fab387}pre .cmt{color:#6c7086;font-style:italic}pre .type{color:#f9e2af}
+  table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:.9em}
+  th,td{border:1px solid #dee2e6;padding:7px 12px;text-align:left}
+  th{background:#f1f3f5;font-weight:600}
+  .note{background:#fff9db;border-left:3px solid #f08c00;padding:10px 16px;margin:.8em 0;border-radius:0 4px 4px 0;font-size:.9em}
+  @media print{body{font-size:11px;color:#000}pre{background:#f8f9fa;color:#000;border:1px solid #ccc}}
+</style>
+</head>
+<body>
+
+<h1>🛠️ C++ STL 面试速查表</h1>
+<p>关联课程：<a href="../lessons/0000-complexity-analysis-stl.html">Lesson 0000</a></p>
+
+<h2>容器选择决策树</h2>
+<pre>
+需要按键快速查找？
+├── 是 → 需要有序？ → 是 → map / set (O(log n))
+│                   → 否 → unordered_map / unordered_set (O(1))
+└── 否 → 需要头尾操作？
+         ├── 只需尾部 → vector (O(1) amortized)
+         ├── 需要头部 → deque (O(1))
+         └── 需要中间 → 考虑 list (但遍历 O(n))
+</pre>
+
+<h2>vector&lt;T&gt; — 最常用</h2>
+<table>
+<tr><th>操作</th><th>代码</th><th>复杂度</th></tr>
+<tr><td>声明</td><td><code>vector&lt;int&gt; v;</code></td><td>—</td></tr>
+<tr><td>定长+默认值</td><td><code>vector&lt;int&gt; v(n, 0);</code></td><td>O(n)</td></tr>
+<tr><td>二维数组</td><td><code>vector&lt;vector&lt;int&gt;&gt; dp(m, vector&lt;int&gt;(n));</code></td><td>O(mn)</td></tr>
+<tr><td>尾部插入</td><td><code>v.push_back(x);</code></td><td>均摊 O(1)</td></tr>
+<tr><td>原地构造</td><td><code>v.emplace_back(a, b);</code></td><td>均摊 O(1)</td></tr>
+<tr><td>预分配</td><td><code>v.reserve(n);</code></td><td>O(n)</td></tr>
+<tr><td>尾部删除</td><td><code>v.pop_back();</code></td><td>O(1)</td></tr>
+<tr><td>下标访问</td><td><code>v[i]</code></td><td>O(1)</td></tr>
+<tr><td>首/中插入</td><td><code>v.insert(v.begin(), x);</code></td><td>O(n) ❌</td></tr>
+<tr><td>清空</td><td><code>v.clear();</code></td><td>O(n)</td></tr>
+</table>
+
+<h2>string</h2>
+<table>
+<tr><th>操作</th><th>代码</th><th>复杂度</th></tr>
+<tr><td>取子串</td><td><code>s.substr(pos, len)</code></td><td>O(len)</td></tr>
+<tr><td>查找</td><td><code>s.find(t)</code></td><td>O(n·m) 朴素</td></tr>
+<tr><td>字符推入</td><td><code>s.push_back(c)</code></td><td>均摊 O(1)</td></tr>
+<tr><td>转数字</td><td><code>stoi(s)</code></td><td>O(n)</td></tr>
+<tr><td>数字转串</td><td><code>to_string(x)</code></td><td>O(log x)</td></tr>
+</table>
+
+<h2>unordered_map&lt;K,V&gt; / unordered_set&lt;T&gt;</h2>
+<table>
+<tr><th>操作</th><th>代码</th><th>复杂度</th></tr>
+<tr><td>插入/更新</td><td><code>mp[key] = val;</code></td><td>均摊 O(1) ⚠️ key 不存在会插入</td></tr>
+<tr><td>存在性检查</td><td><code>mp.count(key)</code> 或 <code>mp.find(key) != mp.end()</code></td><td>均摊 O(1)</td></tr>
+<tr><td>删除</td><td><code>mp.erase(key);</code></td><td>均摊 O(1)</td></tr>
+<tr><td>遍历</td><td><code>for (auto& [k, v] : mp)</code></td><td>O(n)</td></tr>
+</table>
+
+<div class="note">
+  <strong>⚠️ 关键区别：</strong><code>mp[key]</code> 在 key 不存在时<strong>会插入 {key, V()}</strong>。<br>
+  若只想检查存在性，必须用 <code>mp.find(key)</code> 或 <code>mp.count(key)</code>。
+</div>
+
+<h2>stack / queue / deque</h2>
+<table>
+<tr><th>容器</th><th>push</th><th>pop</th><th>top/front</th><th>典型场景</th></tr>
+<tr><td><code>stack&lt;T&gt;</code></td><td><code>push(x)</code> O(1)</td><td><code>pop()</code> O(1)</td><td><code>top()</code> O(1)</td><td>DFS 非递归、单调栈、括号匹配</td></tr>
+<tr><td><code>queue&lt;T&gt;</code></td><td><code>push(x)</code> O(1)</td><td><code>pop()</code> O(1)</td><td><code>front()</code> O(1)</td><td>BFS、层序遍历</td></tr>
+<tr><td><code>deque&lt;T&gt;</code></td><td colspan="2">头尾 push/pop 均 O(1)</td><td>头尾 O(1)</td><td>滑动窗口最值、单调队列</td></tr>
+</table>
+
+<h2>priority_queue&lt;T&gt;（堆）</h2>
+<pre><span class="cmt">// 默认大顶堆</span>
+<span class="type">priority_queue</span>&lt;<span class="type">int</span>&gt; pq;        <span class="cmt">// top() 返回最大值</span>
+
+<span class="cmt">// 小顶堆（三种写法）</span>
+<span class="type">priority_queue</span>&lt;<span class="type">int</span>, <span class="type">vector</span>&lt;<span class="type">int</span>&gt;, greater&lt;<span class="type">int</span>&gt;&gt; pq;
+
+<span class="cmt">// 自定义比较（lambda + decltype）</span>
+<span class="kw">auto</span> cmp = [](<span class="type">int</span> a, <span class="type">int</span> b) { <span class="kw">return</span> a &gt; b; };
+<span class="type">priority_queue</span>&lt;<span class="type">int</span>, <span class="type">vector</span>&lt;<span class="type">int</span>&gt;, <span class="kw">decltype</span>(cmp)&gt; pq(cmp);</pre>
+<table>
+<tr><th>操作</th><th>代码</th><th>复杂度</th></tr>
+<tr><td>插入</td><td><code>pq.push(x);</code></td><td>O(log n)</td></tr>
+<tr><td>取堆顶</td><td><code>pq.top();</code></td><td>O(1)</td></tr>
+<tr><td>弹出堆顶</td><td><code>pq.pop();</code></td><td>O(log n)</td></tr>
+</table>
+
+<h2>&lt;algorithm&gt; 常用算法</h2>
+<table>
+<tr><th>算法</th><th>代码</th><th>复杂度</th></tr>
+<tr><td>排序</td><td><code>sort(v.begin(), v.end());</code></td><td>O(n log n)</td></tr>
+<tr><td>降序排序</td><td><code>sort(v.begin(), v.end(), greater&lt;int&gt;());</code></td><td>O(n log n)</td></tr>
+<tr><td>自定义排序</td><td><code>sort(v.begin(), v.end(), [](auto& a, auto& b) { return ...; });</code></td><td>O(n log n)</td></tr>
+<tr><td>二分查找</td><td><code>binary_search(v.begin(), v.end(), x);</code></td><td>O(log n)</td></tr>
+<tr><td>下界（≥x）</td><td><code>auto it = lower_bound(v.begin(), v.end(), x);</code></td><td>O(log n)</td></tr>
+<tr><td>上界（>x）</td><td><code>auto it = upper_bound(v.begin(), v.end(), x);</code></td><td>O(log n)</td></tr>
+<tr><td>反转</td><td><code>reverse(v.begin(), v.end());</code></td><td>O(n)</td></tr>
+<tr><td>最大值</td><td><code>auto it = max_element(v.begin(), v.end());</code></td><td>O(n)</td></tr>
+<tr><td>全排列</td><td><code>next_permutation(v.begin(), v.end());</code></td><td>O(n)</td></tr>
+<tr><td>第 k 小</td><td><code>nth_element(v.begin(), v.begin()+k, v.end());</code></td><td>O(n) 平均</td></tr>
+<tr><td>去重</td><td><code>auto it = unique(v.begin(), v.end()); v.erase(it, v.end());</code></td><td>O(n)</td></tr>
+</table>
+
+<h2>必备代码片段</h2>
+
+<pre><span class="cmt">// 1. lambda DFS（捕获所有引用）</span>
+<span class="kw">auto</span> dfs = [&](<span class="type">int</span> u, <span class="type">int</span> p) -&gt; <span class="type">void</span> {
+    <span class="kw">for</span> (<span class="type">int</span> v : adj[u]) <span class="kw">if</span> (v != p) <span class="fn">dfs</span>(v, u);
+};
+<span class="fn">dfs</span>(<span class="num">0</span>, -<span class="num">1</span>);
+
+<span class="cmt">// 2. 自定义哈希（pair 放入 unordered_set）</span>
+<span class="kw">struct</span> <span class="type">pair_hash</span> {
+    <span class="type">size_t</span> <span class="kw">operator</span>()(<span class="kw">const</span> pair&lt;<span class="type">int</span>,<span class="type">int</span>&gt;& p) <span class="kw">const</span> {
+        <span class="kw">return</span> hash&lt;<span class="type">long long</span>&gt;{}(
+            ((<span class="type">long long</span>)p.first &lt;&lt; <span class="num">32</span>) | p.second);
+    }
+};
+<span class="type">unordered_set</span>&lt;pair&lt;<span class="type">int</span>,<span class="type">int</span>&gt;, pair_hash&gt; st;
+
+<span class="cmt">// 3. 二分查找下标（lower_bound 转 index）</span>
+<span class="type">int</span> idx = <span class="fn">lower_bound</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), x) - v.<span class="fn">begin</span>();
+
+<span class="cmt">// 4. 初始化一维/二维 DP</span>
+<span class="type">vector</span>&lt;<span class="type">int</span>&gt; dp(n+<span class="num">1</span>, INT_MIN);
+<span class="type">vector</span>&lt;<span class="type">vector</span>&lt;<span class="type">int</span>&gt;&gt; dp(m, <span class="type">vector</span>&lt;<span class="type">int</span>&gt;(n, <span class="num">0</span>));
+
+<span class="cmt">// 5. 数组最大值最小值</span>
+<span class="type">int</span> mx = *<span class="fn">max_element</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());
+<span class="type">int</span> mn = *<span class="fn">min_element</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());
+
+<span class="cmt">// 6. 去重（先排序）</span>
+<span class="fn">sort</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());
+v.<span class="fn">erase</span>(<span class="fn">unique</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>()), v.<span class="fn">end</span>());
+
+<span class="cmt">// 7. 字符判断</span>
+<span class="fn">isalpha</span>(c) / <span class="fn">isdigit</span>(c) / <span class="fn">isalnum</span>(c) / <span class="fn">tolower</span>(c) / <span class="fn">toupper</span>(c)
+</pre>
+
+</body>
+</html>

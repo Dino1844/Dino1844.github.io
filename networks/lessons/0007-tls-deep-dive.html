@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 7 课：TLS —— 互联网的加密铠甲</title>
+<style>
+  :root { --bg: #fffff8; --text: #111; --muted: #666; --accent: #c44; --link: #246; --rule: #ddd; --highlight: #fff8e1; --code-bg: #f4f4f0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Noto Serif CJK SC","Source Han Serif SC","STSong","Songti SC",Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; }
+  article { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.2rem; margin: 2.2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--rule); color: #333; }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 0.5rem; color: #444; }
+  p { margin: 0.8rem 0; }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; } li { margin: 0.35rem 0; }
+  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.92em; font-family: "JetBrains Mono","Fira Code",monospace; }
+  pre { background: var(--code-bg); padding: 0.8rem 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.84rem; line-height: 1.5; margin: 1rem 0; }
+  pre code { background: none; padding: 0; }
+  .sidenote { background: var(--highlight); border-left: 3px solid #e6c840; padding: 0.6rem 1rem; margin: 1rem 0; font-size: 0.88rem; color: #5a4a20; }
+  .sidenote strong { color: #8a6d20; }
+  .stack-indicator { margin: 1.5rem 0; display: flex; flex-direction: column; align-items: center; font-size: 0.82rem; }
+  .stack-indicator .layer { padding: 0.35rem 3rem; border: 1px solid var(--rule); margin: 1px 0; border-radius: 3px; background: #fff; color: var(--muted); }
+  .stack-indicator .layer.current { background: #2c3e50; color: #fff; font-weight: 600; border-color: #2c3e50; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+  th { background: #f5f5f0; padding: 0.5rem 0.7rem; text-align: left; border-bottom: 2px solid var(--rule); font-weight: 600; }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--rule); }
+
+  /* Handshake timeline */
+  .hs { margin: 1.2rem 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .hs .hs-header { display: grid; grid-template-columns: 1fr 1fr; background: #fafaf5; }
+  .hs .hs-header .hsh { padding: 0.55rem 1rem; text-align: center; font-weight: 700; font-size: 0.82rem; font-family: "Noto Serif CJK SC","STSong",serif; }
+  .hs .hs-header .hsh.l { background: #e3ecf5; color: #1e5080; border-right: 1px solid var(--rule); }
+  .hs .hs-header .hsh.r { background: #f2e9dd; color: #704e20; }
+  .hs .hs-step { display: grid; grid-template-columns: 1fr auto 1fr; border-top: 1px solid #eee; min-height: 42px; }
+  .hs .hs-step .arrow-cell { display: flex; align-items: center; justify-content: center; width: 48px; background: #fdfdf8; }
+  .hs .hs-step .m { padding: 0.45rem 0.8rem; font-size: 0.8rem; display: flex; flex-direction: column; justify-content: center; }
+  .hs .hs-step .m.l { text-align: right; align-items: flex-end; }
+  .hs .hs-step .m.r { text-align: left; align-items: flex-start; }
+  .hs .hs-step .m .tag { font-family: "JetBrains Mono","Fira Code",monospace; font-size: 0.74rem; font-weight: 700; padding: 0.12em 0.35em; border-radius: 3px; }
+  .hs .hs-step .m.l .tag { background: #dce8f4; color: #1e5080; }
+  .hs .hs-step .m.r .tag { background: #f0e4d4; color: #704e20; }
+  .hs .hs-step .m .d { font-size: 0.73rem; color: var(--muted); margin-top: 0.1rem; }
+  .hs .hs-step .hbar { grid-column: 1/-1; text-align: center; font-size: 0.68rem; font-family: "JetBrains Mono",monospace; color: var(--muted); padding: 0.1rem; background: #fdfdf8; border-top: 1px dotted #eee; }
+
+  .quiz { margin: 2.5rem 0; padding: 1.5rem; border: 1px solid var(--rule); border-radius: 6px; background: #fdfdf8; }
+  .quiz h2 { margin-top: 0; border: none; padding-bottom: 0; }
+  .quiz .q { margin: 1.2rem 0; }
+  .quiz .q > p { font-weight: 600; margin-bottom: 0.3rem; }
+  .quiz .q label { display: block; padding: 0.35rem 0; cursor: pointer; font-size: 0.9rem; }
+  .quiz .q input[type="radio"] { margin-right: 0.5rem; }
+  .quiz button { margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
+  .quiz button:hover { opacity: 0.9; }
+  .quiz .feedback { margin-top: 0.5rem; font-size: 0.88rem; min-height: 1.5rem; }
+  .quiz .feedback.correct { color: #2a7d2a; } .quiz .feedback.incorrect { color: #c44; }
+  .lesson-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); font-size: 0.9rem; }
+  .source-box { margin: 2rem 0; padding: 1rem 1.2rem; background: #f0f4f8; border-radius: 6px; font-size: 0.9rem; }
+  .source-box h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+<article>
+
+<h1>第 7 课：TLS —— 互联网的加密铠甲</h1>
+<div class="meta">计算机网络 · <a href="../index.html">← 概念地图</a> · 约 25 分钟 · <a href="../reference/glossary.html">术语表</a></div>
+
+<div class="stack-indicator">
+  <div class="layer">应用层 &nbsp; HTTP</div>
+  <div class="layer current">◀ 安全层 &nbsp; TLS ◀ 本课</div>
+  <div class="layer">传输层 &nbsp; TCP</div>
+  <div class="layer">网络层 &nbsp; IP</div>
+</div>
+
+<p>TLS（Transport Layer Security）坐在 TCP 之上、HTTP 之下。当 HTTP 跑在 TLS 之上时，就变成了 HTTPS。TLS 提供三个保证：<strong>机密性</strong>（中间人看不到内容）、<strong>完整性</strong>（内容没被篡改）、<strong>身份认证</strong>（对方确实是它声称的那个）。</p>
+
+<div class="sidenote"><strong>🎯 本课目标：</strong>理解非对称加密与对称加密的分工、TLS 握手的完整流程、证书链的验证机制、TLS 1.3 相对于 1.2 的改进。</div>
+
+<h2>1. 两种加密的分工</h2>
+
+<table>
+  <tr><th></th><th>非对称加密 (RSA/ECDH)</th><th>对称加密 (AES/ChaCha20)</th></tr>
+  <tr><td>密钥</td><td>公钥 + 私钥（两个不同密钥）</td><td>一个共享密钥（双方相同）</td></tr>
+  <tr><td>速度</td><td>慢（比对称慢 100–1000 倍）</td><td>快</td></tr>
+  <tr><td>在 TLS 中的角色</td><td>握手阶段：验证身份 + 安全地协商出对称密钥</td><td>数据传输阶段：用协商好的密钥加密所有流量</td></tr>
+</table>
+
+<p>TLS 的设计哲学：<strong>用慢的非对称加密做一次性的密钥协商，然后用快的对称加密做大量的数据传输。</strong>两全其美。</p>
+
+<h2>2. TLS 1.2 握手 —— 经典的两轮往返</h2>
+
+<div class="hs">
+  <div class="hs-header"><div class="hsh l">客户端</div><div class="hsh r">服务器</div></div>
+
+  <div class="hs-step">
+    <div class="m l"><span class="tag">ClientHello</span><span class="d">支持的密码套件 + 随机数 C</span></div>
+    <div class="arrow-cell"><svg width="32" height="18" viewBox="0 0 32 18"><line x1="2" y1="9" x2="28" y2="9" stroke="#1e5080" stroke-width="1.8"/><polygon points="28,5 28,13 32,9" fill="#1e5080"/></svg></div>
+    <div class="m r"></div>
+  </div>
+  <div class="hs-step"><div class="hbar">Round Trip 1</div></div>
+  <div class="hs-step">
+    <div class="m l"></div>
+    <div class="arrow-cell"><svg width="32" height="18" viewBox="0 0 32 18"><line x1="30" y1="9" x2="4" y2="9" stroke="#704e20" stroke-width="1.8"/><polygon points="4,5 4,13 0,9" fill="#704e20"/></svg></div>
+    <div class="m r"><span class="tag">ServerHello</span><span class="d">选定的密码套件 + 随机数 S</span></div>
+  </div>
+  <div class="hs-step">
+    <div class="m l"></div>
+    <div class="arrow-cell"><svg width="32" height="18" viewBox="0 0 32 18"><line x1="30" y1="9" x2="4" y2="9" stroke="#704e20" stroke-width="1.8"/><polygon points="4,5 4,13 0,9" fill="#704e20"/></svg></div>
+    <div class="m r"><span class="tag">Certificate</span><span class="d">服务器证书（含公钥）</span></div>
+  </div>
+  <div class="hs-step">
+    <div class="m l"></div>
+    <div class="arrow-cell"><svg width="32" height="18" viewBox="0 0 32 18"><line x1="30" y1="9" x2="4" y2="9" stroke="#704e20" stroke-width="1.8"/><polygon points="4,5 4,13 0,9" fill="#704e20"/></svg></div>
+    <div class="m r"><span class="tag">ServerHelloDone</span></div>
+  </div>
+  <div class="hs-step"><div class="hbar">客户端验证证书</div></div>
+  <div class="hs-step">
+    <div class="m l"><span class="tag">ClientKeyExchange</span><span class="d">用服务器公钥加密的 Pre-Master Secret</span></div>
+    <div class="arrow-cell"><svg width="32" height="18" viewBox="0 0 32 18"><line x1="2" y1="9" x2="28" y2="9" stroke="#1e5080" stroke-width="1.8"/><polygon points="28,5 28,13 32,9" fill="#1e5080"/></svg></div>
+    <div class="m r"></div>
+  </div>
+  <div class="hs-step">
+    <div class="m l"><span class="tag">ChangeCipherSpec</span><span class="d">"接下来我用对称密钥加密了"</span></div>
+    <div class="arrow-cell"><svg width="32" height="18" viewBox="0 0 32 18"><line x1="2" y1="9" x2="28" y2="9" stroke="#1e5080" stroke-width="1.8"/><polygon points="28,5 28,13 32,9" fill="#1e5080"/></svg></div>
+    <div class="m r"></div>
+  </div>
+  <div class="hs-step"><div class="hbar">Round Trip 2</div></div>
+  <div class="hs-step">
+    <div class="m l"></div>
+    <div class="arrow-cell"><svg width="32" height="18" viewBox="0 0 32 18"><line x1="30" y1="9" x2="4" y2="9" stroke="#704e20" stroke-width="1.8"/><polygon points="4,5 4,13 0,9" fill="#704e20"/></svg></div>
+    <div class="m r"><span class="tag">ChangeCipherSpec + Finished</span></div>
+  </div>
+  <div class="hs-step"><div class="hbar">开始对称加密传输 HTTP 数据</div></div>
+</div>
+
+<p>对称密钥如何生成？客户端生成一个 <strong>Pre-Master Secret</strong>，用服务器公钥加密发送。双方用「随机数 C + 随机数 S + Pre-Master Secret」通过 PRF 推导出最终的对称密钥。这保证了即使攻击者能监听握手消息（随机数是明文），也无法算出对称密钥（因为 Pre-Master Secret 被公钥加密了）。</p>
+
+<h2>3. 证书与证书链 —— "你真的是 example.com 吗？"</h2>
+
+<p>中间人攻击的经典场景：攻击者在你和服务器之间，用自己的公钥替换服务器的。为了防这个，TLS 引入了<strong>证书（Certificate）</strong>和 <strong>CA（Certificate Authority）</strong>。</p>
+
+<p>证书是一个由 CA 签名的文件，包含了域名和该域名的公钥。浏览器内置了约 150 个<strong>根 CA 的证书</strong>，这些是信任的锚点：</p>
+
+<pre><code>根 CA（浏览器信任列表，如 DigiCert、Let's Encrypt）
+  ↓ 签名
+中间 CA（根 CA 委派，日常签发）
+  ↓ 签名
+服务器证书（example.com + 公钥）</code></pre>
+
+<p>浏览器验证时从下往上逐级检查：服务器证书的签名是否来自中间 CA → 中间 CA 的签名是否来自根 CA → 根 CA 是否在信任列表中。任何一级不通过，浏览器显示安全警告。</p>
+
+<h2>4. TLS 1.3 —— 更快、更安全</h2>
+
+<table>
+  <tr><th></th><th>TLS 1.2</th><th>TLS 1.3 (2018)</th></tr>
+  <tr><td>握手往返</td><td>2-RTT（两次往返）</td><td><strong>1-RTT</strong>（会话恢复 0-RTT）</td></tr>
+  <tr><td>密钥交换</td><td>RSA 或 ECDHE</td><td>仅 ECDHE（前向安全）</td></tr>
+  <tr><td>支持的密码套件</td><td>几十种（含不安全旧算法）</td><td>仅 5 种（全是 AEAD 加密）</td></tr>
+  <tr><td>加密时机</td><td>握手后半段才加密</td><td><strong>ServerHello 之后全部加密</strong></td></tr>
+  <tr><td>0-RTT</td><td>不支持</td><td>支持（之前连接过的客户端可以直接发加密数据）</td></tr>
+</table>
+
+<p>TLS 1.3 的最大改进：把 2-RTT 缩减为 1-RTT，并且<strong>删除了所有已知不安全的密码套件</strong>。它不给你配置错误的机会——能用的全是安全的。</p>
+
+<div class="sidenote"><strong>🔑 前向安全（Forward Secrecy）：</strong>即使服务器的私钥未来某天泄露了，过去的会话也无法被解密。因为每次会话的对称密钥是临时生成的（ECDHE），用完就丢。RSA 密钥交换没有前向安全——拿到私钥就能解密所有历史流量。</div>
+
+<h2>🧪 检验一下</h2>
+<div class="quiz" id="quiz1">
+  <div class="q" id="q1"><p>Q1: TLS 中，非对称加密和对称加密分别用在哪个阶段？</p>
+    <label><input type="radio" name="q1" value="a"> 都用在数据传输阶段</label>
+    <label><input type="radio" name="q1" value="b"> 非对称用于握手协商密钥，对称用于数据传输</label>
+    <label><input type="radio" name="q1" value="c"> 对称用于握手，非对称用于数据传输</label>
+    <label><input type="radio" name="q1" value="d"> 两者交替使用</label></div>
+  <div class="q" id="q2"><p>Q2: 证书的核心作用是什么？</p>
+    <label><input type="radio" name="q2" value="a"> 加密 HTTP 请求的内容</label>
+    <label><input type="radio" name="q2" value="b"> 加速 TLS 握手过程</label>
+    <label><input type="radio" name="q2" value="c"> 绑定域名和公钥，由可信第三方签名验证</label>
+    <label><input type="radio" name="q2" value="d"> 存储 Cookie 和会话信息</label></div>
+  <div class="q" id="q3"><p>Q3: TLS 1.3 相对于 TLS 1.2 的关键改进是什么？</p>
+    <label><input type="radio" name="q3" value="a"> 支持了 RSA 密钥交换</label>
+    <label><input type="radio" name="q3" value="b"> 握手从 2-RTT 降到 1-RTT，删除了不安全密码套件</label>
+    <label><input type="radio" name="q3" value="c"> 增加了更多密码套件供选择</label>
+    <label><input type="radio" name="q3" value="d"> 取消了证书验证步骤</label></div>
+  <div class="q" id="q4"><p>Q4: 「前向安全」意味着什么？</p>
+    <label><input type="radio" name="q4" value="a"> 加密速度比普通 TLS 更快</label>
+    <label><input type="radio" name="q4" value="b"> 即使服务器私钥泄露，历史会话也无法解密</label>
+    <label><input type="radio" name="q4" value="c"> 客户端可以在没有证书的情况下验证服务器</label>
+    <label><input type="radio" name="q4" value="d"> 加密数据只能向前传输，不能向后</label></div>
+  <button onclick="checkQuiz()">提交答案</button>
+  <div class="feedback" id="quiz-feedback"></div>
+</div>
+
+<div class="source-box"><h3>📖 推荐阅读</h3>
+  <p><strong><a href="https://tls12.xargs.org/" target="_blank">The Illustrated TLS 1.2 Connection</a></strong> — 动画演示 TLS 1.2 握手的每一个字节。必看。 · <strong><a href="https://hpbn.co/transport-layer-security-tls/" target="_blank">HPBN: TLS</a></strong> — 从性能角度分析 TLS。</p>
+</div>
+
+<div class="lesson-nav">
+  <a href="0006-http-deep-dive.html">← 第 6 课：HTTP</a>
+  <a href="../index.html">回到概念地图 ↑</a>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">🤔 追问你的 AI 教师：「证书透明（Certificate Transparency）是什么？」「自签名证书和 CA 签名证书有什么区别？」「mTLS 是什么场景用的？」</p>
+</article>
+<script>
+const answers={q1:'b',q2:'c',q3:'b',q4:'b'};
+function checkQuiz(){let c=0,t=Object.keys(answers).length;for(let[k,v]of Object.entries(answers)){if(document.querySelector(`input[name="${k}"]:checked`)?.value===v)c++;}const f=document.getElementById('quiz-feedback');f.textContent=c===t?`✅ ${c}/${t} 全对！`:c>=2?`⚠️ ${c}/${t}`:`❌ ${c}/${t}`;f.className='feedback '+(c===t?'correct':'incorrect');}
+</script>
+</body>
+</html>

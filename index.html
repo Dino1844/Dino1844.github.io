@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习笔记 · Learning Hub</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Source Serif 4', Georgia, 'Noto Serif CJK SC', serif;
+    font-size: 18px; line-height: 1.7; color: #1a1a1a;
+    background: #fdfdfb; max-width: 760px; margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+  }
+  h1 { font-size: 2.6rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  .subtitle { color: #999; font-size: 1rem; margin-bottom: 3rem; font-family: 'Inter', sans-serif; }
+
+  .track {
+    background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 8px;
+    padding: 1.8rem 2rem; margin-bottom: 1.5rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    text-decoration: none; display: block; color: inherit;
+  }
+  .track:hover { border-color: #5577aa; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+
+  .track-header { display: flex; align-items: baseline; gap: 0.8rem; margin-bottom: 0.5rem; }
+  .track-icon { font-size: 1.6rem; }
+  .track-name { font-size: 1.35rem; font-weight: 700; color: #222; }
+  .track-label { font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em; padding: 0.2em 0.6em;
+    border-radius: 3px; background: #f0f0f0; color: #666; }
+  .track-desc { color: #666; font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .track-meta { font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #aaa; }
+
+  .footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid #e8e8e0;
+    font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #bbb; text-align: center; }
+  .footer a { color: #999; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h1>📚 学习笔记</h1>
+<p class="subtitle">系统化自学路径 — 数学 · 计算机 · 金融</p>
+
+<a class="track" href="./quant/">
+  <div class="track-header">
+    <span class="track-icon">📈</span>
+    <span class="track-name">量化金融</span>
+    <span class="track-label">进行中</span>
+  </div>
+  <div class="track-desc">从零基础到设计自己的量化交易策略 — 加密货币市场，重概念和交易逻辑</div>
+  <div class="track-meta">5 已完成 · 14 计划课程</div>
+</a>
+
+<a class="track" href="./networks/">
+  <div class="track-header">
+    <span class="track-icon">🌐</span>
+    <span class="track-name">计算机网络</span>
+    <span class="track-label">进行中</span>
+  </div>
+  <div class="track-desc">以概念地图方式理解网络协议栈 — 从 URL 输入到页面渲染的完整链路</div>
+  <div class="track-meta">8 已完成 · 8 计划课程</div>
+</a>
+
+<a class="track" href="./aimath/">
+  <div class="track-header">
+    <span class="track-icon">🧮</span>
+    <span class="track-name">AI 数学基础</span>
+    <span class="track-label">进行中</span>
+  </div>
+  <div class="track-desc">理解机器学习背后的数学 — 信息几何、评分函数、优化理论</div>
+  <div class="track-meta">3 已完成 · 参考卡片</div>
+</a>
+
+<a class="track" href="./oi/">
+  <div class="track-header">
+    <span class="track-icon">🏆</span>
+    <span class="track-name">信息学竞赛</span>
+    <span class="track-label">进行中</span>
+  </div>
+  <div class="track-desc">算法与数据结构系统训练 — 从暴力枚举到最优解，刷题路径</div>
+  <div class="track-meta">3 已完成 · 参考卡片</div>
+</a>
+
+<div class="footer">
+  部署于 <a href="https://github.com/Dino1844/Dino1844.github.io">GitHub Pages</a>
+</div>
+
+</body>
+</html>

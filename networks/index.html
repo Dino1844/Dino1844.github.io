@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>计算机网络 · 概念地图</title>
+<style>
+  :root {
+    --bg: #fffff8;
+    --text: #111;
+    --muted: #555;
+    --accent: #c44;
+    --link: #246;
+    --node-bg: #fafaf5;
+    --node-border: #ddd;
+    --phase-colors: #e8e0d0, #d8dce8, #d0e0d8, #e0d4e4, #e4ddd0, #d4e0e0, #e8d8d4, #d0d8c8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "Songti SC", Georgia, "Times New Roman", serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  header {
+    padding: 2rem 3rem 1rem;
+    border-bottom: 1px solid var(--node-border);
+    text-align: center;
+  }
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.5rem;
+  }
+  header .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .map-container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+  }
+  /* Core question */
+  .core-question {
+    text-align: center;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+  }
+  .core-question .icon { font-size: 1.4rem; margin-right: 0.3rem; }
+  /* Phase track */
+  .phases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  .phase-node {
+    background: var(--node-bg);
+    border: 1px solid var(--node-border);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    min-width: 120px;
+    flex: 0 0 auto;
+    max-width: 140px;
+    font-size: 0.88rem;
+  }
+  .phase-node:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .phase-node .phase-num {
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .phase-node .phase-label {
+    margin-top: 0.25rem;
+    font-weight: 500;
+  }
+  .phase-node .phase-detail {
+    margin-top: 0.2rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  /* Expanded detail panel */
+  .detail-panel {
+    display: none;
+    background: var(--node-bg);
+    border: 1px solid var(--node-border);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    animation: fadeIn 0.25s;
+  }
+  .detail-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .detail-panel h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--accent);
+  }
+  .detail-panel .concepts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .concept-tag {
+    background: #fff;
+    border: 1px solid var(--node-border);
+    border-radius: 4px;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .concept-tag:hover { border-color: var(--accent); }
+  .concept-tag a { color: var(--link); text-decoration: none; }
+  .concept-tag a:hover { text-decoration: underline; }
+  .detail-panel .links {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .detail-panel .links a { color: var(--link); margin: 0 0.5rem; }
+  /* Framework panel */
+  .framework-hint {
+    text-align: center;
+    margin: 2.5rem 0 1rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .framework-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+  }
+  .framework-card {
+    border: 1px solid var(--node-border);
+    border-radius: 6px;
+    padding: 1.2rem;
+    background: var(--node-bg);
+    transition: box-shadow 0.2s;
+  }
+  .framework-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .framework-card h3 { font-size: 1rem; margin-bottom: 0.6rem; color: var(--accent); }
+  .framework-card ul { list-style: none; font-size: 0.85rem; }
+  .framework-card li { padding: 0.2rem 0; }
+  .framework-card li::before { content: "→ "; color: var(--accent); font-weight: 700; }
+  .framework-card a { color: var(--link); text-decoration: none; }
+  .framework-card a:hover { text-decoration: underline; }
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--node-border);
+  }
+  footer a { color: var(--link); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>计算机网络 · 概念地图</h1>
+  <p class="subtitle">以一个问题串起整个协议栈。点击节点展开，追踪概念到深层知识。</p>
+</header>
+
+<div class="map-container">
+
+  <!-- Core question -->
+  <div class="core-question">
+    <span class="icon">🔍</span>
+    <strong>在浏览器地址栏输入 https://example.com，按下回车，发生了什么？</strong>
+  </div>
+
+  <!-- Phase nodes -->
+  <div class="phases">
+    <div class="phase-node" onclick="showPhase('dns')">
+      <div class="phase-num">Phase 1</div>
+      <div class="phase-label">DNS 解析</div>
+      <div class="phase-detail">域名 → IP</div>
+    </div>
+    <div class="phase-node" onclick="showPhase('tcp')">
+      <div class="phase-num">Phase 2</div>
+      <div class="phase-label">TCP 连接</div>
+      <div class="phase-detail">三次握手</div>
+    </div>
+    <div class="phase-node" onclick="showPhase('tls')">
+      <div class="phase-num">Phase 3</div>
+      <div class="phase-label">TLS 握手</div>
+      <div class="phase-detail">加密信道</div>
+    </div>
+    <div class="phase-node" onclick="showPhase('http')">
+      <div class="phase-num">Phase 4</div>
+      <div class="phase-label">HTTP 请求</div>
+      <div class="phase-detail">请求-响应</div>
+    </div>
+    <div class="phase-node" onclick="showPhase('routing')">
+      <div class="phase-num">Phase 5</div>
+      <div class="phase-label">IP 路由</div>
+      <div class="phase-detail">逐跳转发</div>
+    </div>
+    <div class="phase-node" onclick="showPhase('link')">
+      <div class="phase-num">Phase 6</div>
+      <div class="phase-label">链路层</div>
+      <div class="phase-detail">帧 &amp; MAC</div>
+    </div>
+    <div class="phase-node" onclick="showPhase('render')">
+      <div class="phase-num">Phase 7</div>
+      <div class="phase-label">浏览器渲染</div>
+      <div class="phase-detail">解析 &amp; 绘制</div>
+    </div>
+  </div>
+
+  <!-- Detail panels for each phase -->
+  <div class="detail-panel" id="panel-dns">
+    <h2>Phase 1: DNS 解析 —— 域名到 IP 地址的转换</h2>
+    <div class="concepts">
+      <span class="concept-tag">DNS 缓存（浏览器 → OS → 路由器 → ISP）</span>
+      <span class="concept-tag">递归查询 vs 迭代查询</span>
+      <span class="concept-tag">根域名服务器 → TLD → 权威服务器</span>
+      <span class="concept-tag">A 记录 / AAAA 记录 / CNAME</span>
+      <span class="concept-tag">DNS over HTTPS (DoH)</span>
+    </div>
+    <div class="links">
+      深入阅读：
+      <a href="lessons/0002-dns-deep-dive.html">📖 DNS 深度解析</a>
+      <a href="reference/dns-reference.html">📋 DNS 参考卡</a>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="panel-tcp">
+    <h2>Phase 2: TCP 连接 —— 可靠的传输管道</h2>
+    <div class="concepts">
+      <span class="concept-tag">SYN / SYN-ACK / ACK 三次握手</span>
+      <span class="concept-tag">序列号 (Sequence Number) 与确认号 (ACK)</span>
+      <span class="concept-tag">拥塞控制 (慢启动、拥塞避免)</span>
+      <span class="concept-tag">流量控制 (滑动窗口)</span>
+      <span class="concept-tag">TIME_WAIT 与四次挥手</span>
+    </div>
+    <div class="links">
+      深入阅读：
+      <a href="lessons/0003-tcp-deep-dive.html">📖 TCP 深度解析</a>
+      <a href="reference/tcp-reference.html">📋 TCP 参考卡</a>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="panel-tls">
+    <h2>Phase 3: TLS 握手 —— 建立加密信道</h2>
+    <div class="concepts">
+      <span class="concept-tag">ClientHello / ServerHello</span>
+      <span class="concept-tag">证书链验证 (CA → 中间证书 → 服务器)</span>
+      <span class="concept-tag">非对称加密交换密钥 → 对称加密传输数据</span>
+      <span class="concept-tag">TLS 1.2 vs TLS 1.3 握手效率</span>
+      <span class="concept-tag">HTTPS = HTTP over TLS</span>
+    </div>
+    <div class="links">
+      深入阅读：
+      <a href="lessons/0007-tls-deep-dive.html">📖 TLS 深度解析</a>
+      <a href="reference/tls-reference.html">📋 TLS 参考卡</a>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="panel-http">
+    <h2>Phase 4: HTTP 请求 —— 应用层协议</h2>
+    <div class="concepts">
+      <span class="concept-tag">请求方法：GET / POST / PUT / DELETE</span>
+      <span class="concept-tag">状态码：2xx / 3xx / 4xx / 5xx</span>
+      <span class="concept-tag">Header 字段（Host, User-Agent, Cookie…）</span>
+      <span class="concept-tag">HTTP/1.1 队头阻塞 → HTTP/2 多路复用 → HTTP/3 QUIC</span>
+      <span class="concept-tag">缓存策略（ETag, Cache-Control）</span>
+    </div>
+    <div class="links">
+      深入阅读：
+      <a href="lessons/0006-http-deep-dive.html">📖 HTTP 深度解析</a>
+      <a href="reference/http-reference.html">📋 HTTP 参考卡</a>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="panel-routing">
+    <h2>Phase 5: IP 路由 —— 网络层的逐跳转发</h2>
+    <div class="concepts">
+      <span class="concept-tag">IP 地址（IPv4 / IPv6）与子网划分 (CIDR)</span>
+      <span class="concept-tag">路由表 &amp; 最长前缀匹配</span>
+      <span class="concept-tag">BGP（域间路由） vs OSPF（域内路由）</span>
+      <span class="concept-tag">NAT 网络地址转换</span>
+      <span class="concept-tag">TTL 与 traceroute</span>
+    </div>
+    <div class="links">
+      深入阅读：
+      <a href="lessons/0004-ip-routing-deep-dive.html">📖 IP 路由深度解析</a>
+      <a href="reference/ip-reference.html">📋 IP 层参考卡</a>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="panel-link">
+    <h2>Phase 6: 链路层 —— 在同一网络内的帧传输</h2>
+    <div class="concepts">
+      <span class="concept-tag">MAC 地址与 ARP（地址解析协议）</span>
+      <span class="concept-tag">以太网帧结构</span>
+      <span class="concept-tag">交换机 vs 集线器 vs 路由器</span>
+      <span class="concept-tag">CSMA/CD（冲突检测）</span>
+      <span class="concept-tag">WiFi (802.11) 与有线网络的差异</span>
+    </div>
+    <div class="links">
+      深入阅读：
+      <a href="lessons/0005-link-layer-deep-dive.html">📖 链路层深度解析</a>
+      <a href="reference/link-reference.html">📋 链路层参考卡</a>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="panel-render">
+    <h2>Phase 7: 浏览器渲染 —— 从 HTML 到像素</h2>
+    <div class="concepts">
+      <span class="concept-tag">HTML 解析 → DOM 树</span>
+      <span class="concept-tag">CSS 解析 → CSSOM 树</span>
+      <span class="concept-tag">布局 (Layout) → 绘制 (Paint) → 合成 (Composite)</span>
+      <span class="concept-tag">JavaScript 执行与事件循环</span>
+      <span class="concept-tag">关键渲染路径优化</span>
+    </div>
+    <div class="links">
+      深入阅读：
+      <a href="lessons/0008-browser-rendering.html">📖 浏览器渲染深度解析</a>
+      <span style="color: var(--muted)">（注：此阶段属于浏览器原理，非严格网络范畴）</span>
+    </div>
+  </div>
+
+  <!-- Thinking Framework -->
+  <div class="framework-hint">
+    ▼ 思考框架 —— 不止是知识点，更是分析网络的思维工具
+  </div>
+
+  <div class="framework-grid">
+    <div class="framework-card">
+      <h3>🧅 分层思维</h3>
+      <ul>
+        <li><a href="reference/osi-model.html">OSI 七层 vs TCP/IP 四层</a></li>
+        <li>每层的「对等通信」幻觉</li>
+        <li>封装与解封装</li>
+        <li>为什么分层？端到端原则</li>
+      </ul>
+    </div>
+    <div class="framework-card">
+      <h3>⚡ 可靠性 vs 速度</h3>
+      <ul>
+        <li><a href="reference/tcp-vs-udp.html">TCP vs UDP 设计哲学</a></li>
+        <li>可靠传输的代价</li>
+        <li>什么时候宁可丢包也不重传？</li>
+        <li>QUIC：融合两派优势</li>
+      </ul>
+    </div>
+    <div class="framework-card">
+      <h3>🔀 复用与分用</h3>
+      <ul>
+        <li>端口号如何实现进程间通信</li>
+        <li>Socket = IP + Port</li>
+        <li>从 IP 层到传输层的分用</li>
+        <li>HTTP/2 的流复用</li>
+      </ul>
+    </div>
+    <div class="framework-card">
+      <h3>📐 设计原则</h3>
+      <ul>
+        <li>端到端原则 (End-to-End Principle)</li>
+        <li>Postel 法则：严出宽入</li>
+        <li>命运共享 (Fate Sharing)</li>
+        <li>尽力而为 (Best Effort) vs QoS</li>
+      </ul>
+    </div>
+    <div class="framework-card">
+      <h3>🐛 排错方法论</h3>
+      <ul>
+        <li><a href="reference/troubleshooting.html">逐层排查框架</a></li>
+        <li>自底向上 vs 自顶向下</li>
+        <li>工具链：ping → traceroute → nslookup → tcpdump → Wireshark</li>
+        <li>常见问题指纹（DNS 慢/握手失败/MTU 问题…）</li>
+      </ul>
+    </div>
+    <div class="framework-card">
+      <h3>🔗 协议演进</h3>
+      <ul>
+        <li>为什么协议在不断进化？</li>
+        <li>HTTP/0.9 → HTTP/3 演进史</li>
+        <li>TCP Cubic → BBR 拥塞控制演进</li>
+        <li>向后兼容的工程艺术</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>计算机网络学习工作区 · <a href="MISSION.md">Mission</a> · <a href="NOTES.md">Notes</a> · <a href="RESOURCES.md">Resources</a></p>
+  <p style="margin-top: 0.5rem">点击上方任意节点开始探索。建议从 <a href="lessons/0001-the-url-journey.html">📖 第一课：URL 之旅全览</a> 开始。</p>
+</footer>
+
+<script>
+function showPhase(phaseId) {
+  // Hide all panels
+  document.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('active'));
+  // Show selected
+  const panel = document.getElementById('panel-' + phaseId);
+  if (panel) {
+    panel.classList.add('active');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+</script>
+
+</body>
+</html>

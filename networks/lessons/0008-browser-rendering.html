@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 8 课：浏览器渲染 —— 从 HTML 到像素</title>
+<style>
+  :root { --bg: #fffff8; --text: #111; --muted: #666; --accent: #c44; --link: #246; --rule: #ddd; --highlight: #fff8e1; --code-bg: #f4f4f0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Noto Serif CJK SC","Source Han Serif SC","STSong","Songti SC",Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; }
+  article { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.2rem; margin: 2.2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--rule); color: #333; }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 0.5rem; color: #444; }
+  p { margin: 0.8rem 0; }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; } li { margin: 0.35rem 0; }
+  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.92em; font-family: "JetBrains Mono","Fira Code",monospace; }
+  pre { background: var(--code-bg); padding: 0.8rem 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.84rem; line-height: 1.5; margin: 1rem 0; }
+  pre code { background: none; padding: 0; }
+  .sidenote { background: var(--highlight); border-left: 3px solid #e6c840; padding: 0.6rem 1rem; margin: 1rem 0; font-size: 0.88rem; color: #5a4a20; }
+  .sidenote strong { color: #8a6d20; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+  th { background: #f5f5f0; padding: 0.5rem 0.7rem; text-align: left; border-bottom: 2px solid var(--rule); font-weight: 600; }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--rule); }
+
+  /* Pipeline flow */
+  .pipeline { margin: 1.2rem 0; }
+  .pipeline .pipe-row { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+  .pipeline .pipe-node { padding: 0.6rem 0.9rem; border-radius: 5px; text-align: center; font-weight: 600; font-size: 0.82rem; }
+  .pipeline .pipe-arr { font-size: 1rem; font-weight: 700; color: var(--accent); padding: 0 0.3rem; }
+  .pipeline .pipe-node.dom { background: #dce8f4; color: #1e5080; }
+  .pipeline .pipe-node.css { background: #e8dcef; color: #501e70; }
+  .pipeline .pipe-node.lo  { background: #f0e8d8; color: #70501e; }
+  .pipeline .pipe-node.pa  { background: #d8ece0; color: #1e7040; }
+  .pipeline .pipe-node.co  { background: #f0d8d8; color: #701e1e; }
+
+  .quiz { margin: 2.5rem 0; padding: 1.5rem; border: 1px solid var(--rule); border-radius: 6px; background: #fdfdf8; }
+  .quiz h2 { margin-top: 0; border: none; padding-bottom: 0; }
+  .quiz .q { margin: 1.2rem 0; }
+  .quiz .q > p { font-weight: 600; margin-bottom: 0.3rem; }
+  .quiz .q label { display: block; padding: 0.35rem 0; cursor: pointer; font-size: 0.9rem; }
+  .quiz .q input[type="radio"] { margin-right: 0.5rem; }
+  .quiz button { margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
+  .quiz button:hover { opacity: 0.9; }
+  .quiz .feedback { margin-top: 0.5rem; font-size: 0.88rem; min-height: 1.5rem; }
+  .quiz .feedback.correct { color: #2a7d2a; } .quiz .feedback.incorrect { color: #c44; }
+  .lesson-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); font-size: 0.9rem; }
+  .source-box { margin: 2rem 0; padding: 1rem 1.2rem; background: #f0f4f8; border-radius: 6px; font-size: 0.9rem; }
+  .source-box h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+<article>
+
+<h1>第 8 课：浏览器渲染 —— 从 HTML 到像素</h1>
+<div class="meta">计算机网络 · <a href="../index.html">← 概念地图</a> · 约 15 分钟 · <a href="../reference/glossary.html">术语表</a></div>
+
+<p>URL 之旅的最后一站：HTTP 响应已经把 HTML 送到了浏览器，接下来<strong>怎么把它变成屏幕上的像素</strong>？这不是严格意义上的"网络"知识，但它完成了整个 URL 之旅的最后闭环。</p>
+
+<div class="sidenote"><strong>🎯 本课目标：</strong>理解浏览器的关键渲染路径——HTML→DOM、CSS→CSSOM、布局、绘制、合成。以及"为什么 JavaScript 会阻塞渲染"。</div>
+
+<h2>1. 渲染流水线：五个阶段</h2>
+
+<div class="pipeline">
+  <div class="pipe-row">
+    <span class="pipe-node dom">HTML 解析<br>→ DOM 树</span>
+    <span class="pipe-arr">→</span>
+    <span class="pipe-node css">CSS 解析<br>→ CSSOM 树</span>
+    <span class="pipe-arr">→</span>
+    <span class="pipe-node lo">布局 Layout<br>计算位置大小</span>
+    <span class="pipe-arr">→</span>
+    <span class="pipe-node pa">绘制 Paint<br>生成像素指令</span>
+    <span class="pipe-arr">→</span>
+    <span class="pipe-node co">合成 Composite<br>分层合并显示</span>
+  </div>
+</div>
+
+<h3>Phase 1: HTML → DOM</h3>
+<p>浏览器拿到 HTML 字节流 → 解码为字符 → 词法分析为 Token → 构建 DOM 树。DOM 树是页面结构的对象表示——每个标签是一个节点，嵌套关系是父子关系。</p>
+<p><strong>关键行为：</strong>HTML 解析遇到 <code>&lt;script&gt;</code> 会暂停，等脚本下载并执行完再继续。因为脚本可能调用 <code>document.write()</code> 改变后续 HTML。所以 <code>&lt;script&gt;</code> 放 <code>&lt;/body&gt;</code> 前或加 <code>async/defer</code> 是重要的性能优化。</p>
+
+<h3>Phase 2: CSS → CSSOM</h3>
+<p>CSS 被解析为 CSSOM（CSS Object Model）树。与 DOM 不同，CSS 的解析是<strong>层叠</strong>的——浏览器需要计算每个元素的最终样式（考虑继承、层叠、优先级）。</p>
+<p><strong>CSS 不阻塞 DOM 构建，但阻塞渲染。</strong>因为 CSSOM + DOM = Render Tree（渲染树），两个都完成了才能进入下一阶段。</p>
+
+<h3>Phase 3: 布局（Layout / Reflow）</h3>
+<p>浏览器遍历 Render Tree，计算每个可见元素的<strong>精确位置和大小</strong>。这个过程是流式的——一个元素的位置影响后续所有元素。</p>
+<p>改变 width/height/position 等几何属性会触发<strong>回流（Reflow）</strong>——整个布局重新计算，开销很大。</p>
+
+<h3>Phase 4: 绘制（Paint）</h3>
+<p>把每个元素的视觉样式（颜色、阴影、边框等）转换为<strong>像素绘制指令</strong>，填入不同的<strong>图层（Layer）</strong>。改变 color/background 等非几何属性只需要<strong>重绘（Repaint）</strong>，不触发回流。</p>
+
+<h3>Phase 5: 合成（Composite）</h3>
+<p>浏览器把多个图层按顺序叠加，生成最终的屏幕像素。GPU 在这一步大显身手——transform 和 opacity 的动画只影响合成层，<strong>完全不触发回流或重绘</strong>，可以跑满 60fps。</p>
+
+<h2>2. 回流 vs 重绘 vs 合成 —— 性能代价天差地别</h2>
+
+<table>
+  <tr><th>触发属性（举例）</th><th>触发什么</th><th>代价</th><th>优化建议</th></tr>
+  <tr><td><code>width, height, left, top, margin, padding ...</code></td><td>回流 Layout → Paint → Composite</td><td style="color:#c44;">高</td><td>用 <code>transform: scale/translate</code> 代替</td></tr>
+  <tr><td><code>color, background, box-shadow ...</code></td><td>重绘 Paint → Composite</td><td style="color:#e8a040;">中</td><td>尽量合批修改</td></tr>
+  <tr><td><code>transform, opacity</code></td><td>仅合成 Composite</td><td style="color:#2a7d2a;">低</td><td>动画首选方案</td></tr>
+</table>
+
+<div class="sidenote"><strong>💡 关键优化原则：</strong>CSS 动画如果只改 transform 和 opacity，浏览器把它放在独立的合成层中，由 GPU 处理——主线程完全不受影响，即使 JavaScript 在跑长任务也不会卡动画。</div>
+
+<h2>3. 从输入 URL 到第一帧显示：完整回顾</h2>
+
+<p>把这 8 课串起来——你现在能完整解释整个过程了：</p>
+
+<ol>
+  <li><strong>DNS</strong>（第 2 课）：把 example.com 翻译成 IP</li>
+  <li><strong>TCP</strong>（第 3 课）：三次握手建立可靠连接</li>
+  <li><strong>TLS</strong>（第 7 课）：握手协商加密密钥，验证证书</li>
+  <li><strong>HTTP</strong>（第 6 课）：发送 GET 请求，收到 200 OK + HTML</li>
+  <li><strong>IP</strong>（第 4 课）：每一跳查路由表，MAC 逐跳变，IP 端到端不变</li>
+  <li><strong>链路层</strong>（第 5 课）：交换机按 MAC 转发帧，ARP 翻译 IP→MAC</li>
+  <li><strong>渲染</strong>（本课）：HTML→DOM→CSSOM→Layout→Paint→Composite</li>
+</ol>
+
+<p>从你敲下回车到页面出现，通常只需要 1–3 秒。这背后是几十次网络往返、数千行协议代码、全球数百台路由器的协作。<strong>你现在理解了这每一步。</strong></p>
+
+<h2>🧪 检验一下</h2>
+<div class="quiz" id="quiz1">
+  <div class="q" id="q1"><p>Q1: HTML 解析遇到 <code>&lt;script&gt;</code> 标签（无 async/defer）会怎样？</p>
+    <label><input type="radio" name="q1" value="a"> 跳过脚本，继续解析后续 HTML</label>
+    <label><input type="radio" name="q1" value="b"> 暂停 HTML 解析，等脚本下载执行完再继续</label>
+    <label><input type="radio" name="q1" value="c"> 并行下载脚本，不阻塞 HTML 解析</label>
+    <label><input type="radio" name="q1" value="d"> 先解析后续 HTML，再回头执行脚本</label></div>
+  <div class="q" id="q2"><p>Q2: 以下哪个操作触发的是代价最高的回流（Reflow）？</p>
+    <label><input type="radio" name="q2" value="a"> 改变某个元素的 color 属性</label>
+    <label><input type="radio" name="q2" value="b"> 改变某个元素的 opacity 属性</label>
+    <label><input type="radio" name="q2" value="c"> 改变某个元素的 width 属性</label>
+    <label><input type="radio" name="q2" value="d"> 改变某个元素的 transform 属性</label></div>
+  <div class="q" id="q3"><p>Q3: CSS 解析会阻塞什么？</p>
+    <label><input type="radio" name="q3" value="a"> DOM 树的构建</label>
+    <label><input type="radio" name="q3" value="b"> 渲染（等待 CSSOM 完成后才能进入 Layout）</label>
+    <label><input type="radio" name="q3" value="c"> JavaScript 的执行</label>
+    <label><input type="radio" name="q3" value="d"> 网络请求</label></div>
+  <div class="q" id="q4"><p>Q4: 为什么动画应该用 transform 而不是 left/top？</p>
+    <label><input type="radio" name="q4" value="a"> transform 兼容性更好</label>
+    <label><input type="radio" name="q4" value="b"> transform 只触发合成，不触发回流或重绘，GPU 加速</label>
+    <label><input type="radio" name="q4" value="c"> transform 代码更短</label>
+    <label><input type="radio" name="q4" value="d"> left/top 已经被废弃</label></div>
+  <button onclick="checkQuiz()">提交答案</button>
+  <div class="feedback" id="quiz-feedback"></div>
+</div>
+
+<div class="source-box"><h3>📖 推荐阅读</h3>
+  <p><strong><a href="https://developers.google.com/web/fundamentals/performance/critical-rendering-path" target="_blank">Google: Critical Rendering Path</a></strong> — 浏览器渲染性能优化的权威指南。· <strong><a href="https://www.html5rocks.com/en/tutorials/internals/howbrowserswork/" target="_blank">How Browsers Work</a></strong> — 经典深度文章。</p>
+</div>
+
+<div class="lesson-nav">
+  <a href="0007-tls-deep-dive.html">← 第 7 课：TLS</a>
+  <a href="../index.html">回到概念地图 ↑</a>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">🎉 全部 8 课完成！你现在能完整解释"浏览器输入 URL 后发生了什么"。回 <a href="../index.html">概念地图</a> 复习任何概念，或者问你的 AI 教师进一步的问题。</p>
+</article>
+<script>
+const answers={q1:'b',q2:'c',q3:'b',q4:'b'};
+function checkQuiz(){let c=0,t=Object.keys(answers).length;for(let[k,v]of Object.entries(answers)){if(document.querySelector(`input[name="${k}"]:checked`)?.value===v)c++;}const f=document.getElementById('quiz-feedback');f.textContent=c===t?`✅ ${c}/${t} 全对！`:c>=2?`⚠️ ${c}/${t}`:`❌ ${c}/${t}`;f.className='feedback '+(c===t?'correct':'incorrect');}
+</script>
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 5 课：链路层 —— 同一网络内的帧传输</title>
+<style>
+  :root {
+    --bg: #fffff8;
+    --text: #111;
+    --muted: #666;
+    --accent: #c44;
+    --link: #246;
+    --rule: #ddd;
+    --highlight: #fff8e1;
+    --code-bg: #f4f4f0;
+    --box-bg: #fafaf5;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "Songti SC", Georgia, "Times New Roman", serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+  }
+  article { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: 0.03em; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.2rem; margin: 2.2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--rule); color: #333; }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 0.5rem; color: #444; }
+  p { margin: 0.8rem 0; }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.92em; font-family: "JetBrains Mono", "Fira Code", "SF Mono", monospace; }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8rem 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 1rem 0;
+  }
+  pre code { background: none; padding: 0; }
+
+  .sidenote {
+    background: var(--highlight);
+    border-left: 3px solid #e6c840;
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.88rem;
+    color: #5a4a20;
+  }
+  .sidenote strong { color: #8a6d20; }
+
+  /* Stack position indicator */
+  .stack-indicator {
+    margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.82rem;
+  }
+  .stack-indicator .layer {
+    padding: 0.35rem 3rem;
+    border: 1px solid var(--rule);
+    margin: 1px 0;
+    border-radius: 3px;
+    background: #fff;
+    color: var(--muted);
+  }
+  .stack-indicator .layer.current {
+    background: #2c3e50;
+    color: #fff;
+    font-weight: 600;
+    border-color: #2c3e50;
+  }
+
+  /* Comparison tables */
+  table.compare {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.88rem;
+  }
+  table.compare th {
+    background: #f5f5f0;
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+    border-bottom: 2px solid var(--rule);
+    font-weight: 600;
+  }
+  table.compare td {
+    padding: 0.5rem 0.7rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* Frame diagram */
+  .frame-diagram {
+    margin: 1.2rem 0;
+    display: flex;
+    font-size: 0.78rem;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+  .frame-diagram .fld {
+    padding: 0.6rem 0.8rem;
+    text-align: center;
+    border-right: 1px dashed var(--rule);
+    white-space: nowrap;
+  }
+  .frame-diagram .fld:last-child { border-right: none; }
+  .frame-diagram .fld.hdr { background: #e8eef4; }
+  .frame-diagram .fld.data { background: #f0f0e8; flex: 1; }
+  .frame-diagram .fld.tail { background: #f4e8e8; }
+  .frame-diagram .fld strong { display: block; }
+
+  /* ARP exchange */
+  .arp-exchange {
+    margin: 1.2rem 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+  .arp-exchange .msg {
+    background: var(--code-bg);
+    padding: 0.5rem 0.8rem;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.8rem;
+  }
+  .arp-exchange .arrow { text-align: center; color: var(--accent); font-size: 1.2rem; }
+
+  /* Switch learning */
+  .switch-demo {
+    margin: 1.2rem 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.8rem;
+    font-size: 0.82rem;
+  }
+  .switch-demo .step {
+    background: var(--box-bg);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 0.8rem;
+  }
+  .switch-demo .step h4 { font-size: 0.85rem; margin-bottom: 0.4rem; color: var(--accent); }
+
+  /* Quiz */
+  .sup { margin: 2rem 0; padding: 1.5rem; border: 2px dashed var(--rule); border-radius: 8px; background: #fafdf8; }
+  .sup h2 { border: none; margin-top: 0; color: #5a8a3a; }
+  .sup h3 { color: #5a8a3a; }
+  .quiz {
+    margin: 2.5rem 0;
+    padding: 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: #fdfdf8;
+  }
+  .quiz h2 { margin-top: 0; border: none; padding-bottom: 0; }
+  .quiz .q { margin: 1.2rem 0; }
+  .quiz .q > p { font-weight: 600; margin-bottom: 0.3rem; }
+  .quiz .q label { display: block; padding: 0.35rem 0; cursor: pointer; font-size: 0.9rem; }
+  .quiz .q input[type="radio"] { margin-right: 0.5rem; }
+  .quiz button {
+    margin-top: 1rem; padding: 0.5rem 1.5rem;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 4px; cursor: pointer;
+    font-size: 0.9rem; font-family: inherit;
+  }
+  .quiz button:hover { opacity: 0.9; }
+  .quiz .feedback { margin-top: 0.5rem; font-size: 0.88rem; min-height: 1.5rem; }
+  .quiz .feedback.correct { color: #2a7d2a; }
+  .quiz .feedback.incorrect { color: #c44; }
+
+  .lesson-nav {
+    display: flex; justify-content: space-between;
+    margin-top: 3rem; padding-top: 1.5rem;
+    border-top: 1px solid var(--rule); font-size: 0.9rem;
+  }
+  .source-box {
+    margin: 2rem 0; padding: 1rem 1.2rem;
+    background: #f0f4f8; border-radius: 6px; font-size: 0.9rem;
+  }
+  .source-box h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<article>
+
+<h1>第 5 课：链路层 —— 同一网络内的帧传输</h1>
+<div class="meta">
+  计算机网络 · <a href="../index.html">← 概念地图</a> · 约 20 分钟 ·
+  <a href="../reference/glossary.html">术语表</a>
+</div>
+
+<!-- Stack position -->
+<div class="stack-indicator">
+  <div class="layer">应用层 &nbsp; HTTP · DNS · TLS</div>
+  <div class="layer">传输层 &nbsp; TCP · UDP</div>
+  <div class="layer">网络层 &nbsp; IP · BGP</div>
+  <div class="layer current">◀ 链路层 &nbsp; Ethernet · ARP · MAC ◀ 本课</div>
+  <div class="layer">物理层 &nbsp; 网线 · 光纤 · 无线电</div>
+</div>
+
+<p>
+  把数据包从北京送到旧金山，跨越无数路由器——那是网络层（IP）的工作。但<strong>在每一跳之间</strong>，数据包需要真正地在某根线缆、某段光纤、某个 WiFi 信道上传输。谁来做这件事？链路层。
+</p>
+
+<div class="sidenote">
+  <strong>🎯 本课目标：</strong>理解链路层解决了什么问题、MAC 地址与 IP 地址的分工、ARP 的工作原理、交换机的自学习机制、以及以太网帧的结构。学完后你应该能解释「同一个局域网内，两台电脑怎么找到对方并可靠地交换数据」。
+</div>
+
+<!-- ==================== WHY LINK LAYER ==================== -->
+
+<h2>1. 链路层要解决什么问题？</h2>
+
+<p>
+  网络层的 IP 协议只管「这条包最终要送到 IP 地址 X」——但它在每跳之间<strong>不管具体的传输细节</strong>。链路层的职责是：
+</p>
+
+<ul>
+  <li><strong>在同一段物理链路上</strong>（同一根网线、同一个 WiFi 信道），把数据从一个设备传到相邻设备</li>
+  <li>识别这段链路上的<strong>邻居</strong>——用的是 MAC 地址，不是 IP 地址</li>
+  <li>处理这段链路特有的问题：冲突怎么避免？信号错误怎么检测？</li>
+</ul>
+
+<p>
+  关键洞察：<strong>链路层是跳与跳之间的协议，网络层是端到端之间的协议。</strong>一个 IP 包从北京到旧金山，链路层的帧在每一跳都被拆掉重新封装——源 MAC 和目的 MAC 每一跳都在变，但源 IP 和目的 IP 始终不变。
+</p>
+
+<div class="sidenote">
+  <strong>🔑 核心比喻：</strong>IP 地址是「收件人地址」（终点），MAC 地址是「当前这一站的交接人」（每一跳）。快递从北京发往上海，收件地址不变，但北京分拣中心交给卡车司机、卡车司机交给上海分拣中心——每一次交接，交接人都不一样。
+</div>
+
+<!-- ==================== MAC ADDRESS ==================== -->
+
+<h2>2. MAC 地址 —— 设备的「身份证」</h2>
+
+<p>
+  MAC（Media Access Control）地址是一个 <strong>48 位</strong>（6 字节）的硬件地址，通常写作 <code>00:1A:2B:3C:4D:5E</code>。
+</p>
+
+<p>几个关键事实：</p>
+
+<ul>
+  <li><strong>烧录在网卡中</strong>——每块网卡出厂时由制造商分配一个全球唯一的 MAC 地址。前 24 位是制造商的 OUI（组织唯一标识符），后 24 位由制造商自分配</li>
+  <li><strong>扁平结构</strong>——IP 地址是分层的（192.168.x.x 属于某个子网），MAC 地址是扁平的（没有任何子网概念，在哪都一样）</li>
+  <li><strong>只在局域网内有效</strong>——MAC 地址出了当前广播域就没用了，路由器不会把 MAC 地址转发到另一个网络</li>
+</ul>
+
+<table class="compare">
+  <thead>
+    <tr><th></th><th>IP 地址</th><th>MAC 地址</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>长度</td><td>32 位 (IPv4) / 128 位 (IPv6)</td><td>48 位</td></tr>
+    <tr><td>结构</td><td>分层（网络号 + 主机号）</td><td>扁平（无层次）</td></tr>
+    <tr><td>来源</td><td>网络配置（DHCP / 手动）</td><td>制造商烧录（可软件修改）</td></tr>
+    <tr><td>作用域</td><td>全球可达</td><td>仅局域网内</td></tr>
+    <tr><td>类比</td><td>收件地址</td><td>身份证号</td></tr>
+    <tr><td>工作层</td><td>网络层</td><td>链路层</td></tr>
+  </tbody>
+</table>
+
+<!-- ==================== ARP ==================== -->
+
+<h2>3. ARP —— 「192.168.1.5 的 MAC 地址是多少？」</h2>
+
+<p>
+  现在有了一个核心矛盾：你的电脑知道目的 IP（比如 192.168.1.5），但要在这个局域网里真正把帧发过去，<strong>必须知道对方的 MAC 地址</strong>。ARP（Address Resolution Protocol）就是解决这个问题的。
+</p>
+
+<h3>ARP 的工作过程</h3>
+
+<ol>
+  <li>主机 A 想和 192.168.1.5 通信，但不知道它的 MAC 地址</li>
+  <li>A 在局域网内<strong>广播</strong>一个 ARP 请求：「192.168.1.5 是谁？告诉 192.168.1.3（我）你的 MAC 地址」</li>
+  <li>局域网内<strong>所有设备</strong>都收到这个广播，但只有 192.168.1.5 响应</li>
+  <li>192.168.1.5 <strong>单播</strong>回复：「我是 192.168.1.5，我的 MAC 是 XX:XX:XX:XX:XX:XX」</li>
+  <li>A 把结果缓存到 <strong>ARP 缓存表</strong>（用 <code>arp -a</code> 查看），下次直接用</li>
+</ol>
+
+<div class="arp-exchange">
+  <div></div>
+  <div style="font-weight:600;color:var(--accent);">广播</div>
+  <div></div>
+  <div class="msg">ARP 请求<br>「192.168.1.5 是谁？<br>我是 192.168.1.3<br>MAC: AA:AA」</div>
+  <div class="arrow">→</div>
+  <div class="msg" style="background:#f0f0f0;">所有人收到<br>只有 .5 响应</div>
+  <div></div>
+  <div style="font-weight:600;color:var(--accent);">单播</div>
+  <div></div>
+  <div class="msg">ARP 响应<br>「我是 192.168.1.5<br>MAC: BB:BB」</div>
+  <div class="arrow">←</div>
+  <div class="msg">A 收到，<br>存入 ARP 缓存</div>
+</div>
+
+<div class="sidenote">
+  <strong>⚠️ ARP 的安全隐患：</strong>ARP 没有身份验证机制。攻击者可以伪造 ARP 响应，声称自己就是网关的 IP，从而拦截所有流量——这就是 <strong>ARP 欺骗（ARP Spoofing）</strong>，是中间人攻击的经典手法。
+</div>
+
+<!-- ==================== ETHERNET FRAME ==================== -->
+
+<h2>4. 以太网帧 —— 数据长什么样？</h2>
+
+<p>链路层传输的数据单元叫<strong>帧（Frame）</strong>。以太网帧是目前最主流的帧格式：</p>
+
+<div class="frame-diagram">
+  <div class="fld hdr"><strong>前导码</strong>8 字节<br>同步时钟</div>
+  <div class="fld hdr"><strong>目的 MAC</strong>6 字节</div>
+  <div class="fld hdr"><strong>源 MAC</strong>6 字节</div>
+  <div class="fld hdr"><strong>类型</strong>2 字节<br>0x0800=IPv4<br>0x0806=ARP</div>
+  <div class="fld data"><strong>数据 (Payload)</strong>46–1500 字节<br>包含 IP 包</div>
+  <div class="fld tail"><strong>CRC</strong>4 字节<br>校验和</div>
+</div>
+
+<p>几个要点：</p>
+
+<ul>
+  <li><strong>类型字段</strong>——告诉接收方「数据部分装的是什么协议」，这样接收方知道该把 payload 交给 IP 模块还是 ARP 模块</li>
+  <li><strong>MTU（最大传输单元）</strong>——数据部分通常最多 <strong>1500 字节</strong>。如果 IP 包超过这个大小，就需要<strong>分片</strong>（IPv4 由路由器分片，IPv6 由发送端分片或使用 Path MTU Discovery）</li>
+  <li><strong>CRC 校验</strong>——接收方重新计算校验和，如果不匹配说明帧在传输中损坏了，直接丢弃（链路层<strong>不重传</strong>，由上层 TCP 负责）</li>
+  <li><strong>最短帧 64 字节</strong>——如果数据不足 46 字节，用 padding 补齐。这是为了确保在旧式共享介质中能可靠检测冲突</li>
+</ul>
+
+<div class="sidenote">
+  <strong>🔑 MTU 为什么重要：</strong>如果你的 IP 包是 2000 字节而 MTU 是 1500，IP 层必须切成两片。分片会消耗路由器和终端的 CPU，也增加了丢包风险（一片丢、整个包废）。这就是为什么 VPN 和隧道协议经常遇到 MTU 问题——额外的封装头吃掉了有效载荷空间。
+</div>
+
+<!-- ==================== SWITCH ==================== -->
+
+<h2>5. 交换机 —— 智能帧转发</h2>
+
+<p>在链路层最核心的设备是<strong>交换机（Switch）</strong>。要理解它为什么是「智能」的，先看它的两个「笨」前辈：</p>
+
+<table class="compare">
+  <thead>
+    <tr><th></th><th>集线器 (Hub)</th><th>交换机 (Switch)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>工作方式</td><td>收到帧 → 广播到<strong>所有</strong>端口</td><td>收到帧 → 只转发到<strong>目标 MAC 所在的端口</strong></td></tr>
+    <tr><td>冲突域</td><td>所有端口共享一个冲突域</td><td><strong>每个端口独立</strong>冲突域</td></tr>
+    <tr><td>带宽</td><td>所有端口共享（如 100Mbps / N）</td><td>每个端口独占带宽</td></tr>
+    <tr><td>双工</td><td>半双工（不能同时收发）</td><td>全双工（可以同时收发）</td></tr>
+    <tr><td>安全性</td><td>所有主机都能看到所有流量</td><td>主机只能看到发给自己的流量</td></tr>
+  </tbody>
+</table>
+
+<h3>交换机的自学习机制</h3>
+
+<p>交换机怎么知道目标 MAC 在哪个端口？<strong>它自己学。</strong>过程极其优雅：</p>
+
+<div class="switch-demo">
+  <div class="step">
+    <h4>Step 1: 初始状态</h4>
+    <p><strong>MAC 表为空。</strong>交换机刚启动，不知道任何主机在哪。</p>
+  </div>
+  <div class="step">
+    <h4>Step 2: 收到帧</h4>
+    <p>A（端口 1）发帧给 B。<strong>交换机记下：A 的 MAC 在端口 1。</strong>但还不知道 B 在哪。</p>
+  </div>
+  <div class="step">
+    <h4>Step 3: 泛洪</h4>
+    <p>不知道 B 在哪 → <strong>泛洪（flooding）：</strong>向除端口 1 外的所有端口转发该帧。</p>
+  </div>
+</div>
+<div style="margin-top:0.8rem;"></div>
+<div class="switch-demo">
+  <div class="step">
+    <h4>Step 4: B 回应</h4>
+    <p>B 收到帧后回帧给 A。<strong>交换机记下：B 的 MAC 在端口 3。</strong>现在知道双方位置了。</p>
+  </div>
+  <div class="step">
+    <h4>Step 5: 精确转发</h4>
+    <p>后续 A ↔ B 的帧<strong>只在端口 1 和 3 之间转发</strong>，其他端口不受干扰。</p>
+  </div>
+  <div class="step">
+    <h4>Step 6: 老化</h4>
+    <p>MAC 表条目有过期时间（通常 5 分钟）。过期后重新泛洪学习。这样主机迁移了也能适应。</p>
+  </div>
+</div>
+
+<p>
+  这就是<strong>即插即用</strong>的力量——交换机不需要任何配置，插上网线就能工作。它不依赖任何路由协议，纯粹靠观察流量自学网络拓扑。这是互联网设计哲学「简单核心，复杂边缘」在链路层的体现。
+</p>
+
+<div class="sidenote">
+  <strong>🔌 交换机 vs 路由器：</strong>很多人混淆这两个设备。交换机工作在<strong>链路层</strong>（查 MAC 表转发帧），路由器工作在<strong>网络层</strong>（查路由表转发 IP 包）。交换机连接同一网络内的设备，路由器连接不同网络。
+</div>
+
+<!-- ==================== SHARED MEDIUM ==================== -->
+
+<h2>6. 共享介质问题 —— 谁先说话？</h2>
+
+<p>
+  在现代交换式以太网中，每个设备独占一条链路到交换机，用全双工通信——<strong>不存在冲突</strong>。但在 WiFi 和旧式总线型以太网中，多个设备<strong>共享同一个通信信道</strong>。如果有人同时在同一个频率上发信号，信号会互相干扰——这叫<strong>冲突（Collision）</strong>。
+</p>
+
+<h3>CSMA/CD —— 以太网的解决方案（历史）</h3>
+
+<p>旧式以太网的规则叫 CSMA/CD（载波侦听多路访问 / 冲突检测）：</p>
+<ol>
+  <li><strong>先听后说</strong>：发之前先听，信道空闲才发</li>
+  <li><strong>边说边听</strong>：发送的同时也在监听，检测是否发生冲突</li>
+  <li><strong>冲突后退</strong>：检测到冲突，停止发送，等一个随机时间再重试（二进制指数退避）</li>
+</ol>
+
+<h3>CSMA/CA —— WiFi 的解决方案（现实）</h3>
+
+<p>WiFi（802.11）用的是 CSMA/CA（冲突避免），因为无线环境下<strong>无法在发送的同时检测冲突</strong>（发送信号太强会盖过接收信号）：</p>
+<ol>
+  <li><strong>先听后说 + 随机退避</strong>：空闲后还要等一个随机时间槽</li>
+  <li><strong>RTS/CTS 可选机制</strong>：发前先预约——「我要发 X 字节，请大家都安静」（解决隐藏节点问题）</li>
+  <li><strong>确认机制</strong>：收到帧后回复 ACK。和以太网不同，WiFi <strong>链路层就做确认和重传</strong>——因为无线环境丢包率太高，等 TCP 来重传效率太低</li>
+</ol>
+
+<div class="sidenote">
+  <strong>💡 为什么 WiFi 比有线慢？</strong>不仅因为物理速率，还因为：① 半双工（不能同时收发）② CSMA/CA 的退避开销 ③ 链路层 ACK 的开销 ④ 共享介质（你和邻居的路由器在争同一个信道）。100Mbps 的有线通常比 300Mbps 的 WiFi 体验更流畅。
+</div>
+
+<!-- ==================== PUTTING IT ALL TOGETHER ==================== -->
+
+<h2>7. 一个完整的局域网通信过程</h2>
+
+<p>把上面所有概念串起来——假设主机 A（192.168.1.3）想 ping 主机 B（192.168.1.5），它们连在同一台交换机上：</p>
+
+<ol>
+  <li><strong>A 查路由表</strong>：192.168.1.5 在同一子网 → 直接发，不需要网关</li>
+  <li><strong>A 查 ARP 缓存</strong>：如果不知道 192.168.1.5 的 MAC → 广播 ARP 请求</li>
+  <li><strong>交换机泛洪 ARP 请求</strong>：交换机从端口 1 收到广播帧 → 泛洪到所有其他端口</li>
+  <li><strong>B 单播 ARP 响应</strong>：B 收到 ARP 请求，回复自己的 MAC。交换机看到目的 MAC 在端口 3 → 只转发到端口 3</li>
+  <li><strong>A 封装帧</strong>：源 MAC = AA，目的 MAC = BB，类型 = 0x0800 (IPv4)，payload = ICMP Echo Request</li>
+  <li><strong>交换机转发帧</strong>：查 MAC 表 → BB 在端口 3 → 从端口 3 发出（其他端口不受影响）</li>
+  <li><strong>B 收到帧</strong>：CRC 校验通过 → 类型字段是 0x0800 → 把 payload 交给 IP 模块 → IP 模块再交给 ICMP 模块 → B 回复 ICMP Echo Reply</li>
+</ol>
+
+<p>整个过程，交换机在后台静默地学习和转发，完全没有改变帧的内容。这就是链路层的完整图景。</p>
+
+<!-- ==================== SUPPLEMENT: VLAN & DATACENTER ==================== -->
+<div class="sup">
+<h2>📚 补充：VLAN 与数据中心网络</h2>
+
+<h3>VLAN（虚拟局域网）—— 在一台交换机上隔离多个网络</h3>
+
+<p>你已经知道：交换机根据 MAC 地址转发帧，默认情况下所有端口都在同一个<strong>广播域</strong>内——ARP 广播会到达所有端口。这在大型网络中很糟糕：几百台机器的 ARP 广播互相淹没。</p>
+
+<p><strong>VLAN 解决的问题：在一台物理交换机上创建多个逻辑隔离的网络。</strong></p>
+
+<div style="background:#f4f4f0;padding:0.8rem;border-radius:4px;font-size:0.82rem;margin:0.8rem 0;line-height:1.7;">
+  <strong>没有 VLAN：</strong>一台交换机 48 个端口 = 1 个广播域 = ARP 广播到达所有 48 个端口<br>
+  <strong>有 VLAN：</strong>同一台交换机上 VLAN 10（端口 1-12 财务部）、VLAN 20（端口 13-24 工程部）、VLAN 30（端口 25-36 运维部）——ARP 广播只在各自的 VLAN 内传播
+</div>
+
+<p>跨 VLAN 通信必须经过<strong>路由器</strong>——即使两台机器插在同一台交换机上，如果属于不同 VLAN，帧也不能直接转发。这既是隔离（安全），也是约束（需要路由）。</p>
+
+<p>帧在进入交换机时被打上 <strong>802.1Q Tag</strong>（4 字节），包含 12 位的 VLAN ID（0–4095）。Trunk 端口可以承载多个 VLAN 的帧（帧带着 Tag），Access 端口只属于一个 VLAN（帧不带 Tag）。</p>
+
+<h3>数据中心网络 —— 链路层的工程巅峰</h3>
+
+<p>传统三层网络（接入层 → 汇聚层 → 核心层）在数据中心遇到了瓶颈：东西向流量（服务器之间，如微服务互调）远超南北向流量（客户端 ↔ 服务器）。</p>
+
+<p>现代数据中心的典型拓扑是 <strong>Spine-Leaf（脊叶架构）</strong>：</p>
+
+<div style="background:#f4f4f0;padding:0.8rem;border-radius:4px;font-size:0.82rem;margin:0.8rem 0;line-height:1.7;">
+<pre style="background:none;padding:0;margin:0;">
+        ┌─────────┬─────────┬─────────┐
+        │ Spine 1 │ Spine 2 │ Spine 3 │   ← 每个 Leaf 连到所有 Spine
+        └────┬─────┴────┬────┴────┬────┘
+     ┌───────┼──────┬───┼─────┬──┼────────┐
+     ▼       ▼      ▼   ▼     ▼  ▼        ▼
+  ┌──────┐┌──────┐┌──────┐┌──────┐┌──────┐
+  │Leaf 1││Leaf 2││Leaf 3││Leaf 4││Leaf 5│  ← 服务器直接连 Leaf
+  └──────┘└──────┘└──────┘└──────┘└──────┘
+</pre>
+</div>
+
+<p>任何两台服务器之间最多 <strong>2 跳</strong>（Leaf → Spine → Leaf），延迟可预测。配合 <strong>ECMP</strong>（等代价多路径）在 Spine 之间负载均衡。这就是为什么 Google 搜索的响应时间能控制在几十毫秒——数据中心的网络拓扑被精密设计过。</p>
+
+<p>数据中心网络也大量使用 <strong>VXLAN</strong>（Virtual Extensible LAN）——把二层帧封装在 UDP 包里，在 IP 网络上延伸二层网络。这使得虚拟机可以在数据中心内自由迁移而不改变 IP 和 MAC。</p>
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+
+<h2>🧪 检验一下</h2>
+
+<div class="quiz" id="quiz1">
+
+  <div class="q" id="q1">
+    <p>Q1: 以下哪个说法正确地描述了 IP 地址和 MAC 地址的分工？</p>
+    <label><input type="radio" name="q1" value="a"> IP 地址在局域网内使用，MAC 地址在全球范围内使用</label>
+    <label><input type="radio" name="q1" value="b"> IP 地址是端到端的逻辑地址，MAC 地址是逐跳的物理地址</label>
+    <label><input type="radio" name="q1" value="c"> 路由器根据 MAC 地址转发数据包</label>
+    <label><input type="radio" name="q1" value="d"> 交换机根据 IP 地址转发数据帧</label>
+  </div>
+
+  <div class="q" id="q2">
+    <p>Q2: ARP 请求是以什么方式发送的？为什么？</p>
+    <label><input type="radio" name="q2" value="a"> 单播——因为已经知道目的地 IP 了，可以直接发</label>
+    <label><input type="radio" name="q2" value="b"> 广播——因为不知道目标 IP 对应的 MAC 地址，所以需要问所有人</label>
+    <label><input type="radio" name="q2" value="c"> 组播——只发送给同组的主机</label>
+    <label><input type="radio" name="q2" value="d"> 任播——发给最近的一台</label>
+  </div>
+
+  <div class="q" id="q3">
+    <p>Q3: 交换机收到一个帧，但 MAC 表中没有目标 MAC 的记录。它会怎么做？</p>
+    <label><input type="radio" name="q3" value="a"> 丢弃该帧</label>
+    <label><input type="radio" name="q3" value="b"> 泛洪到除了接收端口外的所有端口</label>
+    <label><input type="radio" name="q3" value="c"> 发送 ARP 请求查询</label>
+    <label><input type="radio" name="q3" value="d"> 缓存该帧，等待目标主机主动发帧学习</label>
+  </div>
+
+  <div class="q" id="q4">
+    <p>Q4: 为什么 WiFi 需要在链路层做确认和重传，而以太网不需要？</p>
+    <label><input type="radio" name="q4" value="a"> 因为 WiFi 速度更快，TCP 重传跟不上</label>
+    <label><input type="radio" name="q4" value="b"> 因为无线信号丢包率比有线高得多，等 TCP 重传效率太低</label>
+    <label><input type="radio" name="q4" value="c"> 因为 WiFi 使用半双工通信</label>
+    <label><input type="radio" name="q4" value="d"> 因为 WiFi 不支持 TCP</label>
+  </div>
+
+  <div class="q" id="q5">
+    <p>Q5: 一个帧的 MTU 是 1500 字节。如果 IP 包是 2500 字节，会怎样？</p>
+    <label><input type="radio" name="q5" value="a"> 交换机拒绝转发</label>
+    <label><input type="radio" name="q5" value="b"> 帧自动扩容到 2500 字节</label>
+    <label><input type="radio" name="q5" value="c"> IP 层将包分成两片，每片不超过 MTU</label>
+    <label><input type="radio" name="q5" value="d"> 链路层将帧分成两帧</label>
+  </div>
+
+  <button onclick="checkQuiz()">提交答案</button>
+  <div class="feedback" id="quiz-feedback"></div>
+</div>
+
+<!-- ==================== SOURCE ==================== -->
+
+<div class="source-box">
+  <h3>📖 推荐阅读</h3>
+  <p>
+    <strong>Kurose &amp; Ross, <em>Computer Networking: A Top-Down Approach</em> (8th Ed), Chapter 6: The Link Layer and LANs.</strong><br>
+    本章覆盖了链路层的完整内容，包括 MAC 协议、ARP、以太网、交换机和 VLAN。配合 Wireshark 实验效果最佳。
+    <a href="https://gaia.cs.umass.edu/kurose_ross/online_lectures.htm" target="_blank">→ 在线讲座</a>
+  </p>
+  <p style="margin-top:0.5rem">
+    <strong>Ilya Grigorik, <em>High Performance Browser Networking</em>, Chapter 2: Building Blocks of TCP.</strong><br>
+    涉及 MTU、分片和链路层对上层性能的影响。
+    <a href="https://hpbn.co/building-blocks-of-tcp/" target="_blank">→ 免费在线阅读</a>
+  </p>
+</div>
+
+<!-- ==================== NEXT ==================== -->
+
+<div class="lesson-nav">
+  <a href="0001-the-url-journey.html">← 第 1 课：URL 之旅全览</a>
+  <a href="../index.html">回到概念地图 ↑</a>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">
+  🤔 有问题？问你的 AI 教师。推荐追问：「ARP 欺骗具体是怎么实施的？」「交换机 MAC 表满了会怎样？」「VLAN 是怎么隔离广播域的？」
+</p>
+
+</article>
+
+<script>
+const answers = { q1: 'b', q2: 'b', q3: 'b', q4: 'b', q5: 'c' };
+function checkQuiz() {
+  let correct = 0, total = Object.keys(answers).length;
+  for (let [qid, ans] of Object.entries(answers)) {
+    const selected = document.querySelector(`input[name="${qid}"]:checked`);
+    if (selected && selected.value === ans) correct++;
+  }
+  const fb = document.getElementById('quiz-feedback');
+  if (correct === total) {
+    fb.textContent = `✅ ${correct}/${total} 全对！你对链路层有了扎实的理解。可以进入下一课或回到概念地图选择下一个主题。`;
+    fb.className = 'feedback correct';
+  } else if (correct >= 3) {
+    fb.textContent = `⚠️ ${correct}/${total} 正确。回顾一下交换机转发逻辑和 ARP 的工作方式。`;
+    fb.className = 'feedback incorrect';
+  } else {
+    fb.textContent = `❌ ${correct}/${total} 正确。建议重读 ARP 部分和交换机自学习部分，这两块是链路层最核心的心智模型。`;
+    fb.className = 'feedback incorrect';
+  }
+}
+</script>
+
+</body>
+</html>

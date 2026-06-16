@@ -1,0 +1,12 @@
+# PDFs and large binaries
+*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~

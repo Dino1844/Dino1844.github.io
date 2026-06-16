@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>计算机网络术语表</title>
+<style>
+  :root {
+    --bg: #fffff8;
+    --text: #111;
+    --muted: #666;
+    --accent: #c44;
+    --link: #246;
+    --rule: #ddd;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "Songti SC", Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  article { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; border-bottom: 1px solid var(--rule); padding-bottom: 1rem; }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.1rem; margin: 2rem 0 0.6rem; color: var(--accent); border-bottom: 1px solid var(--rule); padding-bottom: 0.2rem; }
+  dl { margin: 0.8rem 0; }
+  dt { font-weight: 600; margin-top: 0.8rem; font-size: 0.95rem; }
+  dt code { background: #f4f4f0; padding: 0.1em 0.3em; border-radius: 2px; font-size: 0.9em; }
+  dd { margin-left: 1.2rem; font-size: 0.9rem; color: #333; margin-bottom: 0.5rem; }
+  dd .also { font-size: 0.82rem; color: var(--muted); margin-top: 0.15rem; }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); }
+  footer a { color: var(--link); }
+</style>
+</head>
+<body>
+<article>
+
+<h1>计算机网络术语表</h1>
+<div class="meta">
+  参考文档 · <a href="../index.html">← 概念地图</a> · 持续更新中
+</div>
+
+<p>本术语表是学习计算机网络的词汇基础。每条术语给出简洁定义和上下文。随着学习深入会不断扩充。</p>
+
+<h2>基础概念</h2>
+
+<dl>
+  <dt>协议 (Protocol)</dt>
+  <dd>通信双方约定的规则集合——定义消息的格式、顺序和响应方式。就像外交礼仪：握手用哪只手、先说什么后说什么。<div class="also">参见：所有网络通信都基于某种协议</div></dd>
+
+  <dt>分层 (Layering)</dt>
+  <dd>将网络通信的复杂问题分解为多个独立层次，每层只解决一个子问题。下层为上层提供服务，上层不关心下层实现细节。<div class="also">参见：OSI 模型、TCP/IP 模型</div></dd>
+
+  <dt>封装 (Encapsulation)</dt>
+  <dd>数据从上层传到下层时，每层在数据前面加上自己的头部信息（有时还有尾部）。就像信纸（数据）被放入信封（TCP 头），再装入邮袋（IP 头），再装上邮车（帧头）。<div class="also">对应：解封装 (Decapsulation)</div></dd>
+
+  <dt>端到端原则 (End-to-End Principle)</dt>
+  <dd>网络核心应保持简单（尽力转发），复杂功能（如可靠性、安全）应放在端节点实现。这是互联网设计的哲学基石。<div class="also">参见：Saltzer, Reed, Clark (1984)</div></dd>
+</dl>
+
+<h2>应用层</h2>
+
+<dl>
+  <dt>DNS (Domain Name System)</dt>
+  <dd>将人类可读的域名（example.com）翻译为机器可读的 IP 地址（93.184.216.34）的分层命名系统。可类比为互联网的电话簿。<div class="also">参见：A 记录、CNAME、递归查询、根域名服务器</div></dd>
+
+  <dt>HTTP (HyperText Transfer Protocol)</dt>
+  <dd>Web 的基石协议。客户端（浏览器）发送请求，服务器返回响应。无状态：每个请求独立，服务器不记得上次对话。<div class="also">参见：HTTPS、HTTP/2、HTTP/3、REST</div></dd>
+
+  <dt>TLS (Transport Layer Security)</dt>
+  <dd>在 TCP 之上建立加密信道的协议。提供三个保证：机密性（别人看不到）、完整性（内容没被改）、身份验证（对方真的是它声称的那个）。<div class="also">前身：SSL。最新：TLS 1.3</div></dd>
+
+  <dt><code>URL (Uniform Resource Locator)</code></dt>
+  <dd>统一资源定位符。格式：<code>scheme://host:port/path?query#fragment</code>。完整描述了「用什么协议、去哪台机器、取什么资源」。</dd>
+</dl>
+
+<h2>传输层</h2>
+
+<dl>
+  <dt>TCP (Transmission Control Protocol)</dt>
+  <dd>面向连接的可靠传输协议。保证数据不丢、不乱、不重复。通过三次握手建立连接，四次挥手断开。提供拥塞控制和流量控制。<div class="also">参见：UDP、三次握手、滑动窗口、拥塞控制</div></dd>
+
+  <dt>UDP (User Datagram Protocol)</dt>
+  <dd>无连接的「尽力而为」传输协议。不保证可靠，不保证顺序，不保证不重复。换来的是低延迟和低开销。<div class="also">适用场景：视频通话、DNS 查询、在线游戏</div></dd>
+
+  <dt>端口 (Port)</dt>
+  <dd>16 位数字（0-65535），用于在同一个 IP 地址上区分不同的应用程序。IP 定位机器，端口定位进程。如 HTTP 默认 80，HTTPS 默认 443。<div class="also">Socket = IP + Port</div></dd>
+
+  <dt>三次握手 (Three-Way Handshake)</dt>
+  <dd>TCP 建立连接的过程：① 客户端发 SYN ② 服务器回 SYN-ACK ③ 客户端回 ACK。目的是双方确认彼此的收发能力，并同步初始序列号。<div class="also">为什么不是两次？——防止历史连接被错误建立</div></dd>
+
+  <dt>拥塞控制 (Congestion Control)</dt>
+  <dd>TCP 检测网络拥塞并自动降低发送速率的机制。核心算法：慢启动、拥塞避免、快速重传、快速恢复。<div class="also">参见：AIMD、CUBIC、BBR</div></dd>
+</dl>
+
+<h2>网络层</h2>
+
+<dl>
+  <dt>IP (Internet Protocol)</dt>
+  <dd>网络层的核心协议，负责将数据包从源主机路由到目的主机。提供「尽力而为」(best-effort) 服务——不保证送达、不保证顺序。<div class="also">IPv4（32 位地址）→ IPv6（128 位地址）</div></dd>
+
+  <dt>IP 地址 (IP Address)</dt>
+  <dd>网络中每台设备的逻辑地址。IPv4 格式：<code>192.168.1.1</code>（4 字节）。IPv6 格式：<code>2001:db8::1</code>（16 字节）。<div class="also">公网 IP vs 私有 IP、CIDR 表示法（192.168.1.0/24）</div></dd>
+
+  <dt>路由 (Routing)</dt>
+  <dd>确定数据包从源到目的地路径的过程。每个路由器查路由表，把包转发到「下一跳」(next hop)。<div class="also">路由协议：BGP（域间）、OSPF/IS-IS（域内）</div></dd>
+
+  <dt>NAT (Network Address Translation)</dt>
+  <dd>网络地址转换。允许多台设备共享一个公网 IP。路由器将私有 IP 替换为公网 IP，并维护映射表。解决了 IPv4 地址不够用的燃眉之急。<div class="also">副作用：破坏了端到端原则</div></dd>
+</dl>
+
+<h2>链路层</h2>
+
+<dl>
+  <dt>MAC 地址 (Media Access Control Address)</dt>
+  <dd>48 位硬件地址，烧录在网卡中，用于同一局域网内的设备寻址。格式：<code>00:1A:2B:3C:4D:5E</code>。<div class="also">IP 地址是「你在哪」，MAC 地址是「你是谁」</div></dd>
+
+  <dt>ARP (Address Resolution Protocol)</dt>
+  <dd>地址解析协议。在局域网中，通过 IP 地址查找对应的 MAC 地址。广播问「192.168.1.1 是谁？」，目标设备单播回答「是我，我的 MAC 是 XX」。<div class="also">IPv6 中用 NDP (Neighbor Discovery Protocol) 替代</div></dd>
+
+  <dt>交换机 (Switch)</dt>
+  <dd>链路层设备，根据 MAC 地址转发帧。自学习：看到源 MAC 就记录在哪个端口，逐渐构建转发表。<div class="also">vs 集线器（Hub）：广播到所有端口；vs 路由器（Router）：工作在网络层</div></dd>
+
+  <dt>帧 (Frame)</dt>
+  <dd>链路层的数据单元。以太网帧 = 目的 MAC + 源 MAC + 类型 + 数据 + CRC 校验。<div class="also">MTU（最大传输单元）：通常 1500 字节</div></dd>
+</dl>
+
+<footer>
+  <p>计算机网络学习工作区 · <a href="../index.html">概念地图</a> · <a href="../MISSION.md">Mission</a></p>
+  <p style="margin-top:0.3rem">术语表会随学习进度不断更新。发现遗漏或需要澄清的术语？告诉你的 AI 教师。</p>
+</footer>
+
+</article>
+</body>
+</html>

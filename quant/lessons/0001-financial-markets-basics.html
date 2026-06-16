@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0001 · 金融市场基础</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fdfdfb;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+  }
+
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+
+  .sidenote {
+    float: right; clear: right; width: 200px; margin-right: -230px;
+    font-size: 0.8rem; color: #666; line-height: 1.5; font-family: 'Inter', sans-serif;
+    margin-top: 0.3rem;
+  }
+  @media (max-width: 1000px) {
+    .sidenote { float: none; width: auto; margin: 0.5rem 0; display: block; color: #888; font-style: italic; }
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+
+  .card {
+    background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px;
+    padding: 1.5rem 1.8rem; margin: 1.5rem 0;
+  }
+
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt {
+    padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px;
+    cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem;
+    transition: background 0.15s;
+  }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+
+  .primary-source {
+    background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem;
+    margin: 2.5rem 0 1.5rem; font-size: 0.95rem;
+  }
+  .primary-source h3 { margin-top: 0; }
+
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+
+  .reminder {
+    background: #f5f7fa; border: 1px solid #dde; border-radius: 6px;
+    padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445;
+  }
+
+  .definition { font-style: italic; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<h1>金融市场基础</h1>
+<p class="meta">Lesson 0001 · 2026-06-15 · 预计 15 分钟</p>
+
+<p>
+  在接触任何量化策略之前，需要先回答三个基础问题：
+  <strong>市场上交易的是什么？</strong>
+  <strong>在哪里交易？</strong>
+  <strong>交易如何发生？</strong>
+  这节课就是为这三个问题建立清晰的心智模型。
+</p>
+
+<!-- ============================================================ -->
+<h2>一、金融市场的结构</h2>
+
+<p>
+  金融市场最基本的功能是<strong>撮合资金盈余方和资金需求方</strong>。
+  钱多的人（投资者）把钱给需要钱的人（融资者），换取未来的回报。
+</p>
+
+<div class="card">
+  <h3 style="margin-top:0;">一级市场 vs 二级市场</h3>
+  <table>
+    <tr><th></th><th>一级市场 <span class="en">Primary Market</span></th><th>二级市场 <span class="en">Secondary Market</span></th></tr>
+    <tr><td>交易对象</td><td>新发行的证券</td><td>已有的证券</td></tr>
+    <tr><td>参与方</td><td>发行人 + 承销商 + 初始买家</td><td>投资者之间</td></tr>
+    <tr><td>价格</td><td>发行价（IPO 定价）</td><td>市场价（供需决定）</td></tr>
+    <tr><td>资金流向</td><td>投资者 → 公司</td><td>投资者 → 投资者</td></tr>
+    <tr><td>例子</td><td>公司上市（IPO）、政府发债</td><td>你在券商 App 上买卖股票</td></tr>
+  </table>
+</div>
+
+<p>
+  量化交易几乎全部发生在<strong>二级市场</strong>。
+  我们研究的不是"这个公司值多少钱"（那是投行做的事），而是"当前价格是否偏离了它的合理水平，以及我们能否从中获利"。
+</p>
+
+<!-- ============================================================ -->
+<h2>二、交易的标的物：资产类别</h2>
+
+<p>二级市场上交易的东西可以分为几大类。量化策略可以在任意一种资产上运行，但每一类有它自己的数据特征和交易规则。</p>
+
+<table>
+  <tr>
+    <th>资产类别</th><th>本质</th><th>收益来源</th><th>量化中的角色</th>
+  </tr>
+  <tr>
+    <td><strong>股票</strong> <span class="en">Equities</span></td>
+    <td>公司所有权的一部分</td>
+    <td>股价上涨 + 股息</td>
+    <td>最常见的量化标的；数据丰富、流动性好</td>
+  </tr>
+  <tr>
+    <td><strong>债券</strong> <span class="en">Fixed Income</span></td>
+    <td>借条——到期还本付息</td>
+    <td>利息 + 价格变动</td>
+    <td>利率建模是量化的核心领域之一</td>
+  </tr>
+  <tr>
+    <td><strong>ETF</strong> <span class="en">Exchange-Traded Fund</span></td>
+    <td>一篮子资产的"打包"</td>
+    <td>跟踪指数或策略</td>
+    <td>便宜、分散风险；适合做资产配置层面的量化</td>
+  </tr>
+  <tr>
+    <td><strong>期货</strong> <span class="en">Futures</span></td>
+    <td>未来以约定价格买卖某物的合约</td>
+    <td>价格变动差额</td>
+    <td>杠杆高、可做空方便；CTA 策略的核心标的</td>
+  </tr>
+  <tr>
+    <td><strong>期权</strong> <span class="en">Options</span></td>
+    <td>在未来以约定价格买卖某物的<em>权利</em></td>
+    <td>非线性——波动率也值钱</td>
+    <td>最复杂的量化领域；需要随机微积分</td>
+  </tr>
+</table>
+
+<p>
+  对于初学量化，<strong>股票和 ETF 是最好的起点</strong>——数据最容易获取，规则最简单，策略思路也最直观。
+</p>
+
+<!-- ============================================================ -->
+<h2>三、交易在哪里发生</h2>
+
+<p>二级市场有两大类交易场所：</p>
+
+<div class="card">
+  <h3 style="margin-top:0;">交易所 <span class="en">Exchange</span></h3>
+  <p>集中化的撮合平台。所有买卖订单汇集到这里，按规则匹配成交。</p>
+  <p>例子：上交所（SSE）、深交所（SZSE）、纽交所（NYSE）、纳斯达克（NASDAQ）</p>
+  <p>特点：<strong>透明、标准化、有监管</strong>。交易数据公开可得。</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0;">场外市场 <span class="en">OTC / Over-the-Counter</span></h3>
+  <p>买卖双方直接交易，不经过中央交易所。</p>
+  <p>例子：银行间债券市场、外汇市场的大部分交易、某些衍生品</p>
+  <p>特点：<strong>不透明、定制化</strong>。普通人（和普通量化策略）很少直接接触。</p>
+</div>
+
+<p>
+  量化策略通常<strong>只关注交易所交易的产品</strong>，因为数据可得。
+</p>
+
+<!-- ============================================================ -->
+<h2>四、交易怎么发生：订单簿</h2>
+
+<p>交易所的核心是一个叫<strong>订单簿</strong>（Order Book）的数据结构，它维护着两张表：</p>
+
+<ul>
+  <li><strong>买单列表</strong>（Bid，出价）——人们愿意以什么价格<em>买入</em>，从高到低排列</li>
+  <li><strong>卖单列表</strong>（Ask/Offer，要价）——人们愿意以什么价格<em>卖出</em>，从低到高排列</li>
+</ul>
+
+<p>当最贵的买单价格 ≥ 最便宜的卖单价格时，交易发生（成交）。</p>
+
+<div class="card">
+  <h3 style="margin-top:0;">关键术语</h3>
+  <table>
+    <tr><td><strong>Bid</strong></td><td>最高买入价——你现在<em>能卖出的</em>最高价格</td></tr>
+    <tr><td><strong>Ask / Offer</strong></td><td>最低卖出价——你现在<em>能买入的</em>最低价格</td></tr>
+    <tr><td><strong>Spread</strong></td><td>Ask − Bid 的差值；越小说明流动性越好</td></tr>
+    <tr><td><strong>Last Price</strong></td><td>最近一笔成交的价格</td></tr>
+    <tr><td><strong>Volume</strong></td><td>成交量——一段时间内成交了多少</td></tr>
+  </table>
+</div>
+
+<p>
+  <strong>这个 Bid-Ask 机制是你理解一切市场数据的起点。</strong>
+  你看到的任何 K 线图，背后都是无数买卖订单在订单簿上碰撞的结果。
+</p>
+
+<!-- ============================================================ -->
+<h2>五、我们看到的行情数据：OHLCV</h2>
+
+<p>订单簿的每一次变化是海量的（高频数据），日常使用中通常被聚合为时间窗口内的摘要——即 <strong>OHLCV</strong>，也称 K 线（Candlestick）数据：</p>
+
+<table>
+  <tr><th>字段</th><th>含义</th></tr>
+  <tr><td><strong>Open</strong></td><td>这段时间的第一笔成交价</td></tr>
+  <tr><td><strong>High</strong></td><td>这段时间的最高成交价</td></tr>
+  <tr><td><strong>Low</strong></td><td>这段时间的最低成交价</td></tr>
+  <tr><td><strong>Close</strong></td><td>这段时间的最后一笔成交价（<strong>最重要</strong>）</td></tr>
+  <tr><td><strong>Volume</strong></td><td>这段时间的总成交量</td></tr>
+</table>
+
+<p>
+  几乎所有的量化策略都是用 OHLCV 数据（或从中衍生出的指标）来构建信号的。<strong>Close 是其中最重要的值</strong>——大多数金融理论和回测都基于收盘价。为什么？因为收盘价最接近"市场最终达成共识的价格"。
+</p>
+
+<!-- ============================================================ -->
+<h2>六、量化在这个框架中的位置</h2>
+
+<p>现在有了基本框架，量化的角色就清晰了：</p>
+
+<div class="card">
+  <ol style="padding-left:1.2rem;">
+    <li style="margin-bottom:0.6rem;"><strong>获取数据</strong>——从交易所或数据商获取 OHLCV、订单簿、基本面等数据</li>
+    <li style="margin-bottom:0.6rem;"><strong>构建信号</strong>——用数学/统计模型从数据中提取预测（"这个股票接下来会涨"）</li>
+    <li style="margin-bottom:0.6rem;"><strong>生成订单</strong>——把信号转化为具体的买卖指令（买什么、买多少、什么价格）</li>
+    <li style="margin-bottom:0.6rem;"><strong>执行</strong>——通过券商把订单送到交易所</li>
+    <li style="margin-bottom:0.6rem;"><strong>评估</strong>——回测历史表现，分析风险收益特征</li>
+  </ol>
+</div>
+
+<p>这五个环节，每个环节都有大量的陷阱和学问。我们会逐一深入。</p>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 你在手机上看到某股票"买一 10.00 元，卖一 10.05 元"。如果你想<strong>立即买入</strong>，成交价最可能是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">10.00 元</span>
+    <span class="opt" data-answer="correct">10.05 元</span>
+    <span class="opt" data-answer="wrong">10.025 元</span>
+    <span class="opt" data-answer="wrong">取决于成交量</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 一次 IPO 中，你作为散户在券商 App 上"打新"中签了。这笔交易发生在？</p>
+  <div class="options">
+    <span class="opt" data-answer="correct">一级市场</span>
+    <span class="opt" data-answer="wrong">二级市场</span>
+    <span class="opt" data-answer="wrong">既有一级也有二级</span>
+    <span class="opt" data-answer="wrong">场外市场（OTC）</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. 量化策略中最常用的价格数据是收盘价（Close），主要原因是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">交易所只提供收盘价</span>
+    <span class="opt" data-answer="wrong">计算最简单</span>
+    <span class="opt" data-answer="correct">收盘价最接近市场当日达成的共识价格</span>
+    <span class="opt" data-answer="wrong">开盘价噪声太大</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+
+<div class="primary-source">
+  <h3>📖 推荐阅读</h3>
+  <p><strong>Bodie, Kane & Marcus —《投资学》(Investments)</strong>，第 1–3 章。</p>
+  <p>这是金融学科最权威的入门教材。前三章覆盖了金融市场结构、资产类别和交易机制，比这节课更深入。<br>
+  中文版由机械工业出版社出版。如果你只买一本金融书，就买这本。</p>
+</div>
+
+<!-- ============================================================ -->
+
+<div class="reminder">
+  <strong>💬 有问题随时问。</strong> 我是你的量化金融老师。这节课中的任何概念如果不够清楚——订单簿的机制、一级/二级市场的区别、OHLCV 的用法——直接追问即可。概念理解扎实是后面一切的基础。
+</div>
+
+<div class="nav">
+  下一课预告：<a href="#">0002 · 收益与风险——量化策略的「语言」</a><br>
+  参考资料：<a href="../reference/glossary.html">金融术语表（即将创建）</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      // Reset all opts in this quiz
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

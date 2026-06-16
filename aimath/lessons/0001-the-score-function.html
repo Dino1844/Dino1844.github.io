@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0001 · Score Function：统一生成模型的数学之眼</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #8b4513;
+    --light-accent: #f5efe6;
+    --muted: #6b6b6b;
+    --border: #e0d8cc;
+    --code-bg: #f7f4ef;
+    --highlight: #fff3cd;
+    --insight-border: #d4a574;
+    --correct: #2d6a4f;
+    --incorrect: #c1121f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Palatino', 'Noto Serif SC', 'Source Han Serif SC', 'STSong', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  h1 { font-size: 2.2rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.05rem; color: var(--muted); margin-bottom: 2.5rem; font-style: italic; }
+  h2 { font-size: 1.4rem; margin: 2.8rem 0 1rem; padding-bottom: 0.35rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.15rem; margin: 1.8rem 0 0.7rem; color: #333; }
+
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.4rem; }
+
+  .insight {
+    background: var(--light-accent);
+    border-left: 4px solid var(--insight-border);
+    padding: 1rem 1.2rem;
+    margin: 1.5rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .insight::before { content: "💡 "; font-style: normal; }
+
+  .warning {
+    background: #fff8f0;
+    border-left: 4px solid #e09f3e;
+    padding: 0.9rem 1.2rem;
+    margin: 1.5rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.93rem;
+  }
+
+  .checkpoint {
+    background: #f0f7ff;
+    border: 1px solid #b8d4f0;
+    border-radius: 8px;
+    padding: 0.8rem 1.1rem;
+    margin: 1.2rem 0;
+    font-size: 0.92rem;
+  }
+  .checkpoint strong { color: #2d5f8a; }
+
+  .example-box {
+    background: #fafaf7;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: 1.2rem 0;
+  }
+  .example-box h4 { font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; font-size: 1.05rem; }
+
+  .derivation { font-size: 0.93rem; }
+  .derivation .step { margin: 0.3rem 0; padding-left: 1.5rem; }
+  .derivation .step .reason { color: var(--muted); font-size: 0.82rem; font-style: italic; margin-left: 0.8rem; }
+
+  code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9em;
+  }
+
+  .citation {
+    font-size: 0.85rem;
+    color: var(--muted);
+    float: right;
+    clear: right;
+    width: 180px;
+    margin-right: -210px;
+    margin-top: 0.3rem;
+    line-height: 1.4;
+    font-style: italic;
+  }
+  @media (max-width: 1050px) {
+    .citation { float: none; width: auto; margin: 0.5rem 0; display: block; }
+    body { max-width: 100%; }
+  }
+
+  /* --- Visualization --- */
+  .viz-container {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+    margin: 1.8rem 0;
+  }
+  .viz-container canvas { display: block; width: 100%; height: auto; cursor: crosshair; }
+  .viz-caption { font-size: 0.85rem; color: var(--muted); text-align: center; margin-top: 0.5rem; }
+  .viz-controls { display: flex; gap: 0.6rem; justify-content: center; margin-top: 0.8rem; flex-wrap: wrap; align-items: center; }
+  .viz-controls button {
+    padding: 0.4em 1em; font-family: inherit; font-size: 0.88rem;
+    border: 1px solid var(--border); background: white; border-radius: 5px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .viz-controls button:hover { background: var(--light-accent); }
+  .viz-controls button.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .viz-controls label { font-size: 0.82rem; color: var(--muted); }
+  .viz-controls input[type=range] { width: 80px; }
+
+  /* --- Quiz --- */
+  .quiz { margin: 2rem 0; }
+  .quiz-question {
+    background: white; border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.3rem 1.5rem; margin-bottom: 1rem; transition: border-color 0.2s;
+  }
+  .quiz-question.correct { border-color: var(--correct); background: #f0faf5; }
+  .quiz-question.incorrect { border-color: var(--incorrect); background: #fff5f5; }
+  .quiz-question h4 { font-size: 1rem; margin-bottom: 0.8rem; color: #1a1a1a; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.45rem; }
+  .quiz-option {
+    display: flex; align-items: flex-start; gap: 0.5rem;
+    padding: 0.5rem 0.7rem; border-radius: 6px; cursor: pointer;
+    border: 1px solid transparent; transition: background 0.12s;
+  }
+  .quiz-option:hover { background: var(--light-accent); }
+  .quiz-option input { margin-top: 0.25rem; }
+  .quiz-option label { cursor: pointer; flex: 1; }
+  .quiz-feedback { font-size: 0.9rem; margin-top: 0.7rem; padding: 0.5rem 0.7rem; border-radius: 5px; display: none; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb { background: #d8f3dc; color: var(--correct); }
+  .quiz-feedback.incorrect-fb { background: #ffd7d7; color: var(--incorrect); }
+
+  /* --- Misc --- */
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); }
+  .next-hint { background: var(--highlight); padding: 0.8rem 1.1rem; border-radius: 8px; margin: 1.5rem 0; font-size: 0.93rem; }
+
+  .toc { font-size: 0.92rem; line-height: 1.8; margin: 1rem 0 2rem; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0001 · Score Function</h1>
+<div class="subtitle">统一生成模型的数学之眼 · 阅读时间 ~35 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 概率密度与配分函数：为什么生成模型这么难</a><br>
+  <a href="#s2">2. Score Function：神奇地绕过配分函数</a><br>
+  <a href="#s3">3. Langevin 动力学：有 score 就能采样</a><br>
+  <a href="#s4">4. Score Matching：不知道分布也能学 score</a><br>
+  <a href="#s5">5. 加噪的必要性：为什么不能直接用 score matching</a><br>
+  <a href="#s6">6. 统一视角：从 EBM 到 Diffusion，都是同一件事</a><br>
+  <a href="#s7">7. 自测：检索练习</a>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 概率密度与配分函数：为什么生成模型这么难</h2>
+
+<h3>1.1 什么是概率密度函数？</h3>
+
+<p>
+  先回顾最基本的概念。一个在 $d$ 维空间上的<strong>概率密度函数</strong>（probability density function, PDF）$p(\mathbf{x})$ 需要满足两条性质：
+</p>
+
+<ol>
+  <li><strong>非负性：</strong>$p(\mathbf{x}) \geq 0$ 对所有 $\mathbf{x} \in \mathbb{R}^d$ 成立</li>
+  <li><strong>归一化：</strong>$\int_{\mathbb{R}^d} p(\mathbf{x})\, d\mathbf{x} = 1$（全空间的总体积分为 1）</li>
+</ol>
+
+<p>
+  第二条是最关键的——翻译成人话就是：「所有可能发生的事件的概率加起来必须恰好等于 1」。这看起来只是一个记账要求，但它恰恰是生成模型一切困难的根源。
+</p>
+
+<div class="example-box">
+  <h4>🌰 具体例子：一维高斯分布</h4>
+  <p>
+    标准一维高斯分布 $\mathcal{N}(\mu, \sigma^2)$ 的密度函数：
+  </p>
+  <div class="formula-block">
+    $$p(x) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(x - \mu)^2}{2\sigma^2}\right)$$
+  </div>
+  <p>
+    前面的系数 $\frac{1}{\sqrt{2\pi\sigma^2}}$ 是<strong>精心挑选</strong>的——它保证了 $\int_{-\infty}^{\infty} p(x)\, dx = 1$。
+    这个系数就是<strong>归一化常数</strong>（normalizing constant）。
+  </p>
+  <p>
+    如果我们只写 $p(x) \propto \exp(-(x-\mu)^2/(2\sigma^2))$——也就是「正比于某个函数」——
+    那我们确实知道 $p(x)$ 的<em>形状</em>（一个钟形曲线），但我们不知道它的<em>高度</em>。
+    归一化常数就是那个确定高度的因子。
+  </p>
+</div>
+
+<h3>1.2 配分函数 $Z$：为什么它不可计算</h3>
+
+<p>把上面的例子推广到一般情况。假设我们想建模一个概率分布，我们写出：</p>
+
+<div class="formula-block">
+  $$p_\theta(\mathbf{x}) = \frac{\tilde{p}_\theta(\mathbf{x})}{Z(\theta)}, \quad Z(\theta) = \int \tilde{p}_\theta(\mathbf{x})\, d\mathbf{x}$$
+</div>
+
+<p>
+  其中 $\tilde{p}_\theta(\mathbf{x})$ 是<strong>未归一化密度</strong>（unnormalized density）——它可以是一个神经网络输出的任意正数，比如 $\tilde{p}_\theta(\mathbf{x}) = \exp(-E_\theta(\mathbf{x}))$（这叫能量模型，$E_\theta$ 是神经网络）。$Z(\theta)$ 叫<strong>配分函数</strong>（partition function），它确保密度积分到 1。
+</p>
+
+<div class="warning">
+  <strong>问题来了：$Z(\theta)$ 需要对整个 $\mathbb{R}^d$ 做积分。</strong>
+  对于一张 $256 \times 256$ 的 RGB 图片，$d = 256 \times 256 \times 3 \approx 200{,}000$ 维。
+  在这个空间里做数值积分——用一个 $d$ 维网格，每个维度切 $N$ 个点——需要 $N^{200{,}000}$ 个网格点。
+  即使用蒙特卡洛方法，在高维空间中有效采样也需要指数级的样本量（这是<strong>维度灾难</strong>的核心含义）。
+</div>
+
+<div class="checkpoint">
+  <strong>📍 停下来想一想：</strong>假设你有一个非常简单的模型，$\tilde{p}(\mathbf{x})$ 是神经网络输出的任意正数。
+  你能写出 $\tilde{p}(\mathbf{x})$，但你<strong>不知道 $p(\mathbf{x})$ 的实际数值</strong>——因为除以 $Z$ 之前，你不知道这个正数在整个空间中占多大比例。
+  就像你知道一个物体的<em>相对</em>形状但不知道它的<em>绝对</em>尺度。
+</div>
+
+<h3>1.3 所有生成模型都在绕开 $Z$</h3>
+
+<p>这就是为什么<strong>几乎每一种生成模型本质上都是在用不同的数学技巧逃避 $Z$ 的计算</strong>：</p>
+
+<ul>
+  <li><strong>GAN</strong> —— 最极端的逃避：根本不写 $p(\mathbf{x})$，用对抗游戏隐式地学到怎么采样。判别器只判断「这是真的还是假的」，不计算概率密度。</li>
+  <li><strong>VAE</strong> —— 引入隐变量 $\mathbf{z}$，把问题变成优化一个下界 (ELBO)。这个下界恰好不需要对 $\mathbf{z}$ 做积分——通过变分推断绕开了。</li>
+  <li><strong>Normalizing Flow</strong> —— 唯一不绕的方法：使用可逆神经网络，配合变量替换公式 $\det(\partial f / \partial \mathbf{z})$，<em>解析地</em>计算 $Z$。代价是网络结构受到严重限制（必须可逆、Jacobian 必须好算）。</li>
+  <li><strong>Energy-Based Model (EBM)</strong> —— 建模 $p_\theta(\mathbf{x}) \propto e^{-E_\theta(\mathbf{x})}$，坦然接受 $Z$ 不可算。训练时通过 MCMC 采样（如 Langevin 动力学）来估计涉及 $Z$ 的梯度项。</li>
+</ul>
+
+<p style="font-size:0.85rem; color:var(--muted);">
+  📇 不熟悉以上算法？先看 <a href="../reference/algorithm-cards.html" style="color:var(--accent);">算法知识卡片</a>，每张卡片用 3 分钟讲清楚一个算法的数学本质。
+</p>
+
+<div class="warning">
+  <strong>关键观察：</strong>上面的每个方法——无论是隐式采样、变分下界、可逆变换还是 MCMC——都在做一件很「迂回」的事。
+  有没有一个数学对象，<strong>天然地不依赖 $Z$</strong>，让你不需要绕路就能处理未归一化的概率模型？
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. Score Function：神奇地绕过配分函数</h2>
+
+<h3>2.1 定义和直观含义</h3>
+
+<p>
+  定义概率密度 $p(\mathbf{x})$ 的 <strong>score function</strong>（得分函数）：
+</p>
+
+<div class="formula-block">
+  $$\boxed{\mathbf{s}(\mathbf{x}) = \nabla_{\mathbf{x}} \log p(\mathbf{x})}$$
+</div>
+
+<p>
+  这里 $\nabla_{\mathbf{x}}$ 表示对<strong>数据 $\mathbf{x}$</strong> 的梯度（不是对参数的梯度——这是关键区别）。
+  $\log$ 是自然对数。这个量告诉你：
+</p>
+
+<div class="formula-block">
+  <em>在数据空间的任意一点 $\mathbf{x}$，往哪个方向走能让概率密度增长最快？</em>
+</div>
+
+<p>
+  Score function 是一个<strong>向量场</strong>（vector field）——输入是空间中的点 $\mathbf{x}$，输出是一个 $d$ 维向量，
+  指向「概率更高的区域」。想象你在一个地形图上，概率密度就是海拔，score 就是最陡上坡方向。
+</p>
+
+<h3>2.2 核心性质：配分函数消失了</h3>
+
+<p>现在看最关键的推导——我们把 $p(\mathbf{x}) = \tilde{p}(\mathbf{x}) / Z$ 代入 score 的定义：</p>
+
+<div class="formula-block derivation">
+  <div class="step">
+    $\mathbf{s}(\mathbf{x}) = \nabla_{\mathbf{x}} \log p(\mathbf{x})$
+  </div>
+  <div class="step">
+    $= \nabla_{\mathbf{x}} \log \left( \frac{\tilde{p}(\mathbf{x})}{Z} \right)$
+    <span class="reason">// 代入 $p = \tilde{p} / Z$</span>
+  </div>
+  <div class="step">
+    $= \nabla_{\mathbf{x}} \bigl( \log \tilde{p}(\mathbf{x}) - \log Z \bigr)$
+    <span class="reason">// $\log(a/b) = \log a - \log b$</span>
+  </div>
+  <div class="step">
+    $= \nabla_{\mathbf{x}} \log \tilde{p}(\mathbf{x}) - \nabla_{\mathbf{x}} \log Z$
+    <span class="reason">// 梯度算子是线性的</span>
+  </div>
+  <div class="step">
+    $= \nabla_{\mathbf{x}} \log \tilde{p}(\mathbf{x}) - \mathbf{0}$
+    <span class="reason">// $\log Z$ 不依赖于 $\mathbf{x}$！$Z$ 是对全空间积分的结果，是一个常数</span>
+  </div>
+</div>
+
+<div class="insight">
+  <strong>$Z$ 消失了。</strong>因为 $Z$ 是对整个空间的积分——它不依赖于任何一个具体的 $\mathbf{x}$。
+  所以 $\log Z$ 是一个<strong>常数</strong>（相对于 $\mathbf{x}$），对 $\mathbf{x}$ 求梯度后恒为零。
+  <br><br>
+  <strong>这就是 score function 最核心的性质，也是后续一切展开的根源。</strong>
+  无论 $\tilde{p}$ 的绝对值有多大、$Z$ 有多不可计算，score 只关心 $\tilde{p}$ 的<em>相对变化</em>。
+</div>
+
+<h3>2.3 手算一个具体例子</h3>
+
+<div class="example-box">
+  <h4>🌰 一维高斯分布的 score</h4>
+  <p>取标准一维高斯 $p(x) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)$。让我们一步一步手算它的 score：</p>
+
+  <div class="derivation">
+    <div class="step"><strong>Step 1：取对数</strong></div>
+    <div class="step">
+      $\log p(x) = -\frac{1}{2}\log(2\pi\sigma^2) - \frac{(x-\mu)^2}{2\sigma^2}$
+    </div>
+
+    <div class="step"><strong>Step 2：对 $x$ 求导</strong></div>
+    <div class="step">
+      $s(x) = \frac{d}{dx} \log p(x) = 0 - \frac{2(x-\mu)}{2\sigma^2} = -\frac{x-\mu}{\sigma^2}$
+      <span class="reason">// 注意 $-\frac{1}{2}\log(2\pi\sigma^2)$ 对 $x$ 求导为零（它就是这个分布的 $\log Z$）</span>
+    </div>
+  </div>
+
+  <p><strong>观察：</strong></p>
+  <ul>
+    <li>$s(x) = -\frac{x-\mu}{\sigma^2}$ —— score 是一条直线！它指向均值 $\mu$。</li>
+    <li>在 $x = \mu$ 处（概率最高点），$s(\mu) = 0$（梯度为零）。</li>
+    <li>离 $\mu$ 越远，score 的绝对值越大——它在「用力」把你拉回来。</li>
+    <li><strong>$\frac{1}{\sqrt{2\pi}\sigma}$（归一化常数）在求导后完全消失了。</strong></li>
+  </ul>
+</div>
+
+<h3>2.4 Score 函数的一个重要恒等式</h3>
+
+<p>
+  使用链式法则，score 也可以写成：
+</p>
+
+<div class="formula-block">
+  $$\mathbf{s}(\mathbf{x}) = \nabla_{\mathbf{x}} \log p(\mathbf{x}) = \frac{\nabla_{\mathbf{x}} p(\mathbf{x})}{p(\mathbf{x})}$$
+</div>
+
+<p>
+  这个形式清楚展示了为什么 score 在 $p(\mathbf{x})$ 很小的地方可能会很大——
+  分母很小而分子不一定很小，score 可能爆炸。这是后续「为什么需要加噪」的关键原因。
+</p>
+
+<div class="citation">
+  Score 的概念有两层历史：<br><br>
+  <strong>Fisher score（参数 score）</strong>：$\nabla_\theta \log p(x|\theta)$——对<em>参数</em>求导，费舍尔 1925 年提出，用于最大似然估计。<br><br>
+  <strong>Stein score / Hyvärinen score（数据 score）</strong>：$\nabla_x \log p(x)$——对<em>数据</em>求导，是本文的主角。<br><br>
+  别搞混：前者是 $\mathbb{R}^{\text{\#params}}$ 中的向量，后者是 $\mathbb{R}^d$（数据空间）中的向量。
+</div>
+
+<div class="checkpoint">
+  <strong>📍 停下来想一想：</strong>假设 $p$ 是一个均匀分布 $p(x) = C$（常数），它的 score 是什么？答案是 $\mathbf{0}$——因为概率处处相等，没有任何方向是「更大概率的方向」。Score 关心的是<em>变化</em>，不是绝对值。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. Langevin 动力学：有 score 就能采样</h2>
+
+<h3>3.1 从布朗运动讲起</h3>
+
+<p>
+  如果一个粒子只受随机扰动，没有外力——这就是<strong>布朗运动</strong>（Brownian motion）。在连续时间下，它的位置 $\mathbf{x}(t)$ 满足：
+</p>
+
+<div class="formula-block">
+  $$d\mathbf{x} = \sqrt{2\varepsilon}\, d\mathbf{w}(t)$$
+</div>
+
+<p>
+  其中 $\mathbf{w}(t)$ 是标准维纳过程（Wiener process）——你可以把它理解为「无穷小的独立高斯噪声」。$\varepsilon > 0$ 控制噪声强度。
+  如果粒子只做布朗运动，它的分布会逐渐扩散成一个越来越宽的高斯分布——没有什么方向性。
+</p>
+
+<h3>3.2 加上漂移：Langevin 方程</h3>
+
+<p>
+  现在给粒子加一个<strong>确定性外力</strong>——让它偏向于往某个方向运动。这就是 Langevin 动力学（Langevin dynamics）：
+</p>
+
+<div class="formula-block">
+  $$d\mathbf{x} = \underbrace{\frac{\varepsilon}{2} \nabla_{\mathbf{x}} \log p(\mathbf{x})\, dt}_{\text{漂移项：往高概率方向走}} + \underbrace{\sqrt{2\varepsilon}\, d\mathbf{w}(t)}_{\text{扩散项：随机扰动}}$$
+</div>
+
+<p>
+  <strong>为什么漂移项是 $\frac{\varepsilon}{2} \nabla \log p$？</strong>这个系数不是随便选的。它是由一个叫
+  <strong>Fokker-Planck 方程</strong>的定理保证的：当漂移项取这个值时，$\mathbf{x}(t)$ 在 $t \to \infty$ 时的<strong>稳态分布</strong>
+  （stationary distribution）<strong>恰好是 $p(\mathbf{x})$</strong>。换一个系数，稳态分布就会变成别的分布。
+</p>
+
+<h3>3.3 离散化：可用于计算机的形式</h3>
+
+<p>把连续时间的 SDE 离散化（用 Euler-Maruyama 方法），得到迭代公式：</p>
+
+<div class="formula-block">
+  $$\boxed{\mathbf{x}_{t+1} = \mathbf{x}_t + \frac{\varepsilon}{2} \cdot \mathbf{s}(\mathbf{x}_t) + \sqrt{\varepsilon} \cdot \boldsymbol{\eta}_t, \quad \boldsymbol{\eta}_t \sim \mathcal{N}(\mathbf{0}, \mathbf{I})}$$
+</div>
+
+<p>这个公式由两部分组成：</p>
+
+<ol>
+  <li>
+    <strong>漂移项 $\frac{\varepsilon}{2} \mathbf{s}(\mathbf{x}_t)$</strong>
+    —— 沿 score 方向走半步。因为 $\mathbf{s}$ 指向概率上升最快的方向，所以这一步是<strong>梯度上升</strong>（不是下降——我们要最大<em>化</em>概率）。步长 $\varepsilon/2$ 控制每次移动的幅度。
+  </li>
+  <li>
+    <strong>扩散项 $\sqrt{\varepsilon} \cdot \boldsymbol{\eta}_t$</strong>
+    —— 独立的高斯噪声，每个维度独立，标准差为 $\sqrt{\varepsilon}$。注意 $\varepsilon$ 在漂移项中是一阶小量（$\varepsilon/2$），
+    在扩散项中是 $\sqrt{\varepsilon}$——这意味着当 $\varepsilon$ 很小时，<strong>噪声主导了漂移</strong>。这不是 bug，这是 feature——噪声是探索分布的关键。
+  </li>
+</ol>
+
+<div class="insight">
+  <strong>为什么必须加噪声？</strong>如果去掉扩散项，Langevin 动力学退化成了确定性的梯度上升：
+  $\mathbf{x}_{t+1} = \mathbf{x}_t + \frac{\varepsilon}{2} \mathbf{s}(\mathbf{x}_t)$。
+  这个迭代最终会停在最近的局部极大值（一个 mode），再也出不来。<br><br>
+  噪声有两个作用：① 让粒子有可能<strong>逃离局部陷阱</strong>，探索其他 modes；
+  ② 让粒子的<strong>稳态分布</strong>恰好是 $p(\mathbf{x})$ 而不是某个 delta 函数。
+  <strong>没有噪声，你就不是在采样，而是在做优化。</strong>
+</div>
+
+<h3>3.4 交互式可视化</h3>
+
+<!-- 可视化 -->
+<div class="viz-container">
+  <canvas id="scoreViz" width="720" height="440"></canvas>
+  <div class="viz-caption">
+    <strong>上图：</strong>概率密度 $p(x)$（1D 双峰分布）&emsp;
+    <strong>下图：</strong>Score function $s(x) = \nabla_x \log p(x)$<br>
+    点击<strong>下图</strong>的任意位置放置粒子，观察 Langevin 动力学如何将粒子推向高概率区域。<br>
+    注意粒子如何<strong>在两个峰之间来回跳跃</strong>——这就是扩散项的作用。
+  </div>
+  <div class="viz-controls">
+    <button id="btnReset" class="active">⟳ 重置</button>
+    <button id="btnStep">▶ 单步 Langevin</button>
+    <button id="btnRun">⏩ 连续运行</button>
+    <label>ε: <input type="range" id="epsSlider" min="0.01" max="0.8" step="0.01" value="0.15"></label>
+    <span style="font-size:0.82rem;color:var(--muted);" id="stepInfo">点击画布放置粒子</span>
+  </div>
+</div>
+
+<p>
+  <strong>玩一下：</strong>放置多个粒子，然后连续运行。观察：
+</p>
+<ul>
+  <li>粒子从<strong>任意初始位置</strong>出发，最终都聚集在两个 mode 附近</li>
+  <li>两个 mode 之间的「谷底」处，score 指向两侧——它知道往哪走</li>
+  <li>噪声让粒子有时能<strong>翻越概率壁垒</strong>，从一个 mode 跳到另一个</li>
+  <li>调节 $\varepsilon$：太大会过度随机（粒子乱跳），太小则粒子 stuck 在局部</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. Score Matching：不知道分布也能学 score</h2>
+
+<h3>4.1 问题设定</h3>
+
+<p>
+  上节讲了：<strong>有 score 就能采样</strong>。现在我们面对另一个问题：我们只有一堆数据样本
+  $\{\mathbf{x}^{(i)}\}_{i=1}^N \sim p_{\text{data}}(\mathbf{x})$，<strong>不知道 $p_{\text{data}}$ 的具体形式</strong>。
+  怎么学到一个近似的 score function $\mathbf{s}_\theta(\mathbf{x}) \approx \nabla_{\mathbf{x}} \log p_{\text{data}}(\mathbf{x})$？
+</p>
+
+<h3>4.2 朴素想法（以及它为什么行不通）</h3>
+
+<p>
+  最直接的想法：最小化预测 score 和真实 score 之间的均方误差（MSE）：
+</p>
+
+<div class="formula-block">
+  $$\mathcal{L}_{\text{naive}}(\theta) = \mathbb{E}_{p_{\text{data}}(\mathbf{x})} \left[ \frac{1}{2} \left\| \mathbf{s}_\theta(\mathbf{x}) - \nabla_{\mathbf{x}} \log p_{\text{data}}(\mathbf{x}) \right\|^2 \right]$$
+</div>
+
+<div class="warning">
+  问题是 $\nabla_{\mathbf{x}} \log p_{\text{data}}(\mathbf{x})$ 是未知的——我们本来就不知道 $p_{\text{data}}$ 的解析形式！
+  如果知道它，我们就不需要学 score 了。
+</div>
+
+<h3>4.3 Hyvärinen 的技巧：分部积分</h3>
+
+<p>
+  Hyvärinen (2005) 的洞见是：展开上面的平方项，然后对包含 $\nabla \log p_{\text{data}}$ 的项做<strong>分部积分</strong>（integration by parts），把它转化成只涉及 $\mathbf{s}_\theta$ 的导数的形式。让我一步步推导：
+</p>
+
+<div class="derivation">
+  <p>展开 MSE：</p>
+  <div class="formula-block">
+    $\frac{1}{2}\|\mathbf{s}_\theta - \nabla\log p\|^2 = \underbrace{\frac{1}{2}\|\mathbf{s}_\theta\|^2}_{\text{term A}} - \underbrace{\mathbf{s}_\theta^\top \nabla\log p}_{\text{term B}} + \underbrace{\frac{1}{2}\|\nabla\log p\|^2}_{\text{term C}}$
+  </div>
+
+  <p>
+    Term C 不依赖于 $\theta$ —— 它是常数，优化时忽略。<br>
+    Term B 包含未知的 $\nabla\log p$。但注意到：
+  </p>
+  <div class="formula-block">
+    $\mathbb{E}_p[\mathbf{s}_\theta^\top \nabla\log p] = \int p(\mathbf{x})\, \mathbf{s}_\theta(\mathbf{x})^\top \nabla\log p(\mathbf{x})\, d\mathbf{x}$
+  </div>
+  <div class="formula-block">
+    $= \int p(\mathbf{x})\, \mathbf{s}_\theta(\mathbf{x})^\top \frac{\nabla p(\mathbf{x})}{p(\mathbf{x})}\, d\mathbf{x} = \int \mathbf{s}_\theta(\mathbf{x})^\top \nabla p(\mathbf{x})\, d\mathbf{x}$
+  </div>
+  <p>
+    现在用<strong>分部积分</strong>。在一维情况就是 $\int_a^b u\, dv = uv|_a^b - \int_a^b v\, du$。
+    在高维是 $\int f \cdot \nabla g = -\int g \cdot \nabla \cdot f$（假设 $p(\mathbf{x}) \to 0$ 当 $\|\mathbf{x}\| \to \infty$，边界项消失）：
+  </p>
+  <div class="formula-block">
+    $\int \mathbf{s}_\theta^\top \nabla p = -\int p(\mathbf{x})\, \operatorname{tr}\bigl(\nabla_{\mathbf{x}} \mathbf{s}_\theta(\mathbf{x})\bigr)\, d\mathbf{x} = -\mathbb{E}_p\bigl[\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta)\bigr]$
+  </div>
+  <p>
+    其中 $\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta)$ 是 $\mathbf{s}_\theta$ 的 Jacobian 矩阵的<strong>迹</strong>（对角线元素之和），
+    也叫 $\mathbf{s}_\theta$ 的<strong>散度</strong>（divergence）。
+  </p>
+</div>
+
+<p>拼起来，去掉常数项，得到 <strong>Hyvärinen score matching 损失</strong>：</p>
+
+<div class="formula-block">
+  $$\boxed{J_{\text{SM}}(\theta) = \mathbb{E}_{p_{\text{data}}(\mathbf{x})} \left[ \frac{1}{2} \|\mathbf{s}_\theta(\mathbf{x})\|^2 + \operatorname{tr}\bigl(\nabla_{\mathbf{x}} \mathbf{s}_\theta(\mathbf{x})\bigr) \right]}$$
+</div>
+
+<div class="insight">
+  <strong>奇迹发生了：</strong>这个损失函数<strong>不包含任何对 $p_{\text{data}}$ 的直接引用</strong>——
+  只有期望 $\mathbb{E}_{p_{\text{data}}}$（用数据样本估计即可），以及 $\mathbf{s}_\theta$ 本身的范数和 Jacobian 迹。
+  我们不再需要知道真实分布的解析形式。
+</div>
+
+<h3>4.4 直觉：两项各自在做什么</h3>
+
+<ul>
+  <li>
+    <strong>$\frac{1}{2}\|\mathbf{s}_\theta(\mathbf{x})\|^2$</strong>：惩罚 score 向量在数据点处的长度。
+    因为在高概率区域（mode 附近），score 应该接近零（梯度为零），所以这一项让 score 在数据簇附近<strong>缩小</strong>。
+  </li>
+  <li>
+    <strong>$\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta(\mathbf{x}))$</strong>：惩罚 Jacobian 的迹。
+    在 mode 附近，score 向量指向 mode（汇聚），散度为<strong>负</strong>——这一项鼓励 score 场在数据附近<strong>汇聚</strong>而不是发散。
+    如果这一项不约束，score 网络可以 trivial 地输出零向量来满足第一项——但那样就不是真正的梯度场了。
+  </li>
+</ul>
+
+<div class="checkpoint">
+  <strong>📍 关键理解：</strong>Score matching 的优雅之处在于——它通过分部积分，把「和未知的真实 score 做比较」转化为了「检查预测 score 自己的结构」。梯度场的散度（迹）充当了「自我监督信号」。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 加噪的必要性：为什么不能直接用 score matching</h2>
+
+<h3>5.1 低数据密度区域的问题</h3>
+
+<p>
+  理论上，上一节的 score matching 可以直接在原始数据上训练。实践中有一个致命问题：
+</p>
+
+<p>
+  真实数据（比如自然图片）分布在一个<strong>低维流形</strong>上——$200{,}000$ 维空间中，只有极少一部分区域有数据。
+  在数据流形<strong>之外</strong>（也就是绝大部分空间），$p_{\text{data}}(\mathbf{x}) \approx 0$，因此：
+</p>
+
+<div class="formula-block">
+  $$\mathbf{s}(\mathbf{x}) = \frac{\nabla p(\mathbf{x})}{p(\mathbf{x})} \approx \frac{\text{有限值}}{\approx 0} \to \text{发散}$$
+</div>
+
+<p>
+  而且因为数据流形外几乎没有训练样本，score matching 损失在这些区域的期望 $\mathbb{E}_{p_{\text{data}}}$
+  贡献为零——模型在这些区域<strong>完全没有监督信号</strong>，score 估计会非常不准确。
+</p>
+
+<div class="insight">
+  <strong>这就是为什么需要加噪。</strong>给数据加上高斯噪声 $\mathcal{N}(0, \sigma^2)$，相当于把 $p_{\text{data}}$ 和一个高斯核做<strong>卷积</strong>：
+  $p_\sigma(\mathbf{x}) = (p_{\text{data}} * \mathcal{N}(0, \sigma^2))(\mathbf{x})$。加噪后的分布被「涂抹」到全空间——原本概率为零的区域现在也有了非零概率。
+  此时 score 处处有定义且光滑，模型在所有区域都能收到有效的训练信号。
+</div>
+
+<h3>5.2 Denoising Score Matching</h3>
+
+<p>
+  实践中更常用的变体是 <strong>Denoising Score Matching (DSM)</strong>（Vincent, 2011）。它不是对 $p_{\text{data}}$ 做 score matching，
+  而是对<strong>加噪后的条件分布</strong>做：
+</p>
+
+<div class="formula-block">
+  $$\mathcal{L}_{\text{DSM}}(\theta) = \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}} \mathbb{E}_{\tilde{\mathbf{x}} \sim \mathcal{N}(\mathbf{x}, \sigma^2 \mathbf{I})} \left[ \left\| \mathbf{s}_\theta(\tilde{\mathbf{x}}) - \nabla_{\tilde{\mathbf{x}}} \log q_\sigma(\tilde{\mathbf{x}} | \mathbf{x}) \right\|^2 \right]$$
+</div>
+
+<p>
+  关键：$q_\sigma(\tilde{\mathbf{x}} | \mathbf{x})$ 是我们<strong>手动加的高斯噪声</strong>——它的 score 是已知的！对于高斯噪声 $\tilde{\mathbf{x}} = \mathbf{x} + \sigma \boldsymbol{\epsilon}$：
+</p>
+
+<div class="formula-block">
+  $$\nabla_{\tilde{\mathbf{x}}} \log q_\sigma(\tilde{\mathbf{x}} | \mathbf{x}) = -\frac{\tilde{\mathbf{x}} - \mathbf{x}}{\sigma^2} = -\frac{\boldsymbol{\epsilon}}{\sigma}$$
+</div>
+
+<p>
+  所以 DSM 的损失变成：
+</p>
+
+<div class="formula-block">
+  $$\mathcal{L}_{\text{DSM}}(\theta) = \mathbb{E}_{\mathbf{x}, \boldsymbol{\epsilon}} \left[ \left\| \mathbf{s}_\theta(\mathbf{x} + \sigma \boldsymbol{\epsilon}) + \frac{\boldsymbol{\epsilon}}{\sigma} \right\|^2 \right]$$
+</div>
+
+<p>
+  这等价于训练一个网络，输入一张加噪图片，输出「去噪方向」。<strong>去噪 = 学 score。</strong>
+</p>
+
+<h3>5.3 多尺度噪声：从粗到细</h3>
+
+<p>
+  不同 $\sigma$ 的噪声提供了不同分辨率的 score。$\sigma$ 很大时，score 只看到分布的大致轮廓（粗粒度）；
+  $\sigma$ 很小时，score 能捕捉细节（细粒度）。Song & Ermon (2019) 提出用<strong>多个噪声尺度</strong>
+  $\sigma_1 > \sigma_2 > \cdots > \sigma_L$，采样时从大 $\sigma$ 开始（先确定大轮廓），逐渐减小 $\sigma$
+  （细化细节）——这就是<strong>退火 Langevin 动力学</strong>（annealed Langevin dynamics）。
+</p>
+
+<p>
+  这个「多尺度 + 退火」结构，也是后来 SDE 统一框架的离散前身——连续极限下，不同的噪声尺度变成了连续的时间 $t$，
+  而 sampling 变成了逆向 SDE 的求解。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 统一视角：从 EBM 到 Diffusion，都是同一件事</h2>
+
+<h3>6.1 统一关系表</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>方法家族</th>
+      <th>建模对象</th>
+      <th>和 Score 的关系</th>
+      <th>关键等价</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Energy-Based Model</strong></td>
+      <td>$E_\theta(\mathbf{x})$<br>$p_\theta \propto e^{-E_\theta}$</td>
+      <td>$\mathbf{s}_\theta = -\nabla_\mathbf{x} E_\theta$</td>
+      <td>Score 就是负的能量梯度。学能量函数 = 学 score。</td>
+    </tr>
+    <tr>
+      <td><strong>Score-Based Model</strong></td>
+      <td>$\mathbf{s}_\theta(\mathbf{x})$ 直接</td>
+      <td>本身就是 score</td>
+      <td>最直接的方式——不绕任何弯。</td>
+    </tr>
+    <tr>
+      <td><strong>Diffusion Model (DDPM)</strong></td>
+      <td>$\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)$<br>（噪声预测网络）</td>
+      <td>$\mathbf{s}_\theta(\mathbf{x}_t, t) = -\frac{\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)}{\sigma_t}$</td>
+      <td>预测噪声 = 估计 score。DDPM 的损失函数就是 DSM 的加权版。</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>6.2 DDPM 损失 = Score Matching：显式证明</h3>
+
+<p>DDPM (Ho et al., 2020) 的简化训练损失是：</p>
+
+<div class="formula-block">
+  $$\mathcal{L}_{\text{DDPM}}^{\text{simple}} = \mathbb{E}_{t, \mathbf{x}_0, \boldsymbol{\epsilon}} \left[ \left\| \boldsymbol{\epsilon} - \boldsymbol{\epsilon}_\theta(\sqrt{\bar{\alpha}_t} \mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t} \boldsymbol{\epsilon}, t) \right\|^2 \right]$$
+</div>
+
+<p>现在看 DSM 损失（上一节）：</p>
+
+<div class="formula-block">
+  $$\mathcal{L}_{\text{DSM}} = \mathbb{E}_{\mathbf{x}, \tilde{\mathbf{x}}} \left[ \left\| \mathbf{s}_\theta(\tilde{\mathbf{x}}) - \nabla_{\tilde{\mathbf{x}}} \log q_\sigma(\tilde{\mathbf{x}} | \mathbf{x}) \right\|^2 \right]$$
+</div>
+
+<p>令 $\tilde{\mathbf{x}} = \sqrt{\bar{\alpha}_t} \mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t} \boldsymbol{\epsilon}$（DDPM 的前向加噪过程）。
+则 $q(\tilde{\mathbf{x}} | \mathbf{x}_0) = \mathcal{N}(\sqrt{\bar{\alpha}_t} \mathbf{x}_0, (1-\bar{\alpha}_t)\mathbf{I})$，
+且 $\nabla_{\tilde{\mathbf{x}}} \log q(\tilde{\mathbf{x}} | \mathbf{x}_0) = -\frac{\boldsymbol{\epsilon}}{\sqrt{1-\bar{\alpha}_t}}$。</p>
+
+<p>代入 DSM 损失：</p>
+
+<div class="formula-block">
+  $$\left\| \mathbf{s}_\theta(\tilde{\mathbf{x}}, t) + \frac{\boldsymbol{\epsilon}}{\sqrt{1-\bar{\alpha}_t}} \right\|^2 = \frac{1}{1-\bar{\alpha}_t} \left\| \sqrt{1-\bar{\alpha}_t} \cdot \mathbf{s}_\theta(\tilde{\mathbf{x}}, t) + \boldsymbol{\epsilon} \right\|^2$$
+</div>
+
+<p>定义 $\boldsymbol{\epsilon}_\theta = -\sqrt{1-\bar{\alpha}_t} \cdot \mathbf{s}_\theta$（即噪声预测 = 负的 scale 后的 score），则：</p>
+
+<div class="formula-block">
+  $$\mathcal{L}_{\text{DSM}} \propto \mathbb{E} \left[ \left\| \boldsymbol{\epsilon} - \boldsymbol{\epsilon}_\theta(\tilde{\mathbf{x}}, t) \right\|^2 \right] = \mathcal{L}_{\text{DDPM}}^{\text{simple}}$$
+</div>
+
+<div class="insight">
+  <strong>DDPM 不是灵机一动。</strong>它只是在<strong>加噪数据上做 denoising score matching</strong>，
+  只是换了个变量名（$\boldsymbol{\epsilon}_\theta$ 替代 $\mathbf{s}_\theta$）。噪声调度（线性方差 schedule）
+  是「多尺度」的一种具体选择。整个 DDPM 框架，从损失函数到采样过程，
+  都可以从「score matching + Langevin 动力学」这个视角<strong>必然地</strong>推导出来。
+</div>
+
+<h3>6.3 大局观</h3>
+
+<p>把整节课串起来：</p>
+
+<div style="background:white; border:1px solid var(--border); border-radius:10px; padding:1.2rem 1.5rem; margin:1.5rem 0;">
+  <ol style="margin-bottom:0;">
+    <li><strong>$Z$ 不可算 → </strong>需要找一个不受 $Z$ 影响的数学对象来描述概率分布。</li>
+    <li><strong>Score $\nabla \log p$ → </strong>这个对象天然存在——对数据求梯度，$\log Z$ 消失。</li>
+    <li><strong>Score matching → </strong>不需要知道 $p$ 就能学 score（Hyvärinen, 2005）。</li>
+    <li><strong>Langevin 动力学 → </strong>学到 score 就能采样（Fokker-Planck 保证稳态分布是 $p$）。</li>
+    <li><strong>加噪 → </strong>解决低密度区域的 score 估计问题，让模型在全空间有监督信号。</li>
+    <li><strong>多尺度加噪 + 退火 Langevin → </strong>Score-based generative model（Song & Ermon, 2019）。</li>
+    <li><strong>换个变量名 → </strong>DDPM（Ho et al., 2020）。它是同一件事的不同表述。</li>
+    <li><strong>连续极限 → </strong>SDE 统一框架（Song et al., 2021），连接扩散模型和 score-based 模型。</li>
+  </ol>
+</div>
+
+<p>
+  这条逻辑链中的每一步都是<strong>有因可据</strong>的——不是因为某个人「灵机一动」想到了一个巧妙的损失函数，
+  而是因为每一步都是在回答一个很自然的问题：「上一步遇到了什么困难？什么数学工具能解决它？」
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 自测：检索练习</h2>
+
+<p style="color:var(--muted); font-size:0.9rem;">以下 5 道题用于巩固本节核心概念。建议不要在刚读完时做——过几小时或第二天回来做，效果更好（间隔效应）。</p>
+
+<div class="quiz">
+
+  <div class="quiz-question" id="q1">
+    <h4>Q1 · 为什么 $\nabla_{\mathbf{x}} \log p(\mathbf{x})$ 不依赖于配分函数 $Z$？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkAnswer('q1', 1)">
+        <input type="radio" name="q1" id="q1a"><label for="q1a">A. 因为 $Z$ 是标量，求导后为零</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q1', 2)">
+        <input type="radio" name="q1" id="q1b"><label for="q1b">B. 因为 $\log Z$ 不依赖于 $\mathbf{x}$，所以 $\nabla_{\mathbf{x}} \log Z = \mathbf{0}$</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q1', 3)">
+        <input type="radio" name="q1" id="q1c"><label for="q1c">C. 因为 $\nabla_{\mathbf{x}} \log Z = \frac{1}{Z} \nabla_{\mathbf{x}} Z$，而 $Z$ 是常数</label>
+      </div>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <h4>Q2 · 在概率密度 $p(\mathbf{x})$ 的局部极大值点 $\mathbf{x}^*$ 处，$\mathbf{s}(\mathbf{x}^*)$ 的值是什么？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkAnswer('q2', 1)">
+        <input type="radio" name="q2" id="q2a"><label for="q2a">A. 指向最近的另一个 mode</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q2', 2)">
+        <input type="radio" name="q2" id="q2b"><label for="q2b">B. 零向量，因为 $\nabla p = \mathbf{0}$ 所以 $\nabla \log p = \mathbf{0}$</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q2', 3)">
+        <input type="radio" name="q2" id="q2c"><label for="q2c">C. 概率密度的最大值</label>
+      </div>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <h4>Q3 · 在 Langevin 动力学中，如果去掉扩散项 $\sqrt{\varepsilon} \cdot \boldsymbol{\eta}_t$，会发生什么？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkAnswer('q3', 1)">
+        <input type="radio" name="q3" id="q3a"><label for="q3a">A. 收敛更快，且仍能覆盖整个分布</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q3', 2)">
+        <input type="radio" name="q3" id="q3b"><label for="q3b">B. 会退化为确定性的梯度上升，卡在最近的局部极大值</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q3', 3)">
+        <input type="radio" name="q3" id="q3c"><label for="q3c">C. 算法无法运行，因为没有随机性</label>
+      </div>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q4">
+    <h4>Q4 · Hyvärinen score matching 损失中 $\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta)$ 这一项的作用是？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkAnswer('q4', 1)">
+        <input type="radio" name="q4" id="q4a"><label for="q4a">A. 它来自分部积分，替代了原本对真实 score 的需求</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q4', 2)">
+        <input type="radio" name="q4" id="q4b"><label for="q4b">B. 它是正则化项，防止 score 网络过拟合</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q4', 3)">
+        <input type="radio" name="q4" id="q4c"><label for="q4c">C. 它用来惩罚 score 网络的参数数量</label>
+      </div>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q5">
+    <h4>Q5 · 为什么在原始数据上直接做 score matching 效果不好？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkAnswer('q5', 1)">
+        <input type="radio" name="q5" id="q5a"><label for="q5a">A. 因为真实数据分布集中在低维流形上，流形外的 score 无定义或发散，且缺乏训练信号</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q5', 2)">
+        <input type="radio" name="q5" id="q5b"><label for="q5b">B. 因为 Hyvärinen 损失的计算量在高维数据上太大</label>
+      </div>
+      <div class="quiz-option" onclick="checkAnswer('q5', 3)">
+        <input type="radio" name="q5" id="q5c"><label for="q5c">C. 因为 score matching 需要知道归一化常数</label>
+      </div>
+    </div>
+    <div class="quiz-feedback" id="q5-fb"></div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<h2>8. 这节课的核心 takeaway</h2>
+
+<ol style="margin-left: 1.5rem;">
+  <li><strong>$Z$ 问题是生成模型的根源困难。</strong>所有方法本质上都是在绕它。</li>
+  <li><strong>Score function $\nabla_{\mathbf{x}} \log p(\mathbf{x})$ 天然免疫 $Z$。</strong>因为 $\log Z$ 对 $\mathbf{x}$ 是常数。</li>
+  <li><strong>有 score → Langevin 动力学能采样。</strong>漂移 + 噪声 → 稳态分布就是 $p$。</li>
+  <li><strong>没有 $p$ → Score matching 也能学 score。</strong>通过分部积分消除对真实 score 的依赖。</li>
+  <li><strong>加噪是必要的。</strong>让 score 在全空间有定义和有监督信号。</li>
+  <li><strong>DDPM = 加噪数据上的 denoising score matching。</strong>不是灵机一动，是必然推导。</li>
+</ol>
+
+<!-- ============================================================ -->
+<div class="next-hint">
+  <strong>📌 下节课：</strong><a href="0002-information-geometry.html" style="color:var(--accent);">Lesson 0002 · 信息几何与自然梯度</a> ——
+  Score matching 中出现了 $\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta)$。
+  如果我们看<strong>参数</strong>空间而非数据空间，score 的协方差矩阵就是 <strong>Fisher 信息矩阵</strong>——
+  它定义了概率分布空间的「自然几何」。已发布 ✓
+</div>
+
+<!-- ============================================================ -->
+<div class="lesson-footer">
+  <p>
+    <strong>推荐阅读：</strong>
+    <a href="https://jmlr.org/papers/v6/hyvarinen05a.html" target="_blank">Hyvärinen (2005) — Score Matching</a>
+    ·
+    <a href="https://arxiv.org/abs/1907.05600" target="_blank">Song & Ermon (2019) — Score-Based Generative Modeling</a>
+    ·
+    <a href="https://arxiv.org/abs/2011.13456" target="_blank">Song et al. (2021) — SDE Unification</a>
+  </p>
+  <p style="margin-top: 0.6rem;">
+    <strong>有问题？</strong>直接在这里问。第二节的 score matching 推导如果有任何一步不清楚——问。
+    第三节的 Fokker-Planck 为什么能保证稳态分布——问。知识卡片里任何一个算法不懂——问。
+  </p>
+  <p style="margin-top: 0.8rem; font-size: 0.82rem;">
+    <a href="0000-the-mathematical-landscape.html">← Lesson 0000 · 地貌</a> &emsp;
+    <a href="../reference/algorithm-cards.html">📇 算法卡片</a> &emsp;
+    <a href="../reference/math-primer.html">📐 数学手册</a> &emsp;
+    <a href="../MISSION.md">🎯 Mission</a>
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<script>
+// === Quiz Logic ===
+const ANSWERS = { q1: 2, q2: 2, q3: 2, q4: 1, q5: 1 };
+const EXPLANATIONS = {
+  q1: {
+    correct: '✓ 正确。$\log Z$ 不依赖于 $\mathbf{x}$（$Z$ 是对全空间的积分，是一个跟 $\mathbf{x}$ 无关的常数），因此 $\nabla_{\mathbf{x}} \log Z = \mathbf{0}$。这就是为什么 score function 天然免疫于归一化问题。',
+    wrong: '✗ 选项 B 才是根本原因：$\log Z$ 跟 $\mathbf{x}$ 无关，求导得零。选项 A 不完整（说「$Z$ 是标量所以求导为零」——$Z$ 确实是标量，但任何标量函数对 $\mathbf{x}$ 的梯度一般不是零；只有不依赖于 $\mathbf{x}$ 的标量才是零）。选项 C 本质上正确但多了一步不必要的推导。'
+  },
+  q2: {
+    correct: '✓ 正确。在局部极大值处，$\nabla_{\mathbf{x}} p(\mathbf{x}^*) = \mathbf{0}$。因此 $\mathbf{s}(\mathbf{x}^*) = \frac{\nabla p(\mathbf{x}^*)}{p(\mathbf{x}^*)} = \frac{\mathbf{0}}{p(\mathbf{x}^*)} = \mathbf{0}$。Score 衡量的是对数密度的<em>变化率</em>，不是密度的大小。',
+    wrong: '✗ 不对。Score 在 mode 处恰好为零——因为该点梯度为零。记住：$\nabla \log p = \nabla p / p$，分子为零则整体为零。'
+  },
+  q3: {
+    correct: '✓ 正确。去掉噪声后就是确定性的梯度上升，从任意初始点出发最终都会收敛到最近的局部极大值（一个 mode），无法探索整个分布。噪声保证稳态分布是完整的 $p(\mathbf{x})$ 而非一个点。',
+    wrong: '✗ 选项 B 是正确的。去掉噪声 = 确定性的梯度上升 = 卡在单个 mode。噪声不是为了让算法「能运行」——它是为了确保稳态分布是整个 $p$ 而非单个点。'
+  },
+  q4: {
+    correct: '✓ 正确。$\operatorname{tr}(\nabla \mathbf{s}_\theta)$ 是通过<strong>分部积分</strong>从 $\mathbb{E}[\mathbf{s}_\theta^\top \nabla \log p]$ 转化而来的。它替代了原本需要的真实 score，是整个 score matching 技巧的核心。没有这一项，我们就必须知道 $\nabla \log p$。',
+    wrong: '✗ 选项 A 才是正确的。迹项不是正则化——它是从数学上<strong>等价替换</strong>了未知的真实 score 项。这正是 Hyvärinen 的核心贡献。'
+  },
+  q5: {
+    correct: '✓ 正确。真实数据分布在低维流形上（流形假设），流形外的区域概率接近零，score 发散且缺乏训练样本。加噪后分布被「涂抹」到全空间，score 有定义且有监督。这就是为什么 diffusion/score-based 模型需要多尺度噪声。',
+    wrong: '✗ 选项 A 才是正确原因。Score matching 的计算量确实大（需要算 Jacobian 迹），但这不是使用加噪的主要原因——主要原因是在低密度区域 score 无法定义/学习。'
+  }
+};
+
+function checkAnswer(qid, chosen) {
+  const container = document.getElementById(qid);
+  const fb = document.getElementById(qid + '-fb');
+  const correct = ANSWERS[qid];
+  container.classList.remove('correct', 'incorrect');
+  fb.classList.remove('show', 'correct-fb', 'incorrect-fb');
+  if (chosen === correct) {
+    container.classList.add('correct');
+    fb.classList.add('show', 'correct-fb');
+    fb.innerHTML = EXPLANATIONS[qid].correct;
+  } else {
+    container.classList.add('incorrect');
+    fb.classList.add('show', 'incorrect-fb');
+    fb.innerHTML = EXPLANATIONS[qid].wrong;
+  }
+}
+
+// === Visualization ===
+(function() {
+  const canvas = document.getElementById('scoreViz');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  function normalPDF(x, mu, sigma) {
+    const a = 1 / (sigma * Math.sqrt(2 * Math.PI));
+    return a * Math.exp(-0.5 * ((x - mu) / sigma) ** 2);
+  }
+
+  const mix = [
+    { w: 0.5, mu: -2.5, sigma: 0.55 },
+    { w: 0.5, mu: 2.5, sigma: 0.75 }
+  ];
+
+  function p(x) {
+    return mix.reduce((s, c) => s + c.w * normalPDF(x, c.mu, c.sigma), 0);
+  }
+
+  function dp(x) {
+    return mix.reduce((s, c) => {
+      const n = normalPDF(x, c.mu, c.sigma);
+      return s + c.w * n * (-(x - c.mu) / (c.sigma * c.sigma));
+    }, 0);
+  }
+
+  function score(x) {
+    const pv = p(x);
+    if (pv < 1e-9) return (x > 0 ? -8 : 8);
+    return dp(x) / pv;
+  }
+
+  const xMin = -6, xMax = 6;
+  const topH = 180, bottomTop = 230, bottomH = 180;
+  const pad = 50;
+
+  function xToCanvas(x) { return pad + (x - xMin) / (xMax - xMin) * (W - 2 * pad); }
+  function canvasToX(cx) { return xMin + (cx - pad) / (W - 2 * pad) * (xMax - xMin); }
+
+  let particles = [];
+  let eps = 0.15;
+  let running = false;
+  let runAnimId = null;
+
+  const epsSlider = document.getElementById('epsSlider');
+  epsSlider.addEventListener('input', () => { eps = parseFloat(epsSlider.value); });
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#e8e4dc';
+    ctx.lineWidth = 0.5;
+    for (let xi = -5; xi <= 5; xi++) {
+      const cx = xToCanvas(xi);
+      ctx.beginPath(); ctx.moveTo(cx, 10); ctx.lineTo(cx, topH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx, bottomTop); ctx.lineTo(cx, bottomTop + bottomH - 10); ctx.stroke();
+    }
+
+    // Density
+    const nPts = 400;
+    ctx.beginPath();
+    ctx.strokeStyle = '#8b4513';
+    ctx.lineWidth = 2.5;
+    let first = true;
+    for (let i = 0; i <= nPts; i++) {
+      const x = xMin + (xMax - xMin) * i / nPts;
+      const y = topH - 10 - p(x) * (topH - 30) / 0.45;
+      if (first) { ctx.moveTo(xToCanvas(x), y); first = false; }
+      else { ctx.lineTo(xToCanvas(x), y); }
+    }
+    ctx.stroke();
+    ctx.lineTo(xToCanvas(xMax), topH - 10);
+    ctx.lineTo(xToCanvas(xMin), topH - 10);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(139, 69, 19, 0.08)';
+    ctx.fill();
+
+    ctx.fillStyle = '#2c2c2c';
+    ctx.font = '13px Palatino, serif';
+    ctx.fillText('p(x)', xToCanvas(-5.5), 25);
+    ctx.fillText('s(x) = ∇log p(x)', xToCanvas(-5.5), bottomTop + 20);
+
+    // Zero line
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+    const zeroY = bottomTop + bottomH / 2;
+    ctx.beginPath(); ctx.moveTo(pad, zeroY); ctx.lineTo(W - pad, zeroY); ctx.stroke();
+
+    // Score
+    ctx.beginPath();
+    ctx.strokeStyle = '#2d6a4f';
+    ctx.lineWidth = 2.5;
+    first = true;
+    for (let i = 0; i <= nPts; i++) {
+      const x = xMin + (xMax - xMin) * i / nPts;
+      const sv = score(x);
+      const y = zeroY - sv * 20;
+      const cy = Math.max(bottomTop + 15, Math.min(bottomTop + bottomH - 15, y));
+      if (first) { ctx.moveTo(xToCanvas(x), cy); first = false; }
+      else { ctx.lineTo(xToCanvas(x), cy); }
+    }
+    ctx.stroke();
+
+    // Mode markers
+    mix.forEach(c => {
+      const cx = xToCanvas(c.mu);
+      ctx.strokeStyle = 'rgba(139,69,19,0.3)';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(cx, 15); ctx.lineTo(cx, topH - 5); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#2d6a4f';
+      ctx.beginPath(); ctx.arc(cx, zeroY, 5, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // Particles
+    particles.forEach(pt => {
+      const cx = xToCanvas(pt.x);
+      const cy = zeroY - score(pt.x) * 20;
+      const cyClamped = Math.max(bottomTop + 10, Math.min(bottomTop + bottomH - 10, cy));
+      ctx.fillStyle = '#c1121f';
+      ctx.beginPath(); ctx.arc(cx, cyClamped, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      const dy = topH - 10 - p(pt.x) * (topH - 30) / 0.45;
+      ctx.fillStyle = 'rgba(193, 18, 31, 0.6)';
+      ctx.beginPath(); ctx.arc(cx, dy, 4, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+
+  function langevinStep(pt) {
+    const s = score(pt.x);
+    const noise = Math.sqrt(eps) * (Math.random() * 2 - 1) * Math.sqrt(3);
+    return { x: pt.x + (eps / 2) * s + noise };
+  }
+
+  function resetParticles() {
+    particles = [];
+    document.getElementById('stepInfo').textContent = '点击画布放置粒子';
+    stopRun();
+    draw();
+  }
+
+  function stepAll() {
+    if (particles.length === 0) {
+      document.getElementById('stepInfo').textContent = '请先点击画布放置粒子！';
+      return;
+    }
+    particles = particles.map(langevinStep);
+    document.getElementById('stepInfo').textContent = `ε=${eps.toFixed(3)} | ${particles.length} 个粒子`;
+    draw();
+  }
+
+  function startRun() {
+    if (running) return;
+    if (particles.length === 0) {
+      document.getElementById('stepInfo').textContent = '请先点击画布放置粒子！';
+      return;
+    }
+    running = true;
+    document.getElementById('btnRun').textContent = '⏸ 停止';
+    document.getElementById('btnRun').classList.add('active');
+    function loop() {
+      if (!running) return;
+      particles = particles.map(langevinStep);
+      draw();
+      runAnimId = requestAnimationFrame(loop);
+    }
+    runAnimId = requestAnimationFrame(loop);
+  }
+
+  function stopRun() {
+    running = false;
+    if (runAnimId) cancelAnimationFrame(runAnimId);
+    document.getElementById('btnRun').textContent = '⏩ 连续运行';
+    document.getElementById('btnRun').classList.remove('active');
+  }
+
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const cy = (e.clientY - rect.top) * scaleX;
+    const cx = (e.clientX - rect.left) * scaleX;
+    if (cy >= bottomTop && cy <= bottomTop + bottomH) {
+      particles.push({ x: canvasToX(cx) });
+      document.getElementById('stepInfo').textContent = `已放置 ${particles.length} 个粒子`;
+      draw();
+    }
+  });
+
+  document.getElementById('btnReset').addEventListener('click', resetParticles);
+  document.getElementById('btnStep').addEventListener('click', stepAll);
+  document.getElementById('btnRun').addEventListener('click', () => {
+    if (running) stopRun(); else startRun();
+  });
+
+  draw();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 6 课：HTTP —— Web 的基石协议</title>
+<style>
+  :root {
+    --bg: #fffff8; --text: #111; --muted: #666; --accent: #c44; --link: #246;
+    --rule: #ddd; --highlight: #fff8e1; --code-bg: #f4f4f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif CJK SC","Source Han Serif SC","STSong","Songti SC",Georgia,serif;
+    background: var(--bg); color: var(--text); line-height: 1.75;
+  }
+  article { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: 0.03em; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
+  .meta a { color: var(--link); }
+  h2 { font-size: 1.2rem; margin: 2.2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--rule); color: #333; }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 0.5rem; color: #444; }
+  p { margin: 0.8rem 0; }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.92em; font-family: "JetBrains Mono","Fira Code","SF Mono",monospace; }
+  pre { background: var(--code-bg); padding: 0.8rem 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.84rem; line-height: 1.5; margin: 1rem 0; }
+  pre code { background: none; padding: 0; }
+
+  .sidenote {
+    background: var(--highlight); border-left: 3px solid #e6c840;
+    padding: 0.6rem 1rem; margin: 1rem 0; font-size: 0.88rem; color: #5a4a20;
+  }
+  .sidenote strong { color: #8a6d20; }
+
+  .stack-indicator {
+    margin: 1.5rem 0; display: flex; flex-direction: column; align-items: center; font-size: 0.82rem;
+  }
+  .stack-indicator .layer {
+    padding: 0.35rem 3rem; border: 1px solid var(--rule); margin: 1px 0;
+    border-radius: 3px; background: #fff; color: var(--muted);
+  }
+  .stack-indicator .layer.current {
+    background: #2c3e50; color: #fff; font-weight: 600; border-color: #2c3e50;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+  th { background: #f5f5f0; padding: 0.5rem 0.7rem; text-align: left; border-bottom: 2px solid var(--rule); font-weight: 600; }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--rule); }
+
+  /* Req/res diagram */
+  .req-res {
+    margin: 1.2rem 0;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: "JetBrains Mono","Fira Code",monospace;
+    font-size: 0.78rem;
+  }
+  .req-res .rr-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #fafaf5;
+  }
+  .req-res .rr-header .rrh {
+    padding: 0.55rem 1rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.82rem;
+    font-family: "Noto Serif CJK SC","STSong",serif;
+  }
+  .req-res .rr-header .rrh.req-h { background: #e3ecf5; color: #1e5080; border-right: 1px solid var(--rule); }
+  .req-res .rr-header .rrh.res-h { background: #e8f0e4; color: #2a5a2a; }
+  .req-res .rr-body {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+  .req-res .rr-body .req-col {
+    background: #f5f8fb;
+    padding: 0.7rem 0.9rem;
+    border-right: 1px solid #eee;
+    color: #1e5080;
+    line-height: 1.6;
+  }
+  .req-res .rr-body .arr-col {
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    background: #fdfdf8;
+  }
+  .req-res .rr-body .res-col {
+    background: #f7faf5;
+    padding: 0.7rem 0.9rem;
+    color: #2a5a2a;
+    line-height: 1.6;
+  }
+  .req-res .rr-body .hl { font-weight: 700; color: inherit; }
+
+  /* Evolution cards */
+  .evo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.6rem;
+    margin: 1rem 0;
+  }
+  .evo .ver {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 0.8rem;
+    text-align: center;
+  }
+  .evo .ver .vname {
+    font-family: "JetBrains Mono","Fira Code",monospace;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+  }
+  .evo .ver .vyear { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .evo .ver .vfeat { font-size: 0.78rem; color: #555; line-height: 1.5; }
+
+  .sup { margin: 2rem 0; padding: 1.5rem; border: 2px dashed var(--rule); border-radius: 8px; background: #fafdf8; }
+  .sup h2 { border: none; margin-top: 0; color: #5a8a3a; }
+  .sup h3 { color: #5a8a3a; }
+  .quiz {
+    margin: 2.5rem 0; padding: 1.5rem; border: 1px solid var(--rule);
+    border-radius: 6px; background: #fdfdf8;
+  }
+  .quiz h2 { margin-top: 0; border: none; padding-bottom: 0; }
+  .quiz .q { margin: 1.2rem 0; }
+  .quiz .q > p { font-weight: 600; margin-bottom: 0.3rem; }
+  .quiz .q label { display: block; padding: 0.35rem 0; cursor: pointer; font-size: 0.9rem; }
+  .quiz .q input[type="radio"] { margin-right: 0.5rem; }
+  .quiz button {
+    margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: #fff;
+    border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-family: inherit;
+  }
+  .quiz button:hover { opacity: 0.9; }
+  .quiz .feedback { margin-top: 0.5rem; font-size: 0.88rem; min-height: 1.5rem; }
+  .quiz .feedback.correct { color: #2a7d2a; }
+  .quiz .feedback.incorrect { color: #c44; }
+
+  .lesson-nav {
+    display: flex; justify-content: space-between; margin-top: 3rem;
+    padding-top: 1.5rem; border-top: 1px solid var(--rule); font-size: 0.9rem;
+  }
+  .source-box {
+    margin: 2rem 0; padding: 1rem 1.2rem;
+    background: #f0f4f8; border-radius: 6px; font-size: 0.9rem;
+  }
+  .source-box h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<article>
+
+<h1>第 6 课：HTTP —— Web 的基石协议</h1>
+<div class="meta">
+  计算机网络 · <a href="../index.html">← 概念地图</a> · 约 25 分钟 ·
+  <a href="../reference/glossary.html">术语表</a>
+</div>
+
+<div class="stack-indicator">
+  <div class="layer current">◀ 应用层 &nbsp; HTTP · DNS · TLS ◀ 本课</div>
+  <div class="layer">传输层 &nbsp; TCP · UDP</div>
+  <div class="layer">网络层 &nbsp; IP · BGP</div>
+  <div class="layer">链路层 &nbsp; Ethernet · ARP</div>
+  <div class="layer">物理层 &nbsp; 网线 · 光纤</div>
+</div>
+
+<p>
+  第 3 课我们学了 TCP——它给你一条可靠的字节流管道。但浏览器和服务器在管道里传什么？格式是什么？请求长什么样？响应长什么样？这就是 HTTP（HyperText Transfer Protocol）的职责：<strong>定义客户端和服务器之间交换消息的格式和语义。</strong>
+</p>
+
+<div class="sidenote">
+  <strong>🎯 本课目标：</strong>理解 HTTP 的请求-响应模型、常见方法与状态码的语义、Header 的作用、HTTP/1.1→HTTP/2→HTTP/3 的演进逻辑（队头阻塞→多路复用→QUIC）、以及缓存策略的基本原理。
+</div>
+
+<!-- ==================== REQUEST-RESPONSE ==================== -->
+
+<h2>1. HTTP 的核心模型：请求-响应</h2>
+
+<p>HTTP 是<strong>无状态</strong>的请求-响应协议。客户端发一个请求，服务器返回一个响应。协议本身不记住上一次交互——每个请求都是独立的。</p>
+
+<div class="req-res">
+  <div class="rr-header">
+    <div class="rrh req-h">请求 (Request)</div>
+    <div class="rrh res-h">响应 (Response)</div>
+  </div>
+  <div class="rr-body">
+    <div class="req-col">
+      <span class="hl">GET /index.html HTTP/1.1</span><br>
+      Host: example.com<br>
+      User-Agent: Firefox/121.0<br>
+      Accept: text/html<br>
+      Accept-Language: zh-CN<br>
+      Connection: keep-alive<br>
+      <br>
+      <span style="color:#888;">（空行，表示 Header 结束）</span><br>
+      <span style="color:#888;">（GET 请求没有 Body）</span>
+    </div>
+    <div class="arr-col">
+      <svg width="20" height="40" viewBox="0 0 20 40">
+        <line x1="10" y1="2" x2="10" y2="38" stroke="#aaa" stroke-width="1.2"/>
+        <polygon points="10,34 6,28 14,28" fill="#aaa"/>
+      </svg>
+    </div>
+    <div class="res-col">
+      <span class="hl">HTTP/1.1 200 OK</span><br>
+      Content-Type: text/html<br>
+      Content-Length: 1256<br>
+      Cache-Control: max-age=3600<br>
+      Date: Mon, 16 Jun 2026 ...<br>
+      <br>
+      <span style="color:#888;">（空行）</span><br>
+      &lt;!DOCTYPE html&gt;<br>
+      &lt;html&gt;...&lt;/html&gt;
+    </div>
+  </div>
+</div>
+
+<p>关键结构：</p>
+<ul>
+  <li><strong>起始行</strong>——请求是 <code>方法 + URL + 版本</code>，响应是 <code>版本 + 状态码 + 原因短语</code></li>
+  <li><strong>Header</strong>——键值对，描述消息的元数据。以空行结尾</li>
+  <li><strong>Body</strong>——实际传输的数据（GET 请求通常没有 Body）</li>
+</ul>
+
+<div class="sidenote">
+  <strong>🔗 对接 TCP 知识：</strong>上面那些 Header 和 Body 在传输时被 TCP 切成一个一个的段。HTTP 不关心 TCP 怎么分段——它只管"把这些文本发给对面"。这就是分层的威力：HTTP 作者不需要知道 TCP 的拥塞控制算法。
+</div>
+
+<!-- ==================== METHODS ==================== -->
+
+<h2>2. 方法 —— 你想让服务器做什么？</h2>
+
+<table>
+  <tr><th>方法</th><th>语义</th><th>有 Body？</th><th>安全？</th><th>幂等？</th></tr>
+  <tr><td><code>GET</code></td><td>获取资源</td><td>否</td><td>是</td><td>是</td></tr>
+  <tr><td><code>POST</code></td><td>创建资源 / 提交数据</td><td>是</td><td>否</td><td>否</td></tr>
+  <tr><td><code>PUT</code></td><td>完整替换资源</td><td>是</td><td>否</td><td>是</td></tr>
+  <tr><td><code>PATCH</code></td><td>部分修改资源</td><td>是</td><td>否</td><td>否</td></tr>
+  <tr><td><code>DELETE</code></td><td>删除资源</td><td>通常否</td><td>否</td><td>是</td></tr>
+  <tr><td><code>HEAD</code></td><td>只获取 Header（不要 Body）</td><td>否</td><td>是</td><td>是</td></tr>
+  <tr><td><code>OPTIONS</code></td><td>查询服务器支持哪些方法</td><td>否</td><td>是</td><td>是</td></tr>
+</table>
+
+<p><strong>幂等</strong>的意思是：同样的请求发 N 次，结果和第 1 次一样。PUT 是幂等的（每次都用同样的内容覆盖），POST 不是（每次都会创建新资源）。这个区别在工程上很重要：如果请求超时了但不确定服务器有没有处理，幂等的请求可以直接重试，非幂等的需要先检查。</p>
+
+<!-- ==================== STATUS CODES ==================== -->
+
+<h2>3. 状态码 —— 服务器一句话告诉你结果</h2>
+
+<table>
+  <tr><th>范围</th><th>含义</th><th>典型例子</th></tr>
+  <tr><td><code>1xx</code></td><td>信息：收到了，还在处理</td><td><code>101 Switching Protocols</code>（WebSocket 升级）</td></tr>
+  <tr><td><code>2xx</code></td><td>成功</td><td><code>200 OK</code> · <code>201 Created</code> · <code>204 No Content</code></td></tr>
+  <tr><td><code>3xx</code></td><td>重定向：去别的地方找</td><td><code>301 Moved Permanently</code> · <code>302 Found</code>（临时） · <code>304 Not Modified</code></td></tr>
+  <tr><td><code>4xx</code></td><td>客户端错误：你的锅</td><td><code>400 Bad Request</code> · <code>401 Unauthorized</code> · <code>403 Forbidden</code> · <code>404 Not Found</code> · <code>429 Too Many Requests</code></td></tr>
+  <tr><td><code>5xx</code></td><td>服务器错误：我的锅</td><td><code>500 Internal Server Error</code> · <code>502 Bad Gateway</code> · <code>503 Service Unavailable</code> · <code>504 Gateway Timeout</code></td></tr>
+</table>
+
+<div class="sidenote">
+  <strong>💡 面试常考：301 vs 302 的区别。</strong>301 是永久重定向，浏览器会缓存并自动跳转（下次直接去新地址，不发请求到旧地址）。302 是临时重定向，每次都会先问旧地址。搜索引擎看到 301 会把权重转移到新 URL，看到 302 不会。
+</div>
+
+<!-- ==================== HEADERS ==================== -->
+
+<h2>4. Header —— HTTP 的元数据层</h2>
+
+<p>Header 是 HTTP 最灵活的设计。它们承载了消息的上下文信息，使得 HTTP 从简单的文件传输演变成了功能丰富的应用协议：</p>
+
+<table>
+  <tr><th>分类</th><th>Header 示例</th><th>作用</th></tr>
+  <tr><td>内容协商</td><td><code>Content-Type</code>, <code>Accept</code>, <code>Accept-Language</code></td><td>"我能处理 HTML 和 JSON，你支持哪种？"</td></tr>
+  <tr><td>缓存控制</td><td><code>Cache-Control</code>, <code>ETag</code>, <code>Last-Modified</code></td><td>"这个资源 1 小时内不会变，到期前直接用缓存"</td></tr>
+  <tr><td>认证</td><td><code>Authorization</code>, <code>Cookie</code>, <code>Set-Cookie</code></td><td>"这是我的身份令牌" / "这是给你的会话 ID"</td></tr>
+  <tr><td>连接管理</td><td><code>Connection</code>, <code>Keep-Alive</code></td><td>"这个 TCP 连接用完别关，我还要接着用"</td></tr>
+  <tr><td>CORS</td><td><code>Access-Control-Allow-Origin</code></td><td>"允许来自这些域名的跨域请求"</td></tr>
+  <tr><td>压缩</td><td><code>Content-Encoding</code>, <code>Transfer-Encoding</code></td><td>"响应体用 gzip 压缩了" / "分块传输，长度未知"</td></tr>
+</table>
+
+<p>Cookie 是一个特别值得理解的机制——因为 HTTP 是无状态的，Cookie 用来在客户端存储一小段数据，让服务器能识别"这是同一个用户"。每个请求浏览器自动带上匹配的 Cookie，这就是登录状态能跨请求保持的秘密。</p>
+
+<!-- ==================== EVOLUTION ==================== -->
+
+<h2>5. HTTP 的三次进化 —— 越来越快</h2>
+
+<div class="evo">
+  <div class="ver">
+    <div class="vname">HTTP/0.9</div>
+    <div class="vyear">1991</div>
+    <div class="vfeat">只有 GET<br>没有 Header<br>没有状态码<br>纯文本 HTML</div>
+  </div>
+  <div class="ver">
+    <div class="vname">HTTP/1.0</div>
+    <div class="vyear">1996</div>
+    <div class="vfeat">Header + 状态码<br>POST / HEAD<br>但每个请求<br>独立 TCP 连接</div>
+  </div>
+  <div class="ver">
+    <div class="vname">HTTP/1.1</div>
+    <div class="vyear">1997</div>
+    <div class="vfeat">Keep-Alive 复用连接<br>管道化（有坑）<br>Host 头（虚拟主机）<br>Chunked 分块传输</div>
+  </div>
+  <div class="ver">
+    <div class="vname">HTTP/2</div>
+    <div class="vyear">2015</div>
+    <div class="vfeat">多路复用<br>Server Push<br>Header 压缩(HPACK)<br>二进制帧</div>
+  </div>
+  <div class="ver">
+    <div class="vname">HTTP/3</div>
+    <div class="vyear">2022</div>
+    <div class="vfeat">基于 QUIC (UDP)<br>0-RTT 握手<br>无队头阻塞<br>连接迁移</div>
+  </div>
+</div>
+
+<h3>HTTP/1.1 的队头阻塞问题</h3>
+
+<p>HTTP/1.1 虽然可以用 Keep-Alive 在同一个 TCP 连接上发多个请求，但请求是<strong>串行</strong>的——必须先收到上一个响应才能发下一个请求。浏览器为此开了 6 个并行的 TCP 连接来缓解（每个连接各自串行），但这带来了连接开销。</p>
+
+<p>管道化（Pipelining）试图解决——不等上一个响应就发下一个请求。但问题是：<strong>响应必须按请求顺序返回</strong>。如果第一个请求处理很慢（比如查数据库），后面的响应全部被堵住——这就是 <strong>HTTP 层的队头阻塞</strong>。</p>
+
+<h3>HTTP/2 的多路复用</h3>
+
+<p>HTTP/2 在单个 TCP 连接上建立了多个<strong>流（Stream）</strong>——每个请求-响应对分配一个流 ID，帧在流之间交错传输：</p>
+
+<pre><code>TCP 连接（单条）
+  ├─ 流 1: [HEADERS]──[DATA]────────────────────[收完]
+  ├─ 流 3: [HEADERS]────[DATA]──[DATA]──[收完]
+  └─ 流 5: [HEADERS]────────────[DATA]──[收完]
+
+帧交错到达：1.HDR → 3.HDR → 1.DATA → 5.HDR → 3.DATA → 5.DATA → 3.DATA → 1.END</code></pre>
+
+<p>接收方按流 ID 重新组装。快的请求不再被慢的请求堵住，一个 TCP 连接就能承载所有并发。</p>
+
+<p>但 HTTP/2 仍然跑在 TCP 之上。如果 TCP 层丢了一个段，后续所有段的提交都会被阻塞——尽管它们属于不同的流。这是 <strong>TCP 层的队头阻塞</strong>，HTTP/2 解决不了。</p>
+
+<h3>HTTP/3：抛弃 TCP</h3>
+
+<p>HTTP/3 直接基于 QUIC（一种在 UDP 之上的可靠传输协议）。QUIC 把"流"的概念下移到了传输层——<strong>每个流独立处理丢包</strong>：流 A 丢了包只阻塞流 A，流 B 不受影响。再加上 0-RTT 握手（省掉一次往返）和连接迁移（WiFi 切 4G 不断连），HTTP/3 是真正为现代网络设计的协议。</p>
+
+<table>
+  <tr><th></th><th>HTTP/1.1</th><th>HTTP/2</th><th>HTTP/3</th></tr>
+  <tr><td>传输层</td><td>TCP</td><td>TCP</td><td>QUIC (UDP)</td></tr>
+  <tr><td>并发方式</td><td>多 TCP 连接</td><td>单 TCP + 多 Stream</td><td>单 QUIC + 多 Stream</td></tr>
+  <tr><td>队头阻塞</td><td>HTTP 层 ✗</td><td>TCP 层 ✗</td><td>无 ✔</td></tr>
+  <tr><td>握手</td><td>TCP (1RTT) + TLS (1RTT) = 2RTT</td><td>TCP + TLS = 2RTT</td><td>QUIC 内置 TLS 1.3 = 1RTT (复用 0RTT)</td></tr>
+</table>
+
+<!-- ==================== CACHING ==================== -->
+
+<h2>6. 缓存 —— 不请求就是最快的请求</h2>
+
+<p>HTTP 的缓存机制是 Web 性能的基石。浏览器和 CDN 节点都依赖它来决定「要不要重新请求这个资源」。</p>
+
+<h3>强缓存：直接不问服务器</h3>
+
+<p>服务器在响应中告诉客户端「这个资源 X 秒内有效」：</p>
+<pre><code>Cache-Control: max-age=3600       ← 3600 秒内直接用缓存，不问服务器
+Cache-Control: no-cache           ← 可以用缓存，但必须先问服务器确认
+Cache-Control: no-store           ← 完全不缓存</code></pre>
+
+<h3>协商缓存：问服务器"变了没？"</h3>
+
+<p>缓存过期后，浏览器带着上次的指纹去问服务器：</p>
+
+<pre><code>请求 →  If-None-Match: "abc123"        ← "我有版本 abc123 的缓存，你有更新的吗？"
+       If-Modified-Since: Mon, 16 Jun  ...
+
+响应 ←  304 Not Modified                ← "没变，用你的缓存吧"（没有 Body，极省带宽）
+         或
+       ←  200 OK + 新内容 + 新 ETag     ← "有更新，这是新版本"</code></pre>
+
+<p>ETag 是内容的哈希指纹——只要内容变了一个字节，ETag 就不同。这比用时间戳精确得多。</p>
+
+<!-- ==================== SUPPLEMENT: CDN ==================== -->
+<div class="sup">
+<h2>📚 补充：CDN —— 为什么 YouTube 在美国看和中国看一样快</h2>
+
+<p>浏览器 → DNS → TCP → TLS → HTTP 这一整条链路，延迟的最大瓶颈是<strong>物理距离</strong>。光在光纤中的传播速度大约 200,000 km/s，地球周长为 40,000 km——从北京到纽约的光纤延迟下限大约是 200ms（仅光速损耗，不包括路由器处理）。</p>
+
+<p><strong>CDN（Content Delivery Network）的核心思想：把内容提前推到离用户最近的节点。</strong></p>
+
+<h3>CDN 如何工作</h3>
+<ol>
+  <li><strong>内容复制：</strong>把静态资源（图片、视频、JS/CSS）同步到全球数百个边缘节点（Edge PoP）</li>
+  <li><strong>DNS 导向：</strong>用户访问 cdn.example.com 时，DNS 根据用户的 IP 地理位置，返回<strong>最近的 CDN 节点 IP</strong>（基于 GeoDNS / Anycast）</li>
+  <li><strong>缓存命中：</strong>CDN 节点有缓存就直接返回（几毫秒），缓存未命中再回源站拉取</li>
+</ol>
+
+<h3>没有 CDN vs 有 CDN</h3>
+<table>
+  <tr><th></th><th>没有 CDN</th><th>有 CDN</th></tr>
+  <tr><td>用户在北京访问美国服务器</td><td>~200ms RTT</td><td>~10ms（北京 CDN 节点）</td></tr>
+  <tr><td>热门视频 100 万人同时看</td><td>源站被压垮</td><td>CDN 节点分摊，流量从不回源站</td></tr>
+  <tr><td>DDoS 攻击</td><td>源站直接承受</td><td>CDN 的分布式容量吸收大部分攻击</td></tr>
+</table>
+
+<h3>CDN 和 DNS 的配合</h3>
+<p>这是 CDN 最巧妙的机制：同一个域名 <code>cdn.example.com</code>，北京的 DNS 返回北京 CDN 节点的 IP，纽约的 DNS 返回纽约 CDN 节点的 IP。这就是为什么 CDN 服务商也是 DNS 服务商——Cloudflare、Akamai、AWS CloudFront 都同时提供 DNS + CDN。</p>
+
+<h3>QUIC/HTTP3 在 CDN 中的角色</h3>
+<p>CDN 是 HTTP/3 的主要推动者。因为 CDN 用户场景是：大量短连接、WiFi↔4G 切换、最后一公里丢包率高。QUIC 的 0-RTT 握手和连接迁移在这些场景下收益巨大。Google 和 Cloudflare 的 CDN 已经全面支持 HTTP/3。</p>
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+
+<h2>🧪 检验一下</h2>
+
+<div class="quiz" id="quiz1">
+
+  <div class="q" id="q1">
+    <p>Q1: HTTP 是无状态协议，「无状态」的意思是什么？</p>
+    <label><input type="radio" name="q1" value="a"> HTTP 不保证请求一定到达服务器</label>
+    <label><input type="radio" name="q1" value="b"> 每个请求是独立的，协议本身不记住上一次交互</label>
+    <label><input type="radio" name="q1" value="c"> HTTP 不能传输状态码</label>
+    <label><input type="radio" name="q1" value="d"> HTTP 服务器没有状态机</label>
+  </div>
+
+  <div class="q" id="q2">
+    <p>Q2: POST 和 PUT 的核心区别是什么？</p>
+    <label><input type="radio" name="q2" value="a"> POST 有 Body，PUT 没有</label>
+    <label><input type="radio" name="q2" value="b"> POST 用于创建，PUT 用于删除</label>
+    <label><input type="radio" name="q2" value="c"> POST 非幂等，PUT 是幂等的</label>
+    <label><input type="radio" name="q2" value="d"> POST 走 TCP，PUT 走 UDP</label>
+  </div>
+
+  <div class="q" id="q3">
+    <p>Q3: HTTP/1.1 中"队头阻塞"的根本原因是什么？</p>
+    <label><input type="radio" name="q3" value="a"> TCP 丢包导致后续段全部被阻塞</label>
+    <label><input type="radio" name="q3" value="b"> 响应必须按请求顺序返回，慢请求堵住后续响应</label>
+    <label><input type="radio" name="q3" value="c"> Cookie 太大导致请求被阻塞</label>
+    <label><input type="radio" name="q3" value="d"> 浏览器限制了并发请求数</label>
+  </div>
+
+  <div class="q" id="q4">
+    <p>Q4: HTTP/3 相对于 HTTP/2 的关键改进是什么？</p>
+    <label><input type="radio" name="q4" value="a"> 增加了 Server Push 功能</label>
+    <label><input type="radio" name="q4" value="b"> 改用二进制协议</label>
+    <label><input type="radio" name="q4" value="c"> 基于 QUIC (UDP)，消除了 TCP 层的队头阻塞</label>
+    <label><input type="radio" name="q4" value="d"> 引入了多路复用</label>
+  </div>
+
+  <div class="q" id="q5">
+    <p>Q5: 浏览器收到 <code>304 Not Modified</code> 响应意味着什么？</p>
+    <label><input type="radio" name="q5" value="a"> 服务器宕机了，请稍后重试</label>
+    <label><input type="radio" name="q5" value="b"> 请求的资源已被永久删除</label>
+    <label><input type="radio" name="q5" value="c"> 资源没变，用本地缓存即可</label>
+    <label><input type="radio" name="q5" value="d"> 请求格式有错误</label>
+  </div>
+
+  <button onclick="checkQuiz()">提交答案</button>
+  <div class="feedback" id="quiz-feedback"></div>
+</div>
+
+<div class="source-box">
+  <h3>📖 推荐阅读</h3>
+  <p>
+    <strong>MDN Web Docs: HTTP</strong> — 最准确、最完整的 HTTP 参考。<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP" target="_blank">→ MDN HTTP</a>
+  </p>
+  <p style="margin-top:0.5rem">
+    <strong>Ilya Grigorik, <em>High Performance Browser Networking</em></strong> — HTTP/2 和 HTTP/3 的深入讲解。<a href="https://hpbn.co/http2/" target="_blank">→ 免费在线阅读</a>
+  </p>
+</div>
+
+<div class="lesson-nav">
+  <a href="0003-tcp-deep-dive.html">← 第 3 课：TCP</a>
+  <a href="../index.html">回到概念地图 ↑</a>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">
+  🤔 追问你的 AI 教师：「HTTP/2 的 HPACK 头部压缩是怎么工作的？」「为什么 HTTP/3 选择 UDP 而不是直接改 TCP？」「RESTful API 的设计原则是什么？」
+</p>
+
+</article>
+
+<script>
+const answers = { q1: 'b', q2: 'c', q3: 'b', q4: 'c', q5: 'c' };
+function checkQuiz() {
+  let correct = 0, total = Object.keys(answers).length;
+  for (let [qid, ans] of Object.entries(answers)) {
+    const selected = document.querySelector(`input[name="${qid}"]:checked`);
+    if (selected && selected.value === ans) correct++;
+  }
+  const fb = document.getElementById('quiz-feedback');
+  if (correct === total) {
+    fb.textContent = `✅ ${correct}/${total} 全对！HTTP 的核心概念和演进路径你都掌握了。`;
+    fb.className = 'feedback correct';
+  } else if (correct >= 3) {
+    fb.textContent = `⚠️ ${correct}/${total} 正确。重点回顾 HTTP 演进那一节，理解队头阻塞在不同版本中的表现。`;
+    fb.className = 'feedback incorrect';
+  } else {
+    fb.textContent = `❌ ${correct}/${total} 正确。建议重读方法和状态码的语义，以及三次版本演进各自的改进点。`;
+    fb.className = 'feedback incorrect';
+  }
+}
+</script>
+
+</body>
+</html>
