@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0001 · 为什么有些文明发展出了复杂国家？</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --text-light: #5c5c5c;
+    --accent: #8b4513;
+    --accent-dim: #a0522d;
+    --border: #d4c5b2;
+    --card-bg: #f8f5f0;
+    --history: #8b4513;
+    --economics: #2d6a4f;
+    --politics: #1a659e;
+    --philosophy: #7b2d8b;
+    --highlight: #fef3c7;
+    --correct: #2d6a4f;
+    --incorrect: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Serif SC', 'SimSun', serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.85;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+    font-size: 1.02rem;
+  }
+
+  h1 { font-size: 1.8rem; font-weight: 700; margin: 2rem 0 0.6rem; letter-spacing: 0.02em; line-height: 1.3; }
+  h2 { font-size: 1.25rem; font-weight: 600; margin: 2.6rem 0 0.7rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+
+  p { margin: 0.9rem 0; }
+  li { margin: 0.4rem 0; }
+
+  a { color: var(--accent-dim); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+
+  strong { font-weight: 600; }
+
+  /* Meta bar */
+  .meta {
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+    font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-light);
+    margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+  }
+  .meta .tag {
+    display: inline-block; padding: 0.15rem 0.55rem; border-radius: 3px;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; color: white;
+  }
+  .tag-history { background: var(--history); }
+  .tag-economics { background: var(--economics); }
+  .tag-politics { background: var(--politics); }
+  .tag-philosophy { background: var(--philosophy); }
+
+  /* Hook */
+  .hook {
+    background: var(--highlight); border-left: 4px solid var(--accent);
+    padding: 1.3rem 1.5rem; margin: 1.5rem 0; font-size: 1.02rem;
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* Blockquote */
+  blockquote {
+    border-left: 3px solid var(--border); padding: 0.6rem 1.2rem;
+    margin: 1.2rem 0; color: var(--text-light); background: var(--card-bg);
+    border-radius: 0 4px 4px 0; font-size: 0.96rem;
+  }
+  blockquote.important {
+    border-left-color: var(--accent);
+    background: var(--highlight);
+    color: var(--text);
+  }
+
+  /* Tables */
+  table {
+    width: 100%; border-collapse: collapse; margin: 1.3rem 0; font-size: 0.92rem;
+  }
+  th, td {
+    text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border);
+  }
+  th { font-weight: 600; font-size: 0.82rem; letter-spacing: 0.03em; color: var(--text-light); }
+  tr:hover td { background: #fef9f0; }
+
+  /* Lens section */
+  .lens-header {
+    display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0 0.5rem;
+  }
+  .lens-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* Theory cards */
+  .theory {
+    background: var(--card-bg); border-radius: 6px; padding: 1.1rem 1.3rem;
+    margin: 0.9rem 0; border-left: 3px solid var(--border);
+  }
+  .theory .theory-name { font-weight: 600; }
+  .theory .theory-scholar { font-size: 0.82rem; color: var(--text-light); }
+  .theory .evidence { font-size: 0.88rem; margin-top: 0.4rem; }
+  .theory .evidence .for { color: var(--economics); }
+  .theory .evidence .against { color: var(--incorrect); }
+
+  /* Synthesis diagram */
+  .synth-chain {
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    flex-wrap: wrap; margin: 1.8rem 0; font-family: 'Inter', sans-serif; font-size: 0.84rem;
+  }
+  .synth-node {
+    padding: 0.5rem 0.8rem; border-radius: 4px; font-weight: 500;
+    color: white; text-align: center; white-space: nowrap;
+  }
+  .synth-arrow { color: var(--text-light); font-size: 1.1rem; }
+
+  /* Concept box */
+  .concept-box {
+    border: 2px solid var(--accent); border-radius: 8px; padding: 1.3rem 1.5rem;
+    margin: 2rem 0; background: var(--card-bg);
+  }
+  .concept-box .concept-name {
+    font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+  .concept-box h3 { margin-top: 0; }
+
+  /* Quiz */
+  .quiz-section { margin: 2rem 0; }
+  .quiz-question {
+    background: var(--card-bg); border-radius: 6px; padding: 1.3rem 1.5rem; margin: 1.2rem 0;
+  }
+  .quiz-question .q-num { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.3rem; }
+  .quiz-question .q-text { font-weight: 600; margin-bottom: 0.9rem; font-size: 1.02rem; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz-option {
+    padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 4px;
+    cursor: pointer; transition: background 0.12s, border-color 0.12s; font-size: 0.93rem;
+  }
+  .quiz-option:hover { background: #fdf5e8; }
+  .quiz-option.selected { border-color: var(--accent); background: var(--highlight); }
+  .quiz-option.correct { border-color: var(--correct) !important; background: #e8f5e9 !important; }
+  .quiz-option.incorrect { border-color: var(--incorrect) !important; background: #fdecea !important; }
+
+  .quiz-feedback {
+    margin-top: 0.7rem; font-size: 0.9rem; display: none; padding: 0.7rem 0.9rem;
+    border-radius: 4px; line-height: 1.7;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.fb-correct { background: #e8f5e9; color: #1b5e20; }
+  .quiz-feedback.fb-incorrect { background: #fdecea; color: #b71c1c; }
+  .quiz-btn {
+    margin-top: 0.8rem; padding: 0.45rem 1.1rem; border: none; border-radius: 4px;
+    background: var(--accent); color: white; cursor: pointer; font-family: 'Inter', sans-serif;
+    font-size: 0.85rem; font-weight: 500;
+  }
+  .quiz-btn:hover { background: var(--accent-dim); }
+  .quiz-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Exercise */
+  .exercise {
+    background: var(--card-bg); border: 1px dashed var(--border);
+    border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.5rem 0;
+  }
+  .exercise h3 { margin-top: 0; }
+  .exercise textarea {
+    width: 100%; min-height: 100px; margin: 0.8rem 0; padding: 0.6rem;
+    font-family: inherit; font-size: 0.9rem; border: 1px solid var(--border);
+    border-radius: 4px; background: white; resize: vertical; line-height: 1.7;
+  }
+  .exercise .hint { font-size: 0.84rem; color: var(--text-light); font-style: italic; }
+
+  /* Footer */
+  .lesson-footer {
+    margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+    font-size: 0.87rem; color: var(--text-light);
+  }
+  .lesson-footer .links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
+
+  /* Comparative case box */
+  .case-box {
+    background: var(--card-bg); border-radius: 6px; padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+  }
+  .case-box h4 { margin-top: 0; font-size: 0.96rem; }
+  .case-box .case-meta { font-size: 0.82rem; color: var(--text-light); margin-bottom: 0.5rem; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    body { padding: 1.5rem 1rem 4rem; font-size: 0.98rem; }
+    h1 { font-size: 1.4rem; }
+    .synth-chain { flex-direction: column; gap: 0.3rem; }
+    .synth-arrow { transform: rotate(90deg); }
+  }
+  @media print {
+    body { max-width: 100%; padding: 1rem; font-size: 10pt; }
+    .quiz-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ======== META ======== -->
+<div class="meta">
+  <span>📅 Lesson 0001</span>
+  <span>⏱ ~30 分钟</span>
+  <span><span class="tag tag-history">历史</span> <span class="tag tag-economics">经济</span> <span class="tag tag-politics">政治</span> <span class="tag tag-philosophy">哲学</span></span>
+  <span>🔗 <a href="../reference/glossary.html">术语表</a></span>
+</div>
+
+<!-- ======== TITLE ======== -->
+<h1>为什么有些文明发展出了复杂国家？</h1>
+<p style="font-size:1.05rem;color:var(--text-light);margin-top:-0.2rem;">
+  一个四学科交错的经典问题——也是你跨学科思维框架的第一个锚点
+</p>
+
+<!-- ======== HOOK ======== -->
+<div class="hook">
+  <strong>六个独立的火种。</strong>在人类历史 99% 以上的时间里，所有人都生活在没有国家的小型群体中——几十人到几百人的游群和部落。然后，在大致相同的地质时期（公元前 4000 年到公元前 1000 年之间），地球上六个彼此隔绝的地区，<em>独立地</em>演化出了复杂国家：美索不达米亚、尼罗河谷、印度河流域、黄河流域、中美洲和安第斯山区。<br><br>
+
+  这六个地区没有互相学习——大洋和沙漠阻断了交流。但它们各自走到了相似的目的地：层级化的官僚制、制度化的税收、垄断性的暴力、以及某种将这种不平等秩序合法化的信仰体系。<br><br>
+
+  与此同时，新几内亚高地的农业已经持续了 7000 年——比美索不达米亚长出近一倍——却从未自发产生任何超出部落的政治组织。澳大利亚原住民在完全适合农业的河谷地带生活了数万年，也未走向国家。<br><br>
+
+  <strong>国家不是人类社会的「默认状态」。</strong>它必须被解释。<br><br>
+
+  <em>而解释它，需要同时动用历史学的事实、经济学的逻辑、政治学的权力分析，以及哲学的正当性追问。</em>
+</div>
+
+<!-- ======== PART 1: DEFINING THE STATE ======== -->
+<h2>1. 定义问题：我们到底在讨论什么？</h2>
+
+<p>在回答「国家为什么出现」之前，我们首先面对一个更基础的问题：<strong>究竟什么叫「国家」？</strong></p>
+
+<p>这看起来是个咬文嚼字的问题，但它直接决定了我们接下来要找什么。如果你把「国家」定义为「有政府的社会」，那么几乎所有人类群体都符合；如果你定义为「有宪法和议会的现代民族国家」，那么 18 世纪之前地球上根本没有国家。不同的定义会把我们引向完全不同的解释。</p>
+
+<h3>韦伯的操作性定义</h3>
+
+<p>德国社会学家马克斯·韦伯在 1919 年的演讲《政治作为一种志业》中提出了一个至今仍是最有影响力的定义：</p>
+
+<blockquote class="important">
+  「国家是一个<strong>人类共同体</strong>，它（成功地）宣称在一个<strong>给定的领土</strong>内拥有<strong>合法使用物理暴力的垄断权</strong>。」<br>
+  <span style="font-size:0.85rem;">— Max Weber, <em>Politics as a Vocation</em>, 1919</span>
+</blockquote>
+
+<p>这个定义拆开有三个要件，每一个都值得仔细咀嚼：</p>
+
+<ol>
+  <li><strong>领土（Territory）：</strong>国家的管辖权是有明确地理边界的，而不是基于血缘或部落归属的。部落可能控制一片区域，但其边界模糊，且控制是基于对人的统治而非对土地的统治。国家的标志之一是「地图上画得出边界」。</li>
+  <li><strong>暴力的垄断（Monopoly on Violence）：</strong>在领土内，只有国家可以合法地使用暴力——征税（如果不交钱就把你关起来）、执法、发动战争。部落长老可以劝说你、施加社会压力，但他没有权力派人闯入你家、没收你的财产、把你关进监狱——除非有国家的法律授权。</li>
+  <li><strong>合法性（Legitimacy）：</strong>这里的「合法」不是现代法律意义上的合法，而是<em>被统治者内心接受为正当</em>。如果一个政权完全靠刺刀维持，每一次收税都需要刺刀，每一次判决都需要刺刀——这个政权维持不了几天。真正的国家必须让至少相当一部分人觉得「被统治是合理的」，哪怕只是出于习惯、恐惧或信仰。</li>
+</ol>
+
+<p>第三个要件尤其重要，因为它把国家的维持成本从纯粹的暴力开支降低到了可以接受的水平。我们后面讨论哲学视角时，这会成为核心。</p>
+
+<h3>国家之前：社会组织的演化阶梯</h3>
+
+<p>人类学家埃尔曼·瑟维斯在 1962 年提出了一个经典的四阶段分类。这个框架有它的局限——我们马上会讨论——但它提供了一个有用的参照系：</p>
+
+<table>
+  <tr>
+    <th>阶段</th><th>规模</th><th>权力结构</th><th>经济基础</th><th>关键特征</th>
+  </tr>
+  <tr>
+    <td><strong>游群<br>(Band)</strong></td>
+    <td>20–80 人</td>
+    <td>平权，无正式领袖；最有能力者临时领导狩猎或冲突</td>
+    <td>狩猎采集</td>
+    <td>高度的经济平等；社会压力（嘲笑、排斥）是主要惩罚手段</td>
+  </tr>
+  <tr>
+    <td><strong>部落<br>(Tribe)</strong></td>
+    <td>数百–数千人</td>
+    <td>「大人物」（Big Man）或长老，基于声望，不能世袭，不能强制</td>
+    <td>园耕农业或畜牧</td>
+    <td>通过亲属关系整合；冲突通过血亲复仇而非司法解决</td>
+  </tr>
+  <tr>
+    <td><strong>酋邦<br>(Chiefdom)</strong></td>
+    <td>数千–数万人</td>
+    <td>世袭酋长，控制剩余产品的再分配，可动员劳役</td>
+    <td>集约农业</td>
+    <td>出现阶层分化（大墓与小墓）；酋长有宗教权威但没有常备军</td>
+  </tr>
+  <tr>
+    <td><strong>国家<br>(State)</strong></td>
+    <td>数万–数亿人</td>
+    <td>制度化官僚，暴力垄断，合法征税，成文法律</td>
+    <td>集约农业+贸易+税收</td>
+    <td>职业军队、警察、监狱；超越亲属关系的行政体系；书写和档案系统</td>
+  </tr>
+</table>
+
+<p><strong>瑟维斯框架的陷阱：</strong>这不是一条「必然的进化路线」。它不是阶梯，很多社会在某个「阶段」停留了数千年，有些社会甚至从复杂倒退回简单。关键是：从酋邦到国家不是量的积累，而是一个<strong>结构性的飞跃</strong>——权力的来源从个人魅力或血缘世袭，变成了非人格化的制度和暴力机器。</p>
+
+<p>这就引出了我们的核心问题：<strong>是什么力量推动了这个结构性飞跃？</strong></p>
+
+<!-- ======== PART 2: THE HISTORICAL RECORD ======== -->
+<h2>2. 历史学视角：实际上发生了什么？</h2>
+
+<p>在给出任何理论之前，我们先要看清事实。历史学提供的是<strong>时间、地点和序列</strong>——国家在哪里最先出现？以什么顺序？在什么具体条件下？</p>
+
+<h3>六大原生国家</h3>
+
+<p>考古学和历史学确认了至少六个地区独立地（即没有外部影响）从非国家社会发展出了国家：</p>
+
+<div class="case-box">
+  <h4>美索不达米亚（今伊拉克） · ~3500 BCE</h4>
+  <p class="case-meta">📍 底格里斯河与幼发拉底河之间 · 最早的书写系统、最早的城邦</p>
+  <p>乌鲁克（Uruk）是已知最早的城市——鼎盛时期约 40,000–50,000 人口。楔形文字在这里发明，最初用途是<strong>记账</strong>：记录粮食入库、分配、税收。这本身就说明了一切：国家的第一件工具是会计。到公元前 3000 年左右，苏美尔地区已有十几个城邦并存，彼此竞争、贸易和战争。关键地理条件：河流平原，没有天然屏障，灌溉需要协调，各城邦之间竞争激烈。</p>
+</div>
+
+<div class="case-box">
+  <h4>埃及 · ~3100 BCE</h4>
+  <p class="case-meta">📍 尼罗河谷 · 人类最早的大一统国家</p>
+  <p>埃及与美索不达米亚形成了鲜明对比：它从一开始就是<strong>统一的</strong>，而非城邦竞争。纳尔迈（Narmer）在约公元前 3100 年统一上下埃及，自此开启了延续近 3000 年的王国传统。关键地理条件：尼罗河是一条单一的走廊，两侧是沙漠——天然边界清晰，敌人难以入侵，统一后容易维持。埃及因此成为了「天然国家」的典型案例——地理条件使得国家几乎是一个必然的结构。</p>
+</div>
+
+<div class="case-box">
+  <h4>印度河流域（今巴基斯坦） · ~2600 BCE</h4>
+  <p class="case-meta">📍 印度河流域 · 规划城市、统一度量衡，但无明显的王权象征</p>
+  <p>哈拉帕（Harappa）和摩亨佐-达罗（Mohenjo-daro）展示了一个谜：城市规划极其整齐，下水道系统、标准化的砖块尺寸、统一的度量衡——但<strong>没有宫殿、没有大型墓葬、没有王权或战争的艺术表现</strong>。这是一个「没有国王的国家」吗？还是一个强大的贸易联盟？我们至今无法完全解释。文字尚未破译。</p>
+</div>
+
+<div class="case-box">
+  <h4>黄河流域（中国） · ~1900 BCE</h4>
+  <p class="case-meta">📍 黄河中下游 · 从龙山文化到二里头</p>
+  <p>二里头遗址被广泛认为是夏朝的都城——尽管「夏朝」本身仍在考古学和文献学之间悬而未决。二里头展示了青铜冶炼、宫殿建筑和明确的阶层分化。中国路径的独特之处在于：相对孤立的地理位置（西有高原沙漠、东有大海），使得文明一旦形成就不太受到外来竞争的干扰——这可能塑造了后来大一统的政治哲学偏好。</p>
+</div>
+
+<div class="case-box">
+  <h4>中美洲 · ~300 BCE</h4>
+  <p class="case-meta">📍 墨西哥谷地与尤卡坦半岛 · 奥尔梅克→玛雅→特奥蒂瓦坎</p>
+  <p>中美洲文明在<strong>没有大型驯化动物（没有马、牛、骆驼）</strong>、没有轮子的情况下建立了复杂国家。这本身就挑战了任何基于单一技术因素的解释。玛雅的城邦体系——多个城邦通过战争、联姻和贸易网络互动——在结构上与美索不达米亚惊人地相似。</p>
+</div>
+
+<div class="case-box">
+  <h4>安第斯山区（秘鲁） · ~?</h4>
+  <p class="case-meta">📍 秘鲁海岸与高地 · 卡拉尔→查文→莫切→印加</p>
+  <p>卡拉尔（Caral，约 3000–1800 BCE）是一个<strong>没有陶器、没有文字</strong>的复杂社会——却有着金字塔、灌溉系统和远距离贸易。这又是一个挑战：文字通常被认为是国家的必要条件（用于记录税收和法律），但卡拉尔似乎找到了一条不同的路径——用结绳（quipu）进行记录。</p>
+</div>
+
+<h3>六大案例告诉我们的三件事</h3>
+
+<ol>
+  <li><strong>国家不是被「发明」了一次然后传播的。</strong>至少六次独立演化意味着存在着某种结构性的驱动力——不是某位天才的灵光一现。</li>
+  <li><strong>但国家也不是「不可避免」的。</strong>六次之外，绝大多数人类社会并未走向国家，即使它们知道国家的存在（通过接触邻国）。国家的出现依赖于某些条件的组合。</li>
+  <li><strong>路径是多样的。</strong>埃及（大一统）与美索不达米亚（城邦竞争）的对比说明，相似的结果可以通过不同的政治路径达到——这意味着我们需要区分「国家形成的共同条件」和「各国具体形式的独特原因」。</li>
+</ol>
+
+<!-- ======== PART 3: ECONOMIC LENS ======== -->
+<h2>3. 经济学视角：剩余、人口与组织需求</h2>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--economics);"></span>
+  <span style="font-weight:600;color:var(--economics);">这个学科在追问：物质条件如何产生了对复杂组织的需求？</span>
+</div>
+
+<p>经济学视角的核心直觉是：<strong>国家不是有人「想要」就能建起来的——它需要物质基础。</strong>一个官僚、一支军队、一座宫殿的运转都要消耗粮食、劳力和资源。在狩猎采集的条件下，每个人生产的东西几乎只能养活自己，没有剩余来支撑不事生产的统治阶级。所以国家形成的第一个前提必然是：有人生产的比别人吃的多。</p>
+
+<h3>理论一：农业剩余论（V. Gordon Childe, 1936）</h3>
+
+<div class="theory">
+  <div class="theory-name">「城市革命」假说</div>
+  <div class="theory-scholar">V. Gordon Childe, <em>Man Makes Himself</em> (1936)</div>
+  <p>柴尔德是 20 世纪最有影响力的考古学家之一。他认为国家是「城市革命」的产物——而城市革命的前提是<strong>新石器革命</strong>（农业的发明）。</p>
+  <p>逻辑链：农业 → 粮食剩余 → 一部分人可以脱离粮食生产 → 专业化（陶工、织工、金属匠、祭司、书吏、士兵） → 城市 → 需要协调和管理的机构（国家）。</p>
+  <p>在柴尔德的框架中，国家本质上是一个<strong>管理粮食剩余的组织</strong>。第一代官僚是粮仓管理员。最早的书写系统（楔形文字）有 80% 以上的早期文本是经济记录。这不是巧合。</p>
+  <div class="evidence">
+    <span class="for"><strong>支持证据：</strong></span>六大原生国家全部建立在发达的农业基础之上。没有例外。<br>
+    <span class="against"><strong>挑战：</strong></span>新几内亚高地有集约农业、有剩余、有养猪业，但没有国家。所以剩余是必要的，但不充分。
+  </div>
+</div>
+
+<h3>理论二：水利假说（Karl Wittfogel, 1957）</h3>
+
+<div class="theory">
+  <div class="theory-name">「东方专制主义」论</div>
+  <div class="theory-scholar">Karl Wittfogel, <em>Oriental Despotism</em> (1957)</div>
+  <p>魏特夫提出了一个更大胆的论点：大规模灌溉工程<strong>必须</strong>由中央集权来建设和管理——你不能让每个农民自己去挖一条主干渠。因此，<strong>灌溉→官僚协调→集权国家。</strong></p>
+  <p>他进一步声称：依赖大规模水利的文明（他称之为「水利社会」）倾向于产生强大的专制国家，而依赖降雨的农业社会（如西欧）权力更加分散。他用这个框架来解释中国、美索不达米亚和埃及的集权倾向。</p>
+  <div class="evidence">
+    <span class="for"><strong>支持证据：</strong></span>美索不达米亚和埃及确实依赖大规模灌溉。中国的早期国家（二里头—商—周）与黄河水利工程密切相关。<br>
+    <span class="against"><strong>挑战：</strong></span>(1) 考古证据表明，大型灌溉工程往往在国家出现<em>之后</em>才被建设，而非之前。先有国家，再有国家级水利——因果关系可能反了。(2) 中美洲和安第斯山区的国家依赖的是梯田和雨水收集，而非大型灌溉。(3) 魏特夫的理论带有冷战意识形态色彩——他试图将所有非西方的集权传统归结为「水利专制」。
+  </div>
+</div>
+
+<h3>理论三：人口压力论（Ester Boserup, 1965）</h3>
+
+<div class="theory">
+  <div class="theory-name">人口推动集约化</div>
+  <div class="theory-scholar">Ester Boserup, <em>The Conditions of Agricultural Growth</em> (1965)</div>
+  <p>博塞拉普翻转了马尔萨斯的逻辑：马尔萨斯认为粮食产量决定了人口上限；博塞拉普则认为<strong>人口增长逼迫了农业集约化</strong>。当人多了，休耕期缩短，你必须更努力地耕种每一块地——这产生了对组织协调的需求。</p>
+  <p>在博塞拉普的框架中，不是农业导致了国家，而是<strong>人口密度</strong>同时推动了农业集约化和政治复杂化。更多的人口意味着更多的冲突（需要治理）、更多的交易（需要规则）、以及更多的协作（需要协调）。</p>
+  <div class="evidence">
+    <span class="for"><strong>支持证据：</strong></span>六大原生国家地区都是人口密度较高的区域。人口密度与国家复杂性之间的相关性在跨文化比较中非常稳健。<br>
+    <span class="against"><strong>挑战：</strong></span>相关性不是因果。是人口导致了国家，还是国家（通过提供安全和秩序）促进了人口增长？
+  </div>
+</div>
+
+<h3>经济学视角的小结</h3>
+
+<p>三个理论指向同一个核心命题：<strong>国家解决的是一个经济协调问题。</strong>有了足够的物质剩余和人口密度，简单的亲属关系和声望政治就不够用了——你需要非人格化的制度和记录系统。物质基础不是国家的充分条件，但它是地基。没有地基，建筑无从谈起。</p>
+
+<p style="font-size:0.9rem;color:var(--text-light);">🔗 延伸思考：这与马克思的「经济基础决定上层建筑」一脉相承。我们将在后续课程中深入讨论马克思和唯物史观。</p>
+
+<!-- ======== PART 4: POLITICAL LENS ======== -->
+<h2>4. 政治学视角：战争、强制与组织的生存竞争</h2>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--politics);"></span>
+  <span style="font-weight:600;color:var(--politics);">这个学科在追问：暴力如何塑造了组织形态？</span>
+</div>
+
+<p>经济学视角解释了为什么国家可以<em>运转</em>——但运转不等于诞生。政治学的核心贡献在于指出：<strong>国家不是被「设计」出来的，而是在残酷的竞争中被「筛选」出来的。</strong></p>
+
+<p>如果说经济学视角更偏重「需求方」（社会需要组织来管理剩余），政治学视角就是「供给方」——那些能够高效征税和征兵的政治实体最终消灭了它的竞争对手。</p>
+
+<h3>理论四：战争筛选论（Charles Tilly, 1985/1990）</h3>
+
+<div class="theory">
+  <div class="theory-name">「战争缔造国家，国家发动战争」</div>
+  <div class="theory-scholar">Charles Tilly, <em>Coercion, Capital, and European States</em> (1990)</div>
+  <p>蒂利的研究对象是公元 990–1990 年的欧洲，但他的核心逻辑具有普遍性：</p>
+  <ol>
+    <li>统治者的首要需求是<strong>战争资源</strong>——士兵、武器、粮食、金钱。</li>
+    <li>要获取这些资源，你必须建立<strong>提取机构</strong>：税务机关、征兵机构、人口统计。</li>
+    <li>建立这些机构需要<strong>压制反抗</strong>——所以你还需要警察、监狱和情报网络。</li>
+    <li>一旦有了这些机构，你用它们来发动更多战争——获取更多领土和资源——养活更大的机构。</li>
+  </ol>
+  <p>这个正反馈循环就是蒂利的核心洞察：<strong>战争和国家的建设是一回事。</strong></p>
+  <p>在他的分析中，欧洲的国家体系之所以从数百个政治实体（公元 990 年）缩减为约 30 个（1990 年），正是因为军事竞争淘汰了所有组织能力不达标的竞争者。那些无法高效征税征兵的公国、自由城市和主教领地，要么被吞并，要么沦为附庸。</p>
+  <div class="evidence">
+    <span class="for"><strong>支持证据：</strong></span>欧洲的历史轨迹与蒂利的模型高度吻合。中国的战国时代（475–221 BCE）也展示了完全相同的逻辑：七雄竞争 → 商鞅式的国家能力建设 → 秦的统一。美索不达米亚的早期城邦同样经历了长期的彼此征战。<br>
+    <span class="against"><strong>挑战：</strong></span>蒂利研究的是<em>次生</em>国家形成（在已经有国家的环境中），而非<em>原生</em>国家形成。在美索不达米亚的第一个国家出现之前，它打谁？蒂利的理论更好地解释了「为什么国家一旦出现就会不断扩张和强化」，而不是「第一个国家怎么来的」。
+  </div>
+</div>
+
+<h3>理论五：环围论（Robert Carneiro, 1970）</h3>
+
+<div class="theory">
+  <div class="theory-name">「你可以跑，你就不会接受统治」</div>
+  <div class="theory-scholar">Robert Carneiro, "A Theory of the Origin of the State", <em>Science</em> (1970)</div>
+  <p>卡内罗提出了一个简洁而优雅的机制。他的问题是：当战胜者征服了战败者，战败者为什么不逃走？</p>
+  <p>答案是：<strong>环围（circumscription）。</strong>如果战败者被<strong>地理</strong>限制（沙漠、海洋、山脉包围的可耕地有限）或<strong>社会</strong>限制（周边所有可耕地都已被其他群体占据），逃跑不是一个选项。他们只能接受被统治。</p>
+  <p>第一次征服产生了酋邦。酋邦征服其他酋邦产生了更大的酋邦。随着规模增大，管理的复杂性增加，国家制度逐渐出现。在卡内罗看来，国家本质上是在一个「跑不掉」的环境中，征服不断叠加的产物。</p>
+  <div class="evidence">
+    <span class="for"><strong>支持证据：</strong></span>尼罗河谷（两侧是沙漠）、美索不达米亚（可耕地被沙漠和山脉包围）、秘鲁海岸河谷（被沙漠包围）——六个原生国家中有四个出现在地理环围的环境中。卡内罗用秘鲁海岸河谷做了详细的实证研究。<br>
+    <span class="against"><strong>挑战：</strong></span>亚马孙河流域也是地理环围的（河流+丛林），但并未自发产生国家。环围似乎是一个背景条件，而非触发机制。
+  </div>
+</div>
+
+<h3>理论六：从流寇到坐寇（Mancur Olson, 1993）</h3>
+
+<div class="theory">
+  <div class="theory-name">「坐寇比流寇好——对双方都是」</div>
+  <div class="theory-scholar">Mancur Olson, "Dictatorship, Democracy, and Development", 1993</div>
+  <p>奥尔森用一个思想实验解释了国家的经济逻辑：</p>
+  <p>一群<strong>流寇</strong>（roving bandits）来到一个村庄。由于他们不打算久留，他们会抢走一切可以抢的——杀鸡取卵，毫不节制。因为他们没有「明天还要再来」的激励。</p>
+  <p>但假设其中一伙流寇决定留下来——他们成了<strong>坐寇</strong>（stationary bandits）。现在他们的激励变了：如果他们把农民抢到饿死，明年就没有东西可抢了。所以他们开始征收<strong>定期的、有上限的税收</strong>（而非一次性抢光），并且开始<strong>保护「自己的」农民不被其他流寇抢劫</strong>。</p>
+  <p>坐寇拥有了一种流寇没有的东西：<strong>对生产性投资的包容性利益（encompassing interest）。</strong>农民多种出的每一粒粮食，坐寇都能通过税收分到一部分。因此坐寇开始提供公共品——安全、道路、灌溉、法律——不是为了道德，而是为了提高自己可提取的税基。</p>
+  <p>在奥尔森看来，国家的起源就是：<strong>一伙成功的强盗发现「稳定的剥削比一次性的掠夺更划算」。</strong></p>
+  <div class="evidence">
+    <span class="for"><strong>支持证据：</strong></span>这个逻辑在很多历史情境中都能找到——诺曼征服后的英格兰、战国时期的秦国、殖民时期的刚果（比利时国王利奥波德二世从流寇式的掠夺到制度化统治的转变）。<br>
+    <span class="against"><strong>挑战：</strong></span>它解释的是「征服者为什么要把掠夺制度化」，而不是「在没有征服的情况下，国家怎么从内部产生」。它不涉及自愿合作或共识的形成。
+  </div>
+</div>
+
+<h3>政治学视角的小结</h3>
+
+<p>三个理论共享一个核心前提：<strong>国家不是社会契约的产物，而是暴力竞争和强制的产物。</strong>在这个视角下，国家的合法性是<em>事后</em>粉刷上去的——先有枪支和税收，再有「君权神授」的说辞。这个视角的挑战在于：如果国家纯粹是暴力的产物，那它如何维持？为什么人们不总是在有机会时就造反？这就必须引入哲学的追问。</p>
+
+<p style="font-size:0.9rem;color:var(--text-light);">🔗 延伸思考：卡内罗的环围论和蒂利的战争论都隐含着一个达尔文主义的逻辑——国家是「演化」而非「设计」的产物。这与哈耶克（Friedrich Hayek）的「自发秩序」概念有深层联系，也将在后续课程中展开。</p>
+
+<!-- ======== PART 5: PHILOSOPHICAL LENS ======== -->
+<h2>5. 哲学视角：人们为什么愿意接受统治？</h2>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--philosophy);"></span>
+  <span style="font-weight:600;color:var(--philosophy);">这个学科在追问：权力的正当性从何而来？</span>
+</div>
+
+<p>经济学和政治学解释了国家<strong>如何可能</strong>——有剩余可供提取，有暴力可供使用。但它们绕开了一个更深的问题：<strong>为什么被统治者不反抗？</strong></p>
+
+<p>任何基于纯粹暴力的统治，维持成本高到不可持续——你需要在每个村庄驻扎士兵，每收一次税都要亮出武器。历史一再证明，这种统治方式无法持久。真正稳固的国家必须让至少相当一部分被统治者<strong>内心接受</strong>统治的正当性——或者用韦伯的话来说，统治要成为「权威」（Herrschaft）而非纯粹的「权力」（Macht）。</p>
+
+<p>政治哲学的奠基性问题就是：<strong>什么时候权力可以被称为权威？人们为什么有义务服从？</strong></p>
+
+<h3>霍布斯：恐惧的逻辑（1651）</h3>
+
+<div class="theory">
+  <div class="theory-name">利维坦——对混乱的恐惧催生了秩序</div>
+  <div class="theory-scholar">Thomas Hobbes, <em>Leviathan</em> (1651)</div>
+
+  <p>霍布斯的论证可以重构为四步：</p>
+  <ol>
+    <li><strong>自然平等的困境：</strong>在自然状态下，人类在体力和智力上大致平等——最弱的人也可以通过计谋或联合杀死最强的人。这听起来像是一件好事，但霍布斯指出它恰恰是问题的根源：如果没有人具有压倒性优势，<strong>每个人都是每个人的潜在威胁</strong>。</li>
+    <li><strong>三重欲望导致的战争：</strong>在自然状态中，人们为了<strong>利益</strong>（抢夺资源）、<strong>安全</strong>（先发制人）和<strong>荣誉</strong>（微小的轻视都会引发致命的报复）而彼此为敌。霍布斯的名言：「在自然状态中，人的生活是孤独、贫困、肮脏、野蛮和短暂的。」</li>
+    <li><strong>理性的逃逸：</strong>但人类有理性。理性告诉我们：如果不摆脱自然状态，我们都会死。理性推导出的「自然法」第一条就是：<strong>寻求和平。</strong>为了和平，每个人都同意放弃「按照自己的判断使用暴力」的权利——条件是在场的其他人也同时放弃。</li>
+    <li><strong>利维坦的诞生：</strong>所有人同时签署一个社会契约，将各自的暴力权利转让给一个主权者（个人或议会）——这个主权者不是契约的签署方，因此不受契约约束（你不能起诉国王违约）。主权者拥有<strong>绝对的权力</strong>，因为任何对主权者的限制都等同于部分地回到自然状态。</li>
+  </ol>
+
+  <p>霍布斯论证的震撼之处在于：<strong>他不是在说绝对君主制「好」——他是在说它比内战（自然状态）「不那么糟」。</strong>霍布斯写作《利维坦》时正值英国内战（1642–1651），他亲眼目睹了秩序的崩溃。他的理论本质上是：任何国家，哪怕是暴政，都比无政府状态强。</p>
+
+  <blockquote>
+    「在没有共同权力使人畏惧的地方，就没有法律；没有法律，就没有不公正。」<br>
+    <span style="font-size:0.85rem;">— Hobbes, <em>Leviathan</em>, Ch. 13</span>
+  </blockquote>
+
+  <p><strong>霍布斯的漏洞：</strong>(1) 他真的证明自然状态就是战争状态吗？人类学证据表明，无国家社会并非永久的战争状态——它们有复杂的和平维持机制。(2) 如果主权者本身变成了最大的恐怖来源呢？霍布斯没有给出有效的制衡机制，因为他认为制衡意味着分裂主权——而分裂主权就是回到自然状态。(3) 历史上哪个国家是通过所有人「同时签署契约」而建立的？没有。社会契约是一个思想实验，不是历史事实。</p>
+</div>
+
+<h3>洛克：财产的逻辑（1689）</h3>
+
+<div class="theory">
+  <div class="theory-name">政府的权力必须被限制——因为它只是财产权的守夜人</div>
+  <div class="theory-scholar">John Locke, <em>Two Treatises of Government</em> (1689)</div>
+
+  <p>洛克与霍布斯共享了「社会契约」的框架，但结论几乎完全相反。关键的差异在于洛克对自然状态的假设：</p>
+  <ol>
+    <li><strong>自然状态不是战争状态：</strong>洛克认为，自然状态中的人们受到自然法的约束——这个自然法就是理性，它教导所有人「没有人应该伤害他人的生命、健康、自由或财产」。自然状态中的问题不是战争，而是<strong>执行不便</strong>——每个人都是自己案件的法官，这导致了偏见和报复的循环。</li>
+    <li><strong>财产权先于国家：</strong>这是洛克最激进的主张。你通过自己的劳动将自然资源变成了你的财产——这发生在任何政府存在之前。国家不能创造财产权；它只能<strong>保护</strong>已经存在的财产权。因此，国家不能任意拿走你的财产——即使是通过民主投票也不能。</li>
+    <li><strong>有限政府和革命权：</strong>人们进入社会契约时，放弃的只是「自己做自己案件的法官」这一权利，而<strong>不是</strong>放弃生命、自由和财产权。如果政府侵犯了这些自然权利，它就<strong>违反了契约</strong>，人民有权推翻它——这就是洛克的「革命权」论证。</li>
+  </ol>
+
+  <p>霍布斯和洛克之间的差异，归根结底是一个经验判断的分歧：自然状态到底是地狱还是一间有一些不便的公寓？</p>
+
+  <blockquote>
+    「人们联合为共和体并将自己置于政府之下的<strong>伟大的和主要的目的</strong>，是保护他们的财产。」<br>
+    <span style="font-size:0.85rem;">— Locke, <em>Second Treatise</em>, §124</span>
+  </blockquote>
+
+  <p><strong>洛克的遗产：</strong>美国独立宣言几乎是洛克论证的翻版（「生命、自由和追求幸福」替代了「生命、自由和财产」）。现代自由民主制的理论基础有一半在洛克这里。</p>
+</div>
+
+<h3>休谟和反契约论：国家的真相</h3>
+
+<div class="theory">
+  <div class="theory-name">「几乎没有任何一个政府是建立在契约之上的」</div>
+  <div class="theory-scholar">David Hume, "Of the Original Contract" (1748)</div>
+
+  <p>苏格兰哲学家大卫·休谟对社会契约论提出了最根本的挑战：</p>
+  <ol>
+    <li><strong>历史上从未发生过：</strong>「几乎没有任何一个政府是建立在人民的同意之上的。」打开历史书，你看到的不是和平的契约，而是<strong>征服、篡位和习惯</strong>。一个诺曼底的威廉打过来，杀了你的国王，然后告诉你他是新国王——这跟「社会契约」没有任何关系。</li>
+    <li><strong>「默认同意」是虚伪的：</strong>契约论者说，你选择留在国家中就表示你同意了它的统治。休谟的反驳是：一个被绑在船上的人对船长「留在船上」不是同意——他只是无处可去。穷人怎么可能「自由选择」离开自己的国家？</li>
+    <li><strong>效用而非契约：</strong>休谟认为，政府真正的正当性来源不是远古的什么契约，而是<strong>它当下的效用（utility）</strong>。我们服从政府是因为它带来了秩序和稳定——这是一种<strong>基于习惯和利益的服从</strong>，而非基于承诺或契约。</li>
+  </ol>
+
+  <p>休谟的批判将我们拉回地面：国家的起源与其说是哲学家的思想实验，不如说是征服者的刀剑和对秩序的渴望共同塑造的历史。但这并不意味着哲学问题是假的——它只是意味着，我们需要把「<strong>国家事实上如何产生</strong>」（历史/经济/政治问题）和「<strong>国家凭什么声称它具有正当性</strong>」（哲学问题）作为两个相关但不重合的问题来思考。</p>
+</div>
+
+<h3>哲学视角的小结</h3>
+
+<p>哲学给了我们两个不可回避的问题，它们贯穿此后所有关于国家的讨论：</p>
+<ol>
+  <li><strong>描述性问题：</strong>国家事实上是如何出现的？（答案似乎是：暴力和征服，至少在大部分情况下）</li>
+  <li><strong>规范性问题：</strong>一个国家的统治什么时候才<em>值得</em>被称为正当的？（答案至今仍有深刻分歧——霍布斯的标准是「提供秩序」，洛克的标准是「保护权利」，休谟的标准是「有效用」）</li>
+</ol>
+
+<p>这两个问题之间的<strong>张力</strong>——国家的事实起源（暴力）和国家的规范基础（同意或效用）之间的鸿沟——是一切开明政治思考的起点。</p>
+
+<!-- ======== PART 6: SYNTHESIS ======== -->
+<h2>6. 综汇：把四个视角拼在一起</h2>
+
+<p>现在让我们退后一步，把四个学科的答案放在一张桌子上看：</p>
+
+<table>
+  <tr><th>学科</th><th>它追问的问题</th><th>核心答案</th><th>国家是什么？</th></tr>
+  <tr>
+    <td>📜 历史学</td>
+    <td>「在何时、何地、以什么序列发生？」</td>
+    <td>六次独立起源；路径多样但存在共同模式</td>
+    <td>一个在特定地理和时序条件下展开的具体过程</td>
+  </tr>
+  <tr>
+    <td>🌾 经济学</td>
+    <td>「什么物质条件使之可能？」</td>
+    <td>农业剩余 + 人口密度 → 需要组织协调</td>
+    <td>一个管理和分配经济剩余的制度化机构</td>
+  </tr>
+  <tr>
+    <td>⚔️ 政治学</td>
+    <td>「权力如何被攫取和巩固？」</td>
+    <td>战争筛选 + 地理限制 + 统治者的利益计算</td>
+    <td>一台高效的战争和提取机器</td>
+  </tr>
+  <tr>
+    <td>🏛 哲学</td>
+    <td>「为什么人们接受而非反抗？」</td>
+    <td>秩序 > 混乱（霍布斯）；权利保护（洛克）；习惯和效用（休谟）</td>
+    <td>一个必须不断为其存在提供正当性叙事的建构</td>
+  </tr>
+</table>
+
+<p>这些答案并不互相矛盾——它们互为<strong>因果链上的环节</strong>：</p>
+
+<div class="synth-chain">
+  <span class="synth-node" style="background:var(--economics);">地理 → 农业 → 剩余 → 人口密度</span>
+  <span class="synth-arrow">→</span>
+  <span class="synth-node" style="background:var(--politics);">群体竞争 → 战争 → 组织筛选<br><small>（环围条件下失败者无处可逃）</small></span>
+  <span class="synth-arrow">→</span>
+  <span class="synth-node" style="background:var(--history);">制度固化<br><small>税收 · 法律 · 书写 · 官僚制</small></span>
+  <span class="synth-arrow">→</span>
+  <span class="synth-node" style="background:var(--philosophy);">正当性建构<br><small>宗教 · 意识形态 · 传统 · 法律权威</small></span>
+</div>
+
+<p>但注意：<strong>这张图是一个巨大的简化。</strong>现实中的因果不是从左到右的线性流水线，而是充满了<strong>反馈循环</strong>：</p>
+
+<ul>
+  <li><strong>反向因果：</strong>一个有效的税收系统（制度固化）能养活更大的军队 → 更大的军队赢得更多战争 → 更大的领土意味着更多的人口和农业剩余。箭头是双向的。</li>
+  <li><strong>跳级互动：</strong>思想（正当性建构）可以直接影响物质（农业剩余）。比如：一个宗教禁止食用某种高效的粮食作物 → 经济产出大幅下降 → 该社会在军事竞争中失败。思想通过影响行为而影响物质。</li>
+  <li><strong>路径依赖：</strong>一旦走上某条路，就很难切换。秦国选择了法家式的国家能力建设（商鞅变法）→ 统一六国 → 汉承秦制 → 中华帝国的基本政治逻辑在此后两千年里反复重现。最早的偶然选择会被后来的制度「锁定」。</li>
+</ul>
+
+<h3>核心概念工具：必要与充分</h3>
+
+<div class="concept-box">
+  <div class="concept-name">🧠 可带走的概念工具</div>
+  <h3>区分「必要条件」和「充分条件」</h3>
+  <p>这是本课程第一个、也是最重要的思维工具。当你面对任何关于「X 导致了 Y」的声称时，先问：</p>
+  <ul>
+    <li><strong>必要条件：</strong>没有 X，Y 不可能发生。如氧气之于火。</li>
+    <li><strong>充分条件：</strong>有 X，Y 必然发生。如达到燃点的干燥木材 + 氧气 → 火。</li>
+  </ul>
+  <p>在国家形成的问题上：</p>
+  <ul>
+    <li>农业剩余 → <strong>必要但不充分</strong>（新几内亚有剩余无国家）</li>
+    <li>地理环围 + 人口压力 + 战争 → 可能形成一个<strong>联合充分条件</strong>，但在不同案例中组合不同</li>
+    <li>水利工程 → <strong>既不必要也不充分</strong>（中美洲无水系灌溉仍有国家；有水利不一定有国家）</li>
+  </ul>
+  <p style="margin-bottom:0;">这个思维习惯将贯穿本课程每一次讨论。单一原因的解释几乎永远是错的——不是因为那些原因不存在，而是因为真实世界中的重大现象<strong>总是多因的</strong>。</p>
+</div>
+
+<!-- ======== PART 7: EXERCISES ======== -->
+<h2>7. 练习与思考</h2>
+
+<div class="quiz-section">
+
+  <!-- Q1: Retrieval -->
+  <div class="quiz-question" id="quiz-q1">
+    <div class="q-num">练习 1 · 检索练习</div>
+    <div class="q-text">韦伯的国家定义包含三个核心要件。以下哪一组是正确的？（不看上文）</div>
+    <div class="quiz-options" id="quiz-q1-opts">
+      <div class="quiz-option" data-answer="wrong">人民、政府、宪法</div>
+      <div class="quiz-option" data-answer="correct">领土、合法暴力的垄断、合法性</div>
+      <div class="quiz-option" data-answer="wrong">军队、税收、官僚</div>
+      <div class="quiz-option" data-answer="wrong">主权、边界、公民身份</div>
+    </div>
+    <div class="quiz-feedback" id="quiz-q1-fb"></div>
+  </div>
+
+  <!-- Q2: Theory matching -->
+  <div class="quiz-question" id="quiz-q2">
+    <div class="q-num">练习 2 · 理论匹配</div>
+    <div class="q-text">将以下论证与其提出者配对：</div>
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <p style="font-size:0.88rem;margin-bottom:0.5rem;"><strong>论证</strong></p>
+        <div style="font-size:0.88rem;margin-bottom:0.6rem;">A. 胜利者征服失败者，失败者因地理限制无处可逃，只能接受统治，层层叠加产生国家</div>
+        <div style="font-size:0.88rem;margin-bottom:0.6rem;">B. 所有人都害怕被他人杀死，理性让他们共同放弃暴力权利，赋予主权者</div>
+        <div style="font-size:0.88rem;margin-bottom:0.6rem;">C. 一伙强盗发现稳定的收税比一次性抢光更划算，于是变成了政府</div>
+        <div style="font-size:0.88rem;margin-bottom:0.6rem;">D. 农业产生剩余，剩余催生专业化和管理需求，人口聚集形成城市和国家</div>
+        <div style="font-size:0.88rem;margin-bottom:0.6rem;">E. 战争需要资源，资源需要提取机构，提取机构就是国家的雏形</div>
+      </div>
+      <div style="flex:1;min-width:260px;">
+        <p style="font-size:0.88rem;margin-bottom:0.5rem;"><strong>学者</strong></p>
+        <div class="quiz-options" id="quiz-q2-opts">
+          <div class="quiz-option" data-q="A" data-answer="carneiro">A → ？</div>
+          <div class="quiz-option" data-q="B" data-answer="hobbes">B → ？</div>
+          <div class="quiz-option" data-q="C" data-answer="olson">C → ？</div>
+          <div class="quiz-option" data-q="D" data-answer="childe">D → ？</div>
+          <div class="quiz-option" data-q="E" data-answer="tilly">E → ？</div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.8rem;color:var(--text-light);margin-top:0.5rem;">点击每行循环选择。全部选好后点击「检查」。</p>
+    <button class="quiz-btn" id="quiz-q2-btn" onclick="checkQ2()">检查匹配</button>
+  </div>
+
+  <!-- Q3: Deeper thinking -->
+  <div class="quiz-question" id="quiz-q3">
+    <div class="q-num">练习 3 · 论证分析</div>
+    <div class="q-text">霍布斯与洛克都从「自然状态」出发，却得出了完全相反的结论——霍布斯论证了绝对主权，洛克论证了有限政府和革命权。这个分歧的根本原因是什么？</div>
+    <div class="quiz-options" id="quiz-q3-opts">
+      <div class="quiz-option" data-answer="wrong">霍布斯生活在英国，洛克生活在法国，两国的政治传统不同</div>
+      <div class="quiz-option" data-answer="best">他们对「自然状态是否必然滑向战争状态」以及「自然状态下人是否拥有不可剥夺的权利」这两个核心前提做出了不同的设定</div>
+      <div class="quiz-option" data-answer="wrong">霍布斯信仰基督教而洛克是无神论者，宗教立场决定了他们的政治哲学</div>
+      <div class="quiz-option" data-answer="wrong">洛克比霍布斯晚写了几十年，新的考古发现改变了他对史前社会的理解</div>
+    </div>
+    <div class="quiz-feedback" id="quiz-q3-fb"></div>
+  </div>
+
+  <!-- Q4: Application -->
+  <div class="quiz-question" id="quiz-q4">
+    <div class="q-num">练习 4 · 综合应用</div>
+    <div class="q-text">印度河流域（哈拉帕文明）展示了城市规划整齐、标准化砖块和统一度量衡，但考古却没有发现宫殿、大型墓葬或战争的艺术表现。基于本课四个视角，以下哪种分析最有说服力？</div>
+    <div class="quiz-options" id="quiz-q4-opts">
+      <div class="quiz-option" data-answer="wrong">这说明哈拉帕不是一个真正的国家，而是一个先进的酋邦</div>
+      <div class="quiz-option" data-answer="wrong">这说明印度河流域的人比其他文明更爱好和平，他们的国家是哲学对话的产物</div>
+      <div class="quiz-option" data-answer="best">这说明「战争缔造国家」的路径并非唯一的——可能存在基于贸易协调（而非军事竞争）的国家形成路径。哈拉帕的标准化和城市规划暗示了一种以经济管理为核心而非以战争为核心的国家形式。但这并不推翻四个视角的框架——它只是表明不同案例中各因素的权重可能非常不同</div>
+      <div class="quiz-option" data-answer="wrong">这说明魏特夫的水利假说是唯一正确的解释，因为印度河流域依赖季风灌溉</div>
+    </div>
+    <div class="quiz-feedback" id="quiz-q4-fb"></div>
+  </div>
+
+</div>
+
+<!-- Application -->
+<div class="exercise">
+  <h3>✏️ 开放思考（可选，5分钟）</h3>
+  <p>一群殖民者在太平洋一座无人岛上建立了定居点。岛屿面积约 500 平方公里，中央是山地，沿海有环状平原。有河流可用于灌溉。周边 200 公里内无其他岛屿。</p>
+  <p><strong>用本课的框架分析：</strong>这个殖民地上是否可能产生国家？需要什么条件？哪些条件是本课六个理论各自认为关键的？你认为最可能的故事是什么？</p>
+  <textarea placeholder="写下你的分析……&#10;&#10;提示：考虑经济基础（剩余是否可能）、政治动力（有竞争吗？地理环围吗？）、历史比较（类似条件在真实历史中产生了什么结果？）、哲学维度（人们为什么愿意接受一个中央权威？）"></textarea>
+  <p class="hint">💡 把你的分析发给 Claude——我会逐一回应，这是你获得即时反馈的机会。反馈循环越紧，学习效率越高。</p>
+</div>
+
+<!-- ======== FURTHER READING ======== -->
+<h2>8. 推荐阅读</h2>
+
+<div style="background:var(--card-bg);border-radius:6px;padding:1.3rem 1.5rem;margin:1.2rem 0;">
+
+  <p style="font-weight:600;margin-top:0;">📖 主读</p>
+  <p style="margin-bottom:0.3rem;"><strong>Francis Fukuyama —《政治秩序的起源》（The Origins of Political Order, 2011），第 1–5 章</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">从灵长类动物社会讲到前人类政治，再到中国、印度、欧洲和中东的国家形成。跨学科意识强，与本节框架高度吻合。有中译本（广西师范大学出版社）。</p>
+
+  <p style="font-weight:600;margin-top:1rem;">📖 辅读</p>
+  <p style="margin-bottom:0.3rem;"><strong>James C. Scott —《反谷》（Against the Grain, 2017）</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">与本课的「进步叙事」形成对跖——斯科特认为早期国家不是进步而是对自由的背叛。谷物使人口「可见」和「可征税」，国家因此得以成立。有中译本。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>Robert Carneiro — "A Theory of the Origin of the State" (Science, 1970)</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">短短 8 页的经典论文，清晰呈现了环围论的逻辑。建议读完本节后直接看原文。</p>
+
+  <p style="font-weight:600;margin-top:1rem;">🎧 推荐</p>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:0;">搜索播客 "Tides of History" 中关于国家起源的剧集（英文）。Patrick Wyman 博士的叙述质量很高。</p>
+</div>
+
+<!-- ======== CROSS-REFERENCES ======== -->
+<h2>9. 关联与展望</h2>
+<p style="font-size:0.92rem;">
+  本课概念将在后续课程中反复出现并深化：
+</p>
+<ul style="font-size:0.92rem;">
+  <li><strong>合法性的类型：</strong>韦伯区分了三种权威——传统型、卡里斯马型和法理型。我们将在讨论罗马、中世纪欧洲和现代民主时分别展开。</li>
+  <li><strong>「战争缔造国家」在东方：</strong>战国和秦的统一——商鞅变法如何可以被解读为一场系统性的国家能力建设。</li>
+  <li><strong>国家的退场：</strong>帝国衰亡的多因分析——当物质基础、军事能力、制度凝聚力和正当性叙事同时崩塌时会发生什么。</li>
+  <li><strong>霍布斯 vs 洛克 vs 卢梭：</strong>本课只用了霍布斯和洛克来建立国家哲学的第一块模板。后续将补入卢梭、康德和当代契约论——以及儒家和法家对同一问题的完全不同的回答。</li>
+</ul>
+
+<!-- ======== FOOTER ======== -->
+<div class="lesson-footer">
+  <p>🎯 本课服务于你的 <a href="../MISSION.md">MISSION</a>：<em>构建一套整合历史、经济、政治和哲学的跨学科理解框架。</em></p>
+  <p>💬 <strong>这就是老师存在的意义。</strong>以上任何一个论证你不同意？任何一个案例你想了解更多？应用练习中你的分析与本课框架有冲突？——直接问 Claude。反馈循环是整个学习过程中最重要的环节。</p>
+  <div class="links">
+    <span>← 这是第一课</span>
+    <span><a href="#" style="color:var(--text-light);">下一课 →</a>（即将推出）</span>
+    <span><a href="../reference/glossary.html">📚 术语表</a></span>
+  </div>
+</div>
+
+<!-- ======== SCRIPTS ======== -->
+<script>
+(function() {
+  // --- Helper: standard quiz (select + feedback) ---
+  function setupStandard(qId) {
+    const opts = document.querySelectorAll('#' + qId + '-opts .quiz-option');
+    const fb = document.getElementById(qId + '-fb');
+
+    opts.forEach(o => {
+      o.addEventListener('click', function() {
+        opts.forEach(x => { x.classList.remove('selected', 'correct', 'incorrect'); });
+        o.classList.add('selected');
+
+        const ans = o.dataset.answer;
+        if (ans === 'correct' || ans === 'best') {
+          o.classList.add('correct');
+          fb.className = 'quiz-feedback show fb-correct';
+          if (ans === 'best') {
+            if (qId === 'quiz-q3') {
+              fb.innerHTML = '✅ <strong>正确。</strong>霍布斯和洛克分歧的根源确实在于他们对自然状态的不同假设——以及由此派生的对人性的不同判断。霍布斯认为自然状态必然滑向战争（「肮脏、野蛮、短暂」），因此需要绝对主权来阻止。洛克认为自然状态虽有不便利，但人们在其中拥有不可剥夺的自然权利（生命、自由、财产），因此政府的权力来自被统治者的委托且是可撤销的。这个分歧是一个极好的例子——哲学论证的结论往往已经蕴含在其前提中了。';
+            } else if (qId === 'quiz-q4') {
+              fb.innerHTML = '✅ <strong>正确。</strong>哈拉帕是一个完美的反面案例：它提醒我们，任何单一理论（无论是蒂利的战争论还是魏特夫的水利论）在声称普适性时都需要接受反例的检验。同时它也说明，本课的「四视角框架」的强项不在于宣称「所有国家都是以同一种方式形成的」，而在于提供一组<strong>可供检验的分析维度</strong>——经济、政治、正当性——然后在每个具体案例中看各因素的权重如何。';
+            }
+          } else {
+            fb.innerHTML = '✅ <strong>正确。</strong>韦伯的三个要件——领土、暴力的合法垄断、合法性——是政治学中最简洁也最有力量的工具性定义之一。';
+          }
+        } else {
+          o.classList.add('incorrect');
+          fb.className = 'quiz-feedback show fb-incorrect';
+          if (qId === 'quiz-q3') {
+            if (o.textContent.includes('英国') || o.textContent.includes('法国')) {
+              fb.innerHTML = '❌ 霍布斯和洛克都是英国人。两人都经历了英国内战（虽然在不同时期）。地理不是原因。';
+            } else if (o.textContent.includes('基督') || o.textContent.includes('无神论')) {
+              fb.innerHTML = '❌ 两人都是基督徒（虽然不是同一教派）。而且宗教立场并不能直接解释他们的政治哲学分歧。';
+            } else if (o.textContent.includes('考古')) {
+              fb.innerHTML = '❌ 洛克当时并没有比霍布斯有更多关于史前社会的考古发现。论证的差异来自<em>概念前提</em>的不同设定，而非经验证据的更新。';
+            }
+          } else if (qId === 'quiz-q4') {
+            if (o.textContent.includes('酋邦')) {
+              fb.innerHTML = '❌ 哈拉帕的城市规划、标准化和统一度量衡远超任何一个已知的酋邦。仅仅因为没有发现宫殿就否定其国家地位，是以偏概全。这本身就是一个好问题：我们是不是太依赖「宫殿和战争」的模板来辨认国家了？';
+            } else if (o.textContent.includes('爱好和平')) {
+              fb.innerHTML = '❌ 「爱好和平」是一种十九世纪式的浪漫想象，不是分析。没有战争的艺术表现不等于没有战争——也可能是战争的表达方式不同（如通过仪式而非图像）。而且这个选项完全没有给出因果解释。';
+            } else if (o.textContent.includes('水利假说')) {
+              fb.innerHTML = '❌ 中美洲没有大型水利系统却仍有国家，这已经挑战了魏特夫的普适性声称。哈拉帕的季风灌溉论也过于单一。';
+            }
+          } else {
+            fb.innerHTML = '❌ 不正确。建议重新阅读相关部分再试。';
+          }
+        }
+      });
+    });
+  }
+
+  setupStandard('quiz-q1');
+  setupStandard('quiz-q3');
+  setupStandard('quiz-q4');
+
+  // --- Q2: Cycle-through matching ---
+  const scholars = ['childe', 'hobbes', 'olson', 'carneiro', 'tilly'];
+  const scholarLabels = {
+    childe: 'V. Gordon Childe',
+    hobbes: 'Thomas Hobbes',
+    olson: 'Mancur Olson',
+    carneiro: 'Robert Carneiro',
+    tilly: 'Charles Tilly'
+  };
+  const q2Opts = document.querySelectorAll('#quiz-q2-opts .quiz-option');
+
+  q2Opts.forEach(opt => {
+    let idx = -1;
+    opt.addEventListener('click', function() {
+      idx = (idx + 1) % scholars.length;
+      const s = scholars[idx];
+      opt.textContent = opt.dataset.q + ' → ' + scholarLabels[s];
+      opt.dataset.selected = s;
+      opt.classList.remove('correct', 'incorrect');
+    });
+  });
+
+  window.checkQ2 = function() {
+    let allCorrect = true;
+    q2Opts.forEach(opt => {
+      if (opt.dataset.selected === opt.dataset.answer) {
+        opt.classList.add('correct');
+        opt.classList.remove('incorrect');
+      } else {
+        opt.classList.add('incorrect');
+        opt.classList.remove('correct');
+        allCorrect = false;
+      }
+    });
+    const btn = document.getElementById('quiz-q2-btn');
+    if (allCorrect) {
+      btn.textContent = '✅ 全部正确！';
+      btn.disabled = true;
+    } else {
+      btn.textContent = '还有错的，调整后再检查';
+    }
+  };
+})();
+</script>
+
+</body>
+</html>
