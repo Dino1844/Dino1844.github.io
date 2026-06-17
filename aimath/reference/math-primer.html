@@ -347,15 +347,56 @@ window.MathJax = {
 <div class="concept" id="ibp">
   <span class="tag tag-calc">微积分</span>
   <h4>分部积分 Integration by Parts</h4>
-  <p class="def">一维：$\int_a^b u(x) v'(x)\, dx = [u(x)v(x)]_a^b - \int_a^b u'(x) v(x)\, dx$。高维推广到散度定理。</p>
+
+  <p class="def"><strong>一维公式：</strong>$\displaystyle\int_a^b u(x)\, v'(x)\, dx = \big[u(x)v(x)\big]_a^b - \int_a^b u'(x)\, v(x)\, dx$</p>
+
   <p class="intuition">
-    分部积分把「被积函数中的一个因子求导」转移到另一个因子上。在 score matching 中，这个技巧让你把
-    $\mathbb{E}[\mathbf{s}_\theta^\top \nabla\log p]$（需要知道 $\nabla\log p$）转化为 $-\mathbb{E}[\operatorname{tr}(\nabla\mathbf{s}_\theta)]$
-    （只需要 $\mathbf{s}_\theta$ 自己的导数）。<strong>等于把「不知道的 $\nabla\log p$」交换成了「可计算的 $\nabla\mathbf{s}_\theta$」。</strong>
+    分部积分把「被积函数中的一个因子求导」转移到另一个因子上。
+    在 score matching 中，这个技巧让你把 $\mathbb{E}[\mathbf{s}_\theta^\top \nabla\log p]$（需要知道 $\nabla\log p$）
+    转化为 $-\mathbb{E}[\operatorname{tr}(\nabla\mathbf{s}_\theta)]$（只需要 $\mathbf{s}_\theta$ 自己的导数）。
+    <strong>等于把「不知道的 $\nabla\log p$」交换成了「可计算的 $\nabla\mathbf{s}_\theta$」。</strong>
   </p>
+
   <div class="example">
-    $\int x e^x dx = x e^x - \int 1 \cdot e^x dx = x e^x - e^x + C$
+    <strong>一维示例：</strong>$\int x e^x dx = x e^x - \int 1 \cdot e^x dx = x e^x - e^x + C$
   </div>
+
+  <h4 style="margin-top:1rem;">高维推广（Score Matching 的完整推导）</h4>
+
+  <p>在高维 $\mathbb{R}^d$ 中，Term B 是一个 $d$ 维内积的积分：</p>
+
+  <div class="formula-block">
+    $$\int_{\mathbb{R}^d} \underbrace{\mathbf{s}_\theta(\mathbf{x})^\top}_{1 \times d} \cdot \underbrace{\nabla_{\mathbf{x}} p(\mathbf{x})}_{d \times 1} \, d\mathbf{x}
+    = \int \sum_{i=1}^d s_{\theta,i}(\mathbf{x}) \cdot \frac{\partial p(\mathbf{x})}{\partial x_i} \, d\mathbf{x}$$
+  </div>
+
+  <p>对<strong>每一个维度 $i$</strong> 分别做一维分部积分（将它对 $x_i$ 的积分分离出来）：</p>
+
+  <div class="formula-block">
+    $$\int_{-\infty}^{\infty} s_{\theta,i} \cdot \frac{\partial p}{\partial x_i} \, dx_i
+    = \underbrace{\big[ s_{\theta,i} \cdot p \big]_{x_i \to -\infty}^{x_i \to \infty}}_{\text{边界项 } = 0\ (\text{因为 } p \to 0)} \;-\; \int_{-\infty}^{\infty} \frac{\partial s_{\theta,i}}{\partial x_i} \cdot p \, dx_i$$
+  </div>
+
+  <p><strong>为什么边界项为零？</strong>因为 $p(\mathbf{x})$ 是概率密度——当任何一个坐标趋于无穷时，$p(\mathbf{x}) \to 0$（否则积分不会为 1）。神经网络的输出 $s_{\theta,i}$ 在无穷远处是有界的，所以 $s_{\theta,i} \cdot p$ 在边界处归零。</p>
+
+  <p>对所有 $i = 1, \dots, d$ 求和：</p>
+
+  <div class="formula-block">
+    $$\sum_{i=1}^d \int s_{\theta,i} \frac{\partial p}{\partial x_i} d\mathbf{x}
+    = -\int \underbrace{\left(\sum_{i=1}^d \frac{\partial s_{\theta,i}}{\partial x_i}\right)}_{\text{这恰好是 } \operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta) = \nabla \cdot \mathbf{s}_\theta} \cdot p(\mathbf{x}) \, d\mathbf{x}$$
+  </div>
+
+  <p>写成期望形式：</p>
+
+  <div class="formula-block">
+    $$\boxed{\mathbb{E}_{p(\mathbf{x})}\big[\mathbf{s}_\theta(\mathbf{x})^\top \nabla_{\mathbf{x}} \log p(\mathbf{x})\big]
+    = -\mathbb{E}_{p(\mathbf{x})}\big[\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta(\mathbf{x}))\big]}$$
+  </div>
+
+  <div class="insight" style="background:var(--light-accent);border-left:4px solid var(--accent);padding:0.7rem 1rem;margin:0.8rem 0;border-radius:0 6px 6px 0;font-size:0.93rem;">
+    <strong>核心魔术：</strong>左边需要知道 $\nabla\log p$（未知的真实 score）→ 右边只需要 $\nabla\mathbf{s}_\theta$（你自己的网络的 Jacobian，可以通过自动微分计算）。分部积分 + 边界项消失 = <strong>把未知量替换成了可计算量</strong>。
+  </div>
+
   <p class="used-in">
     Hyvärinen score matching 推导的核心步骤 (L0001 §4.3)
   </p>
@@ -502,6 +543,7 @@ window.MathJax = {
     <a href="../lessons/0001-the-score-function.html">L0001 · Score</a> &emsp;
     <a href="../lessons/0002-information-geometry.html">L0002 · 信息几何</a> &emsp;
     <a href="algorithm-cards.html">📇 算法卡片</a> &emsp;
+    <a href="empirical-evidence.html">🔬 实证证据</a> &emsp;
     <a href="../MISSION.md">🎯 Mission</a>
   </p>
 </footer>
