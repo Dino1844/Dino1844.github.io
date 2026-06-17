@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Teach Skill配置全流程</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, 'Noto Serif CJK SC', serif;
+    font-size: 18px; line-height: 1.75; color: #1a1a1a;
+    background: #fdfdfb; max-width: 800px; margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+  }
+
+  h1 {
+    font-size: 2.4rem; font-weight: 700; line-height: 1.25;
+    margin-bottom: 0.5rem; letter-spacing: -0.02em;
+  }
+  h2 {
+    font-size: 1.5rem; font-weight: 700; margin-top: 3rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.4rem; border-bottom: 2px solid #e8e8e0;
+  }
+  h3 {
+    font-size: 1.15rem; font-weight: 600; margin-top: 1.8rem; margin-bottom: 0.5rem;
+    color: #333;
+  }
+
+  p { margin-bottom: 1rem; }
+  a { color: #5577aa; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .subtitle {
+    color: #999; font-size: 1rem; margin-bottom: 2.5rem;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Flow diagram */
+  .flow {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    margin: 2rem 0; padding: 1.5rem;
+    background: #f8f8f4; border-radius: 8px; border: 1px solid #e8e8e0;
+    font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600;
+    justify-content: center;
+  }
+  .flow-step {
+    background: #fff; padding: 0.5rem 1rem; border-radius: 6px;
+    border: 1.5px solid #5577aa; color: #335588; white-space: nowrap;
+  }
+  .flow-arrow { color: #aaa; font-size: 1.2rem; }
+
+  /* Code blocks */
+  .code-block-wrapper { position: relative; margin: 1rem 0 1.5rem; }
+  .code-block-wrapper pre { margin: 0; }
+  pre {
+    background: #1e1e2e; color: #cdd6f4; font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+    font-size: 0.85rem; line-height: 1.6; padding: 1.2rem 1.5rem;
+    border-radius: 6px; overflow-x: auto;
+  }
+  .copy-btn {
+    position: absolute; top: 0.6rem; right: 0.6rem;
+    display: flex; align-items: center; gap: 0.35rem;
+    padding: 0.3rem 0.65rem;
+    font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 500;
+    color: #999; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
+    cursor: pointer; opacity: 0;
+    transition: opacity 0.2s, color 0.2s, background 0.2s, border-color 0.2s;
+    z-index: 1;
+  }
+  .code-block-wrapper:hover .copy-btn,
+  .copy-btn:focus-visible { opacity: 1; }
+  .copy-btn:hover { color: #ddd; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+  .copy-btn.copied { color: #7ec98f; border-color: rgba(126,201,143,0.4); background: rgba(126,201,143,0.1); }
+  .copy-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+  code {
+    font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+    font-size: 0.85em;
+    background: #f0f0ea; padding: 0.15em 0.4em; border-radius: 3px;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  /* Callouts */
+  .callout {
+    border-left: 4px solid #5577aa; background: #f4f6fa;
+    padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout.warn {
+    border-left-color: #e09b3a; background: #fef9f2;
+  }
+  .callout.tip {
+    border-left-color: #3a8b5c; background: #f3faf6;
+  }
+  .callout strong { display: block; margin-bottom: 0.3rem; }
+
+  /* Checklist */
+  .checklist { list-style: none; padding: 0; margin: 1rem 0; }
+  .checklist li {
+    padding: 0.5rem 0 0.5rem 2rem; position: relative;
+    border-bottom: 1px solid #f0f0e8;
+  }
+  .checklist li::before {
+    content: "☐"; position: absolute; left: 0; color: #aaa;
+    font-size: 1.1rem;
+  }
+
+  /* Step number */
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; background: #5577aa; color: #fff;
+    border-radius: 50%; font-family: 'Inter', sans-serif;
+    font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .footer {
+    margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e8e8e0;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #bbb; text-align: center;
+  }
+  .footer p { margin-bottom: 0.4rem; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    body { font-size: 16px; padding: 1.5rem 1rem 4rem; }
+    h1 { font-size: 1.8rem; }
+    pre { font-size: 0.75rem; padding: 0.8rem; }
+    .flow { gap: 0.3rem; padding: 1rem; }
+    .flow-step { font-size: 0.75rem; padding: 0.4rem 0.6rem; }
+    .flow-arrow { font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🔧 Claude Code 全流程安装与配置</h1>
+<p class="subtitle">从零开始：nvm → npm → Claude Code → DeepSeek API → Teach Skill</p>
+
+<!-- Flow diagram -->
+<div class="flow">
+  <span class="flow-step">nvm</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Node.js</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">npm</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Claude Code</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">DeepSeek API</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Teach Skill</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">GitHub Pages</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">🎓 使用</span>
+</div>
+
+<h2>1. 安装 nvm（Node Version Manager）</h2>
+
+<p><strong>nvm</strong> 让你在同一台机器上管理多个 Node.js 版本。它解决的核心问题是：不同项目可能需要不同的 Node 版本，而系统包管理器通常只能装一个。</p>
+
+<h3>安装命令</h3>
+<pre><code>curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash</code></pre>
+
+<p>安装完成后，<strong>重启终端</strong>或执行：</p>
+<pre><code>source ~/.bashrc   # 或 source ~/.zshrc</code></pre>
+
+<h3>验证安装</h3>
+<pre><code>nvm --version</code></pre>
+
+<div class="callout tip">
+  <strong>💡 提示</strong>
+  如果命令未找到，检查 <code>~/.bashrc</code> 或 <code>~/.zshrc</code> 中是否被正确添加了 nvm 初始化脚本。通常安装脚本会自动追加，但某些系统需要手动确认。
+</div>
+
+<h2>2. 安装 Node.js 与 npm</h2>
+
+<p>nvm 安装好之后，用 nvm 来安装 Node.js，npm 会随 Node.js 自动安装。</p>
+
+<h3>安装 LTS 版本（推荐）</h3>
+<pre><code>nvm install --lts
+nvm use --lts
+nvm alias default 'lts/*'</code></pre>
+
+<div class="callout">
+  <strong>📌 这三条命令的含义</strong>
+  <code>install --lts</code> — 下载最新的长期支持版本<br>
+  <code>use --lts</code> — 在当前 shell 中切换到该版本<br>
+  <code>alias default 'lts/*'</code> — 设置默认版本，新终端自动使用此版本
+</div>
+
+<h3>验证安装</h3>
+<pre><code>node --version   # 例如 v22.11.0
+npm --version    # 例如 10.9.0</code></pre>
+
+<h2>3. 安装 Claude Code</h2>
+
+<p>Claude Code 是 Anthropic 提供的命令行 AI 编程助手。通过 npm 全局安装：</p>
+
+<pre><code>npm install -g @anthropic-ai/claude-code</code></pre>
+
+<div class="callout warn">
+  <strong>⚠️ 权限问题</strong>
+  如果遇到 <code>EACCES</code> 权限错误，<strong>不要用 sudo</strong>。nvm 管理的 Node.js 不需要 sudo。请确认 <code>nvm use --lts</code> 已执行且 npm 的全局路径在用户目录下：<br>
+  <code>npm config get prefix</code> 应输出类似 <code>/home/用户名/.nvm/versions/node/v22.11.0</code> 的路径。
+</div>
+
+<h3>验证安装</h3>
+<pre><code>claude --version</code></pre>
+
+<h2>4. 配置 DeepSeek API</h2>
+
+<p>Claude Code 默认使用 Anthropic API。要改用 DeepSeek 模型(可以开发票)，请参照官方指南设置环境变量或配置文件：</p>
+
+<p style="font-size: 1.1rem; margin: 1.5rem 0;">
+  📖 <a href="https://api-docs.deepseek.com/zh-cn/quick_start/agent_integrations/claude_code" target="_blank">接入 Claude Code — DeepSeek API 官方文档</a>
+</p>
+
+<p>核心步骤：在 <a href="https://platform.deepseek.com/api_keys" target="_blank">platform.deepseek.com</a> 获取 API Key，然后设置 <code>ANTHROPIC_BASE_URL</code> 和 <code>ANTHROPIC_AUTH_TOKEN</code> 两个环境变量即可。详细参数请直接参阅上方官方文档。</p>
+
+<h2>5. 安装 Teach Skill</h2>
+
+<p>Teach Skill 是 Claude Code 的结构化教学扩展模块。安装与使用详见：</p>
+
+<p style="font-size: 1.1rem; margin: 1.5rem 0;">
+  📖 <a href="https://www.aihero.dev/learn-anything-with-my-teach-skill" target="_blank">Learn Anything with My Teach Skill — aihero.dev</a>
+</p>
+
+<h2>6. 部署到 GitHub Pages</h2>
+
+<p>把 Teach Skill 产出的课程文件部署到 GitHub Pages，就能在任何地方通过浏览器访问你的学习笔记。</p>
+
+<p style="font-size: 1.1rem; margin: 1.5rem 0;">
+  📖 <a href="https://docs.github.com/zh/pages/quickstart" target="_blank">GitHub Pages 快速入门 — 官方文档</a>
+</p>
+
+<p>一句话总结：创建一个名为 <code>你的用户名.github.io</code> 的公开仓库，把 HTML 文件推上去，等几秒即可在 <code>https://你的用户名.github.io</code> 访问。如果需要自定义域名或绑定 HTTPS，详见上方官方文档。</p>
+
+<h2>7. 使用 Teach Skill</h2>
+
+<p>Teach skill 围绕三个核心概念组织学习：</p>
+
+<h3>知识 · 技能 · 智慧</h3>
+
+<style>
+  .triple {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;
+    margin: 1.2rem 0 1.8rem;
+  }
+  .triple > div {
+    background: #f8f8f4; border-radius: 8px; padding: 1.2rem;
+    border: 1px solid #e8e8e0; text-align: center;
+  }
+  .triple h4 { font-size: 1rem; margin-bottom: 0.4rem; }
+  .triple p { font-size: 0.85rem; color: #666; margin: 0; }
+  @media (max-width: 600px) {
+    .triple { grid-template-columns: 1fr; }
+  }
+</style>
+<div class="triple">
+  <div>
+    <h4 style="color:#5577aa;">📖 知识</h4>
+    <p>来自高质量、高信任度的资源</p>
+  </div>
+  <div>
+    <h4 style="color:#3a8b5c;">🛠 技能</h4>
+    <p>通过交互式练习获得的实战能力</p>
+  </div>
+  <div>
+    <h4 style="color:#e09b3a;">🧠 智慧</h4>
+    <p>在社区和实践中验证的真知灼见</p>
+  </div>
+</div>
+
+<h3>基础工作流</h3>
+<pre><code># 1. 明确学习任务
+/teach 帮我学习量化金融的基础概念
+
+# 2. Agent 会询问你的学习目标，填入 MISSION.md
+
+# 3. Agent 产出课程（HTML 文件）到 lessons/ 目录
+
+# 4. 在浏览器中打开课程文件学习
+
+# 5. 遇到问题随时回来追问：
+/teach 上一课中关于期权定价的部分我没理解</code></pre>
+
+<h3>关键文件结构</h3>
+<pre><code>~/.claude/skills/teach/
+├── MISSION.md              # 你的学习目标
+├── NOTES.md                # 学习偏好记录
+├── RESOURCES.md            # 高质量资源列表
+├── lessons/                # HTML 课程文件
+│   └── 0001-xxx.html
+├── learning-records/       # 学习记录
+│   └── 0001-xxx.md
+└── reference/              # 参考卡片（速查表）</code></pre>
+
+<div class="callout tip">
+  <strong>💡 最佳实践</strong>
+  <ul style="margin:0.5rem 0 0 1.2rem; padding:0;">
+    <li>每次只学一个紧密相关的话题</li>
+    <li>在浏览器中打开 HTML 课程，边看边实操</li>
+    <li>用 <code>/teach</code> 追问直到真正理解</li>
+    <li>定期回顾 <code>learning-records/</code> 巩固记忆</li>
+  </ul>
+</div>
+
+<h2>📋 快速检查清单</h2>
+<ul class="checklist">
+  <li><code>nvm --version</code> — nvm 已安装且可用</li>
+  <li><code>node --version</code> — Node.js LTS 已安装</li>
+  <li><code>npm --version</code> — npm 已就绪</li>
+  <li><code>claude --version</code> — Claude Code 已全局安装</li>
+  <li><code>~/.claude/settings.json</code> — DeepSeek API 已配置</li>
+  <li><code>/teach</code> 可用 — Teach skill 已安装</li>
+  <li><code>https://你的用户名.github.io</code> — GitHub Pages 已部署</li>
+  <li>浏览器打开课程 — 开始学习</li>
+</ul>
+
+<div class="footer">
+  <p>📚 本课程由 Teach Skill 生成 · <a href="../../..">返回学习主页</a></p>
+  <p>遇到问题？在 Claude Code 中输入 <code>/teach 我对某一步有疑问</code> 获取帮助</p>
+</div>
+
+<script>
+(function() {
+  document.querySelectorAll('pre').forEach(function(pre) {
+    if (pre.closest('.code-block-wrapper')) return; // skip if already wrapped
+    var wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrapper';
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.title = '复制到剪贴板';
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>复制</span>';
+    wrapper.appendChild(btn);
+
+    btn.addEventListener('click', function() {
+      var code = pre.querySelector('code') || pre;
+      var text = code.textContent || code.innerText || '';
+      navigator.clipboard.writeText(text).then(function() {
+        btn.classList.add('copied');
+        var span = btn.querySelector('span');
+        var orig = span.textContent;
+        span.textContent = '已复制!';
+        setTimeout(function() {
+          btn.classList.remove('copied');
+          span.textContent = orig;
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

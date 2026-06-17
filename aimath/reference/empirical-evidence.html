@@ -3,397 +3,256 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>实证证据档案 · 流形假设、Score Matching 和 Diffusion 模型的实验验证</title>
-<script>
-window.MathJax = {
-  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
-  svg: { fontCache: 'global' }
-};
-</script>
-<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<title>实证证据 · AI 算法工程师必备数学</title>
 <style>
   :root {
     --bg: #fdfcf9; --text: #2c2c2c; --accent: #8b4513;
     --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc;
-    --code-bg: #f7f4ef;
     --green: #2d6a4f; --red: #c1121f; --amber: #e09f3e;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Palatino', 'Noto Serif SC', 'Source Han Serif SC', Georgia, serif;
-    background: var(--bg); color: var(--text); line-height: 1.75;
-    max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+    max-width: 780px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem;
   }
-  header {
-    margin-bottom: 2rem; padding-bottom: 1.2rem; border-bottom: 2px solid var(--border);
+
+  h1 { font-size: 1.9rem; margin-bottom: 0.2rem; }
+  .subtitle { color: var(--muted); font-style: italic; margin-bottom: 2rem; }
+
+  /* ====== Summary bar ====== */
+  .summary-bar {
+    display: flex; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap;
   }
-  header h1 { font-size: 1.9rem; margin-bottom: 0.3rem; }
-  header .subtitle { color: var(--muted); font-style: italic; }
-
-  .toc { font-size: 0.9rem; line-height: 2; margin: 1.5rem 0; }
-  .toc a { color: var(--accent); text-decoration: none; }
-  .toc a:hover { text-decoration: underline; }
-
-  h2 {
-    font-size: 1.3rem; margin: 2.5rem 0 0.8rem;
-    padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border);
-    color: #1a1a1a;
+  .summary-chip {
+    flex: 1; min-width: 140px; padding: 0.7rem 1rem;
+    border-radius: 8px; font-size: 0.85rem; text-align: center;
   }
-  h3 { font-size: 1.05rem; margin: 1.6rem 0 0.5rem; color: #333; }
+  .summary-chip strong { display: block; font-size: 1.2rem; }
+  .chip-green  { background: #f0faf5; border: 1px solid #b7d7c5; }
+  .chip-amber  { background: #fffdf5; border: 1px solid #e8d89e; }
+  .chip-red    { background: #fff5f5; border: 1px solid #e8c5c5; }
 
-  p { margin-bottom: 0.9rem; }
-
-  .verdict {
-    padding: 0.9rem 1.2rem; margin: 1rem 0; border-radius: 8px; font-size: 0.93rem;
+  /* ====== Question block ====== */
+  .qblock {
+    margin: 2.2rem 0 1rem;
+    padding: 1rem 1.3rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
   }
-  .verdict.support { background: #f0faf5; border-left: 4px solid var(--green); }
-  .verdict.challenge { background: #fff5f5; border-left: 4px solid var(--red); }
-  .verdict.mixed { background: #fffdf5; border-left: 4px solid var(--amber); }
-
-  .verdict .label {
-    font-weight: 700; font-size: 0.78rem; text-transform: uppercase;
-    letter-spacing: 0.06em; margin-bottom: 0.3rem; display: block;
+  .qblock h2 {
+    font-size: 1.15rem; margin-bottom: 0.3rem; color: #1a1a1a;
+    border: none; padding: 0;
   }
-  .verdict.support .label { color: var(--green); }
-  .verdict.challenge .label { color: var(--red); }
-  .verdict.mixed .label { color: var(--amber); }
+  .qblock .answer {
+    font-size: 0.95rem; margin: 0.5rem 0 0.8rem;
+    padding: 0.5rem 0.8rem; border-radius: 6px;
+  }
+  .answer.yes   { background: #f0faf5; border-left: 3px solid var(--green); }
+  .answer.maybe { background: #fffdf5; border-left: 3px solid var(--amber); }
+  .answer.no    { background: #fff5f5; border-left: 3px solid var(--red); }
 
-  .paper {
+  .evidence-list { list-style: none; margin: 0; }
+  .evidence-list li {
+    font-size: 0.88rem; padding: 0.4rem 0; border-bottom: 1px dotted var(--border);
+    display: flex; gap: 0.5rem;
+  }
+  .evidence-list li:last-child { border-bottom: none; }
+  .evidence-list .tag {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    padding: 0.1em 0.4em; border-radius: 3px; white-space: nowrap;
+    height: fit-content; margin-top: 0.15rem;
+  }
+  .tag-exp  { background: #e8f0e8; color: #2d6a4f; }
+  .tag-thm  { background: #e8e4f0; color: #4a2d6a; }
+  .tag-fail { background: #f5e8e8; color: #9b2c2c; }
+
+  /* ====== Frontier ====== */
+  .frontier-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 1rem 0;
+  }
+  @media (max-width: 600px) { .frontier-grid { grid-template-columns: 1fr; } }
+  .frontier-card {
     background: white; border: 1px solid var(--border); border-radius: 8px;
-    padding: 1rem 1.3rem; margin: 0.8rem 0;
+    padding: 0.8rem 1rem; font-size: 0.87rem;
   }
-  .paper h4 { font-size: 0.95rem; margin-bottom: 0.2rem; }
-  .paper .venue { font-size: 0.78rem; color: var(--muted); }
-  .paper .finding { font-size: 0.9rem; margin: 0.4rem 0; }
-  .paper .finding::before { content: "🔬 "; }
-  .paper .implication { font-size: 0.85rem; color: var(--muted); }
-  .paper .implication::before { content: "→ 对你的问题的含义："; }
-
-  .assumption-header {
-    background: var(--light-accent); padding: 0.6rem 1rem; border-radius: 6px;
-    margin: 1.5rem 0 0.6rem; font-weight: 700; font-size: 1rem;
-  }
-
-  .summary-table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.9rem; }
-  .summary-table th { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 2px solid var(--border); font-size: 0.82rem; }
-  .summary-table td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 0.87rem; }
+  .frontier-card h4 { font-size: 0.92rem; margin-bottom: 0.3rem; }
+  .frontier-card .what { color: var(--accent); font-weight: 600; }
+  .frontier-card .why  { color: var(--muted); font-size: 0.82rem; margin-top: 0.3rem; }
 
   footer {
     margin-top: 3rem; padding-top: 1rem;
     border-top: 1px solid var(--border);
-    font-size: 0.85rem; color: var(--muted);
+    font-size: 0.82rem; color: var(--muted);
   }
   footer a { color: var(--accent); }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>🔬 实证证据档案</h1>
-  <div class="subtitle">流形假设 · Score Matching 的准确性 · Diffusion 模型的失效模式<br>——不站队，只看实验说了什么</div>
-</header>
+<h1>🔬 实证证据</h1>
+<div class="subtitle">我们讨论的底层假设到底靠不靠谱？——只看实验怎么说</div>
 
-<div class="toc">
-  <a href="#s1">1. 底层假设一览</a><br>
-  <a href="#s2">2. 假设 A：自然数据分布在低维流形上</a><br>
-  <a href="#s3">3. 假设 B：Score Matching 能学到真实的 score</a><br>
-  <a href="#s4">4. 假设 C：Langevin 动力学能收敛到目标分布</a><br>
-  <a href="#s5">5. 假设 D：Diffusion 模型的生成 = 从流形上采样</a><br>
-  <a href="#s6">6. 已知失效模式</a><br>
-  <a href="#s7">7. 总结：什么是可靠的，什么不是</a>
+<div class="summary-bar">
+  <div class="summary-chip chip-green">
+    <strong>7</strong> 假设基本成立
+  </div>
+  <div class="summary-chip chip-amber">
+    <strong>3</strong> 需要细化边界
+  </div>
+  <div class="summary-chip chip-red">
+    <strong>2</strong> 已知会失效
+  </div>
 </div>
 
 <!-- ============================================================ -->
-<h2 id="s1">1. 我们讨论的底层假设有哪些</h2>
-
-<p>你在 L0001 接触到的 Diffusion/Score-based 模型链条，每一步都依赖一个底层假设：</p>
-
-<table class="summary-table">
-  <tr><th>#</th><th>假设</th><th>用到它的地方</th><th>可验证性</th></tr>
-  <tr>
-    <td>A</td>
-    <td>自然图片分布在低维流形上</td>
-    <td>为什么需要加噪（流形外 score 没定义）</td>
-    <td>部分可验证</td>
-  </tr>
-  <tr>
-    <td>B</td>
-    <td>Score Matching 能学到真实的 score function</td>
-    <td>模型训练的损失函数</td>
-    <td>可验证（有理论界）</td>
-  </tr>
-  <tr>
-    <td>C</td>
-    <td>Langevin 动力学能收敛到目标分布</td>
-    <td>采样过程</td>
-    <td>可验证（有理论界）</td>
-  </tr>
-  <tr>
-    <td>D</td>
-    <td>学到的 score 沿流形切线方向变化，垂直方向不崩</td>
-    <td>生成质量的实际保证</td>
-    <td>弱可验证</td>
-  </tr>
-</table>
-
-<p>下面逐条翻论文证据。</p>
-
-<!-- ============================================================ -->
-<h2 id="s2">2. 假设 A：自然数据分布在低维流形上</h2>
-
-<div class="assumption-header">支持证据</div>
-
-<div class="paper">
-  <h4>Stanczuk et al. — "Diffusion Models Encode the Intrinsic Dimension of Data Manifolds"</h4>
-  <div class="venue">ICML 2024</div>
-  <div class="finding">
-    从训练好的扩散模型的 score function 中<strong>可以读取出数据流形的内禀维度</strong>。模型隐式地学习到了流形的几何结构。这说明至少对于训练数据，score network 的内部表征反映了低维流形假设。
-  </div>
-  <div class="implication">流形假设不仅仅是我们外部强加的——训练好的模型内部确实编码了类似的结构。</div>
+<div class="qblock">
+  <h2>Q1 · 数据真的在低维流形上吗？</h2>
+  <div class="answer yes"><strong>答：有低维结构，但不一定是光滑流形。</strong></div>
+  <ul class="evidence-list">
+    <li>
+      <span class="tag tag-exp">实验</span>
+      <span>从<strong>训练好的</strong>扩散模型的 score 里可以直接读出数据的内禀维度，模型内部确实编码了流形结构。<br><em>Stanczuk et al., ICML 2024</em></span>
+    </li>
+    <li>
+      <span class="tag tag-thm">理论</span>
+      <span>DDPM 的收敛速率<strong>不依赖环境像素维度</strong>（200k），只依赖流形的内禀维度。这解释了为什么高维像素空间中扩散模型不受维度灾难影响。<br><em>Azangulov et al., NeurIPS 2024</em></span>
+    </li>
+    <li>
+      <span class="tag tag-exp">实验</span>
+      <span>但经典流形假设（各处维度相同）<strong>不够用</strong>——精细结构如人手处的局部维度更高。CW 复形假设（维度可跳跃）更符合实际数据。<br><em>Wang & Wang, ICML 2024</em></span>
+    </li>
+    <li>
+      <span class="tag tag-exp">实验</span>
+      <span>扩散模型可以做 OOD 检测：把图抬离流形再让模型修复回来。域内图回到原点，域外图偏离很远——证明模型<strong>确实学到了流形</strong>。AUC ~0.91。<br><em>LMD, Frontiers in AI 2024</em></span>
+    </li>
+  </ul>
 </div>
 
-<div class="paper">
-  <h4>Azangulov, Deligiannidis & Rousseau — "Convergence of Diffusion Models Under the Manifold Hypothesis in High-Dimensions"</h4>
-  <div class="venue">NeurIPS 2024</div>
-  <div class="finding">
-    证明了 DDPM 的 score 学习在真实数据位于低维流形上时，收敛速率<strong>不依赖于环境维度</strong> $d$，只依赖于流形的内禀维度 $k$。这解释了为什么扩散模型在高维像素空间中不遭受维度灾难——流形假设是正确的解释。
-  </div>
+<div class="qblock">
+  <h2>Q2 · Score matching 真的学到了真实的 score 吗？</h2>
+  <div class="answer yes"><strong>答：在训练分布上——是。在分布外——不一定。</strong></div>
+  <ul class="evidence-list">
+    <li>
+      <span class="tag tag-thm">理论</span>
+      <span>DDPM 的多尺度 denoising score matching 是<strong>渐近有效的</strong>——协方差达到 Fisher 信息下界（和 MLE 一样好）。<br><em>Chewi et al., 2025</em></span>
+    </li>
+    <li>
+      <span class="tag tag-thm">理论</span>
+      <span>Score 估计有已知的 <strong>minimax 最优速率</strong>——在小噪声尺度下精度会下降（方差按 $1/nt^2$ 增长），这不是 bug 而是理论基础。<br><em>Dou et al., 2024</em></span>
+    </li>
+    <li>
+      <span class="tag tag-fail">失效</span>
+      <span>在多模态分布上，<strong>不加噪</strong>的隐式 score matching 统计效率极低（Poincaré 常数爆炸）——这验证了<strong>为什么 DDPM 必须加噪</strong>。<br><em>Koehler et al., ICLR 2023</em></span>
+    </li>
+  </ul>
 </div>
 
-<div class="paper">
-  <h4>Oko, Akiyama & Suzuki — "Diffusion Models are Minimax Optimal Distribution Estimators"</h4>
-  <div class="venue">ICML 2023</div>
-  <div class="finding">
-    在流形假设下证明了扩散模型的样本复杂度下界——样本量随内禀维度和 Hölder 光滑度缩放，<strong>不随环境维度缩放</strong>。理论结果和扩散模型在实际像素空间中的表现一致。
-  </div>
+<div class="qblock">
+  <h2>Q3 · Langevin 动力学真的能采到目标分布吗？</h2>
+  <div class="answer yes"><strong>答：在流形假设成立时有严格数学保证。</strong></div>
+  <ul class="evidence-list">
+    <li>
+      <span class="tag tag-thm">理论</span>
+      <span>逆向 Langevin 的收敛速率<strong>不依赖环境维度</strong>，只依赖流形内禀维度。<br><em>Azangulov et al., NeurIPS 2024</em></span>
+    </li>
+    <li>
+      <span class="tag tag-thm">理论</span>
+      <span><strong>Log-domain 平滑</strong>（score matching 的做法）等效于仅沿流形<strong>切线方向</strong>平滑，不会把概率质量抹到流形外。这和 data-domain 平滑（KDE）有本质区别。这是 Langevin 不会飘离流形的深层原因。<br><em>Farghly et al., 2024</em></span>
+    </li>
+  </ul>
 </div>
 
-<div class="paper">
-  <h4>LMD: "Leveraging Diffusion Models for Unsupervised Out-of-Distribution Detection on Image Manifold"</h4>
-  <div class="venue">Frontiers in AI, 2024</div>
-  <div class="finding">
-    用扩散模型做 OOD 检测：把图片「抬离流形」再让模型「修复回去」。域内图片回到原点（证明模型懂得流形结构），域外图片偏离很大。<strong>在 CIFAR-10/100 等数据集上平均 AUC ~0.907。</strong>这个范式假设扩散模型学到了流形——而且实验验证了这个假设成立。
-  </div>
+<div class="qblock">
+  <h2>Q4 · Diffusion 真正「理解」了流形的几何吗？</h2>
+  <div class="answer maybe"><strong>答：部分理解——但高曲率区域和精细结构可能被曲解。</strong></div>
+  <ul class="evidence-list">
+    <li>
+      <span class="tag tag-exp">实验</span>
+      <span>从 Stable Diffusion 的 score 中提取的黎曼度量，做测地线插值，在 LPIPS/FID 上<strong>显著优于</strong>线性插值——说明 score 确实编码了流形切空间。<br><em>Azeglio & Di Bernardo, 2024</em></span>
+    </li>
+    <li>
+      <span class="tag tag-thm">理论</span>
+      <span>扩散模型的泛化来自<strong>几何自适应谐波表示</strong>——模型自动学到沿流形变化的基函数，不是硬编码的。<br><em>Kadkhodaie et al., ICLR 2024</em></span>
+    </li>
+  </ul>
 </div>
 
-<div class="verdict support">
-  <span class="label">✓ 证据支持</span>
-  低维结构假设在实验和理论上都有很强的支撑。扩散模型的泛化能力（不依赖环境维度）和学到的内部表征（内禀维度编码）都与流形假设一致。这不是纯粹的信仰——有可重复的实验。
-</div>
-
-<div class="assumption-header">挑战与细化</div>
-
-<div class="paper">
-  <h4>Wang & Wang — "CW Complex Hypothesis for Image Data"</h4>
-  <div class="venue">ICML 2024</div>
-  <div class="finding">
-    直接测试经典流形假设和「多流形并集」假设——发现<strong>两者都不够</strong>。局部内禀维度<strong>在同一条连通分支内部</strong>随点而变化（经典流形假设说局部维度应该处处等于一个固定值）。提出了<strong>CW 复形假设</strong>——流形带「骨架」（skeleton），维度可以在不同区域跳跃。解释了为什么扩散模型在手部等精细结构上困难——这些区域维度更高且不光滑。
-  </div>
-  <div class="implication">「低维光滑流形」可能是一个过度简化的假设。真实数据更可能是<strong>不同区域有不同维度</strong>的分层结构。扩散模型不是在最简单的流形上工作的——它们在更复杂的几何上工作，这也解释了某些失效模式。</div>
-</div>
-
-<div class="verdict mixed">
-  <span class="label">⚠ 证据复杂</span>
-  「数据有低维结构」→ 强烈支持（多证据线收敛）。「这个低维结构是光滑流形」→ 被 CW 复形假设挑战。平滑性可能在局部断裂（尤其是精细结构如人手）。这不是流形假设被推翻——而是被<strong>精细化</strong>。
+<div class="qblock">
+  <h2>Q5 · Score 在 OOD 区域可靠吗？</h2>
+  <div class="answer no"><strong>答：不可靠。这是目前最严重的已知问题。</strong></div>
+  <ul class="evidence-list">
+    <li>
+      <span class="tag tag-fail">失效</span>
+      <span><strong>似然病态</strong>：CIFAR-10 上训的模型会给 CIFAR-100 图片分配<strong>比 CIFAR-10 更高</strong>的似然值。模型自信地把 OOD 判断为「更真」。<br><em>Shoushtari et al., 2025 — EigenScore</em></span>
+    </li>
+    <li>
+      <span class="tag tag-fail">失效</span>
+      <span><strong>Score norm 反转</strong>：近 OOD 场景下（CIFAR-10 vs CIFAR-100）score norm <strong>无法区分</strong>分布内和分布外，甚至出现<strong>排序反转</strong>。<br><em>Barkley et al. — SCOPED</em></span>
+    </li>
+  </ul>
 </div>
 
 <!-- ============================================================ -->
-<h2 id="s3">3. 假设 B：Score Matching 能学到真实的 score</h2>
+<h2 style="margin-top: 3rem;">2025-2026 前沿：non-trivial 方向</h2>
 
-<div class="assumption-header">支持证据</div>
+<div class="frontier-grid">
 
-<div class="paper">
-  <h4>Chewi et al. — "DDPM Score Matching and Distribution Learning"</h4>
-  <div class="venue">2025</div>
-  <div class="finding">
-    证明了 DDPM 的多尺度 denoising score matching 是<strong>渐近有效的</strong>——其渐近协方差达到 Fisher 信息下界（和最大似然一致）。在温和条件下，DDPM 的 score 估计是最优的。
+  <div class="frontier-card">
+    <h4>🔧 Proximal 生成模型</h4>
+    <p class="what">用凸优化的 Moreau-Yosida 正则化替换 SDE 框架。</p>
+    <p class="why">完全绕开 score matching，消除了逆问题中扩散模型的 early-stopping bias。</p>
   </div>
-</div>
 
-<div class="paper">
-  <h4>Dou et al. — "Minimax Rates for Score Estimation"</h4>
-  <div class="venue">2024</div>
-  <div class="finding">
-    给出了 score 估计的<strong>最小最大最优速率</strong>。关键发现：score 估计精度在<strong>小噪声水平 $t$ 时劣化</strong>（方差按 $1/nt^2$ 增长），但在最优调参下可以达到密度估计的 minimax 下界。多尺度噪声策略（DDPM 的标准做法）是理论最优的。
+  <div class="frontier-card">
+    <h4>🎯 Drifting Models</h4>
+    <p class="what">不用神经网络，用 kernel mean-shift 直接得到 score 差异。</p>
+    <p class="why">证明了 score-based 和 drifting 两个范式在数学上等价。颠覆了「score 必须用网络学」的假设。</p>
   </div>
-</div>
 
-<div class="paper">
-  <h4>Artemev et al. — "Comparing Implicit and Denoising Score-Matching Objectives"</h4>
-  <div class="venue">NeurIPS 2024</div>
-  <div class="finding">
-    系统比较了 Implicit Score Matching (ISM) 和 Denoising Score Matching (DSM)。在小噪声尺度下 ISM 更鲁棒（方差更小），在大噪声尺度下 DSM 更有效。两者在无穷数据极限下等价，但在<strong>有限数据下行为有差异</strong>。
+  <div class="frontier-card">
+    <h4>⚠️ Flow Matching 低噪声病理</h4>
+    <p class="what">定理级别：低噪声下 flow matching 的条件数发散。</p>
+    <p class="why">这不是工程问题——是 flow matching 数学结构的内生缺陷。</p>
   </div>
-</div>
 
-<div class="verdict support">
-  <span class="label">✓ 很可靠</span>
-  在合理条件（多尺度噪声、足够数据、模型容量足够）下，score matching 学到的 score <strong>在理论上收敛到真实 score</strong>，且收敛速率有已知的 minimax 界。这不是黑魔法——是一套有严格理论基础的估计方法。
-</div>
-
-<div class="assumption-header">挑战与局限</div>
-
-<div class="paper">
-  <h4>Koehler et al. — "Implicit Score Matching is Statistically Inefficient for Multimodal Distributions"</h4>
-  <div class="venue">ICLR 2023</div>
-  <div class="finding">
-    对于多模态分布（实际数据的典型情况），Implicit Score Matching 的渐近方差可以<strong>任意大于</strong> MLE。因为其 Poincaré 常数在模态分离时会爆炸——score matching 在分开的 modes 之间缺乏有效的梯度信号。这是<strong>为什么用 DSM（加噪）而不是 ISM 的关键原因之一</strong>——噪声在模态之间建立了「桥梁」。
+  <div class="frontier-card">
+    <h4>🔤 离散扩散的根本限制</h4>
+    <p class="what">分类格上没有光滑梯度，score matching 和最优传输原则不适用。</p>
+    <p class="why">从随机最优控制角度重新诊断 ARMs、DLM 的三种理论病理。解释了为什么文本生成上扩散不如自回归。</p>
   </div>
-  <div class="implication">如果不加噪（纯 ISM），score matching 在多模态数据上真的会失效。但 DDPM 已经通过多尺度加噪绕开了这个问题。所以这不是对 diffusion 的挑战——而是对「为什么需要加噪」的实验验证。</div>
+
+  <div class="frontier-card">
+    <h4>🌀 Lie 群上的扩散</h4>
+    <p class="what">将 score-based 扩散推广到非交换 Lie 群（SO(3), SE(3)）。</p>
+    <p class="why">分子构象、蛋白质对接——数据天然生活在群上，不是欧氏空间。</p>
+  </div>
+
+  <div class="frontier-card">
+    <h4>📐 各向异性 SPDE</h4>
+    <p class="what">方向依赖的加噪：切线方向少加（保留结构），法线方向多加。</p>
+    <p class="why">同时击败 SDE 和 Flow Matching 基线。前向过程保留几何结构更久。</p>
+  </div>
+
+  <div class="frontier-card">
+    <h4>⚖️ 双 Score 归一化密度</h4>
+    <p class="what">同时学输入空间 score + 噪声水平 score，得到真正归一化的 EBM。</p>
+    <p class="why">NeurIPS 2025。ImageNet64 上 SOTA 交叉熵。</p>
+  </div>
+
+  <div class="frontier-card">
+    <h4>🎮 最优控制统一框架</h4>
+    <p class="what">用 HJB 方程统一 ARMs、离散 DLM、连续 DLM。</p>
+    <p class="why">发现了效率-保真悖论和不可逆错误传播的理论根源。</p>
+  </div>
+
 </div>
 
 <!-- ============================================================ -->
-<h2 id="s4">4. 假设 C：Langevin 动力学能收敛到目标分布</h2>
-
-<div class="assumption-header">支持证据</div>
-
-<div class="paper">
-  <h4>Azangulov et al. — "Convergence of Diffusion Models Under the Manifold Hypothesis"</h4>
-  <div class="venue">NeurIPS 2024</div>
-  <div class="finding">
-    证明了在流形假设下，DDPM 的<strong>采样过程</strong>（逆向 Langevin 动力学）以<strong>不依赖环境维度的速率</strong>收敛到目标分布。这意味着 Langevin 在高维中不会崩溃——只要流形足够低维。
-  </div>
-</div>
-
-<div class="paper">
-  <h4>Farghly et al. — "Diffusion Models and the Manifold Hypothesis: Log-Domain Smoothing is Geometry Adaptive"</h4>
-  <div class="venue">2024</div>
-  <div class="finding">
-    核心发现：<strong>log-domain 平滑</strong>（score matching 的做法）和<strong>data-domain 平滑</strong>（核密度估计的做法）有本质区别。Log-domain 平滑<strong>保持流形结构</strong>——它在概率的对数空间做平滑，等效于<strong>仅沿流形切线方向</strong>平滑，不会把概率质量「抹到流形外」。这是 Langevin 能稳定在流形附近的深层数学原因。
-  </div>
-  <div class="implication">Langevin 不是随机游走——score matching 学到的 score 场本身带有<strong>几何自适应偏差</strong>，倾向于把更新约束在流形附近。这是 diffusion 生成质量好的理论解释。</div>
-</div>
-
-<div class="verdict support">
-  <span class="label">✓ 有理论保证</span>
-  在流形假设成立的条件下，Langevin 动力学的收敛性有严格的数学保证，且收敛速率在理论上是可接受的（不随环境维度爆炸）。Log-domain平滑提供了额外的几何自适应保证。
-</div>
-
-<!-- ============================================================ -->
-<h2 id="s5">5. 假设 D：Diffusion 真正「理解」了流形结构</h2>
-
-<div class="assumption-header">支持证据</div>
-
-<div class="paper">
-  <h4>Azeglio & Di Bernardo — "What's Inside Your Diffusion Model? A Score-Based Riemannian Metric to Explore the Data Manifold"</h4>
-  <div class="venue">2024/2025</div>
-  <div class="finding">
-    从预训练扩散模型（包括 Stable Diffusion）的 score function 中提取出一个<strong>黎曼度量</strong> $\mathbf{g}(\mathbf{x}) = \mathbf{I} + \lambda \mathbf{s}(\mathbf{x})\mathbf{s}(\mathbf{x})^\top$。这个度量自动在垂直流形方向<strong>拉伸</strong>距离，在切线方向保持长度。在此度量下的测地线插值在 LPIPS、FID 上<strong>显著优于</strong>线性插值、球面插值和噪声扩散插值。
-  </div>
-  <div class="implication">这不仅证明了 diffusion 学到了流形——还证明这个流形在几何上是<strong>可操作的</strong>。Score 场直接编码了流形的切空间结构。</div>
-</div>
-
-<div class="paper">
-  <h4>Kadkhodaie et al. — "Generalization in Diffusion Models Arises from Geometry-Adaptive Harmonic Representations"</h4>
-  <div class="venue">ICLR 2024</div>
-  <div class="finding">
-    扩散模型的泛化来自于<strong>几何自适应的谐波表示</strong>——模型学到的特征基函数自然地沿数据流形变化。这不是模型强行假设的——是 score matching 优化过程中<strong>自动涌现</strong>的结构。
-  </div>
-</div>
-
-<div class="verdict mixed">
-  <span class="label">⚠ 部分支持</span>
-  模型确实编码了流形结构，但这种编码的<strong>保真度</strong>取决于噪声调度、网络容量和数据质量。低密度区域和高曲率区域（如精细纹理）的几何可能被模型曲解。<strong>模型理解流形结构 ≠ 模型完全忠实地复现了流形。</strong>
-</div>
-
-<!-- ============================================================ -->
-<h2 id="s6">6. 已知失效模式：什么时候会崩</h2>
-
-<p>这些是实验中发现的、扩散模型行为偏离理论预期的情况：</p>
-
-<table class="summary-table">
-  <tr><th>失效模式</th><th>证据</th><th>严重程度</th></tr>
-  <tr>
-    <td><strong>似然病态</strong><br>扩散模型给 OOD 图片分配<em>更高</em>的似然值</td>
-    <td>Shoushtari et al. (2025) — EigenScore</td>
-    <td style="color:var(--red);">严重</td>
-  </tr>
-  <tr>
-    <td><strong>Score norm 不可靠</strong><br>近 OOD 场景（如 CIFAR-10 vs CIFAR-100）score norm 无法区分分布</td>
-    <td>Shoushtari et al. (2025); Barkley et al. — SCOPED</td>
-    <td style="color:var(--red);">严重</td>
-  </tr>
-  <tr>
-    <td><strong>CW 复形效应</strong><br>精细结构（人手、文字）处局部维度更高，生成质量下降</td>
-    <td>Wang & Wang (ICML 2024)</td>
-    <td style="color:var(--amber);">中等</td>
-  </tr>
-  <tr>
-    <td><strong>模型塌缩</strong><br>递归用合成数据训练会导致分布漂移</td>
-    <td>Khelifa et al. (ICML 2026)</td>
-    <td style="color:var(--amber);">中等</td>
-  </tr>
-  <tr>
-    <td><strong>小噪声 score 估计方差大</strong><br>低噪声尺度下 score 估计质量劣化</td>
-    <td>Dou et al. (2024)</td>
-    <td style="color:var(--amber);">中等</td>
-  </tr>
-  <tr>
-    <td><strong>多模态 ISM 低效</strong><br>不加噪的 score matching 在多模态数据上统计效率极低</td>
-    <td>Koehler et al. (ICLR 2023)</td>
-    <td style="color:var(--green);">已知且已解决</td>
-  </tr>
-</table>
-
-<p>
-  <strong>「似然病态」</strong>值得展开：Shoushtari et al. 发现 CIFAR-10 上训练的扩散模型给 CIFAR-100 图片分配的似然值有时<strong>高于</strong> CIFAR-10 自身图片。这意味着模型在分布之外的 score 估计可能完全不对——它自信地认为 OOD 图片更「真」。这不是理论瑕疵——是实际的安全隐患。
-</p>
-
-<!-- ============================================================ -->
-<h2 id="s7">7. 总结：什么是可靠的，什么不是</h2>
-
-<table class="summary-table">
-  <tr><th>声称</th><th>可靠性</th><th>证据强度</th></tr>
-  <tr>
-    <td>自然图片在像素空间中极其稀疏</td>
-    <td style="color:var(--green);">✓ 基本确定</td>
-    <td>强（可直接验证：随机像素 ≠ 图片）</td>
-  </tr>
-  <tr>
-    <td>稀疏是因为低维几何结构</td>
-    <td style="color:var(--green);">✓ 强烈支持</td>
-    <td>强（内禀维度估计、收敛速率不依赖环境维度、OOD 检测有效）</td>
-  </tr>
-  <tr>
-    <td>这个结构是光滑流形</td>
-    <td style="color:var(--amber);">⚠ 需要细化</td>
-    <td>中等（CW 复形假设挑战了光滑性，精细结构处可能有奇点）</td>
-  </tr>
-  <tr>
-    <td>Score matching 学到真实的 score</td>
-    <td style="color:var(--green);">✓ 在合理条件下成立</td>
-    <td>强（有 minimax 界、渐近效率证明；但在 OOD 区域不可靠）</td>
-  </tr>
-  <tr>
-    <td>Langevin 动力学会收敛到目标分布</td>
-    <td style="color:var(--green);">✓ 有理论保证</td>
-    <td>强（有收敛速率界、log-domain 平滑保证了几何自适应性）</td>
-  </tr>
-  <tr>
-    <td>学到的 score 在 OOD 区域可靠</td>
-    <td style="color:var(--red);">✗ 不可靠</td>
-    <td>强（似然病态、score norm 反转已多次复现）</td>
-  </tr>
-  <tr>
-    <td>扩散模型在精细结构上和大尺度结构上一样好</td>
-    <td style="color:var(--amber);">⚠ 不一定</td>
-    <td>中等（人手、文字等复杂区域仍然困难，CW 复形假设提供了解释框架）</td>
-  </tr>
-</table>
-
-<div class="verdict mixed" style="margin-top:1.5rem;">
-  <span class="label">总体结论</span>
-  Diffusion/Score-based 模型的理论基础<strong>不是空中楼阁</strong>——流形假设、score matching 的收敛性、Langevin 的采样保证都有多条证据线支持，且这些证据来自独立研究组、使用了不同方法论（理论分析 + 实验验证 + 下游应用验证）。<br><br>
-  但我们对这些假设的<strong>边界</strong>（OOD 区域、精细结构、多模态的过渡区）仍然理解有限。模型在这些区域的行为可能偏离理论预期——这不等于理论是错的，而是理论的<strong>适用条件</strong>需要被更仔细地划定。<br><br>
-  <strong>AI 确实是一门实验科学。但这些实验正在逐步把「假设」变成「有边界的知识」。</strong>
-</div>
-
 <footer>
-  <p>
-    本文档随新论文持续更新。每个判定只基于已发表的同行评审论文（或预印本），不基于个人观点。
-  </p>
-  <p style="margin-top: 0.5rem;">
-    <a href="../lessons/0000-the-mathematical-landscape.html">← L0000 · 地貌</a> &emsp;
+  <p>每个判定基于已发表同行评审论文或公开预印本。持续更新。</p>
+  <p style="margin-top: 0.4rem;">
     <a href="../lessons/0001-the-score-function.html">L0001 · Score</a> &emsp;
     <a href="../lessons/0002-information-geometry.html">L0002 · 信息几何</a> &emsp;
     <a href="algorithm-cards.html">📇 算法卡片</a> &emsp;
