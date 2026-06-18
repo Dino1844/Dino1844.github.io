@@ -152,6 +152,81 @@ window.MathJax = {
 
 <p>TD 学习不需要环境模型，也不需要完整轨迹——每走一步 $(s,a,r,s')$ 就能做一次更新。这使得 TD 可以<strong>在线学习</strong>，适用于 continuing（无限长）任务。</p>
 
+
+<div class="viz-container" style="background:white;border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.5rem 0;text-align:center;">
+  <svg viewBox="0 0 560 320" xmlns="http://www.w3.org/2000/svg" style="max-width:560px;width:100%;">
+    <defs>
+      <marker id="arr-mc" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><polygon points="0 0, 6 2, 0 4" fill="#555"/></marker>
+    </defs>
+
+    <!-- MC side (left) -->
+    <text x="140" y="22" text-anchor="middle" font-size="14" font-weight="700" fill="#c44d4d">蒙特卡洛 MC</text>
+
+    <!-- States in MC -->
+    <circle cx="80" cy="60" r="18" fill="#f5efe6" stroke="#8b4513" stroke-width="1.5"/>
+    <text x="80" y="64" text-anchor="middle" font-size="10" fill="#1a1a1a">s</text>
+    <circle cx="140" cy="100" r="18" fill="#f5efe6" stroke="#8b4513" stroke-width="1.5"/>
+    <text x="140" y="104" text-anchor="middle" font-size="10" fill="#1a1a1a">s₁</text>
+    <circle cx="100" cy="160" r="18" fill="#f5efe6" stroke="#8b4513" stroke-width="1.5"/>
+    <text x="100" y="164" text-anchor="middle" font-size="10" fill="#1a1a1a">s₂</text>
+    <circle cx="200" cy="120" r="18" fill="#f5efe6" stroke="#8b4513" stroke-width="1.5"/>
+    <text x="200" y="124" text-anchor="middle" font-size="10" fill="#1a1a1a">s₃</text>
+    <circle cx="180" cy="180" r="18" fill="#f5efe6" stroke="#8b4513" stroke-width="1.5"/>
+    <text x="180" y="184" text-anchor="middle" font-size="10" fill="#1a1a1a">s₄</text>
+    <circle cx="260" cy="150" r="20" fill="#e6f4ea" stroke="#2d6a4f" stroke-width="2"/>
+    <text x="260" y="154" text-anchor="middle" font-size="10" fill="#2d6a4f" font-weight="700">G</text>
+
+    <!-- MC arrows (full trajectory) -->
+    <line x1="98" y1="60" x2="130" y2="94" stroke="#c44d4d" stroke-width="1.2" marker-end="url(#arr-mc)"/>
+    <line x1="135" y1="118" x2="108" y2="144" stroke="#c44d4d" stroke-width="1.2" marker-end="url(#arr-mc)"/>
+    <line x1="120" y1="168" x2="170" y2="178" stroke="#c44d4d" stroke-width="1.2" marker-end="url(#arr-mc)"/>
+    <line x1="115" y1="148" x2="185" y2="126" stroke="#c44d4d" stroke-width="1.2" marker-end="url(#arr-mc)"/>
+    <line x1="218" y1="120" x2="248" y2="142" stroke="#c44d4d" stroke-width="1.2" marker-end="url(#arr-mc)"/>
+    <line x1="195" y1="175" x2="248" y2="155" stroke="#c44d4d" stroke-width="1.2" marker-end="url(#arr-mc)"/>
+
+    <!-- MC annotation -->
+    <text x="140" y="215" text-anchor="middle" font-size="10" fill="#c44d4d">等轨迹结束 → 看真实 G_t → 平均</text>
+    <text x="140" y="230" text-anchor="middle" font-size="9" fill="#888">(无偏，高方差)</text>
+
+    <!-- TD side (right) -->
+    <text x="420" y="22" text-anchor="middle" font-size="14" font-weight="700" fill="#5b8c5a">时序差分 TD(0)</text>
+
+    <!-- States in TD -->
+    <circle cx="360" cy="90" r="22" fill="#f5efe6" stroke="#8b4513" stroke-width="2"/>
+    <text x="360" y="86" text-anchor="middle" font-size="11" fill="#1a1a1a">s</text>
+    <text x="360" y="102" text-anchor="middle" font-size="9" fill="#888">V(s)</text>
+
+    <circle cx="480" cy="90" r="22" fill="#f5efe6" stroke="#8b4513" stroke-width="2"/>
+    <text x="480" y="86" text-anchor="middle" font-size="11" fill="#1a1a1a">s'</text>
+    <text x="480" y="102" text-anchor="middle" font-size="9" fill="#888">V(s')</text>
+
+    <!-- Step arrow -->
+    <line x1="382" y1="90" x2="458" y2="90" stroke="#5b8c5a" stroke-width="2.2" marker-end="url(#arr-mc)"/>
+    <text x="420" y="82" text-anchor="middle" font-size="10" fill="#5b8c5a">a, r</text>
+
+    <!-- Update formula -->
+    <rect x="380" y="130" width="160" height="45" rx="8" fill="#e6f4ea" stroke="#2d6a4f" stroke-width="1.2"/>
+    <text x="460" y="150" text-anchor="middle" font-size="10" fill="#2d6a4f" font-weight="600">V(s) ← V(s) + α[r+γV(s')−V(s)]</text>
+    <text x="460" y="168" text-anchor="middle" font-size="9" fill="#888">TD 误差 δ_t</text>
+
+    <!-- Arrow from states to formula -->
+    <line x1="360" y1="112" x2="400" y2="148" stroke="#999" stroke-width="0.8" stroke-dasharray="3,3"/>
+    <line x1="480" y1="112" x2="500" y2="148" stroke="#999" stroke-width="0.8" stroke-dasharray="3,3"/>
+
+    <!-- TD annotation -->
+    <text x="420" y="205" text-anchor="middle" font-size="10" fill="#5b8c5a">不等结束 → 一步自举 → 即时更新</text>
+    <text x="420" y="220" text-anchor="middle" font-size="9" fill="#888">(有偏，低方差，在线学习)</text>
+
+    <!-- Divider -->
+    <line x1="280" y1="30" x2="280" y2="230" stroke="#ccc" stroke-width="1" stroke-dasharray="4,6"/>
+
+    <!-- Key insight at bottom -->
+    <text x="280" y="270" text-anchor="middle" font-size="11" fill="#8b4513" font-weight="600">MC 等结局看全集 · TD 走一步猜全集</text>
+    <text x="280" y="290" text-anchor="middle" font-size="10" fill="#888">MC = KNN（无偏高方差）· TD = 回归（有偏低方差）</text>
+  </svg>
+  <div class="viz-caption">MC vs TD：MC 走完整轨迹后回溯更新所有经过的状态；TD 每走一步就更新——用 V(s') 的当前估计做 bootstrapping。</div>
+</div>
+
 <!-- ============================================================ -->
 <h2 id="s4">4. MC vs TD：偏差-方差权衡</h2>
 

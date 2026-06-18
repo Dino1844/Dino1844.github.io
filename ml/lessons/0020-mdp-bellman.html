@@ -195,6 +195,39 @@ window.MathJax = {
 
 <p>注意两个关键：<strong>转移概率 $\mathcal{P}$ 由环境决定，智能体不知道</strong>（model-free）或只知道部分（model-based）。<strong>奖励信号是唯一的学习信号</strong>——没有标签告诉你"正确动作是什么"。</p>
 
+
+<div class="viz-container" style="background:white;border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.5rem 0;text-align:center;">
+  <svg viewBox="0 0 520 220" xmlns="http://www.w3.org/2000/svg" style="max-width:520px;width:100%;">
+    <defs>
+      <marker id="arr-mdp" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><polygon points="0 0, 6 2, 0 4" fill="#555"/></marker>
+    </defs>
+    <!-- Agent -->
+    <rect x="40" y="60" width="100" height="100" rx="50" fill="#5b8c5a" opacity="0.12" stroke="#5b8c5a" stroke-width="2"/>
+    <text x="90" y="100" text-anchor="middle" font-size="14" font-weight="700" fill="#3a6b39">智能体</text>
+    <text x="90" y="120" text-anchor="middle" font-size="11" fill="#5b8c5a">Agent</text>
+    <text x="90" y="140" text-anchor="middle" font-size="10" fill="#555">策略 π(a|s)</text>
+
+    <!-- Environment -->
+    <rect x="360" y="60" width="120" height="100" rx="12" fill="#4a7bab" opacity="0.1" stroke="#4a7bab" stroke-width="2"/>
+    <text x="420" y="100" text-anchor="middle" font-size="14" font-weight="700" fill="#2d5f8a">环境</text>
+    <text x="420" y="120" text-anchor="middle" font-size="11" fill="#4a7bab">Environment</text>
+    <text x="420" y="140" text-anchor="middle" font-size="10" fill="#555">P(s'|s,a), R</text>
+
+    <!-- Action arrow (top) -->
+    <path d="M140,80 C230,40 310,40 360,80" fill="none" stroke="#c44d4d" stroke-width="2.2" marker-end="url(#arr-mdp)"/>
+    <text x="250" y="52" text-anchor="middle" font-size="12" fill="#c44d4d" font-weight="600">动作 a_t</text>
+
+    <!-- State+Reward arrow (bottom) -->
+    <path d="M360,140 C310,180 230,180 140,140" fill="none" stroke="#e07b39" stroke-width="2.2" marker-end="url(#arr-mdp)"/>
+    <text x="250" y="196" text-anchor="middle" font-size="12" fill="#e07b39" font-weight="600">状态 s_{t+1} + 奖励 r_{t+1}</text>
+
+    <!-- Time annotation -->
+    <text x="260" y="24" text-anchor="middle" font-size="10" fill="#888">时间步 t</text>
+    <text x="260" y="214" text-anchor="middle" font-size="10" fill="#888">时间步 t+1</text>
+  </svg>
+  <div class="viz-caption">MDP 交互循环：智能体观测状态 → 选动作 → 环境返回新状态 + 奖励。智能体不知道 P 和 R——只能通过交互采样学习。</div>
+</div>
+
 <!-- ============================================================ -->
 <h2 id="s3">3. 回报与价值函数：从"这步赚多少"到"长远看有多好"</h2>
 
@@ -269,6 +302,55 @@ window.MathJax = {
 
 <div class="insight">
   <strong>Bellman 方程的本质：自洽性条件。</strong>它说"如果 $V^\pi$ 是正确的价值函数，那么对它自己的递归定义必须成立"。反过来，满足 Bellman 方程的函数就是 $V^\pi$。这给了我们一个<strong>检验</strong>和<strong>求解</strong>价值函数的方法：猜一个 $V$，看它是否满足方程 —— 这就是下一课动态规划的基础。
+</div>
+
+
+<div class="viz-container" style="background:white;border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.5rem 0;text-align:center;">
+  <svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg" style="max-width:500px;width:100%;">
+    <defs>
+      <marker id="arr-bell" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><polygon points="0 0, 6 2, 0 4" fill="#555"/></marker>
+    </defs>
+
+    <!-- Current state -->
+    <circle cx="130" cy="130" r="35" fill="#5b8c5a" opacity="0.15" stroke="#5b8c5a" stroke-width="2.5"/>
+    <text x="130" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#3a6b39">V(s)</text>
+    <text x="130" y="145" text-anchor="middle" font-size="10" fill="#555">当前价值</text>
+
+    <!-- Sum/expectation symbol -->
+    <text x="250" y="120" text-anchor="middle" font-size="22" fill="#8b4513">= Σ π(a|s) Σ P</text>
+
+    <!-- Reward + Next state -->
+    <circle cx="130" cy="40" r="28" fill="#e07b39" opacity="0.15" stroke="#e07b39" stroke-width="2"/>
+    <text x="130" y="36" text-anchor="middle" font-size="12" font-weight="700" fill="#c06a25">r</text>
+    <text x="130" y="52" text-anchor="middle" font-size="9" fill="#888">即时期望奖励</text>
+
+    <!-- Plus sign -->
+    <text x="200" y="68" font-size="20" fill="#555">+</text>
+
+    <!-- Gamma * V(s') -->
+    <circle cx="370" cy="90" r="32" fill="#4a7bab" opacity="0.12" stroke="#4a7bab" stroke-width="2"/>
+    <text x="370" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="#2d5f8a">γV(s')</text>
+    <text x="370" y="104" text-anchor="middle" font-size="9" fill="#888">折扣的未来价值</text>
+
+    <!-- Arrows -->
+    <line x1="158" y1="110" x2="200" y2="68" stroke="#555" stroke-width="1.2"/>
+    <line x1="230" y1="70" x2="338" y2="90" stroke="#555" stroke-width="1.2" marker-end="url(#arr-bell)"/>
+
+    <!-- Multiple next states -->
+    <circle cx="370" cy="155" r="20" fill="#4a7bab" opacity="0.08" stroke="#4a7bab" stroke-width="1.2" stroke-dasharray="4,3"/>
+    <text x="370" y="159" text-anchor="middle" font-size="9" fill="#888">s'_1</text>
+    <circle cx="420" cy="125" r="20" fill="#4a7bab" opacity="0.08" stroke="#4a7bab" stroke-width="1.2" stroke-dasharray="4,3"/>
+    <text x="420" y="129" text-anchor="middle" font-size="9" fill="#888">s'_2</text>
+    <circle cx="420" cy="175" r="20" fill="#4a7bab" opacity="0.08" stroke="#4a7bab" stroke-width="1.2" stroke-dasharray="4,3"/>
+    <text x="420" y="179" text-anchor="middle" font-size="9" fill="#888">s'_3</text>
+    <line x1="390" y1="102" x2="380" y2="140" stroke="#999" stroke-width="0.8"/>
+    <line x1="395" y1="100" x2="412" y2="118" stroke="#999" stroke-width="0.8"/>
+    <line x1="395" y1="100" x2="412" y2="168" stroke="#999" stroke-width="0.8"/>
+
+    <!-- Notation -->
+    <text x="250" y="240" text-anchor="middle" font-size="11" fill="#555">Bellman 期望方程：今天的价值 = 今天的期望奖励 + 折扣的明天价值</text>
+  </svg>
+  <div class="viz-caption">Bellman 方程：V(s) 等于即时期望奖励 r 加上折扣的未来价值 γV(s')。这是一个递归——计算 V(s) 只需要知道 V(s')。</div>
 </div>
 
 <!-- ============================================================ -->

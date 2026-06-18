@@ -171,6 +171,54 @@ abla\log\pi$ 奇迹般出现</a><br>
   <div class="cc-connections"><span class="conn-badge">→ 0020: GPI 范式</span><span class="conn-badge">→ 0007: <span class="cr" data-card="primal-dual">原始-对偶</span></span><span class="conn-badge">→ 0010: TD 误差 = Bellman 残差</span></div>
 </div>
 
+
+<div class="viz-container" style="background:white;border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.5rem 0;text-align:center;">
+  <svg viewBox="0 0 540 300" xmlns="http://www.w3.org/2000/svg" style="max-width:540px;width:100%;">
+    <defs>
+      <marker id="arr-ac" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><polygon points="0 0, 6 2, 0 4" fill="#555"/></marker>
+    </defs>
+
+    <!-- Actor box -->
+    <rect x="30" y="60" width="180" height="160" rx="10" fill="#c44d4d" opacity="0.07" stroke="#c44d4d" stroke-width="2"/>
+    <text x="120" y="90" text-anchor="middle" font-size="15" font-weight="700" fill="#a33">Actor (策略网络)</text>
+    <text x="120" y="110" text-anchor="middle" font-size="11" fill="#555">π_φ(a|s)</text>
+    <text x="120" y="135" text-anchor="middle" font-size="10" fill="#888">输入: 状态 s</text>
+    <text x="120" y="152" text-anchor="middle" font-size="10" fill="#888">输出: 动作分布 π(a|s)</text>
+    <text x="120" y="175" text-anchor="middle" font-size="10" fill="#888">更新: ∇log π × advantage</text>
+    <text x="120" y="200" text-anchor="middle" font-size="9" fill="#a33">"做什么动作"</text>
+
+    <!-- Critic box -->
+    <rect x="330" y="60" width="180" height="160" rx="10" fill="#4a7bab" opacity="0.07" stroke="#4a7bab" stroke-width="2"/>
+    <text x="420" y="90" text-anchor="middle" font-size="15" font-weight="700" fill="#2d5f8a">Critic (价值网络)</text>
+    <text x="420" y="110" text-anchor="middle" font-size="11" fill="#555">V_ψ(s) 或 Q_ψ(s,a)</text>
+    <text x="420" y="135" text-anchor="middle" font-size="10" fill="#888">输入: 状态 s (+动作 a)</text>
+    <text x="420" y="152" text-anchor="middle" font-size="10" fill="#888">输出: 标量价值</text>
+    <text x="420" y="175" text-anchor="middle" font-size="10" fill="#888">更新: min TD 误差²</text>
+    <text x="420" y="200" text-anchor="middle" font-size="9" fill="#2d5f8a">"这个动作有多好"</text>
+
+    <!-- Arrow: Actor → Environment (action) -->
+    <line x1="210" y1="130" x2="270" y2="130" stroke="#c44d4d" stroke-width="2" marker-end="url(#arr-ac)"/>
+    <text x="240" y="122" text-anchor="middle" font-size="9" fill="#c44d4d">a ~ π</text>
+
+    <!-- Environment box in center -->
+    <rect x="270" y="105" width="60" height="50" rx="6" fill="#f5efe6" stroke="#8b4513" stroke-width="1.2"/>
+    <text x="300" y="126" text-anchor="middle" font-size="10" fill="#8b4513">环境</text>
+    <text x="300" y="142" text-anchor="middle" font-size="9" fill="#888">Env</text>
+
+    <!-- Arrow: Environment → Critic (s', r) -->
+    <path d="M300,155 C300,220 420,220 420,210" fill="none" stroke="#e07b39" stroke-width="1.8" marker-end="url(#arr-ac)"/>
+    <text x="360" y="235" text-anchor="middle" font-size="9" fill="#e07b39">s', r</text>
+
+    <!-- Arrow: Critic → Actor (TD error = advantage) -->
+    <path d="M330,170 C270,240 180,240 150,210" fill="none" stroke="#2d6a4f" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arr-ac)"/>
+    <text x="260" y="258" text-anchor="middle" font-size="10" fill="#2d6a4f" font-weight="600">TD 误差 δ_t = advantage</text>
+
+    <!-- Bottom note -->
+    <text x="270" y="288" text-anchor="middle" font-size="11" fill="#8b4513">一个 TD 误差 δ_t 同时训练两个网络——这是 Actor-Critic 最优雅的设计</text>
+  </svg>
+  <div class="viz-caption">Actor-Critic 架构：Actor 输出动作，Critic 输出价值。环境返回 s', r → Critic 算 TD 误差 → TD 误差同时更新 Critic（缩小预测误差）和 Actor（策略梯度权重）。</div>
+</div>
+
 <!-- ============================================================ -->
 <h2 id="s5">5. PPO：Trust Region 与保守策略迭代</h2>
 
@@ -352,6 +400,33 @@ window.addEventListener('load', function() {
   <div class="cc-header"><span class="cc-tag">哲学</span><h3>贝叶斯推断中的不确定性管理</h3></div>
   <div class="cc-essence">贝叶斯（0002）：参数不确定时，不取点估计——对整个后验积分。RL 的同构：Q 值不确定时，不贪婪选最大——加探索、取 min（Double Q）、加 trust region（PPO）。两种哲学的核心都是<strong>在不确定时保持保守</strong>。</div>
   <div class="cc-connections"><span class="conn-badge">→ 0002: 贝叶斯</span><span class="conn-badge">→ 0022: RL 不确定性管理</span></div>
+</div>
+</template>
+
+
+<template id="card-data-bootstrap">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">RL 概念</span><h3>自举 Bootstrapping</h3></div>
+  <div class="cc-essence">用<strong>当前的估计值</strong>作为更新目标的一部分。TD 目标 $r+\gamma V(s')$ 用了当前的 $V(s')$——"用自己的估计去更新自己"。DP 也自举（Bellman 更新）。MC 不自举——只用真实回报 $G_t$。</div>
+  <div class="cc-section"><h4>自举的代价与收益</h4><p>收益：不等轨迹结束就能更新（在线学习）+ 压低方差（只含一步随机性）。代价：引入偏差——如果 $V(s')$ 不准，目标就不准。死三角里自举是三条边之一。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0021 §3: TD 学习</span><span class="conn-badge">→ 0022 §1: 死三角</span></div>
+</div>
+</template>
+
+<template id="card-data-is">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">统计工具</span><h3>重要性采样 Importance Sampling</h3></div>
+  <div class="cc-essence">从分布 $q$ 采样估计 $\mathbb{E}_p[f(X)]$：$\mathbb{E}_p[f] = \mathbb{E}_q[\frac{p}{q}f]$。权重 $w=p/q$ 修正了采样分布的偏差。Off-policy RL 的数学基础——行为策略 $\mu$ 采样，目标策略 $\pi$ 评估。</div>
+  <div class="cc-section"><h4>在 RL 里</h4><p>Off-policy 评估需要 $\prod_t \frac{\pi(a_t|s_t)}{\mu(a_t|s_t)}$ 的乘积——轨迹越长权重方差越大。这是 off-policy 方法比 on-policy 更难的根本原因。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0021: off-policy</span><span class="conn-badge">→ PPO: IS ratio r_t(φ)</span></div>
+</div>
+</template>
+
+<template id="card-data-policy">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">RL 核心</span><h3>策略 Policy π(a|s)</h3></div>
+  <div class="cc-essence">策略 = 智能体的"行为规则"：在每个状态 $s$，以什么概率选动作 $a$。确定性策略：$a=\pi(s)$。随机策略：$a\sim\pi(\cdot|s)$。随机性对<strong>探索</strong>关键——确定性策略在未知环境里永远重复同样动作。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0020 §3: 价值依赖于策略</span><span class="conn-badge">→ 0022 §3: 参数化策略</span></div>
 </div>
 </template>
 
