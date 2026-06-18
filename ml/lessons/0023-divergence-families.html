@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0023 · 散度家族</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "\01f4a1 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "\026a0\fe0f "; font-style: normal; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .cr { color: var(--accent); border-bottom: 1px dashed var(--accent); cursor: pointer; }
+  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+  .card-popup { position: fixed; z-index: 9999; width: 400px; max-height: 480px; overflow-y: auto; background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); padding: 0; display: none; font-size: 0.88rem; line-height: 1.55; }
+  .card-popup.show { display: block; }
+  .card-popup .concept-card { margin: 0; border: none; border-radius: 0; box-shadow: none; padding: 1rem 1.2rem; }
+  .viz-container { background:white;border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.5rem 0;text-align:center; }
+  .viz-caption { font-size:0.85rem;color:var(--muted);text-align:center;margin-top:0.5rem; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0023 · 散度家族</h1>
+<div class="subtitle">KL 散度只是冰山一角——$f$-散度、JS、Wasserstein 以及它们为什么决定生成模型的成败 · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 散度的公理：什么才算"距离"</a><br>
+  <a href="#s2">2. $f$-散度：一个公式，KL/JS/χ² 全在里面</a><br>
+  <a href="#s3">3. 前向 KL vs 反向 KL：mean-seeking vs mode-seeking</a><br>
+  <a href="#s4">4. Jensen-Shannon：对称且平滑</a><br>
+  <a href="#s5">5. Wasserstein 距离：最优传输的几何直觉</a><br>
+  <a href="#s6">6. 为什么散度选择决定 GAN 的生与死</a><br>
+  <a href="#s7">7. 推导与自测</a>
+</div>
+
+<p>
+  0001 §6 引入了 KL 散度，证明了 MLE = min KL。但如果 KL 不是"最好的"散度呢？如果换一个散度，GAN 就不会训练崩溃呢？本课把视野从 KL 拉到整个<strong>散度家族</strong>——$f$-散度、JS、Wasserstein——并回答：<strong>不同的散度如何决定了不同算法的行为</strong>。
+</p>
+
+<div class="retrieval">
+  <h3>激活已有知识</h3>
+  <ol>
+    <li>KL 散度：$\mathrm{KL}(p\|q)=\mathbb{E}_p[\log(p/q)]$，不对称，非负（0001 §6）</li>
+    <li>$D_{\text{KL}}(p\|q)\neq D_{\text{KL}}(q\|p)$：前向 KL 和后向 KL 行为完全不同</li>
+    <li>0010 EM：最大化 ELBO = 最小化前向 KL</li>
+    <li>0015 VI：最大化 ELBO = 最小化反向 KL</li>
+    <li>GAN 用 JS/Binary Cross-Entropy → 训练不稳定 → WGAN 用 Wasserstein</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 散度的公理：什么才算"距离"</h2>
+
+<p>数学上，"距离"需要满足三条公理：正定性 $d(p,q)\geq 0$ 且 $d(p,q)=0\Leftrightarrow p=q$，对称性 $d(p,q)=d(q,p)$，三角不等式 $d(p,q)+d(q,r)\geq d(p,r)$。KL 散度满足正定性（Gibbs 不等式）但<strong>不对称</strong>——它不是真正的距离。</p>
+
+<div class="meta-box">
+  <h4>范式 #29 · 散度 = 衡量分布差异的函数</h4>
+  <strong>散度</strong>（divergence）只要求正定性，<strong>不要求对称和三角不等式</strong>。这给了我们一个巨大的设计空间——可以根据任务选择不同几何性质的散度。VI 用反向 KL（mode-seeking），MLE 用前向 KL（mean-seeking），GAN 用 JS（对称），WGAN 用 Wasserstein（处处有梯度）。
+</div>
+
+<table>
+  <tr><th>散度</th><th>对称?</th><th>三角不等式?</th><th>处处有梯度?</th><th>典型用途</th></tr>
+  <tr><td>$D_{\text{KL}}(p\|q)$</td><td>否</td><td>否</td><td>在 $q=0,p>0$ 处爆炸</td><td>MLE、EM</td></tr>
+  <tr><td>$D_{\text{KL}}(q\|p)$</td><td>否</td><td>否</td><td>在 $p=0,q>0$ 处爆炸</td><td>变分推断 (VI)</td></tr>
+  <tr><td>JS 散度</td><td>是</td><td>否</td><td>支撑不交时退化到常数</td><td>原始 GAN</td></tr>
+  <tr><td>$W_1$ (Wasserstein-1)</td><td>是</td><td>是</td><td>是（关键优势）</td><td>WGAN</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. $f$-散度：一个公式，KL/JS/χ² 全在里面</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">范式 #30</span><h3>$f$-散度 · $f$-Divergence</h3></div>
+  <div class="cc-essence"><strong>数学本质：</strong>$D_f(p\|q) = \mathbb{E}_q\!\big[f\!\big(\frac{p(x)}{q(x)}\big)\big] = \int q(x)\,f\!\big(\frac{p(x)}{q(x)}\big)\,dx$。其中 $f$ 是任意凸函数且 $f(1)=0$。<strong>换 $f$ = 换散度</strong>——这就像指数族里"换分布 = 换四个组件"的同构：一个统一形式覆盖一大类。</div>
+  <div class="cc-section"><h4>$f$ 函数对照表</h4>
+  <table style="font-size:0.84rem;">
+    <tr><th>$f(u)$</th><th>散度</th><th>公式</th></tr>
+    <tr><td>$u\log u$</td><td>前向 KL</td><td>$D_{\text{KL}}(p\|q)=\int p\log(p/q)$</td></tr>
+    <tr><td>$-\log u$</td><td>反向 KL</td><td>$D_{\text{KL}}(q\|p)=\int q\log(q/p)$</td></tr>
+    <tr><td>$-(u+1)\log\frac{u+1}{2}+u\log u$</td><td>JS</td><td>$D_{\text{JS}}=\frac12\mathrm{KL}(p\|m)+\frac12\mathrm{KL}(q\|m),\;m=\frac{p+q}{2}$</td></tr>
+    <tr><td>$(u-1)^2$</td><td>Pearson $\chi^2$</td><td>$\chi^2(p\|q)=\int\frac{(p-q)^2}{q}$</td></tr>
+  </table></div>
+  <div class="cc-connections"><span class="conn-badge">→ 指数族: 换组件 = 换分布</span><span class="conn-badge">→ $f$-散度: 换 $f$ = 换散度</span></div>
+</div>
+
+<div class="insight">
+  <strong>凸函数 $f$ 决定了散度的全部几何性质。</strong>$f(u)=u\log u$：在 $u\to 0$ 时有界（$0\log 0\to 0$），所以前向 KL 对 $q=0$ 但 $p>0$ 的区域施<strong>重罚</strong>。$f(u)=-\log u$：在 $u\to\infty$ 时线性增长（$\log u$），所以反向 KL 对 $p=0$ 但 $q>0$ 的区域施<strong>软罚</strong>。这两个不对称性来自 $f$ 在 $u\to 0$ 和 $u\to\infty$ 的渐近行为——散度的全部"个性"都在 $f$ 的尾巴里。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 前向 KL vs 反向 KL：mean-seeking vs mode-seeking</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">范式 #31</span><h3>前向 KL = mean-seeking · 反向 KL = mode-seeking</h3></div>
+  <div class="cc-essence"><strong>前向 KL</strong> $\mathrm{KL}(p\|q)$：$p$ 大处 $q$ 必须大，否则被 $\log(p/q)\to\infty$ 重罚 → $q$ 覆盖 $p$ 的所有模式（mean-seeking）。<strong>反向 KL</strong> $\mathrm{KL}(q\|p)$：$p$ 小处 $q$ 必须小，否则被 $q\log(q/p)$ 罚 → $q$ 缩在 $p$ 的一个模式里（mode-seeking）。</div>
+  <div class="cc-section"><h4>两种 KL 的选择决定了整个算法的行为</h4>
+  <p><strong>MLE/EM 用前向 KL</strong>（$\mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}})$）→ 模型必须覆盖数据的所有模式 → 不会漏模式，但可能把噪声当模式。</p>
+  <p><strong>VI 用反向 KL</strong>（$\mathrm{KL}(q_\phi\|p_{\text{posterior}})$）→ $q$ 缩在真实后验的最高峰附近 → 若真后验多峰，只拟合一个峰。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0001 §6: MLE = min 前向 KL</span><span class="conn-badge">→ 0015: VI = min 反向 KL</span><span class="conn-badge">→ 0010: EM = 前向 KL</span></div>
+</div>
+
+<div class="warning">
+  <strong>多峰分布的悲剧：</strong>假设 $p_{\text{data}}$ 是双峰（两个 cluster）。前向 KL 训练的模型会生成两个峰（覆盖完整）。反向 KL 训练的模型（VI）可能只生成一个峰——它选择了"最安全"的那个模式，完全忽略了另一个。<strong>这就是为什么 VAE 生成的样本比 GAN "模糊"——反向 KL 的 mode-seeking 本性让 VAE 不敢覆盖全部模式。</strong>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. Jensen-Shannon：对称且平滑</h2>
+
+<p>JS 散度取前向和后向 KL 的<strong>对称平均</strong>：$D_{\text{JS}}(p\|q) = \frac12\mathrm{KL}(p\|m) + \frac12\mathrm{KL}(q\|m)$，其中 $m=\frac{p+q}{2}$。它是对称的、有界的（$0\leq D_{\text{JS}}\leq\log 2$）。</p>
+
+<p>为什么 GAN 用 JS？原始 GAN 的 minimax 目标：$\min_G\max_D\mathbb{E}_{p_{\text{data}}}[\log D]+\mathbb{E}_{p_G}[\log(1-D)]$。当 $D$ 达到最优 $D^*=\frac{p_{\text{data}}}{p_{\text{data}}+p_G}$ 时，生成器的损失 <strong>等价于 $2D_{\text{JS}}(p_{\text{data}}\|p_G)-\log 4$</strong>。</p>
+
+<div class="warning">
+  <strong>JS 的致命缺陷：梯度消失。</strong>在高维空间中，$p_{\text{data}}$ 和 $p_G$ 的支撑集（概率非零的区域）几乎不相交。当支撑不交时，$D_{\text{JS}}$ 恒定等于 $\log 2$——梯度完全为零。训练初期的生成器产生的是纯噪声，和数据分布支撑几乎无交集 → JS 散度停在 $\log 2$，梯度零 → GAN 不学了 → 训练崩溃。<strong>这是原始 GAN 不稳定的数学根源。</strong>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. Wasserstein 距离：最优传输的几何直觉</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">范式 #32</span><h3>Wasserstein 距离 · Earth Mover's Distance</h3></div>
+  <div class="cc-essence"><strong>直觉：</strong>把分布 $p$ 变成分布 $q$，最少需要把多少"概率质量"搬运多远的距离。不像 KL/JS 只比较同一位置的密度值，Wasserstein 考虑了<strong>空间的几何结构</strong>。</div>
+  <div class="cc-section"><h4>Wasserstein-1 (Kantorovich-Rubinstein 对偶)</h4>
+  <div class="cc-formula">$$W_1(p,q) = \sup_{\|f\|_L\leq 1} \mathbb{E}_{x\sim p}[f(x)] - \mathbb{E}_{x\sim q}[f(x)]$$</div>
+  <p>$f$ 是 1-Lipschitz 函数——变化不能太快。WGAN 的 Critic 就是在学这个最优的 $f$。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ WGAN: Critic 近似 $f$</span><span class="conn-badge">→ 0019: 最优传输 = 概率空间几何</span></div>
+</div>
+
+<div class="derivation">
+  <h4>为什么 Wasserstein 解决了 JS 的梯度消失</h4>
+  <div class="step"><strong>JS 的问题：</strong>两分布支撑不交 → $D_{\text{JS}}=\log 2$（常数）→ $\nabla D_{\text{JS}}=0$ → 生成器得不到学习信号。</div>
+  <div class="step"><strong>Wasserstein 的不同：</strong>$W_1(p,q)$ = 需要搬运的概率质量 × 搬运距离。即使两分布支撑不交，$W_1$ <strong>仍然等于它们之间的空间距离</strong> → 梯度不为零 → 生成器得到"往数据方向走"的信号。<span class="reason">Wasserstein 连续依赖于分布的几何位置——JS 没有这个性质。</span></div>
+  <div class="step">例如：$p=\delta_0$（Dirac at 0），$q_\theta=\delta_\theta$。$W_1(p,q_\theta)=|\theta|$（梯度 = $\pm 1$，处处非零）。$D_{\text{JS}}(p\|q_\theta)=\log 2$（$\theta\neq 0$ 时恒定，梯度 = 0）。<span class="reason">这个一维例子完美展示了 Wasserstein 对生成模型的价值。</span></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 为什么散度选择决定 GAN 的生与死</h2>
+
+<p>总结整个故事的逻辑链：</p>
+<ol>
+  <li><strong>原始 GAN = min JS</strong>（等价性由最优判别器推导出）→ 高维支撑不交 → JS 常数 → 梯度消失 → 训练崩溃/模式坍塌。</li>
+  <li><strong>WGAN = min Wasserstein</strong>（用 Kantorovich-Rubinstein 对偶）→ 处处有梯度 → 训练稳定。代价：需要约束 Critic 是 1-Lipschitz（权重裁剪、梯度惩罚）。</li>
+  <li><strong>$f$-GAN</strong>：可以用任意 $f$-散度训练 GAN——用 Fenchel 对偶把 $\mathbb{E}_q[f(p/q)]$ 变成 $\sup_T[\mathbb{E}_p[T]-\mathbb{E}_q[f^*(T)]]$（$f^*$ = $f$ 的凸共轭）。$T$ 就是判别器。</li>
+</ol>
+
+<div class="insight">
+  <strong>Fenchel 对偶是 $f$-GAN 的数学核心。</strong>凸函数的对偶表示：$f(u) = \sup_{t\in\mathbb{R}}[tu - f^*(t)]$。代入 $u=p/q$：
+  $D_f(p\|q) = \sup_T[\mathbb{E}_p[T(x)] - \mathbb{E}_q[f^*(T(x))]]$。
+  这就是 $f$-GAN 的统一框架——$T$ 是判别器，$f^*$ 是激活函数。<strong>换 $f$ = 换激活函数 = 换散度 = 换 GAN 的行为。</strong>这是"损失是噪声的影子"（0001 §2）在生成模型里的对应物：<strong>"判别器的激活函数是散度的影子"。</strong>
+</div>
+
+<table>
+  <tr><th>$f$-散度</th><th>$f^*(t)$ (凸共轭)</th><th>判别器输出激活</th><th>GAN 变体</th></tr>
+  <tr><td>KL</td><td>$\exp(t-1)$</td><td>无界（可能爆炸）</td><td>—</td></tr>
+  <tr><td>JS</td><td>$-\log(2-e^t)$</td><td>Sigmoid</td><td>原始 GAN</td></tr>
+  <tr><td>$\chi^2$</td><td>$t+t^2/4$</td><td>线性</td><td>LSGAN</td></tr>
+  <tr><td>Wasserstein</td><td>—（不是 $f$-散度）</td><td>无激活（Critic）</td><td>WGAN</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 推导与自测</h2>
+
+<div class="problem">
+  <div class="ptitle">L1 · $f$-散度的非负性证明 <span class="plevel l1">L1</span></div>
+  <div class="pbody">用 Jensen 不等式证明 $D_f(p\|q)\geq 0$。提示：$f$ 是凸函数，$f(1)=0$。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">$D_f(p\|q) = \mathbb{E}_q[f(p/q)] \geq f(\mathbb{E}_q[p/q])$<span class="reason">Jensen 不等式：$f$ 是凸函数</span></div>
+    <div class="step">$\mathbb{E}_q[p/q] = \int q\cdot(p/q)\,dx = \int p\,dx = 1$<span class="reason">$p$ 是概率密度，积分为 1</span></div>
+    <div class="step">$f(\mathbb{E}_q[p/q]) = f(1) = 0$<span class="reason">$f(1)=0$ 是 $f$-散度的定义要求</span></div>
+    <div class="step">因此 $D_f(p\|q) \geq 0$。等号成立当 $p/q$ 是常数（$p=q$ 几乎处处）。</div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L2 · JS 散度的有界性 <span class="plevel l2">L2</span></div>
+  <div class="pbody">证明 $0\leq D_{\text{JS}}(p\|q)\leq\log 2$。提示：$D_{\text{JS}}=\frac12\mathrm{KL}(p\|m)+\frac12\mathrm{KL}(q\|m)$，其中 $m=(p+q)/2$。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">$\mathrm{KL}(p\|m) = \mathbb{E}_p[\log(p/m)] = \mathbb{E}_p[\log(2p/(p+q))] = \mathbb{E}_p[\log 2 + \log(p/(p+q))] \leq \mathbb{E}_p[\log 2] = \log 2$<span class="reason">$p/(p+q)\leq 1$ → $\log\leq 0$ → 上界 $\log 2$</span></div>
+    <div class="step">同理 $\mathrm{KL}(q\|m) \leq \log 2$。$D_{\text{JS}} = \frac12(\leq\log 2 + \leq\log 2) \leq \log 2$。<span class="reason">这就是 JS 有界的原因——它比较的是 $p$ 和 $m=(p+q)/2$，不是直接比较 $p$ 和 $q$。</span></div>
+    <div class="step">下界：非负性由 Jensen 保证。<span class="reason">有界性是 JS 在高维失效的根源——支撑不交时直接饱和到上限 $\log 2$。</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L3 · Wasserstein vs KL 的几何敏感性 <span class="plevel l3">L3</span></div>
+  <div class="pbody">设 $p=\mathcal{N}(0,1)$，$q_\theta=\mathcal{N}(\theta,1)$。(1) 推导 $\mathrm{KL}(p\|q_\theta)$ 和 $W_2(p,q_\theta)$（Wasserstein-2）的表达式。(2) 分析它们作为 $\theta$ 的函数的梯度行为——哪个在 $\theta$ 大时梯度仍显著？(3) 解释这对生成模型训练的意义。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">(1) 两个高斯之间的 KL：$\mathrm{KL}(p\|q_\theta) = \frac12\big[\frac{\sigma_p^2}{\sigma_q^2} + \frac{(\mu_p-\mu_q)^2}{\sigma_q^2} - 1 + 2\log\frac{\sigma_q}{\sigma_p}\big]$。这里 $\mu_p=0,\mu_q=\theta,\sigma_p=\sigma_q=1$ → $\mathrm{KL}= \frac12\theta^2$。<span class="reason">KL = 二次增长，梯度 $\theta$，随距离线性增长——看似不错。</span></div>
+    <div class="step">两个高斯之间的 $W_2$：$W_2^2(p,q_\theta) = (\mu_p-\mu_q)^2 + (\sigma_p-\sigma_q)^2 = \theta^2 + 0$。$W_2 = |\theta|$，梯度 = $\text{sign}(\theta)$。<span class="reason">Wasserstein-2 梯度是常数！无论两分布隔多远，梯度永远 $\pm 1$。</span></div>
+    <div class="step">(2) KL 梯度 $=\theta$（小 $\theta$ 时梯度小 → 训练慢）；$W_2$ 梯度 $=\pm 1$（恒定 → 处处有效）。<span class="reason">在这个例子里两者都好——但高维支撑不交时 KL 直接无穷大，$W$ 仍然有限。</span></div>
+    <div class="step">(3) 生成模型意义：训练初期 $p_G$ 和 $p_{\text{data}}$ 几乎无交集。JS/KL 的梯度为零或无穷 → 生成器收不到信号。Wasserstein 的梯度仍反映两分布的几何距离 → 生成器始终知道"往哪走"。<span class="reason">这就是 WGAN 比原始 GAN 稳定的数学根源。</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="reminder">
+  <strong>关键带回：</strong>散度家族 = 一个统一框架（$f$-散度）生成 KL/JS/χ² + Wasserstein 作为"非 $f$ 的几何散度"。
+  前向 KL = 覆盖所有模式（MLE），反向 KL = 聚焦一个模式（VI），JS = 对称但高维失效（原始 GAN），Wasserstein = 处处有梯度（WGAN）。
+  <strong>"损失是噪声的影子"（0001）→ "判别器的激活函数是 $f$-散度的影子"（本课）→ "散度是生成模型行为的影子"。</strong>
+</div>
+
+<div class="primary-source">
+  <h3>主要参考</h3>
+  <strong>Nowozin et al. (2016) — $f$-GAN: Training Generative Neural Samplers using Variational Divergence Minimization</strong>（$f$-散度统一 GAN 框架）。<br>
+  <strong>Arjovsky et al. (2017) — Wasserstein GAN</strong>（WGAN 原始论文，Kantorovich-Rubinstein 对偶）。<br>
+  <strong>Peyré & Cuturi (2019) — Computational Optimal Transport</strong>（最优传输的现代计算视角）。
+</div>
+
+<div class="lesson-footer">
+  <a href="0022-deep-rl.html">← 0022 Deep RL</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  <a href="../reference/math-primer.html">📐 数学手册</a> ·
+  <a href="../index.html">← AI 数学</a>
+</div>
+
+<script src="../reference/popup-cards.js"></script>
+<script>
+window.addEventListener('load', function() {
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    MathJax.typesetPromise();
+  }
+});
+</script>
+</body>
+</html>
