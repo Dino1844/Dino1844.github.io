@@ -126,7 +126,7 @@ window.MathJax = {
   <h3>激活已有知识</h3>
   <ol style="margin-bottom:0.5rem;">
     <li>条件概率 $p(s'\mid s,a)$——给定当前状态和动作，下一状态的概率分布。</li>
-    <li>期望 $\mathbb{E}[X] = \sum_x p(x)x$——RL 里大量用期望，因为环境和策略都是随机的。</li>
+    <li><span class="cr" data-card="expectation">期望</span> $\mathbb{E}[X] = \sum_x p(x)x$——RL 里大量用期望，因为环境和策略都是随机的。</li>
     <li>动态规划——把大问题拆成重叠子问题，Bellman 方程就是动态规划在 MDP 上的形式。</li>
   </ol>
 </div>
@@ -464,6 +464,32 @@ window.addEventListener('load', function() {
   }
 });
 </script>
+
+
+<template id="card-data-expectation">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">概率</span><h3>期望 Expectation</h3></div>
+  <div class="cc-essence">$\mathbb{E}_p[f(X)] = \sum_x p(x)f(x)$（离散）或 $\int p(x)f(x)dx$（连续）。期望 = 按概率加权的平均。RL 里大量用期望——价值和回报都是对随机轨迹的期望。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 📐 数学手册·概率</span></div>
+</div>
+</template>
+
+<template id="card-data-dp">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">算法</span><h3>动态规划 Dynamic Programming</h3></div>
+  <div class="cc-essence">把大问题拆成重叠子问题，自底向上求解。RL 里：$V(s)$ 依赖 $V(s')$ → Bellman 方程天然是递归结构 → DP 就是迭代应用 Bellman 更新直到收敛。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0020 §5: 值迭代 = DP</span><span class="conn-badge">→ 📐 数学手册</span></div>
+</div>
+</template>
+
+<template id="card-data-fixed-point">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">数学</span><h3>不动点迭代 Fixed-Point Iteration</h3></div>
+  <div class="cc-essence">$x_{k+1} = f(x_k)$。如果 $f$ 是压缩映射（$\|f(x)-f(y)\| \leq \gamma\|x-y\|,\gamma<1$），Banach 定理保证迭代收敛到唯一不动点 $x^*=f(x^*)$。</div>
+  <div class="cc-section"><h4>在 RL 里</h4><p>Bellman 算子 $\mathcal{T}^\pi$ 和 $\mathcal{T}^*$ 都是 $\gamma$-contraction → 值迭代和策略迭代的收敛性保证。这是所有 RL 方法的理论基础。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0020 §5-§6</span><span class="conn-badge">→ 0022: 函数逼近破坏压缩性</span></div>
+</div>
+</template>
 
 </body>
 </html>

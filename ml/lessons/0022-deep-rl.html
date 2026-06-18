@@ -106,9 +106,9 @@ abla\log\pi$ 奇迹般出现</a><br>
   <strong>自举</strong>（bootstrapping：用当前估计做更新目标）+ <strong>Off-policy 学习</strong>（行为策略 ≠ 目标策略）+ <strong>函数逼近</strong>（神经网络替代表格）——三者取二可控，<strong>三者齐上随时发散</strong>。这是 Sutton & Barto §11.3 的命名，DQN 的经验回放和 target network 本质是给这三者各加了一道保险。
 </div>
 
-<p>表格型 Q-learning 能收敛是因为 Bellman 算子 $\mathcal{T}^*$ 是<strong>压缩映射</strong>（$\gamma$-contraction）：$\|\mathcal{T}^*Q_1 - \mathcal{T}^*Q_2\|_\infty \leq \gamma\|Q_1-Q_2\|_\infty$。Banach 不动点定理保证迭代收敛到唯一 $Q^*$。</p>
+<p>表格型 Q-learning 能收敛是因为 Bellman 算子 $\mathcal{T}^*$ 是<strong>压缩映射</strong>（$\gamma$-contraction）：$\|\mathcal{T}^*Q_1 - \mathcal{T}^*Q_2\|_\infty \leq \gamma\|Q_1-Q_2\|_\infty$。<span class="cr" data-card="banach">Banach 不动点定理</span>保证迭代收敛到唯一 $Q^*$。</p>
 
-<p>问题出在<strong>函数逼近破坏了压缩性</strong>。用神经网络 $Q_\theta$ 替代表格后，TD 更新变成了"Bellman 算子 → 梯度下降投影到网络参数空间 → 新的 $Q_\theta$"——两步的复合算子<strong>不再是压缩映射</strong>。Baird (1995) 的经典反例：一个简单 7 状态 MDP，线性函数逼近 + off-policy TD → 参数发散到无穷。</p>
+<p>问题出在<strong>函数逼近破坏了压缩性</strong>。用神经网络 $Q_\theta$ 替代表格后，TD 更新变成了"Bellman 算子 → 梯度下降投影到网络参数空间 → 新的 $Q_\theta$"——两步的复合算子<strong>不再是压缩映射</strong>。<span class="cr" data-card="baird">Baird (1995) 反例</span>：一个简单 7 状态 MDP，线性函数逼近 + off-policy TD → 参数发散到无穷。</p>
 
 <div class="derivation">
   <h4>为什么 Bellman 算子 + 函数逼近会发散</h4>
@@ -135,7 +135,7 @@ abla\log\pi$ 奇迹般出现</a><br>
 <p>但这里有一个<strong>更深的矛盾</strong>：目标网络冻结参数 → 训练稳定了，但 $Q_{\theta^-}$ 是<strong>过时的</strong>——用它做的 TD 目标是错的。更新频率是 tradeoff：更新太快 → 不稳定（死三角再现）；更新太慢 → 目标偏差大 → 收敛慢。这本质上和<b>偏差-方差权衡</b>（0012）同构：目标网络延迟 = 用偏差（旧参数）换方差（训练稳定）。</p>
 
 <div class="insight">
-  <strong>$\max$ 操作为什么导致系统性高估？</strong>不是"噪声里有运气好的"这么简单。深层原因是 <strong>Jensen 不等式</strong>（0010 §4）：$f(\mathbb{E}[X]) \leq \mathbb{E}[f(X)]$ 对凸函数。$\max$ 是凸函数，所以 $\max(\mathbb{E}[Q]) \leq \mathbb{E}[\max(Q)]$——你应该比较"真实 $Q$ 的 $\max$"，但你实际上在比较"估计值 $Q$ 的 $\max$"，估计值含噪声 → $\max$ 放大正噪声、压缩负噪声 → 期望值偏高。<strong>这是凸函数对随机变量的系统性偏误——和 EM 的 ELBO 下界是同一种 Jensen 效应，方向相反。</strong>
+  <strong>$\max$ 操作为什么导致系统性高估？</strong>不是"噪声里有运气好的"这么简单。深层原因是 <strong><span class="cr" data-card="jensen-ref">Jensen 不等式</span>（0010 §4）：$f(\mathbb{E}[X]) \leq \mathbb{E}[f(X)]$ 对凸函数。$\max$ 是凸函数，所以 $\max(\mathbb{E}[Q]) \leq \mathbb{E}[\max(Q)]$——你应该比较"真实 $Q$ 的 $\max$"，但你实际上在比较"估计值 $Q$ 的 $\max$"，估计值含噪声 → $\max$ 放大正噪声、压缩负噪声 → 期望值偏高。<strong>这是凸函数对随机变量的系统性偏误——和 EM 的<span class="cr" data-card="elbo-ref">ELBO 下界</span>是同一种 Jensen 效应，方向相反。</strong>
 </div>
 
 <!-- ============================================================ -->
@@ -153,7 +153,7 @@ abla\log\pi$ 奇迹般出现</a><br>
 </div>
 
 <div class="insight">
-  <strong>$\nabla\log\pi$ 和 score function 是同族工具。</strong>0018 的 score function $\nabla_\mathbf{x}\log p(\mathbf{x})$ 衡量"数据方向怎么走能让概率增大"。
+  <strong>$\nabla\log\pi$ 和 score function 是同族工具。</strong><span class="cr" data-card="score-ref">0018 的 score function</span> $\nabla_\mathbf{x}\log p(\mathbf{x})$ 衡量"数据方向怎么走能让概率增大"。
   策略梯度的 $\nabla_\phi\log\pi_\phi(a|s)$ 衡量"参数怎么调能让这个动作的概率增大"。
   <strong>同一个恒等式（$\nabla\log f = \nabla f/f$），两个完全不同的领域，两种完全不同的用法。</strong>
 </div>
@@ -165,10 +165,10 @@ abla\log\pi$ 奇迹般出现</a><br>
 
 <div class="concept-card">
   <div class="cc-header"><span class="cc-tag">RL 范式 #27</span><h3>Actor-Critic 的深层结构</h3></div>
-  <div class="cc-essence"><strong>Actor-Critic 不是"两个网络互相帮助"——它是<strong>原始-对偶</strong>（primal-dual）优化的一个实例。Actor 在策略空间做梯度上升（原始问题），Critic 在值函数空间做 TD 学习（对偶——提供梯度方向的质量估计）。0020 的策略迭代（策略评估 + 策略改进）是这张图在表格空间的精确版；Actor-Critic 是它在函数空间的近似版。</div>
+  <div class="cc-essence"><strong>Actor-Critic 不是"两个网络互相帮助"——它是<strong><span class="cr" data-card="primal-dual">原始-对偶</span></strong>（primal-dual）优化的一个实例。Actor 在策略空间做梯度上升（原始问题），Critic 在值函数空间做 TD 学习（对偶——提供梯度方向的质量估计）。0020 的策略迭代（策略评估 + 策略改进）是这张图在表格空间的精确版；Actor-Critic 是它在函数空间的近似版。</div>
   <div class="cc-section"><h4>TD 误差的双重角色</h4>
   <p>$\delta_t = r + \gamma V(s') - V(s)$ 同时做两件事：(1) <strong>训练 Critic</strong>——$L = \delta_t^2$，最小化预测误差；(2) <strong>训练 Actor</strong>——$\nabla_\phi J = \mathbb{E}[\nabla_\phi\log\pi_\phi(a|s)\,\delta_t]$，TD 误差本身就是 advantage 的无偏估计。<strong>一个标量同时驱动两个网络的更新——这是 Actor-Critic 最优雅的地方。</strong></p></div>
-  <div class="cc-connections"><span class="conn-badge">→ 0020: GPI 范式</span><span class="conn-badge">→ 0007: 原始-对偶</span><span class="conn-badge">→ 0010: TD 误差 = Bellman 残差</span></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0020: GPI 范式</span><span class="conn-badge">→ 0007: <span class="cr" data-card="primal-dual">原始-对偶</span></span><span class="conn-badge">→ 0010: TD 误差 = Bellman 残差</span></div>
 </div>
 
 <!-- ============================================================ -->
@@ -211,7 +211,7 @@ abla\log\pi$ 奇迹般出现</a><br>
   <tr><td>DQN</td><td>死三角（off-policy + 自举 + FA）</td><td>经验回放（打破时序）+ 目标网络（冻结目标）</td><td>i.i.d. 假设（0016 反例）</td></tr>
   <tr><td>Double DQN</td><td>$\max$ 的 Jensen 高估</td><td>选评分离（$Q_1$ 选动作，$Q_2$ 估值）</td><td>选择偏差（0012 过拟合同构）</td></tr>
   <tr><td>策略梯度</td><td>高维连续动作的 $\arg\max$</td><td>$\nabla\log\pi$（REINFORCE trick）</td><td>Score function（0018）</td></tr>
-  <tr><td>Baseline (advantage)</td><td>策略梯度的方差</td><td>控制变量法（control variate）</td><td>蒙特卡洛方差缩减</td></tr>
+  <tr><td>Baseline (advantage)</td><td>策略梯度的方差</td><td><span class="cr" data-card="control-variate">控制变量法（control variate）</span></td><td>蒙特卡洛方差缩减</td></tr>
   <tr><td>PPO</td><td>策略更新步长的稳定性</td><td>Clipped surrogate（KL 的代理）</td><td>Trust region + 梯度裁剪（0014）</td></tr>
   <tr><td>SAC</td><td>探索不足 + 样本效率</td><td>最大熵（奖励 + $H(\pi)$）</td><td>KL 散度（0001 §6）· 对偶优化（0007）</td></tr>
   <tr><td>TD3</td><td>Q 高估 + 策略过拟合 Q</td><td>双 Q min + 目标平滑</td><td>正则化（防止过拟合 Q 函数）</td></tr>
@@ -222,7 +222,7 @@ abla\log\pi$ 奇迹般出现</a><br>
   DQN 管理"数据分布的不确定性"（非 i.i.d.）；Double DQN/TD3 管理"估计值的不确定性"（Jensen 偏差）；
   PPO 管理"策略更新的不确定性"（trust region）；SAC 管理"动作选择的不确定性"（熵最大化）。
   RL 的根本困难不是"怎么找到最优策略"——而是<strong>"在每一步信息都不完整的情况下，怎么安全地向最优策略移动"</strong>。
-  这和贝叶斯推断（0002/0003）里的"参数不确定时别过度自信"是同一种哲学。
+  这和<span class="cr" data-card="bayes-ref">贝叶斯推断（0002/0003）</span>里的"参数不确定时别过度自信"是同一种哲学。
 </div>
 
 <h2 id="s6">6. 推导与自测</h2>
@@ -241,7 +241,7 @@ abla\log\pi$ 奇迹般出现</a><br>
 
 <div class="problem">
   <div class="ptitle">L2 · 策略梯度定理的直观证明 <span class="plevel l2">L2</span></div>
-  <div class="pbody">策略梯度定理：$\nabla_\phi\mathbb{E}_{\tau\sim\pi_\phi}[G_0] = \mathbb{E}_\tau[\sum_t\nabla_\phi\log\pi_\phi(a_t|s_t)G_t]$。解释为什么 $\nabla\log\pi$ 出现了（提示：这和 0018 的 score function 同族），并说明为什么可以加任意 baseline $b(s_t)$ 而不改变梯度期望。</div>
+  <div class="pbody">策略梯度定理：$\nabla_\phi\mathbb{E}_{\tau\sim\pi_\phi}[G_0] = \mathbb{E}_\tau[\sum_t\nabla_\phi\log\pi_\phi(a_t|s_t)G_t]$。解释为什么 $\nabla\log\pi$ 出现了（提示：这和 <span class="cr" data-card="score-ref">0018 的 score function</span> 同族），并说明为什么可以加任意 baseline $b(s_t)$ 而不改变梯度期望。</div>
   <details><summary>展开推导</summary>
   <div class="sol">
     <div class="step">$\nabla_\phi\pi_\phi(\tau) = \pi_\phi(\tau)\nabla_\phi\log\pi_\phi(\tau)$（对数求导技巧：$\nabla\log f = \nabla f/f$）。<span class="reason">这和 $\nabla_\mathbf{x}\log p(\mathbf{x})$（0018 score function）是同一恒等式。</span></div>
@@ -291,6 +291,69 @@ window.addEventListener('load', function() {
   }
 });
 </script>
+
+
+<template id="card-data-banach">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">数学</span><h3>Banach 不动点定理</h3></div>
+  <div class="cc-essence">若 $f$ 是完备度量空间上的压缩映射（$\|f(x)-f(y)\|\leq\gamma\|x-y\|,\;\gamma<1$），则 $f$ 有唯一不动点 $x^*=f(x^*)$，且迭代 $x_{k+1}=f(x_k)$ 收敛到 $x^*$。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0020: Bellman 算子</span><span class="conn-badge">→ 0022: 函数逼近破坏压缩</span></div>
+</div>
+</template>
+
+<template id="card-data-baird">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">理论</span><h3>Baird 反例 (1995)</h3></div>
+  <div class="cc-essence">一个 7 状态 MDP，线性函数逼近 + off-policy TD(0) → 参数发散到无穷。证明了"死三角"不是理论猜想——是真实会发生的灾难。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0022 §1: 死三角</span></div>
+</div>
+</template>
+
+<template id="card-data-jensen-ref">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">不等式</span><h3>Jensen 不等式</h3></div>
+  <div class="cc-essence">凸函数：$f(\mathbb{E}[X])\leq\mathbb{E}[f(X)]$。$\max$ 是凸的 → $\max(\mathbb{E}[Q])\leq\mathbb{E}[\max(Q)]$ → 估计噪声使 $\max$ 系统性偏高。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0010 §4: ELBO 下界</span><span class="conn-badge">→ 0022: max 偏差</span></div>
+</div>
+</template>
+
+<template id="card-data-elbo-ref">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">范式 #9</span><h3>ELBO</h3></div>
+  <div class="cc-essence">$\log p = \text{ELBO} + \mathrm{KL}(q\|p)$。Jensen 给下界 → EM 最大化它。Q-learning 的 $\max$ 是 Jensen 的<strong>相反方向</strong>——给上偏。</div>
+</div>
+</template>
+
+<template id="card-data-score-ref">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">核心概念</span><h3>Score Function</h3></div>
+  <div class="cc-essence">$\nabla_\mathbf{x}\log p(\mathbf{x}) = \nabla p/p$。策略梯度的 $\nabla_\phi\log\pi_\phi$ 是参数空间的 score——同一个恒等式，不同的变量。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0018 §2</span><span class="conn-badge">→ 0022 §3: 策略梯度</span></div>
+</div>
+</template>
+
+<template id="card-data-primal-dual">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">优化</span><h3><span class="cr" data-card="primal-dual">原始-对偶</span> Primal-Dual</h3></div>
+  <div class="cc-essence">原始问题（策略优化）+ 对偶问题（价值估计）= Actor-Critic。Critic 评估当前策略（对偶信息），Actor 用这信息改进策略（原始更新）。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0007 §3: SVM 对偶</span><span class="conn-badge">→ 0022 §4: Actor-Critic</span></div>
+</div>
+</template>
+
+<template id="card-data-control-variate">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">统计</span><h3>控制变量法 Control Variate</h3></div>
+  <div class="cc-essence">估计 $\mathbb{E}[X]$ 时，用 $X - \beta(Y-\mathbb{E}[Y])$ 替代 $X$。$\mathbb{E}[Y]$ 已知 = 0 → 期望不变，但方差降低。策略梯度 baseline $b(s)$ 就是控制变量——$\mathbb{E}[\nabla\log\pi\cdot b]=0$。</div>
+</div>
+</template>
+
+<template id="card-data-bayes-ref">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">哲学</span><h3>贝叶斯推断中的不确定性管理</h3></div>
+  <div class="cc-essence">贝叶斯（0002）：参数不确定时，不取点估计——对整个后验积分。RL 的同构：Q 值不确定时，不贪婪选最大——加探索、取 min（Double Q）、加 trust region（PPO）。两种哲学的核心都是<strong>在不确定时保持保守</strong>。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0002: 贝叶斯</span><span class="conn-badge">→ 0022: RL 不确定性管理</span></div>
+</div>
+</template>
 
 </body>
 </html>

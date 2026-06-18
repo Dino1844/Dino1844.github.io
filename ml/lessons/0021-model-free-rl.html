@@ -100,7 +100,7 @@ window.MathJax = {
   <ol><li>Bellman 期望方程：$V^\pi(s) = \sum_a\pi\sum_{s'}\mathcal{P}[\mathcal{R}+\gamma V^\pi(s')]$</li>
   <li>Bellman 最优方程：$V^*(s)=\max_a\sum_{s'}\mathcal{P}[\mathcal{R}+\gamma V^*(s')]$</li>
   <li>0020 的 GPI 范式：策略评估 + 策略改进交替</li>
-  <li>0012 的偏差-方差分解：$\mathbb{E}[(y-\hat{f})^2]=\text{Bias}^2+\text{Var}+\sigma^2$</li></ol>
+  <li><span class="cr" data-card="bias-var-ref">0012 的偏差-方差分解</span>：$\mathbb{E}[(y-\hat{f})^2]=\text{Bias}^2+\text{Var}+\sigma^2$</li></ol>
 </div>
 
 <!-- ============================================================ -->
@@ -165,7 +165,7 @@ window.MathJax = {
 </table>
 
 <div class="insight">
-  <strong>这和 ML 的偏差-方差分解是同构的。</strong>MC 像 KNN——用原始数据点（轨迹），无偏但高变。TD 像线性回归——用模型假设（Bellman 方程的结构）约束估计，引入偏差但压低方差。哪个更好取决于<strong>样本量</strong>：数据少时 TD 的结构优势更大，数据多时 MC 的无偏性更可靠。
+  <strong>这和 ML 的<span class="cr" data-card="bias-var-ref">偏差-方差分解</span>是同构的。</strong><strong>MC 像 KNN</strong>——用原始数据点（轨迹），无偏但高变。<strong>TD 像回归</strong>——用模型假设（Bellman 方程的结构）约束估计，引入偏差但压低方差。哪个更好取决于<strong>样本量</strong>：数据少时 TD 的结构优势更大，数据多时 MC 的无偏性更可靠。
 </div>
 
 <!-- ============================================================ -->
@@ -220,7 +220,7 @@ window.MathJax = {
 <p><strong>Softmax/Boltzmann 探索</strong>：$\pi(a\mid s) = \frac{\exp(Q(s,a)/\tau)}{\sum_{a'}\exp(Q(s,a')/\tau)}$。温度 $\tau$ 控制随机程度：$\tau\to 0$ → 贪婪；$\tau\to\infty$ → 均匀随机。$Q$ 值高的动作被选的概率更高——"聪明地探索"。</p>
 
 <div class="meta-box">
-  <h4>范式 #25 · 探索-利用权衡</h4>
+  <h4>范式 #25 · <span class="cr" data-card="explore-exploit">探索-利用权衡</span></h4>
   这是 RL 独有的困难——监督学习没有"选哪个数据点去标注"的问题。多臂老虎机（bandit）是纯探索-利用问题（没有状态转移），MDP 是 bandit + 状态转移。解决思路：(1) $\varepsilon$ 随时间衰减（先多探索，后多利用）；(2) 用置信区间（UCB）；(3) Thompson 采样（贝叶斯版）。
 </div>
 
@@ -289,6 +289,23 @@ window.addEventListener('load', function() {
   }
 });
 </script>
+
+
+<template id="card-data-bias-var-ref">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">ML 基础</span><h3>偏差-方差分解</h3></div>
+  <div class="cc-essence">$\mathbb{E}[(y-\hat{f})^2] = \text{Bias}^2 + \text{Var} + \sigma^2$。在 RL 里：MC 无偏（$G_t$ 是真实回报）但高方差（轨迹随机性大）；TD 有偏（自举用不准的 $V(s')$）但低方差（只含一步随机性）。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0012: 完整推导</span><span class="conn-badge">→ 0021 §4: MC vs TD</span></div>
+</div>
+</template>
+
+<template id="card-data-explore-exploit">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">RL 独有</span><h3>探索-利用权衡 Exploration-Exploitation</h3></div>
+  <div class="cc-essence"><strong>探索</strong>：试没试过的动作，收集信息 → 可能发现更好的策略。<strong>利用</strong>：用已知最好的动作，最大化当前回报。RL 独有的困境——监督学习没有"选哪个数据点去标注"的决策。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0021 §7</span><span class="conn-badge">→ 多臂老虎机: 纯 EE 问题</span></div>
+</div>
+</template>
 
 </body>
 </html>
