@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0008 · 回测</title>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Serif 4',Georgia,serif;font-size:18px;line-height:1.75;color:#1a1a1a;background:#fdfdfb;max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+  h1{font-size:2.2rem;font-weight:700;margin-bottom:.3rem;letter-spacing:-.02em}
+  h2{font-size:1.45rem;font-weight:600;margin:3rem 0 .8rem;color:#2c2c2c}
+  h3{font-size:1.1rem;font-weight:600;margin:1.8rem 0 .5rem;color:#333}
+  .meta{color:#888;font-size:.9rem;margin-bottom:2rem;font-family:'Inter',sans-serif}
+  p{margin-bottom:1rem} strong{font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.95rem}
+  th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid #e0e0d8}
+  th{font-weight:600;font-family:'Inter',sans-serif;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:#666}
+  tr:last-child td{border-bottom:none}
+  .card{background:#fafaf8;border:1px solid #e8e8e0;border-radius:6px;padding:1.5rem 1.8rem;margin:1.5rem 0}
+  .card h3{margin-top:0}
+  .insight{background:#fff8f0;border-left:3px solid #e08830;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .insight h3{margin-top:0;color:#8b5a20}
+  .retrieval{background:#f8f4ff;border:1px solid #d8d0e8;border-radius:6px;padding:1.2rem 1.5rem;margin:2rem 0}
+  .retrieval h3{margin-top:0;color:#5b4a8a}
+  .crypto-note{background:#f5f9ff;border-left:3px solid #4a90d9;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .crypto-note h3{margin-top:0;color:#2a5a9a}
+  .formula{text-align:center;font-size:1.05rem;margin:1.4rem 0}
+  .danger{background:#fff0f0;border-left:3px solid #c44;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .danger h3{margin-top:0;color:#a33}
+  .connection{background:#f0f8f8;border-left:3px solid #4a9a9a;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#345}
+  .connection h3{margin-top:0;color:#2a6a6a}
+  .open-q{background:#fafafa;border:1px dashed #bbb;border-radius:6px;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#555}
+  .open-q h3{margin-top:0;color:#666}
+  .phase-summary{background:#f0f8f0;border:1px solid #c0d8c0;border-radius:6px;padding:1.5rem 1.8rem;margin:2rem 0}
+  .phase-summary h3{margin-top:0;color:#3a6a3a}
+  .quiz{margin:2rem 0} .quiz .q{font-weight:600;margin-bottom:.6rem}
+  .quiz .options{display:flex;flex-direction:column;gap:.4rem}
+  .quiz .opt{padding:.6rem 1rem;border:1px solid #d8d8d0;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;transition:background .15s}
+  .quiz .opt:hover{background:#f0f0e8}
+  .quiz .opt.correct{background:#e6f4ea;border-color:#4a9}
+  .quiz .opt.wrong{background:#fce8e8;border-color:#c44}
+  .quiz .feedback{margin-top:.8rem;font-size:.9rem;color:#555;display:none} .quiz .feedback.show{display:block}
+  .primary-source{background:#fffdf5;border-left:3px solid #e6c030;padding:1rem 1.5rem;margin:2.5rem 0 1.5rem;font-size:.95rem}
+  .primary-source h3{margin-top:0}
+  .nav{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #e0e0d8;font-family:'Inter',sans-serif;font-size:.85rem;color:#999}
+  .nav a{color:#5577aa;text-decoration:none}
+  .reminder{background:#f5f7fa;border:1px solid #dde;border-radius:6px;padding:1.2rem 1.5rem;margin:2.5rem 0;font-size:.9rem;color:#445}
+  .en{color:#888;font-size:.85em}
+</style>
+</head>
+<body>
+
+<h1>回测</h1>
+<p class="meta">Lesson 0008（重写·深度版）· 第二阶段收官 · 预计 50-60 分钟</p>
+
+<div class="retrieval"><h3>🔁 衔接</h3>
+<p>前面所有课给你构建策略的工具。回测是<strong>验证</strong>环节——在历史数据上模拟策略，看表现。但回测是量化最大的陷阱来源：<strong>回测好看 ≠ 未来能赚</strong>。几乎所有"漂亮"的回测都死于样本外。这节讲清五大陷阱（过拟合、前视、幸存者、交易成本、体制变化）和怎么防（walk-forward、样本外、PSR/Deflated Sharpe）。<strong>不懂回测陷阱，前面全白学</strong>——你会自信地部署一个必亏的策略。</p></div>
+
+<!-- ============================================================ -->
+<h2>一、过拟合与多重检验 <span class="en">Overfitting / Multiple Testing</span></h2>
+
+<p>你试了 100 个参数组合，挑 Sharpe 最高的。问题：纯随机下，100 次里最高 Sharpe 也很高——它是<strong>噪声的峰值</strong>，不是真信号。</p>
+
+<div class="card"><h3>Bailey-López de Prado Deflated Sharpe</h3>
+<p>修正多重检验后的 Sharpe 显著性。给定试了 $N$ 个策略，观测到最高 Sharpe $\hat{SR}$，真实 Sharpe 为 0 的概率：</p>
+<div class="formula">$$P(\max \hat{SR} \geq \text{观测} \mid SR=0) \approx f(N, T, \text{偏度}, \text{峰度})$$</div>
+<p>试得越多（$N$ 大）、样本越短（$T$ 小）、收益越肥尾，需要的"显著"Sharpe 越高。试 100 个策略、3 年数据，Sharpe 要 2-3 才显著——你回测 Sharpe 1.5 完全可能是噪声。<strong>Harvey-Liu-Zhu "回测过拟合危机"：学术界试了无数因子，多数 p 值未经多重检验修正，是假的</strong>。</p></div>
+
+<div class="danger"><h3>⚠️ PBO（Probability of Backtest Overfitting）</h3>
+<p style="margin-bottom:0;">Bailey et al. 提出直接估"过拟合概率"的方法：把样本分训练/测试，看训练上最优参数在测试上的排名。如果训练最优在测试中排名差，PBO 高 → 过拟合。任何回测都应报告 PBO。</p></div>
+
+<!-- ============================================================ -->
+<h2>二、前视偏差 <span class="en">Look-Ahead Bias</span></h2>
+
+<p>用<strong>当时还不知道的信息</strong>做决策。最隐蔽的几种：</p>
+<ul>
+  <li><strong>用收盘价生成信号、用同日收盘价成交</strong>——你不知道收盘价直到收盘。必须用 $t-1$ 信息生成 $t$ 信号，$t$ 收盘成交（或 $t+1$ 开盘）。</li>
+  <li><strong>标准化用了全样本均值/标准差</strong>：z-score 用整个回测期均值标准化 = 用未来信息。必须用<strong>滚动/扩展窗口</strong>，只用截至当天的数据。</li>
+  <li><strong>因子构造用了未来基本面</strong>：财报公告日 vs 你假设知道的日子。必须用 PIT（point-in-time）数据。</li>
+  <li><strong>参数选了全样本最优</strong>：选均线周期 20 因为全样本最好 = 前视。参数必须 walk-forward 选。</li>
+</ul>
+
+<div class="crypto-note"><h3>🔗 币圈前视的高发点</h3>
+<ul>
+  <li><strong>链上数据确认时间</strong>：链上指标（MVRV 等）的"当天值"可能当天还没全部确认（区块确认需时间）。用未确认值=前视。</li>
+  <li><strong>资金费率时间戳</strong>：费率 8h 结算一次，用"本期费率"在期中交易=前视。要用上一期已结算费率。</li>
+  <li><strong>新币上线</strong>：回测里包含某币从上线第一天——但上线当天你不知道它、不可交易。要加"上线 N 天后才纳入"。</li>
+  <li><strong>稳定币市值</strong>：USDT 增发数据有公告延迟，链上 mint 和市场影响有时差。</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2>三、幸存者偏差 <span class="en">Survivorship Bias</span></h2>
+
+<p>回测只用<strong>今天还活着的资产</strong>——死掉的（退市、归零、下架）被排除。结果：回测收益虚高，因为你只看到"成功者"。</p>
+
+<div class="card"><h3>币圈的幸存者偏差极严重</h3>
+<p>2017 ICO 的币 90%+ 归零下架。如果你回测"2017 买入前 100 山寨币持有至今"只用今天还在的，结果极好——但真实买入那 100 个大部分归零，巨亏。<strong>必须用包含死币的完整历史数据</strong>：每个时点用当时可交易的标的，下架后按归零/最后价处理。数据源：CoinGecko 历史快照、专业数据商。免费 API 常只给现存币 → 幸存者偏差。</p></div>
+
+<!-- ============================================================ -->
+<h2>四、交易成本 <span class="en">Transaction Costs</span></h2>
+
+<p>回测忽略交易成本 = 自欺。成本三类：</p>
+<div class="formula">$$\text{成本} = \underbrace{\text{手续费}}_{\text{maker/taker 费率}} + \underbrace{\text{半个 spread}}_{\text{买卖价差}} + \underbrace{\text{市场冲击}}_{\text{你的单推价}}$$</div>
+<ul>
+  <li><strong>手续费</strong>：taker 0.05-0.1%，maker 0-0.02%。高频策略累积致命。</li>
+  <li><strong>半个 spread</strong>：每次交易亏半个 bid-ask spread（0001）。低流动性币 spread 大，成本吞噬 alpha。</li>
+  <li><strong>市场冲击</strong>：你的单子本身推价。线性模型：冲击 $= \lambda \cdot \text{下单量}$（0014）。回测假设按 mid 成交 = 完全忽略后两项。</li>
+</ul>
+
+<div class="insight"><h3>⚡ 换手率 × 成本 是杀手</h3>
+<p style="margin-bottom:0;">日换手 200%（每天换一半仓位）× 单边成本 0.2% × 2（买卖）× 365 天 = 年化 292% 成本。一个看起来年化 50% 的高频策略扣完成本巨亏。<strong>回测必须按实际下单方式（maker/taker）、实际 spread、冲击模型扣成本</strong>。换手率高的策略对成本极敏感——这是很多学术因子实盘失效的主因。</p></div>
+
+<!-- ============================================================ -->
+<h2>五、体制变化与 walk-forward</h2>
+
+<p>金融数据结构每几年变（0004 讲过）。全样本回测平均掉不同体制，可能掩盖"只在某体制赚"。</p>
+
+<div class="card"><h3>Walk-Forward 验证</h3>
+<ol>
+  <li>把数据分连续窗口：训练 1（2018-2020）→ 测试 1（2021）；训练 2（2019-2021）→ 测试 2（2022）……</li>
+  <li>每个训练窗口估参数，紧接的测试窗口检验（不重叠）</li>
+  <li>只看测试窗口拼接的表现——这是<strong>样本外</strong></li>
+</ol>
+<p>关键：参数在每个训练窗口<strong>重新估</strong>，模拟实盘"只能用过去信息"。如果 walk-forward 表现远差于全样本，说明过拟合/体制依赖。</p></div>
+
+<div class="card"><h3>样本外留一段不动</h3>
+<p>留出最近 1-2 年数据<strong>完全不碰</strong>——不调参、不看。最后只在这段验证一次。如果碰过（哪怕只是"看一眼调一下"），它就不再是样本外。这是最严格的检验，但人很难忍住不看。</p></div>
+
+<!-- ============================================================ -->
+<h2>六、回测检查清单</h2>
+
+<table>
+<tr><th>陷阱</th><th>检查</th></tr>
+<tr><td>过拟合</td><td>报告 Deflated Sharpe / PBO；参数少；walk-forward 表现</td></tr>
+<tr><td>多重检验</td><td>记录试了多少策略/参数；用 Bonferroni 或 Deflated Sharpe 修正</td></tr>
+<tr><td>前视</td><td>信号只用 $t-1$ 信息；标准化用滚动窗口；PIT 基本面；链上确认时间</td></tr>
+<tr><td>幸存者</td><td>含死币/退市币；每时点用当时可交易标的</td></tr>
+<tr><td>交易成本</td><td>扣手续费 + 半 spread + 冲击；按实际 maker/taker；换手率×成本</td></tr>
+<tr><td>体制</td><td>walk-forward；分体制看表现；留样本外</td></tr>
+<tr><td>容量</td><td>用真实订单簿深度限仓；回测仓位不能超过流动性能容纳</td></tr>
+<tr><td>执行</td><td>假设成交价保守（按 ask/bid 而非 mid）；滑点建模</td></tr>
+</table>
+
+<div class="danger"><h3>⚠️ 回测好 ≠ 实盘好</h3>
+<p style="margin-bottom:0;">即使过了所有检查，样本外仍可能差——因为未来体制可能和历史都不同（币圈尤其）。回测是<strong>必要不充分</strong>：回测差一定不做，回测好不一定能做。最后一步永远是<strong>小仓位实盘</strong>验证，再放大。</p></div>
+
+<!-- ============================================================ -->
+<div class="phase-summary"><h3>📚 第二阶段总结：工具三课</h3>
+<table>
+<tr><td>0006</td><td>线性回归</td><td>OLS 假设、金融违反、Newey-West、Fama-MacBeth</td></tr>
+<tr><td>0007</td><td>组合理论</td><td>Markowitz、error maximization、风险平价、BL</td></tr>
+<tr><td>0008</td><td>回测</td><td>五大陷阱、walk-forward、Deflated Sharpe</td></tr>
+</table>
+<p style="margin-bottom:0;">第三阶段：<strong>因子基础 → 动量/价值/carry → 低波/质量/币圈 → 多因子组合</strong>。地基和工具齐了，开始建策略。</p></div>
+
+<!-- ============================================================ -->
+<div class="connection"><h3>🔗 与其他课的连接</h3>
+<p><strong>前置</strong>：0002 Sharpe（回测 Sharpe 修正）、0003 肥尾（Deflated Sharpe 含偏度峰度）、0004 体制变化、0006 多重检验（回归跑太多次）、0007 优化过拟合。</p>
+<p><strong>后续</strong>：0009-0012 所有因子都要回测验证；0014 滑点建模（回测成本的关键）。本课检查清单贯穿后面所有策略落地。</p></div>
+
+<div class="open-q"><h3>❓ 开放问题</h3>
+<ul>
+<li>币圈历史短（10-15 年），walk-forward 窗口怎么切？每段太短没统计意义。</li>
+<li>Deflated Sharpe 在币圈怎么校准——试了多少策略很难精确知道。</li>
+<li>链上因子的前视怎么彻底防——区块确认、数据商延迟、PIT 链上数据怎么拿？</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+<div class="quiz" id="q1"><p class="q">1. 试了 100 个参数组合挑 Sharpe 最高，为什么危险？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">计算量大</span>
+<span class="opt" data-answer="correct">多重检验——纯噪声下 100 次最高 Sharpe 也很高，是噪声峰值不是真信号，需 Deflated Sharpe 修正</span>
+<span class="opt" data-answer="wrong">参数太多记不住</span>
+<span class="opt" data-answer="wrong">没关系</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q2"><p class="q">2. 用收盘价生成信号、同日收盘价成交，错在哪？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">收盘价不准</span>
+<span class="opt" data-answer="correct">前视偏差——收盘前你不知道收盘价；信号必须用 $t-1$ 信息，$t$ 或 $t+1$ 成交</span>
+<span class="opt" data-answer="wrong">手续费高</span>
+<span class="opt" data-answer="wrong">没问题</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q3"><p class="q">3. 币圈幸存者偏差为什么特别严重？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">币圈数据好</span>
+<span class="opt" data-answer="correct">大量币归零下架（2017 ICO 90%+ 死），只用今天还活着的回测严重虚高收益</span>
+<span class="opt" data-answer="wrong">币都活着</span>
+<span class="opt" data-answer="wrong">和股票一样</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q4"><p class="q">4. 日换手 200%、单边成本 0.2% 的策略，年化成本约？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">0.4%</span>
+<span class="opt" data-answer="correct">200%×0.2%×2×365 ≈ 292%——换手率×成本是高频策略杀手，回测必须扣</span>
+<span class="opt" data-answer="wrong">2%</span>
+<span class="opt" data-answer="wrong">可忽略</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q5"><p class="q">5. 回测过了所有检查，能确定实盘赚吗？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">能，检查够严格</span>
+<span class="opt" data-answer="correct">不能——回测是必要不充分，未来体制可能不同；最后必须小仓位实盘验证</span>
+<span class="opt" data-answer="wrong">不能，回测没用</span>
+<span class="opt" data-answer="wrong">看 Sharpe</span>
+</div><p class="feedback"></p></div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source"><h3>📖 过拟合与多重检验</h3>
+<p><strong>Bailey & López de Prado — "The Deflated Sharpe Ratio" (2014)</strong>。多重检验修正 Sharpe。<br>
+<strong>Harvey, Liu & Zhu — "...and the Cross-Section of Expected Returns" (2016, RFS)</strong>。多重检验危机的综述。</p></div>
+<div class="primary-source" style="margin-top:.5rem;"><h3>📖 实务</h3>
+<p><strong>López de Prado —《金融机器学习实战》</strong>第 11-13 章。回测陷阱、PBO、walk-forward 的工业级处理。<br>
+<strong>Chan —《量化交易》</strong>。回测实务入门，常见陷阱清单。</p></div>
+
+<div class="reminder"><strong>💬 有问题随时问。</strong> walk-forward 怎么切窗口、Deflated Sharpe 怎么算、链上前视怎么防——任何一点都可以深挖。第二阶段结束，你有了完整工具箱。第三阶段开始建真正的策略：因子。</div>
+
+<div class="nav">上一课：<a href="0007-portfolio-theory.html">0007 · 组合理论</a> &nbsp;|&nbsp; <a href="../index.html">↑ 返回目录</a><br>下一课：<a href="0009-factor-foundations.html">0009 · 因子基础</a></div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(q=>{q.querySelectorAll('.opt').forEach(o=>{o.addEventListener('click',function(){const f=this.parentElement.nextElementSibling;this.parentElement.querySelectorAll('.opt').forEach(x=>{x.classList.remove('correct','wrong');x.style.pointerEvents='none'});if(this.dataset.answer==='correct'){this.classList.add('correct');f.textContent='✓ 正确。';f.className='feedback show'}else{this.classList.add('wrong');this.parentElement.querySelector('[data-answer="correct"]').classList.add('correct');f.textContent='✗ 不对。绿色高亮的是正确答案。';f.className='feedback show'}})})});
+</script>
+</body>
+</html>

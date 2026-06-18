@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0015 · 变分推断与采样</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0015 · 变分推断与采样</h1>
+<div class="subtitle">后验不可算 → ELBO 最大化近似 → 平均场坐标上升 → MCMC 采样替代 · 阅读时间 ~55 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 后验不可算：贝叶斯的计算瓶颈</a><br>
+  <a href="#s2">2. ELBO：$\log p=\text{ELBO}+\text{KL}$，最大化 ELBO = 最小化 KL</a><br>
+  <a href="#s3">3. 平均场假设：$q=\prod q_j$ 因子分解</a><br>
+  <a href="#s4">4. 坐标上升：最优 $q_j$ 正比于 $\exp(\mathbb{E}_{-j}[\log p])$</a><br>
+  <a href="#s5">5. 共轭指数族：最优因子自动闭合</a><br>
+  <a href="#s6">6. EM 是变分的特例</a><br>
+  <a href="#s7">7. MCMC：另一条路——采样而非优化</a><br>
+  <a href="#s8">8. 推导与演算</a><br>
+  <a href="#s9">9. 自测</a>
+</div>
+
+<p>
+  贝叶斯推断的核心是后验 $p(\mathbf{z}\mid\mathbf{x})\propto p(\mathbf{x},\mathbf{z})$。0002/0009 共轭情形后验有闭式。但真实模型（非共轭、大规模、深度网络）后验的分母 $p(\mathbf{x})=\int p(\mathbf{x},\mathbf{z})d\mathbf{z}$ 算不出——这就是贝叶斯的计算瓶颈。
+</p>
+
+<p>
+  两条出路：<strong>变分推断</strong>（VI）把推断变成优化——找一个易算分布 $q$ 近似后验，最大化 ELBO（等价最小化 $\text{KL}(q\|p)$）。<strong>MCMC</strong> 走另一条路——构造马尔可夫链从后验采样，渐近精确但慢。
+  VI 快但近似（$q$ 族限制），MCMC 精但慢——工程上常权衡。本课把 VI 推透（ELBO、平均场、坐标上升、共轭闭合），再讲 MCMC 的直觉（细致平衡、Metropolis、Gibbs）。
+  VI 是 0010 <span class="cr" data-card="em">EM</span> 的推广（EM 的 $q$ 取真后验，VI 限制 $q$ 近似），也是现代深度贝叶斯（<span class="cr" data-card="vae">VAE</span>）的根基。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>0010 EM：ELBO $\mathcal{L}(q,\boldsymbol\theta)=\sum q\log(p/q)$，$\ell=\text{ELBO}+\text{KL}(q\|p(\mathbf{z}\mid\mathbf{x}))$。E 步令 $q=$ 后验让 KL=0。</li>
+    <li>0009 共轭：指数族似然 + 共轭先验 → 后验同形闭式。非共轭时后验无闭式。</li>
+    <li>KL 散度 $D_{\text{KL}}(q\|p)=\int q\log(q/p)\geq0$，等号 $q=p$。非对称。</li>
+    <li>Jensen：$\log\mathbb{E}[X]\geq\mathbb{E}[\log X]$（$\log$ 凹）。0003/0010 用过。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 后验不可算：贝叶斯的计算瓶颈</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#5b8c5a;">范式 #9</span>
+	    <h3>变分推断 · Variational Inference</h3>
+	    <span class="cc-aliases">ELBO · Mean-Field · CAVI</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>后验 $p(\mathbf{z}|\mathcal{D})$ 不可算 → 用一个简单的分布 $q(\mathbf{z})$ 去逼近它。$\log p(\mathcal{D}) = \underbrace{\mathbb{E}_q[\log p(\mathcal{D},\mathbf{z}) - \log q]}_{\text{ELBO}} + \mathrm{KL}(q\|p_{\text{true}})$。最大化 ELBO = 同时最大化似然 + 缩小 KL。
+	  </div>
+	  <div class="cc-section">
+	    <h4>EM 与 VI 的关系</h4>
+	    <p><strong>EM：</strong>$q$ 设为真实后验（可行时）→ E步 KL=0，M步最大化 ELBO</p>
+	    <p><strong>VI：</strong>$q$ 受限（如 mean-field $q=\prod q_j$）→ KL 不归零，在受限族里最优逼近</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0010: EM = VI 的特例</span>
+	    <span class="conn-badge">→ 0002: 共轭让 VI 有闭式更新</span>
+	    <span class="conn-badge">→ 0004(指数族): 共轭指数族 VI</span>
+	  </div>
+	</div>
+
+
+<p>
+  后验 $p(\mathbf{z}\mid\mathbf{x})=p(\mathbf{x},\mathbf{z})/p(\mathbf{x})$，分母 $p(\mathbf{x})=\int p(\mathbf{x},\mathbf{z})d\mathbf{z}$ 是<strong>证据</strong>（evidence / marginal likelihood，0003）。
+  共轭时积分闭式（0009）；非共轭时积分无闭式，高维下数值积分不可行（维度灾难）。
+  例：贝叶斯逻辑回归——Bernoulli 似然 + 高斯先验于 $\mathbf{w}$，后验 $p(\mathbf{w}\mid\mathbf{X},\mathbf{y})\propto\exp(-\frac\alpha2\|\mathbf{w}\|^2)\prod_n\sigma(y_n\mathbf{w}^\top\mathbf{x}_n)$，sigmoid 让积分无闭式。
+</p>
+
+<div class="insight">
+  <strong>变分推断的转机：把"算后验"变成"优化一个下界"。</strong>
+  不直接算 $p(\mathbf{z}\mid\mathbf{x})$，而在易算分布族 $\mathcal{Q}$ 里找 $q^\star=\arg\min_{q\in\mathcal{Q}}\text{KL}(q\|p(\cdot\mid\mathbf{x}))$。
+  这把推断（积分）转成优化（求极值），可用梯度/坐标上升，适合大规模和自动微分。代价：$q$ 是近似，受族 $\mathcal{Q}$ 限制。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. ELBO：$\log p=\text{ELBO}+\text{KL}$，最大化 ELBO = 最小化 KL</h2>
+
+<p>对任意 $q$（与 0010 同推导）：</p>
+
+<div class="formula-block">
+  $$\log p(\mathbf{x})=\underbrace{\mathbb{E}_q[\log p(\mathbf{x},\mathbf{z})]-\mathbb{E}_q[\log q(\mathbf{z})]}_{\text{ELBO}}+\underbrace{D_{\text{KL}}(q(\mathbf{z})\|p(\mathbf{z}\mid\mathbf{x}))}_{\geq0}$$
+</div>
+
+<p>
+  ELBO $\leq\log p(\mathbf{x})$。最大化 ELBO $\Leftrightarrow$ 最小化 $\text{KL}(q\|p)$ $\Leftrightarrow$ $q\to$ 后验。
+  关键：ELBO 只需 $p(\mathbf{x},\mathbf{z})$（联合，不需归一化）和 $q$（易算）——<strong>绕开了难算的 $p(\mathbf{x})$</strong>。
+</p>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #15 · "推断转优化：造 ELBO，在易算族里最大化"</h4>
+  任何不可算后验的贝叶斯模型，造 ELBO = $\mathbb{E}_q[\log p(\mathbf{x},\mathbf{z})]-\mathbb{E}_q[\log q]$，在选定的 $q$ 族里优化。族越富近似越好但越难算；族越窄越好算但近似差。
+  <strong>本课<span class="cr" data-card="mf-vi">平均场 VI</span>、<span class="cr" data-card="vae">VAE</span>（重参数化 + 梯度）、0010 <span class="cr" data-card="em">EM</span>（$q$ 不限制取真后验）、变分 EM、深度贝叶斯——全是这一招。</strong> VI 与 EM 的差别只在 $q$ 是否限制：EM $q$ 自由（下界紧），VI $q$ 受限（下界不紧但可算）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 平均场假设：$q=\prod q_j$ 因子分解</h2>
+
+<p>
+  选 $q$ 族最常用<strong>平均场</strong>（mean-field）：把隐变量分组，假设 $q(\mathbf{z})=\prod_j q_j(\mathbf{z}_j)$（组间独立）。
+  如贝叶斯逻辑回归 $q(\mathbf{w})=\prod_d q(w_d)$（各权重独立），或 GMM $q(\mathbf{Z},\boldsymbol\pi,\boldsymbol\mu,\boldsymbol\Sigma)=q(\mathbf{Z})q(\boldsymbol\pi)q(\boldsymbol\mu,\boldsymbol\Sigma)$。
+</p>
+
+<div class="warning">
+  <strong>平均场的代价：忽略后验的变量间相关性。</strong> 若真实后验 $\mathbf{z}_1,\mathbf{z}_2$ 强相关，$q=q_1q_2$ 拟合不了——近似差或需更细分组（结构化 VI）。但平均场让优化可分，坐标上升高效，是工程首选。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 坐标上升：最优 $q_j$ 正比于 $\exp(\mathbb{E}_{-j}[\log p])$</h2>
+
+<p>固定其他 $q_{i\neq j}$，对 $q_j$ 最大化 ELBO。把 ELBO 里与 $q_j$ 有关的项抽出：</p>
+
+<div class="derivation">
+  <h4>最优 $q_j$ 的闭式</h4>
+  <div class="step">
+    $\text{ELBO}=\mathbb{E}_q[\log p(\mathbf{x},\mathbf{z})]-\mathbb{E}_q[\log q]$
+  </div>
+  <div class="step">
+    对 $q_j$ 有关的项 $=\int q_j\big(\mathbb{E}_{q_{-j}}[\log p(\mathbf{x},\mathbf{z})]\big)d\mathbf{z}_j-\int q_j\log q_j\,d\mathbf{z}_j+\text{const}$
+    <span class="reason">平均场让 $\log q=\sum\log q_i$，只有 $q_j$ 项含 $q_j$</span>
+  </div>
+  <div class="step">
+    $=-D_{\text{KL}}\big(q_j\,\big\|\,\frac{\exp(\mathbb{E}_{q_{-j}}[\log p])}{Z_j}\big)+\text{const}$
+    <span class="reason">配成 KL，$Z_j$ 归一化常数</span>
+  </div>
+  <div class="step">
+    最大化（最小化 KL）给 $\boxed{\;q_j^\star(\mathbf{z}_j)\propto\exp\!\big(\mathbb{E}_{q_{-j}}[\log p(\mathbf{x},\mathbf{z})]\big)\;}$
+  </div>
+</div>
+
+<p>
+  <strong>坐标上升变分推断</strong>（CAVI）：轮流用上式更新每个 $q_j$，ELBO 单调上升（每步最大化）。收敛到平均场最优。
+  直觉：$q_j$ 的更新 = "在其他变量分布下，$\log p$ 的期望取指数归一化"——把其他变量的不确定性平均掉，得到本变量的最优分布。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 共轭指数族：最优因子自动闭合</h2>
+
+<p>
+  若模型是<strong>共轭指数族</strong>（0009），上式 $\exp(\mathbb{E}_{-j}[\log p])$ 自动给出同族 $q_j$——<strong>指数族在期望下闭合</strong>。
+  这让 CAVI 每步是参数更新（不是函数更新），高效。如贝叶斯 GMM 的变分更新：$q(\boldsymbol\mu_k,\boldsymbol\Sigma_k)$ 仍是高斯-Wishart，参数由责任和统计量更新。
+</p>
+
+<div class="insight">
+  <strong>共轭 = 变分可算的根基。</strong> 0009 说共轭让后验闭式；这里说共轭让变分因子闭式。同一性质（指数族闭合）的两次回报。
+  非共轭时 $q_j^\star$ 不在易算族，需进一步近似（如 Laplace、delta 法、或用易算族强行投影——VAE 的做法）。这是 VI 在非共轭模型上的难点。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. EM 是变分的特例</h2>
+
+<p>
+  0010 EM 也可写成 ELBO 最大化：E 步对 $q$ 无约束优化（$q=$ 真后验，KL=0，下界紧），M 步对 $\boldsymbol\theta$ 优化。
+  <strong>VI 是 EM 的推广</strong>：当 $q$ 不受限（全空间），VI 退化为 EM（E 步给真后验）。当 $q$ 受限（平均场），VI 给近似后验。
+</p>
+
+<table>
+  <tr><th></th><th>EM</th><th>变分推断</th></tr>
+  <tr><td>$q$ 范围</td><td>全空间（真后验）</td><td>受限族（如平均场）</td></tr>
+  <tr><td>下界</td><td>紧（KL=0）</td><td>不紧（KL>0）</td></tr>
+  <tr><td>适用</td><td>共轭（后验可算）</td><td>非共轭/大规模</td></tr>
+  <tr><td>收敛</td><td>似然局部极大</td><td>ELBO 局部极大</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. MCMC：另一条路——采样而非优化</h2>
+
+<p>
+  VI 把推断转优化（快但近似）。MCMC 走另一条：构造马尔可夫链，其平稳分布是后验 $p(\mathbf{z}\mid\mathbf{x})$，跑足够久采的样本 $\mathbf{z}^{(s)}$ 服从后验，用样本估后验量 $\mathbb{E}[f(\mathbf{z})]\approx\frac1S\sum f(\mathbf{z}^{(s)})$。
+</p>
+
+<p><strong>细致平衡</strong>（detailed balance）是核心：转移核 $T$ 满足 $\pi(\mathbf{z})T(\mathbf{z}\to\mathbf{z}')=\pi(\mathbf{z}')T(\mathbf{z}'\to\mathbf{z})$，则 $\pi$ 是平稳分布。取 $\pi=p(\mathbf{z}\mid\mathbf{x})$。</p>
+
+<p><strong>Metropolis-Hastings</strong>：从提议 $q(\mathbf{z}'\mid\mathbf{z})$ 采 $\mathbf{z}'$，以接受率</p>
+
+<div class="formula-block">
+  $$A(\mathbf{z}\to\mathbf{z}')=\min\!\Big(1,\;\frac{p(\mathbf{x},\mathbf{z}')\,q(\mathbf{z}\mid\mathbf{z}')}{p(\mathbf{x},\mathbf{z})\,q(\mathbf{z}'\mid\mathbf{z})}\Big)$$
+</div>
+
+<p>
+  接受/拒绝。注意只需<strong>联合 $p(\mathbf{x},\mathbf{z})$</strong>（归一化常数 $p(\mathbf{x})$ 在比里消掉）——绕开难算证据。这是 MCMC 的魔法。
+</p>
+
+<p><strong>Gibbs 采样</strong>：MH 的特例，逐维更新 $z_j\mid z_{-j}\sim p(z_j\mid\mathbf{x},z_{-j})$（条件采样，接受率 1）。需条件可算（共轭时方便）。</p>
+
+<div class="warning">
+  <strong>VI vs MCMC 权衡：</strong>
+  VI：快（优化，可批量/自动微分），近似（$q$ 限制），给下界 ELBO，适合大规模/在线/深度模型（VAE）。
+  MCMC：渐近精确（样本 $\to$ 后验），慢（混合时间，高维难探索），无下界，适合小规模精确推断。
+  量化里大规模贝叶斯（如因子模型随时间更新）偏 VI；小样本精确推断偏 MCMC。
+</div>
+
+<div class="meta-box">
+  <h4>🔗 联系 · VI/MCMC 在量化与深度贝叶斯</h4>
+  <strong>VAE</strong>（变分自编码器）：编码器输出 $q(\mathbf{z}\mid\mathbf{x})$ 的参数，解码器 $p(\mathbf{x}\mid\mathbf{z})$，重参数化让 ELBO 可反向传播——VI + 神经网络的结合（0014 + 本课）。
+  <strong>贝叶斯神经网络</strong>：权重有后验，VI 给 $q(\mathbf{w})$（如 Flipout/MC dropout），预测 = 期望 over $q$，给不确定性估计。
+  <strong>量化</strong>：贝叶斯因子模型（0017）用 VI 估计因子后验和预测不确定性；regime switching 用 MCMC 估状态路径。不确定性估计对风控关键——点预测不够。
+  本课是这些的公共计算根基。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与演算</h2>
+
+<p>下面 6 道题，难度递增。把 ELBO、坐标上升、共轭闭合、MCMC 接受率推通。</p>
+
+<div class="problem">
+  <div class="ptitle">题 1 · ELBO 与 KL 分解 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    证明 $\log p(\mathbf{x})=\text{ELBO}+D_{\text{KL}}(q\|p(\cdot\mid\mathbf{x}))$，ELBO $=\mathbb{E}_q[\log p(\mathbf{x},\mathbf{z})]-\mathbb{E}_q[\log q]$。说明为什么最大化 ELBO 等价最小化 KL，且不需算 $p(\mathbf{x})$。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\mathbb{E}_q[\log p(\mathbf{x},\mathbf{z})]=\mathbb{E}_q[\log p(\mathbf{z}\mid\mathbf{x})]+\log p(\mathbf{x})$。$\text{ELBO}=\mathbb{E}_q[\log p(\mathbf{z}\mid\mathbf{x})]-\mathbb{E}_q[\log q]+\log p(\mathbf{x})=-D_{\text{KL}}+\log p(\mathbf{x})$。ELBO 只含 $\log p(\mathbf{x},\mathbf{z})$ 和 $q$，无 $\log p(\mathbf{x})$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\mathbb{E}_q[\log p(\mathbf{x},\mathbf{z})]=\mathbb{E}_q[\log p(\mathbf{z}\mid\mathbf{x})p(\mathbf{x})]=\mathbb{E}_q[\log p(\mathbf{z}\mid\mathbf{x})]+\log p(\mathbf{x})$（$p(\mathbf{x})$ 与 $\mathbf{z}$ 无关）。</div>
+    <div class="step">$\text{ELBO}=\mathbb{E}_q[\log p(\mathbf{x},\mathbf{z})]-\mathbb{E}_q[\log q]=\mathbb{E}_q[\log p(\mathbf{z}\mid\mathbf{x})]+\log p(\mathbf{x})-\mathbb{E}_q[\log q]$</div>
+    <div class="step">$=\log p(\mathbf{x})-\big(\mathbb{E}_q[\log q]-\mathbb{E}_q[\log p(\mathbf{z}\mid\mathbf{x})]\big)=\log p(\mathbf{x})-D_{\text{KL}}(q\|p(\cdot\mid\mathbf{x}))$。</div>
+    <div class="step">所以 $\log p=\text{ELBO}+D_{\text{KL}}$。$\square$ 最大化 ELBO $\Leftrightarrow$ 最小化 KL $\Leftrightarrow$ $q\to p(\cdot\mid\mathbf{x})$。ELBO $=\mathbb{E}_q[\log p(\mathbf{x},\mathbf{z})]-\mathbb{E}_q[\log q]$ 只需联合 $p(\mathbf{x},\mathbf{z})$（未归一化也行）和 $q$，<strong>不需 $p(\mathbf{x})$</strong>——绕开难积分。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 2 · 平均场坐标上升更新 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    平均场 $q=\prod_j q_j$。固定 $q_{i\neq j}$，对 $q_j$ 最大化 ELBO，推出 $q_j^\star\propto\exp(\mathbb{E}_{q_{-j}}[\log p(\mathbf{x},\mathbf{z})])$。说清配成 KL 的步骤。
+  </div>
+  <details><summary>提示</summary><div class="hint">ELBO 里含 $q_j$ 的项 $=\int q_j\mathbb{E}_{q_{-j}}[\log p]d\mathbf{z}_j-\int q_j\log q_j d\mathbf{z}_j$。令 $\log\tilde p_j=\mathbb{E}_{q_{-j}}[\log p]$，则 $=\int q_j\log(\tilde p_j/q_j)d\mathbf{z}_j=-D_{\text{KL}}(q_j\|\tilde p_j/Z_j)+\log Z_j$。最小化 KL 给 $q_j=\tilde p_j/Z_j$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">平均场 $\log q=\sum_i\log q_i$。ELBO $=\int\prod_i q_i[\log p(\mathbf{x},\mathbf{z})-\sum_i\log q_i]d\mathbf{z}$。对 $q_j$ 有关的项：</div>
+    <div class="step">$=\int q_j\Big(\int\prod_{i\neq j}q_i\log p\,d\mathbf{z}_{-j}\Big)d\mathbf{z}_j-\int q_j\log q_j\,d\mathbf{z}_j+\text{const}=\int q_j\mathbb{E}_{q_{-j}}[\log p]d\mathbf{z}_j-\int q_j\log q_j\,d\mathbf{z}_j+\text{const}$。</div>
+    <div class="step">令 $\log\tilde p_j(\mathbf{z}_j)=\mathbb{E}_{q_{-j}}[\log p(\mathbf{x},\mathbf{z})]$。上式 $=\int q_j\log(\tilde p_j/q_j)d\mathbf{z}_j+\text{const}=-D_{\text{KL}}(q_j\|\tilde p_j/Z_j)+\log Z_j+\text{const}$（$Z_j=\int\tilde p_j$ 归一化）。</div>
+    <div class="step">对 $q_j$ 最大化 = 最小化 $D_{\text{KL}}(q_j\|\tilde p_j/Z_j)$，解 $q_j^\star=\tilde p_j/Z_j\propto\exp(\mathbb{E}_{q_{-j}}[\log p])$。$\square$</div>
+    <div class="step">回接 0010：EM E 步 $q=p(\mathbf{z}\mid\mathbf{x})$ 是 $q$ 不受限时的解（$\mathbb{E}_{q_{-j}}$ 退化，$q_j\propto p$ 给真后验）。平均场限制让 $q_j$ 只看"其他变量平均后"的 $\log p$。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 3 · 共轭指数族自动闭合 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    设 $p(\mathbf{x},\mathbf{z})$ 中 $\mathbf{z}_j$ 的条件是指数族 $p(\mathbf{z}_j\mid\cdot)\propto\exp(\eta(\mathbf{z}_{-j})^\top T(\mathbf{z}_j)-a(\eta))$。证明 $q_j^\star\propto\exp(\mathbb{E}_{q_{-j}}[\log p])$ 仍是同族指数族，参数 $\eta$ 换成 $\mathbb{E}_{q_{-j}}[\eta(\mathbf{z}_{-j})]$。说明为什么这让 VI 高效。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\log p$ 含 $\mathbf{z}_j$ 的部分 $=\eta(\mathbf{z}_{-j})^\top T(\mathbf{z}_j)-a(\eta)+\text{const}$。$\mathbb{E}_{q_{-j}}$ 把 $\mathbf{z}_{-j}$ 平均，给 $\mathbb{E}[\eta]^\top T(\mathbf{z}_j)-\mathbb{E}[a(\eta)]$。取 $\exp$ 归一化，$q_j^\star$ 是同族，自然参数 $\mathbb{E}[\eta]$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\log p(\mathbf{x},\mathbf{z})$ 含 $\mathbf{z}_j$ 的部分（指数族条件）$=\eta(\mathbf{z}_{-j})^\top T(\mathbf{z}_j)-a(\eta(\mathbf{z}_{-j}))+\text{const}(\mathbf{z}_{-j})$。</div>
+    <div class="step">$\mathbb{E}_{q_{-j}}[\log p]=\mathbb{E}_{q_{-j}}[\eta]^\top T(\mathbf{z}_j)-\mathbb{E}_{q_{-j}}[a(\eta)]+\text{const}$。前一项是 $T(\mathbf{z}_j)$ 与新自然参数 $\bar\eta=\mathbb{E}_{q_{-j}}[\eta]$ 的内积，后两项与 $\mathbf{z}_j$ 无关。</div>
+    <div class="step">$q_j^\star\propto\exp(\bar\eta^\top T(\mathbf{z}_j))$，归一化给同族指数族 $q_j^\star=p(\mathbf{z}_j;\bar\eta)$，参数 $\bar\eta=\mathbb{E}_{q_{-j}}[\eta(\mathbf{z}_{-j})]$。$\square$</div>
+    <div class="step">高效：每步坐标上升只需更新 $q_j$ 的<strong>参数</strong> $\bar\eta$（算 $\mathbb{E}_{q_{-j}}[\eta]$），不是更新整个函数。共轭让 VI 从泛函优化降为参数优化，可批量自动微分。回接 0009：共轭先验统一构造 $\exp(\eta^\top\tau-\nu a)$ 是这里"闭合"的具体形式。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 4 · EM 是 VI 的特例 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    说明 0010 EM 的 E 步（$q=$ 真后验）等价于 VI 中 $q$ 不受限（全空间）时的坐标更新。证明此时 ELBO 紧贴 $\log p(\mathbf{x}\mid\boldsymbol\theta)$。对比 EM 和平均场 VI 在 GMM 上的差别。
+  </div>
+  <details><summary>提示</summary><div class="hint">$q$ 不受限时题 2 的 $q_j^\star\propto\exp(\mathbb{E}_{q_{-j}}[\log p])$ 退化：无平均场约束，$q^\star\propto p(\mathbf{x},\mathbf{z})=p(\mathbf{z}\mid\mathbf{x})p(\mathbf{x})$，归一化给真后验。KL=0，ELBO=$\log p$。GMM 共轭，EM E 步给真后验责任；平均场 VI 把 $\boldsymbol\pi,\boldsymbol\mu,\boldsymbol\Sigma$ 也当隐变量近似，$q$ 因子分解，下界不紧但可处理大 $K$。
+  </div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$q$ 不受限（无平均场）：题 2 推导里 $q$ 是 $\mathbf{z}$ 的任意分布，$q^\star\propto\exp(\mathbb{E}[\log p(\mathbf{x},\mathbf{z})])$，无其他变量平均（$q_{-j}$ 不存在），$q^\star\propto p(\mathbf{x},\mathbf{z})$，归一化 $q^\star=p(\mathbf{z}\mid\mathbf{x})$。即 EM E 步。</div>
+    <div class="step">此时 $D_{\text{KL}}(q\|p(\cdot\mid\mathbf{x}))=0$，ELBO $=\log p(\mathbf{x}\mid\boldsymbol\theta)$ 紧贴。$\square$ EM = VI with unconstrained $q$。</div>
+    <div class="step">GMM 对比：EM 把 $\mathbf{Z}$ 当隐变量、$\boldsymbol\pi,\boldsymbol\mu,\boldsymbol\Sigma$ 当参数点估计，E 步给 $\mathbf{Z}$ 真后验（责任），M 步点更新参数。下界紧，但参数无不确定性。</div>
+    <div class="step">平均场 VI（变分 GMM）：$\boldsymbol\pi,\boldsymbol\mu,\boldsymbol\Sigma$ 也当随机变量有先验，$q(\mathbf{Z})q(\boldsymbol\pi)q(\boldsymbol\mu,\boldsymbol\Sigma)$ 因子分解。各 $q_j$ 互相用期望更新，下界不紧（因子分解忽略相关性），但给参数后验（不确定性）、抗过拟合（先验正则）、可处理大 $K$（贝叶斯自动定 $K$）。代价：近似偏差。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 5 · Metropolis 接受率与细致平衡 <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    证明 Metropolis 接受率 $A(\mathbf{z}\to\mathbf{z}')=\min(1,\frac{\pi(\mathbf{z}')q(\mathbf{z}\mid\mathbf{z}')}{\pi(\mathbf{z})q(\mathbf{z}'\mid\mathbf{z})})$（$\pi$ 目标，$q$ 提议）满足细致平衡 $\pi(\mathbf{z})T(\mathbf{z}\to\mathbf{z}')=\pi(\mathbf{z}')T(\mathbf{z}'\to\mathbf{z})$，从而 $\pi$ 是平稳分布。说明为什么只需 $\pi$ 的未归一化形式。
+  </div>
+  <details><summary>提示</summary><div class="hint">转移核 $T(\mathbf{z}\to\mathbf{z}')=q(\mathbf{z}'\mid\mathbf{z})A(\mathbf{z}\to\mathbf{z}')$（$\mathbf{z}\neq\mathbf{z}'$）。分两种情况：$\pi(\mathbf{z}')q(\mathbf{z}\mid\mathbf{z}')\geq\pi(\mathbf{z})q(\mathbf{z}'\mid\mathbf{z})$ 时 $A(\mathbf{z}\to\mathbf{z}')=1$，$A(\mathbf{z}'\to\mathbf{z})=\frac{\pi(\mathbf{z})q(\mathbf{z}'\mid\mathbf{z})}{\pi(\mathbf{z}')q(\mathbf{z}\mid\mathbf{z}')}$。代入验细致平衡。归一化常数在 $\pi(\mathbf{z}')/\pi(\mathbf{z})$ 里消掉。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$T(\mathbf{z}\to\mathbf{z}')=q(\mathbf{z}'\mid\mathbf{z})A(\mathbf{z}\to\mathbf{z}')$。设 $r=\frac{\pi(\mathbf{z}')q(\mathbf{z}\mid\mathbf{z}')}{\pi(\mathbf{z})q(\mathbf{z}'\mid\mathbf{z})}$。$A(\mathbf{z}\to\mathbf{z}')=\min(1,r)$，$A(\mathbf{z}'\to\mathbf{z})=\min(1,1/r)$。</div>
+    <div class="step">情况 $r\geq1$：$A(\mathbf{z}\to\mathbf{z}')=1$，$A(\mathbf{z}'\to\mathbf{z})=1/r$。$\pi(\mathbf{z})T(\mathbf{z}\to\mathbf{z}')=\pi(\mathbf{z})q(\mathbf{z}'\mid\mathbf{z})\cdot1$。</div>
+    <div class="step">$\pi(\mathbf{z}')T(\mathbf{z}'\to\mathbf{z})=\pi(\mathbf{z}')q(\mathbf{z}\mid\mathbf{z}')\cdot\frac{1}{r}=\pi(\mathbf{z}')q(\mathbf{z}\mid\mathbf{z}')\cdot\frac{\pi(\mathbf{z})q(\mathbf{z}'\mid\mathbf{z})}{\pi(\mathbf{z}')q(\mathbf{z}\mid\mathbf{z}')}=\pi(\mathbf{z})q(\mathbf{z}'\mid\mathbf{z})$。相等！</div>
+    <div class="step">情况 $r<1$ 对称同理。所以细致平衡 $\pi(\mathbf{z})T(\mathbf{z}\to\mathbf{z}')=\pi(\mathbf{z}')T(\mathbf{z}'\to\mathbf{z})$ 成立。$\square$ 对平稳分布求和：$\sum_{\mathbf{z}'}\pi(\mathbf{z}')T(\mathbf{z}'\to\mathbf{z})=\sum_{\mathbf{z}'}\pi(\mathbf{z})T(\mathbf{z}\to\mathbf{z}')=\pi(\mathbf{z})$（$T$ 行和 1），$\pi$ 平稳。</div>
+    <div class="step">未归一化：接受率用 $\pi(\mathbf{z}')/\pi(\mathbf{z})$，若 $\pi=\tilde\pi/Z$，$Z$ 在比里消掉。所以只需 $\tilde\pi=p(\mathbf{x},\mathbf{z})$（联合），不需算 $Z=p(\mathbf{x})$。<strong>这是 MCMC 绕开难算证据的魔法，与 VI 的 ELBO 异曲同工。</strong></div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 6 · 用 VI 推贝叶斯逻辑回归（范式迁移） <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    贝叶斯逻辑回归：$p(\mathbf{w}\mid\mathbf{X},\mathbf{y})\propto\exp(-\frac\alpha2\|\mathbf{w}\|^2)\prod_n\sigma(y_n\mathbf{w}^\top\mathbf{x}_n)^{y_n}$（高斯先验 + Bernoulli 似然，非共轭）。平均场 $q(\mathbf{w})=\mathcal{N}(\mathbf{m},\mathbf{V})$（假设高斯变分族）。写出 ELBO，说明为什么 Bernoulli 似然让 $q^\star$ 不是闭式高斯（非共轭），需近似（如 Jaakkola 下界或 Laplace）。这训练你把 VI 范式用到非共轭模型，看清共轭的价值。
+  </div>
+  <details><summary>提示</summary><div class="hint">ELBO $=\mathbb{E}_q[\log p(\mathbf{y}\mid\mathbf{X},\mathbf{w})+\log p(\mathbf{w})]-\mathbb{E}_q[\log q]$。先验项 $\log p(\mathbf{w})=-\frac\alpha2\|\mathbf{w}\|^2+\text{const}$，$\mathbb{E}_q$ 给 $-\frac\alpha2(\operatorname{tr}\mathbf{V}+\|\mathbf{m}\|^2)$（高斯二阶矩）。似然项 $\sum_n\mathbb{E}_q[\log\sigma(y_n\mathbf{w}^\top\mathbf{x}_n)]$——$\log\sigma$ 非线性，$\mathbb{E}_q$ 无闭式（高斯下 $\log\sigma$ 的期望无解析）。这是非共轭的根源。
+  </div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">ELBO $=\mathbb{E}_q[\log p(\mathbf{y}\mid\mathbf{X},\mathbf{w})]+\mathbb{E}_q[\log p(\mathbf{w})]-\mathbb{E}_q[\log q]$。</div>
+    <div class="step">先验项：$\mathbb{E}_q[-\frac\alpha2\|\mathbf{w}\|^2]=-\frac\alpha2(\operatorname{tr}\mathbf{V}+\mathbf{m}^\top\mathbf{m})$（$\mathbb{E}[\|\mathbf{w}\|^2]=\operatorname{tr}\mathbf{V}+\|\mathbf{m}\|^2$）。闭式。</div>
+    <div class="step">熵项 $-\mathbb{E}_q[\log q]=\frac12\log|2\pi e\mathbf{V}|$（高斯熵）。闭式。</div>
+    <div class="step">似然项：$\sum_n\mathbb{E}_{\mathcal{N}(\mathbf{m},\mathbf{V})}[\log\sigma(y_n\mathbf{w}^\top\mathbf{x}_n)]=\sum_n\mathbb{E}[-\log(1+\exp(-y_n\mathbf{w}^\top\mathbf{x}_n))]$。$\mathbf{w}^\top\mathbf{x}_n\sim\mathcal{N}(\mathbf{m}^\top\mathbf{x}_n,\mathbf{x}_n^\top\mathbf{V}\mathbf{x}_n)$，但 $\mathbb{E}[\log\sigma(\cdot)]$ <strong>无闭式</strong>——$\log\sigma$ 非线性，高斯下 log-sigmoid 期望无解析。</div>
+    <div class="step">这是非共轭的根源：高斯先验 × Bernoulli 似然不在共轭指数族内（0009 共轭表无此对）。$q^\star$ 不是闭式高斯。</div>
+    <div class="step">近似方案：(1) <strong>Jaakkola 下界</strong>：用 $\log\sigma(x)$ 的变分下界（二次），代回 ELBO 得闭式高斯 $q$ 更新；(2) <strong>Laplace</strong>：在后验众数用高斯近似；(3) <strong>VAE 风格</strong>：用 MC 估 $\mathbb{E}[\log\sigma]$（重参数化采样 + 梯度）。</div>
+    <div class="step"><strong>范式迁移</strong>：本课的"ELBO + 坐标上升 + 共轭闭合"在非共轭处卡住（似然项无闭式），需额外近似下界或采样。这看清了共轭的价值——0009 共轭让 VI 闭式，非共轭需 Jaakkola/Laplace/MC。现代实践多用 MC 估计（VAE），把"闭式"换成"无偏梯度"。$\square$</div>
+  </div></details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 自测</h2>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q1 · VI 和 MCMC 各解决什么问题？何时选哪个？</div>
+  <details><summary>答案</summary><div class="sol">都解决后验不可算。VI 把推断转优化（最大化 ELBO），快、可批量/自动微分、给下界，但 $q$ 受限近似。MCMC 构造马尔可夫链采样，渐近精确、无下界，但慢（混合时间）、高维难。选：大规模/在线/深度模型/要快速近似 → VI；小样本/要精确/可等采样时间 → MCMC。量化大规模贝叶斯偏 VI，小样本精确偏 MCMC。两者可结合（VI 初始化 MCMC 等）。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q2 · 平均场假设的代价是什么？什么时候不合适？</div>
+  <details><summary>答案</summary><div class="sol">平均场 $q=\prod q_j$ 假设隐变量组间独立，忽略后验相关性。代价：真实后验强相关时近似差（如高度耦合的 $\mathbf{z}_1,\mathbf{z}_2$，$q_1q_2$ 拟合不了），且平均场倾向低估后验方差（过于自信）。不合适：变量强耦合（如时序模型相邻状态、空间模型相邻像素）。改进：结构化 VI（部分因子分解保留关键相关）、或用更富 $q$ 族（如低秩高斯）。权衡：越富越准越难算。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q3 · 为什么 MCMC 只需未归一化的 $p(\mathbf{x},\mathbf{z})$？</div>
+  <details><summary>答案</summary><div class="sol">Metropolis 接受率用比 $\pi(\mathbf{z}')/\pi(\mathbf{z})$，若 $\pi=p(\mathbf{z}\mid\mathbf{x})=p(\mathbf{x},\mathbf{z})/p(\mathbf{x})$，归一化常数 $p(\mathbf{x})$ 在比里消掉。所以只需联合 $p(\mathbf{x},\mathbf{z})$（未归一化也行），绕开难算的证据 $p(\mathbf{x})=\int p(\mathbf{x},\mathbf{z})d\mathbf{z}$。这与 VI 的 ELBO 异曲同工：ELBO 也只需 $\log p(\mathbf{x},\mathbf{z})$ 不需 $p(\mathbf{x})$。两者都绕开了贝叶斯计算瓶颈（证据积分），VI 靠"下界 + 优化"，MCMC 靠"比值 + 采样"。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q4 · EM 和 VI 的关系是什么？共轭为什么对两者都关键？</div>
+  <details><summary>答案</summary><div class="sol">EM 是 VI 的特例：VI 限制 $q$ 在易算族（平均场），EM 不限制 $q$（取真后验，下界紧）。共轭对两者关键：EM 共轭时 E 步后验闭式（0010 GMM）；VI 共轭指数族时最优因子自动闭合（题 3），坐标上升是参数更新。非共轭时 EM 的 E 步后验无闭式（需内循环 VI/MCMC），VI 的因子无闭式（需 Jaakkola/Laplace/MC）。共轭 = "贝叶斯计算可算"的根基，0009 是它的总论。</div></details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;">
+    <strong>PRML §10.1–10.2（变分推断）</strong>——§10.1 ELBO、§10.2 平均场 + 坐标上升、贝叶斯混合高斯的完整变分推导。本课第 2–5 节的母本。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>PRML §11.2–11.3（MCMC）</strong>——§11.2.2 Metropolis-Hastings、§11.3 Gibbs 采样、细致平衡。本课第 7 节来源。
+  </p>
+  <p style="margin-bottom:0; font-size:0.9rem;">
+    <strong>Bishop §10.1.2（EM 作为变分的特例）</strong>——把 EM 放进 VI 框架。本课第 6 节。 Blei et al. (2017) "Variational Inference: A Review for Statisticians" 给现代视角和平均场直觉。
+  </p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">
+    这课的关键逻辑链：后验不可算（非共轭/大规模）→ ELBO = $\log p-$ KL，最大化 ELBO = 最小化 KL（绕开证据）→ 平均场 $q=\prod q_j$ → 坐标上升 $q_j^\star\propto\exp(\mathbb{E}_{-j}[\log p])$ → 共轭指数族自动闭合（参数更新）→ EM 是 $q$ 不受限的特例 → MCMC 另一条路（细致平衡 + 接受率，只需未归一化）→ VI vs MCMC 权衡。
+    题 5（Metropolis 细致平衡）和题 6（贝叶斯逻辑回归非共轭）是钥匙——题 5 把 MCMC 绕开证据的魔法落到代数，题 6 把 VI 范式迁移到非共轭看清共轭价值。
+    <strong>本课是 VAE/贝叶斯神经网络/贝叶斯因子模型的计算根基，接 0017。</strong>卡住直接问。
+  </p>
+</div>
+
+<div class="lesson-footer">
+  <a href="0014-neural-networks.html">← 0014 神经网络</a> ·
+  <a href="0010-mixture-models-em.html">← 0010 EM</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0016-ml-in-quant.html">0016 ML 在量化中的角色</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<!-- ===== CARD POPUP DATA ===== -->
+<template id="card-data-em">
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag" style="background:#5b8c5a;">范式 #10</span>
+    <h3>EM 算法</h3>
+    <span class="cc-aliases">Expectation-Maximization</span>
+  </div>
+  <div class="cc-essence">
+    有隐变量时极大似然无闭式解。E 步用当前参数算隐变量后验（"责任"）；M 步加权矩匹配更新参数。每一步保证 $\log p$ 不降。
+  </div>
+  <div class="cc-section">
+    <h4>关键分解</h4>
+    <p>$\log p = \text{ELBO} + \mathrm{KL}(q\|p_{\text{true}})$。E 步设 $q=p_{\text{true}}$ 让 KL=0；M 步最大化 ELBO。</p>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 0010 §5: 完整推导</span>
+    <span class="conn-badge">→ 0015: VI = EM 受限版</span>
+  </div>
+</div>
+</template>
+
+<template id="card-data-vae">
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag" style="background:#5b8c5a;">VAE</span>
+    <h3>变分自编码器</h3>
+    <span class="cc-aliases">Kingma &amp; Welling 2014</span>
+  </div>
+  <div class="cc-essence">
+    编码器输出 $q(\mathbf{z}|\mathbf{x})$ 的参数（$\mu_\phi,\sigma_\phi$），解码器 $p(\mathbf{x}|\mathbf{z})$，<strong>重参数化</strong>让 ELBO 可反向传播：$\mathbf{z}=\mu_\phi+\sigma_\phi\odot\boldsymbol{\epsilon},\;\boldsymbol{\epsilon}\sim\mathcal{N}(0,I)$。
+  </div>
+  <div class="cc-section">
+    <h4>核心公式</h4>
+    <p>$\text{ELBO} = \mathbb{E}_{q_\phi}[\log p_\theta(\mathbf{x}|\mathbf{z})] - \mathrm{KL}(q_\phi\|p(\mathbf{z}))$</p>
+    <p>重建项 + KL 正则项。VI + 神经网络 = VAE。</p>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 0014: 神经网络</span>
+    <span class="conn-badge">→ 0015 §1: VI 根基</span>
+    <span class="conn-badge">→ 📇 算法卡片</span>
+  </div>
+</div>
+</template>
+
+<template id="card-data-mf-vi">
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag" style="background:#5b8c5a;">范式 #9</span>
+    <h3>平均场变分推断</h3>
+    <span class="cc-aliases">Mean-Field VI · CAVI</span>
+  </div>
+  <div class="cc-essence">
+    $q(\mathbf{z})=\prod_j q_j(\mathbf{z}_j)$ ——假设隐变量组间独立。坐标上升：$q_j^\star \propto \exp(\mathbb{E}_{-j}[\log p])$，轮番更新至 ELBO 收敛。
+  </div>
+  <div class="cc-section">
+    <h4>代价与收益</h4>
+    <p>代价：忽略后验的变量间相关性。收益：优化可分，坐标上升高效，共轭指数族自动闭合。</p>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 本课 §3-§5</span>
+    <span class="conn-badge">→ 0010: EM 不受限版</span>
+  </div>
+</div>
+</template>
+
+</body>
+</html>

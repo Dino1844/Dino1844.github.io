@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0013 · 衡生品定价</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.75; color: #1a1a1a; background: #fdfdfb; max-width: 760px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .insight h3 { margin-top: 0; color: #8b5a20; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .formula { text-align: center; font-size: 1.05rem; margin: 1.4rem 0; }
+  .danger { background: #fff0f0; border-left: 3px solid #c44; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .danger h3 { margin-top: 0; color: #a33; }
+  .connection { background: #f0f8f8; border-left: 3px solid #4a9a9a; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #345; }
+  .connection h3 { margin-top: 0; color: #2a6a6a; }
+  .open-q { background: #fafafa; border: 1px dashed #bbb; border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #555; }
+  .open-q h3 { margin-top: 0; color: #666; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<h1>衍生品定价——期货 → 期权</h1>
+<p class="meta">Lesson 0013（重写·深度版）· 第四阶段开始 · 预计 50-60 分钟</p>
+
+<div class="retrieval">
+  <h3>🔁 衔接</h3>
+  <p>你最初最感兴趣的方向。前 12 课讲的都是线性工具（现货、线性因子组合）——收益和价格成比例。期权是非线性的，它让你能对波动率、时间、曲率下注，而不只是方向。这节从无套利定价原则出发，推到期权定价为什么必须用风险中性测度，再到 Black-Scholes 和它的缺陷。重点讲<strong>为什么</strong>，不是背公式。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、衍生品的本质与无套利定价原则</h2>
+
+<p>衍生品 = 收益由某标的决定的合约。定价的核心原则不是"折现期望收益"，而是<strong>无套利</strong>：</p>
+<div class="card">
+  <h3>无套利原则</h3>
+  <p>如果两个组合未来收益完全相同，它们今天价格必须相同。否则买便宜卖贵，无风险套利。</p>
+  <p>这个原则比"折现期望"更根本——它不要求知道未来概率分布，只要求市场无套利。所有衍生品定价都从这出发：构造一个<strong>复制组合</strong>（replicating portfolio），让它未来收益和衍生品相同，那衍生品价格 = 复制组合成本。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>二、期货定价——成本持有模型</h2>
+
+<p>用无套利推期货价格。考虑一个期货合约，$T$ 期后交割，现价 $F$，标的现价 $S$。</p>
+
+<div class="card">
+  <h3>构造两个组合</h3>
+  <p>组合 A：现在买 1 单位标的，持有到 $T$。成本 $S$，到 $T$ 价值 = 标的价 + 期间持有收益 $q$（如股息）。</p>
+  <p>组合 B：现在签期货多头 + 把 $F \cdot e^{-rT}$ 存银行。到期：期货交割得标的（付 $F$），银行存款得 $F$，净得标的。成本 $F \cdot e^{-rT}$。</p>
+  <p>两个组合到期都得 1 单位标的 → 无套利要求今天成本相等：</p>
+  <div class="formula">
+    $$S = F \cdot e^{-rT} \cdot e^{qT} \implies F = S \cdot e^{(r-q)T}$$
+  </div>
+  <p>这就是<strong>成本持有模型</strong>：期货价 = 现货 + 资金成本 $r$ − 持有收益 $q$。</p>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 永续合约：没有到期日的期货</h3>
+  <p>传统期货靠到期交割强制收敛（$T\to 0$ 时 $F\to S$）。永续没到期，靠<strong>资金费率</strong>替代收敛机制：当 $F > S$，多头每 8 小时付空头费率，提高多头持有成本 → 平多 → $F$ 压回 $S$。费率扮演了连续的 $(r-q)$ 角色。费率公式（简化）：</p>
+  <div class="formula">
+    $$\text{funding} \approx \underbrace{\frac{F - S}{S}}_{\text{基差部分}} \cdot \frac{1}{\text{周期}} + \underbrace{\text{clamp}(\text{利率差})}_{\text{利率部分}}$$
+  </div>
+  <p>clamp 限幅（如 ±0.75%/8h）防止极端费率。基差部分直接把价差映射成费率——价差越大费率越猛，套利者越有动力进场压平。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、期权——非对称收益</h2>
+
+<p>看涨期权 Call：到期收益 $\max(S_T - K, 0)$。看跌 Put：$\max(K - S_T, 0)$。</p>
+
+<div class="card">
+  <h3>为什么期权定价难</h3>
+  <p>期货收益是线性的（$S_T - F$），复制简单（一单位标的 + 存款）。期权收益是<strong>折线</strong>——到期时如果 $S_T < K$，Call 收益是 0（不是 $S_T - K$）。这个非线性意味着<strong>静态复制不可能</strong>：你没法用一个固定的标的+存款组合复制折线收益。</p>
+  <p>解决：<strong>动态复制</strong>——连续调整标的持有量（delta 对冲），让组合每时刻都匹配期权价值。这要求连续交易和可微的价格过程，引出随机微积分。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、Black-Scholes 的推导逻辑</h2>
+
+<h3>4.1 假设</h3>
+<ul>
+  <li>标的服从几何布朗运动：$dS = \mu S \, dt + \sigma S \, dW$（log return 正态、波动率常数）</li>
+  <li>无风险利率 $r$ 常数，连续可交易，无交易成本，可做空</li>
+</ul>
+
+<h3>4.2 推导链条（随意版）</h3>
+<div class="card">
+  <ol>
+    <li>设期权价值是 $S$ 和 $t$ 的函数 $V(S,t)$。用 Itô 引理展开 $dV$</li>
+    <li>构造对冲组合：卖 1 期权 + 买 $\Delta = \partial V/\partial S$ 股标的。选这个 $\Delta$ 使组合消掉 $dW$ 项（随机部分）→ 组合无风险</li>
+    <li>无风险组合必须 earn $r$（否则套利）→ 得到 <strong>BS PDE</strong>：
+      $$\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + r S \frac{\partial V}{\partial S} - r V = 0$$
+    </li>
+    <li>解 PDE（Call 边界条件 $V(S,T)=\max(S-K,0)$）→ BS 公式</li>
+  </ol>
+</div>
+
+<h3>4.3 BS 公式</h3>
+<div class="formula">
+  $$C = S \cdot N(d_1) - K e^{-rT} \cdot N(d_2), \quad d_1 = \frac{\ln(S/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}$$
+</div>
+
+<div class="card">
+  <h3>各项的经济含义</h3>
+  <ul>
+    <li>$S \cdot N(d_1)$：若行权能拿到标的的现值，按风险中性下"被行权"的概率调整</li>
+    <li>$K e^{-rT} \cdot N(d_2)$：若行权要付的 $K$ 的折现，按风险中性下"真正行权"概率调整</li>
+    <li>$N(d_2)$ = 风险中性下 $S_T > K$ 的概率（真正行权概率）</li>
+    <li>$N(d_1)$ = delta（对冲比率），略大于 $N(d_2)$</li>
+  </ul>
+</div>
+
+<h3>4.4 风险中性定价——最关键的概念</h3>
+<div class="insight">
+  <h3>⚡ 为什么用 $r$ 而不是 $\mu$</h3>
+  <p>注意 BS 里<strong>没有 $\mu$</strong>（标的的真实预期收益）——只有 $r$。这反直觉：期权收益依赖标的未来表现，为什么定价不用标的预期收益？</p>
+  <p>答案：<strong>风险中性测度</strong>。在无套利 + 完全市场假设下，可以证明存在一个等价测度，在这个测度下所有资产以 $r$ 增长。定价时在这个"风险中性世界"算期望再折现，结果等于真实世界价格。<strong>真实世界的 $\mu$ 被对冲掉了</strong>——因为期权可以被动态复制，持有期权等价于持有复制组合，复制组合的收益只取决于 $r$ 不取决于 $\mu$。</p>
+  <p>这是衍生品定价的精髓：<strong>因为可对冲，所以不需要预测 $\mu$</strong>。不可对冲的部分（如跳跃风险、随机波动率）才需要风险溢价——这就是 BS 假设之外模型的切入点。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>五、希腊字母——期权的风险分解</h2>
+
+<table>
+  <tr><th>字母</th><th>定义</th><th>含义</th><th>实务</th></tr>
+  <tr><td>Delta $\Delta$</td><td>$\partial V/\partial S$</td><td>对标的价的敏感度</td><td>方向风险；delta 中性对冲</td></tr>
+  <tr><td>Gamma $\Gamma$</td><td>$\partial^2 V/\partial S^2$</td><td>Delta 的变化率（曲率）</td><td>大波动时 delta 漂移；gamma 是凸性收益的来源</td></tr>
+  <tr><td>Vega $\nu$</td><td>$\partial V/\partial \sigma$</td><td>对波动率的敏感度</td><td>波动率风险；做多 vega = 做多波动率</td></tr>
+  <tr><td>Theta $\Theta$</td><td>$\partial V/\partial t$</td><td>对时间的敏感度</td><td>时间衰减；买方亏 theta，卖方赚</td></tr>
+  <tr><td>Rho $\rho$</td><td>$\partial V/\partial r$</td><td>对利率的敏感度</td><td>通常较小</td></tr>
+</table>
+
+<div class="card">
+  <h3>BS PDE 的希腊字母形式</h3>
+  <p>BS PDE 可以重写成：</p>
+  <div class="formula">
+    $$\Theta + \frac{1}{2}\sigma^2 S^2 \Gamma + r S \Delta - r V = 0$$
+  </div>
+  <p>这是期权的<strong>会计恒等式</strong>：时间衰减（Theta）+ 凸性收益（Gamma 项）+ 对冲漂移（Delta 项）= 融资成本（$rV$）。买期权的人：每天亏 Theta，但靠 Gamma 在波动中赚回来——如果波动够大，Gamma 收益 > Theta 损失，赚；不够则亏。这就是<strong>波动率 vs 时间衰减的博弈</strong>。</p>
+</div>
+
+<div class="insight">
+  <h3>⚡ 期权交易的实质</h3>
+  <p style="margin-bottom:0;">用 delta 对冲掉方向后，持有期权 = 做多 Gamma + 做多 Vega − 每天 Theta。你不是在赌方向，而是在赌<strong>实际波动率 vs 隐含波动率</strong>：</p>
+  <ul>
+    <li>实际波动 > 隐含波动 → Gamma 收益 > Theta 损失 → 买期权赚</li>
+    <li>实际波动 < 隐含波动 → Gamma 收益 < Theta 损失 → 卖期权赚</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>六、隐含波动率与波动率曲面</h2>
+
+<p>BS 公式里 $S, K, T, r$ 都能观测，只有 $\sigma$ 不能。反过来：从<strong>市场期权报价</strong>反推 $\sigma$，得<strong>隐含波动率 IV</strong>。IV 是市场对未来波动的预期。</p>
+
+<div class="card">
+  <h3>波动率曲面——BS 假设错在哪的直接证据</h3>
+  <p>BS 假设 $\sigma$ 是常数 → 所有行权价、所有到期的期权 IV 应该相同。但实证：</p>
+  <ul>
+    <li><strong>波动率微笑</strong>：OTM 和 ITM 的 IV 高于 ATM。市场为尾部事件付更多 → 真实分布肥尾</li>
+    <li><strong>波动率偏斜</strong>：股票里下行 OTM put 的 IV 高于上行 OTM call——市场更怕暴跌（崩盘尾部更肥）</li>
+    <li><strong>期限结构</strong>：短期 IV 通常高于长期（短期波动更剧烈）</li>
+  </ul>
+  <p>波动率曲面是<strong>BS 之外的所有信息</strong>——BS 用一个常数 $\sigma$ 拟合，剩下的 misfit 全在曲面里。交易波动率曲面是高级期权策略的核心。</p>
+</div>
+
+<div class="danger">
+  <h3>⚠️ BS 的已知缺陷</h3>
+  <ul>
+    <li><strong>常数波动率</strong>——现实有波动率聚集（第三课）。改进：局部波动率模型、Heston 随机波动率</li>
+    <li><strong>对数正态（无跳跃）</strong>——现实有跳跃（崩盘）。改进：Merton 跳跃扩散、Variance Gamma</li>
+    <li><strong>连续交易</strong>——现实有交易成本和离散对冲，对冲误差会累积</li>
+  </ul>
+  <p>实务没人直接用裸 BS 定价——都用<strong>隐含波动率参数化的 BS</strong>（用市场 IV 反算价格，BS 只是插值工具）或更复杂模型。但 BS 仍是行业基准和直觉语言。</p>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈期权（Deribit）</h3>
+  <p>Deribit 是币圈期权主流所。特点：</p>
+  <ul>
+    <li><strong>IV 高</strong>：BTC ATM IV 常年化 50-80%（vs 美股 ~15%）。因为 BTC 波动本身就大</li>
+    <li><strong>微笑更对称</strong>：币圈暴涨暴跌都常见，下行偏斜不如股票明显。put 和 call 的 OTM IV 都高</li>
+    <li><strong>稳定币计价</strong>：期权以 USDC 结算，规避法币出入金</li>
+    <li><strong>永续期权</strong>（新）：Deribit 推出无到期日期权，类似永续合约之于期货</li>
+    <li><strong>流动性集中短端</strong>：大部分流动性在 1 周内到期，长期期权流动性差</li>
+  </ul>
+  <p><strong>策略</strong>：费率套利是 carry，期权可做波动率交易——买跨式（call+put）做多波动率，卖跨式做空。币圈 IV 高 → 卖方诱人（赚高 theta），但崩盘尾部肥 → 卖方风险大。<strong>裸卖期权在币圈极危险</strong>，必须用价差限风险。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>七、Put-Call Parity——一个无套利恒等式</h2>
+
+<div class="formula">
+  $$C - P = S - K e^{-rT}$$
+</div>
+<p>Call − Put = 现货 − 行权价折现。这不依赖任何模型（不用 BS），纯无套利。用处：</p>
+<ul>
+  <li>从 Call 价推 Put 价（或反之），不用分别定价</li>
+  <li>检验市场套利机会：如果实测 $C - P \neq S - Ke^{-rT}$，有套利</li>
+  <li>把期权拆成"内在价值 + 时间价值"的框架</li>
+</ul>
+
+<!-- ============================================================ -->
+<div class="connection">
+  <h3>🔗 与其他课的连接</h3>
+  <p><strong>前置</strong>：0005 概率分布（BS 假设对数正态、肥尾解释波动率微笑）、0003 波动率聚集（BS 常数波动率假设的失败）、0007 无套利（本节定价原则）、第一课永续合约（费率机制）。</p>
+  <p><strong>后续</strong>：0014 微观结构——期权做市和现货做市的不同（gamma/delta 动态对冲）；多因子阶段——波动率风险溢价（IV > 实际波动）本身是个因子（第十课波动率套利）。</p>
+</div>
+
+<div class="open-q">
+  <h3>❓ 开放问题</h3>
+  <ul>
+    <li>币圈期权<strong>波动率曲面</strong>的建模——学术和实务都还在发展，没有股票市场那么成熟</li>
+    <li>永续期权的<strong>合理定价</strong>——无到期日的期权怎么定？类似永续合约的费率机制延伸</li>
+    <li>币圈崩盘的<strong>跳跃结构</strong>——Luna、FTX 那种归零式跳跃，BS 类模型完全捕捉不到，怎么建模？</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 为什么 BS 公式里没有标的的真实预期收益 $\mu$？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">$\mu$ 无法估计</span>
+    <span class="opt" data-answer="correct">期权可被动态复制（delta 对冲），复制组合收益只取决于 $r$；风险中性测度下 $\mu$ 被对冲掉</span>
+    <span class="opt" data-answer="wrong">$\mu$ 等于 $r$</span>
+    <span class="opt" data-answer="wrong">BS 假设 $\mu=0$</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 用 delta 对冲掉方向后，持有期权实质是在赌什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">标的涨跌</span>
+    <span class="opt" data-answer="correct">实际波动率 vs 隐含波动率——Gamma 收益 vs Theta 损失的博弈</span>
+    <span class="opt" data-answer="wrong">利率</span>
+    <span class="opt" data-answer="wrong">行权价</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. 波动率微笑（OTM 的 IV 高于 ATM）证明了什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">BS 完全正确</span>
+    <span class="opt" data-answer="correct">BS 的常数波动率 + 对数正态假设错了，真实分布有肥尾，市场为尾部付更多</span>
+    <span class="opt" data-answer="wrong">期权定价太高</span>
+    <span class="opt" data-answer="wrong">市场无效</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. 永续合约的资金费率在定价上扮演什么角色？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">只是手续费</span>
+    <span class="opt" data-answer="correct">替代到期交割的收敛机制——把基差映射成连续的持有成本，使合约价锚定现货</span>
+    <span class="opt" data-answer="wrong">对冲工具</span>
+    <span class="opt" data-answer="wrong">和定价无关</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="q">5. 为什么币圈裸卖期权极危险？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">卖方收益低</span>
+    <span class="opt" data-answer="correct">币圈 IV 高诱人卖（赚 theta），但崩盘尾部肥（Luna/FTX 式跳跃），卖方尾部风险无限——必须用价差限风险</span>
+    <span class="opt" data-answer="wrong">流动性差</span>
+    <span class="opt" data-answer="wrong">监管禁止</span>
+  </div>
+  <p class="feedback" id="f5"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 教材</h3>
+  <p><strong>Hull —《期权、期货及其他衍生品》</strong>第 12-15、18-19 章。衍生品圣经，先直觉后数学。<br>
+  <strong>Natenberg —《期权波动率与定价》</strong>。实务交易员视角，希腊字母和波动率交易直觉。</p>
+</div>
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 深入</h3>
+  <p><strong>Shreve —《随机分析与金融》</strong>。BS 推导的严格随机微积分基础。<br>
+  <strong>Gatheral —《波动率曲面》</strong>。波动率曲面建模的权威。</p>
+</div>
+
+<div class="reminder">
+  <strong>💬 有问题随时问。</strong> 风险中性测度的直觉、delta 对冲的具体操作、波动率曲面怎么读、币圈期权策略——任何一点都可以深挖。这是你最初最感兴趣的方向，值得多花时间。最后一课讲做市与微观结构。
+</div>
+
+<div class="nav">
+  上一课：<a href="0012-multifactor-combination.html">0012 · 多因子组合</a> &nbsp;|&nbsp;
+  <a href="../index.html">↑ 返回目录</a><br>
+  下一课：<a href="0014-market-making-microstructure.html">0014 · 做市与微观结构</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

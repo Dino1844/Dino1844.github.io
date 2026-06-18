@@ -90,6 +90,84 @@
   <dd>理论上零风险的收益率。传统金融用国债利率，币圈常用稳定币借贷利率（有争议）。</dd>
 </dl>
 
+<h2>组合理论</h2>
+<dl>
+  <dt>有效前沿 <span class="en">Efficient Frontier</span></dt>
+  <dd>给定风险下收益最大（或给定收益下风险最小）的所有组合构成的曲线。Markowitz 理论的核心。</dd>
+  <dt>误差最大化 <span class="en">Error Maximization</span></dt>
+  <dd>Markowitz 优化对预期收益估计误差极度敏感，本质是在放大输入误差而非找最优组合。</dd>
+  <dt>风险平价 <span class="en">Risk Parity</span></dt>
+  <dd>让每个资产对组合总风险的贡献相等。不需要预测收益，只需波动率和相关性——比 Markowitz 稳健。</dd>
+  <dt>Black-Litterman 模型</dt>
+  <dd>把投资者主观观点与市场隐含均衡收益融合，缓解 Markowitz 对 μ 估计的极端敏感性。</dd>
+  <dt>风险贡献 <span class="en">Risk Contribution</span></dt>
+  <dd>单个资产对组合总方差贡献的份额。风险平价的目标是各资产风险贡献相等。</dd>
+</dl>
+
+<h2>因子</h2>
+<dl>
+  <dt>因子 <span class="en">Factor</span></dt>
+  <dd>能解释资产收益率差异的可量化属性。如动量、价值、Carry、波动率等。</dd>
+  <dt>Alpha (α)</dt>
+  <dd>因子模型解释不了的额外收益——真正的"超额收益"。大多 alpha 实盘会衰减，且常是未识别的 beta。</dd>
+  <dt>Beta (β)</dt>
+  <dd>对因子的暴露度。承担该因子风险的补偿，可持续。</dd>
+  <dt>CAPM <span class="en">Capital Asset Pricing Model</span></dt>
+  <dd>单因子模型：资产预期超额收益 = β × 市场风险溢价。唯一因子是市场。</dd>
+  <dt>Fama-French 三因子</dt>
+  <dd>市场 + SMB（小市值减大市值）+ HML（高账面市值比减低）。解释 CAPM 解释不了的收益。</dd>
+  <dt>IC <span class="en">Information Coefficient</span></dt>
+  <dd>因子值与未来收益的相关系数。衡量因子预测能力，IC 加权是多因子组合常用方法。</dd>
+  <dt>动量崩溃 <span class="en">Momentum Crash</span></dt>
+  <dd>市场急速反转时动量策略巨亏——持有的空头仓位在反弹中爆亏。肥尾事件。</dd>
+  <dt>价值陷阱 <span class="en">Value Trap</span></dt>
+  <dd>资产便宜是因为基本面恶化，会变得更便宜。质量因子用来过滤。</dd>
+  <dt>Carry</dt>
+  <dd>持有高利差资产、做空低利差资产赚利差。币圈最典型：资金费率套利。</dd>
+</dl>
+
+<h2>衍生品</h2>
+<dl>
+  <dt>成本持有模型 <span class="en">Cost of Carry</span></dt>
+  <dd>F = S·e^(r−q)T。期货价格 = 现货 + 持有成本 − 持有收益。</dd>
+  <dt>看涨/看跌期权 <span class="en">Call / Put</span></dt>
+  <dd>未来以约定价买/卖某物的权利（非义务）。收益非对称：亏有限，赚无限。</dd>
+  <dt>Black-Scholes 模型</dt>
+  <dd>期权定价经典公式。假设价格服从对数正态、波动率常数。行业基准但假设有缺陷。</dd>
+  <dt>隐含波动率 <span class="en">Implied Volatility / IV</span></dt>
+  <dd>从期权市场报价反推的波动率。不同行权价 IV 不同→波动率微笑/偏斜，证明正态假设错。</dd>
+  <dt>希腊字母 <span class="en">Greeks</span></dt>
+  <dd>期权风险度量：Delta（方向）、Gamma（曲率）、Vega（波动率）、Theta（时间）、Rho（利率）。</dd>
+</dl>
+
+<h2>微观结构</h2>
+<dl>
+  <dt>订单流不平衡 <span class="en">OFI</span></dt>
+  <dd>买单量减卖单量。持续正值→买压→短期可能涨。低延迟 alpha 来源。</dd>
+  <dt>逆向选择 <span class="en">Adverse Selection</span></dt>
+  <dd>做市商被知情交易者用信息优势割韭菜。做市商最怕的风险。</dd>
+  <dt>穿仓 <span class="en">Adverse Fill / Toxic Flow</span></dt>
+  <dd>价格单边突破，做市商只成交一边，攥着方向性亏损仓位。</dd>
+  <dt>滑点 <span class="en">Slippage</span></dt>
+  <dd>实际成交价与预期价的差。大单吃光订单簿深度导致。回测必须建模。</dd>
+</dl>
+
+<h2>回归与统计</h2>
+<dl>
+  <dt>R² <span class="en">Coefficient of Determination</span></dt>
+  <dd>自变量解释因变量方差的比例。金融里单因子 R² 普遍很低（5-15%），过高（>0.3）通常是 leakage 信号。</dd>
+  <dt>多重共线性 <span class="en">Multicollinearity</span></dt>
+  <dd>自变量之间高度相关，导致回归系数不稳定、显著性失效。处理：去相关因子或正交化。</dd>
+  <dt>异方差 <span class="en">Heteroskedasticity</span></dt>
+  <dd>残差方差不恒定。金融数据普遍存在（波动率聚集）。使 OLS 标准误和 p 值不可信。</dd>
+  <dt>Newey-West 稳健标准误 <span class="en">HAC Standard Errors</span></dt>
+  <dd>同时处理异方差和自相关残差的标准误估计。金融回归的标配。</dd>
+  <dt>伪回归 <span class="en">Spurious Regression</span></dt>
+  <dd>对非平稳序列做回归，即使无真实关系也会得到高 R² 和假显著系数。处理：对平稳序列回归。</dd>
+  <dt>ADF 检验 <span class="en">Augmented Dickey-Fuller Test</span></dt>
+  <dd>检验序列是否平稳（有无单位根）。回归前对不确定的序列先做此检验。</dd>
+</dl>
+
 <h2>时间序列</h2>
 <dl>
   <dt>自相关 <span class="en">Autocorrelation</span></dt>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0013 · 集成方法：committees、bagging、AdaBoost、随机森林</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0013 · 集成方法</h1>
+<div class="subtitle">Committees、Bagging、AdaBoost、随机森林——偏差-方差指导集成选择 · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 回接 0012：偏差-方差分解——集成方法的两条路</a><br>
+  <a href="#s2">2. Committees（平均）：降方差，但模型相关是瓶颈</a><br>
+  <a href="#s3">3. Bagging：bootstrap 引入多样性，打破相关瓶颈</a><br>
+  <a href="#s4">4. AdaBoost：顺序训练，降偏差——把弱学习器变强</a><br>
+  <a href="#s5">5. AdaBoost 的前向分步加性模型视角</a><br>
+  <a href="#s6">6. 损失函数对比：指数损失 vs 对数损失 vs Hinge</a><br>
+  <a href="#s7">7. 随机森林：bagging + 特征采样，降相关降方差</a><br>
+  <a href="#s8">8. Boosting vs Bagging：何时用哪个</a><br>
+  <a href="#s9">9. 推导与演算</a><br>
+  <a href="#s10">10. 自测</a>
+</div>
+
+<p>
+  集成方法（ensemble methods）的核心直觉很简单：<strong>三个臭皮匠，顶个诸葛亮</strong>。
+  但"为什么多个模型比一个模型好"、"好多少"、"什么条件下好"——这些问题的答案藏在<strong>偏差-方差分解</strong>里。
+  本课从 0012 课的偏差-方差框架出发，看四种集成方法如何分别作用于偏差和方差，
+  并推导 AdaBoost 作为前向分步加性模型的完整机制。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 上节课与本课前置</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>偏差-方差分解：$\mathbb{E}[\text{test error}] = \text{Bias}^2 + \text{Variance} + \text{Irreducible Error}$。高偏差对应欠拟合，高方差对应过拟合。</li>
+    <li>深决策树（fully grown tree）是低偏差高方差模型；浅决策树（stump）是高偏差低方差模型。</li>
+    <li>0008 课对比过三种损失函数：平方（回归）、对数（分类）、hinge（SVM）。本课会在这个基础上加指数损失。</li>
+    <li>bootstrap 采样：从 $N$ 个样本中有放回抽 $N$ 次，约 $1-1/e \approx 63.2\%$ 的样本出现至少一次，其余 $36.8\%$ 未出现（out-of-bag）。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 回接 0012：偏差-方差分解——集成方法的两条路</h2>
+
+<p>
+  0012 课告诉我们，模型的泛化误差可以分解为三项：
+</p>
+
+<div class="formula-block">
+  $$\mathbb{E}\big[(y - \hat{f}(\mathbf{x}))^2\big] = \underbrace{\big(\mathbb{E}[\hat{f}(\mathbf{x})] - f(\mathbf{x})\big)^2}_{\text{Bias}^2} + \underbrace{\mathbb{E}\big[(\hat{f}(\mathbf{x}) - \mathbb{E}[\hat{f}(\mathbf{x})])^2\big]}_{\text{Variance}} + \underbrace{\sigma^2}_{\text{Irreducible}}$$
+</div>
+
+<p>
+  这里的期望是对训练集的随机性取的——不同的训练集产生不同的 $\hat{f}$。
+  集成方法的核心策略就是<strong>同时训练多个模型再组合</strong>，但<strong>降的是哪一项，取决于组合方式</strong>：
+</p>
+
+<ul>
+  <li><strong>降方差</strong>：对多个预测取平均（committees、bagging、随机森林）。每个模型偏差相近，平均不改变偏差，但方差缩小。</li>
+  <li><strong>降偏差</strong>：顺序训练，每个新模型"修正"前一个的残差（boosting）。最终组合的偏差比单个弱学习器小得多。</li>
+</ul>
+
+<div class="insight">
+  <strong>偏差-方差分解是集成方法的设计指南。</strong>
+  面对一个具体问题，先诊断：模型是偏差主导（欠拟合）还是方差主导（过拟合）？
+  偏差主导 $\rightarrow$ boosting（降偏差）；方差主导 $\rightarrow$ bagging/RF（降方差）。
+  选错了方向，集成只会让情况更糟。
+</div>
+
+<p>下面依次看四种方法，每种都问同一个问题：<strong>它改变了偏差-方差分解里的哪一项？怎么改的？</strong></p>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. Committees（平均）：降方差，但模型相关是瓶颈</h2>
+
+<p>
+  最简单的集成：训练 $M$ 个模型 $\hat{f}_1,\dots,\hat{f}_M$（同种算法、不同初始化/不同数据子集），
+  取平均预测 $\bar{f} = \frac{1}{M}\sum_{m=1}^M \hat{f}_m$。
+</p>
+
+<p>先看偏差：</p>
+<div class="formula-block">
+  $$\mathbb{E}[\bar{f}] = \frac{1}{M}\sum_{m=1}^M \mathbb{E}[\hat{f}_m] \approx \mathbb{E}[\hat{f}_1]$$
+</div>
+<p>每个模型偏差相同，平均后偏差不变。</p>
+
+<p>再看方差。先考虑<strong>理想情况</strong>：$M$ 个模型<strong>独立同分布</strong>，每个方差 $\sigma^2$：</p>
+<div class="formula-block">
+  $$\operatorname{Var}(\bar{f}) = \frac{1}{M^2}\sum_{m=1}^M \operatorname{Var}(\hat{f}_m) = \frac{\sigma^2}{M}$$
+</div>
+
+<p>方差降至 $1/M$。如果 $M=100$，方差缩到单个模型的 $1\%$——这太美了。
+  但现实是：<strong>模型之间不独立</strong>。它们用同一份数据训练，预测高度相关。
+  引入相关系数 $\rho$（假设所有模型对之间的相关系数相同）：</p>
+
+<div class="formula-block">
+  $$\operatorname{Var}(\bar{f}) = \frac{1}{M^2}\Big(\sum_{m} \sigma^2 + \sum_{m\neq k} \rho\sigma^2\Big) = \rho\sigma^2 + \frac{1-\rho}{M}\sigma^2$$
+</div>
+
+<div class="derivation">
+  <h4>推导 · 相关模型的平均方差</h4>
+  <div class="step">
+    $\operatorname{Var}(\bar{f}) = \frac{1}{M^2}\big(\sum_m \operatorname{Var}(\hat{f}_m) + \sum_{m\neq k} \operatorname{Cov}(\hat{f}_m,\hat{f}_k)\big)$
+    <span class="reason">方差展开：$\operatorname{Var}(\sum X_m)=\sum \operatorname{Var}(X_m)+\sum_{m\neq k}\operatorname{Cov}(X_m,X_k)$</span>
+  </div>
+  <div class="step">
+    $= \frac{1}{M^2}\big(M\sigma^2 + M(M-1)\rho\sigma^2\big)$
+    <span class="reason">代入 $\operatorname{Var}=\sigma^2$，$\operatorname{Cov}=\rho\sigma^2$</span>
+  </div>
+  <div class="step">
+    $= \frac{\sigma^2}{M} + \frac{M-1}{M}\rho\sigma^2 = \rho\sigma^2 + \frac{1-\rho}{M}\sigma^2$
+    <span class="reason">整理</span>
+  </div>
+</div>
+
+<p>观察两个极端：</p>
+<ul>
+  <li>$\rho=0$（完全独立）：$\operatorname{Var}=\sigma^2/M$——理想情况。</li>
+  <li>$\rho=1$（完全相关）：$\operatorname{Var}=\sigma^2$——平均毫无效果。</li>
+</ul>
+
+<p>现实介于两者之间。用同一份数据训练，$\rho$ 通常很大（比如 0.7-0.9），
+  方差只能降到 $\rho\sigma^2$ 附近，远不如 $1/M$ 理想。
+  <strong>这就是 committees 的瓶颈：模型间相关性限制了集成增益。</strong></p>
+
+<div class="insight">
+  <strong>集成的关键是多样性，不是数量。</strong>
+  100 个几乎一样的模型平均，不如 10 个差异大的模型平均。
+  后续所有集成方法——bagging 用 bootstrap、随机森林用特征采样、AdaBoost 用加权重采样——
+  本质上都是在<strong>刻意制造多样性</strong>，降低 $\rho$。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. Bagging：bootstrap 引入多样性，打破相关瓶颈</h2>
+
+<p>
+  Bagging = <strong>B</strong>ootstrap <strong>Agg</strong>regat<strong>ing</strong>（Breiman, 1996）。
+  核心思想：用 bootstrap 采样制造 $M$ 个不同的训练集，每个训练集训练一个模型，最后平均（回归）或投票（分类）。
+</p>
+
+<p>算法流程：</p>
+<ol>
+  <li>对 $m=1,\dots,M$：从原始数据集有放回抽样 $N$ 次，得 bootstrap 样本 $\mathcal{D}_m$。</li>
+  <li>在 $\mathcal{D}_m$ 上训练模型 $\hat{f}_m$。</li>
+  <li>最终预测 $\hat{f}_{\text{bag}}(\mathbf{x}) = \frac{1}{M}\sum_{m=1}^M \hat{f}_m(\mathbf{x})$（回归）或多数投票（分类）。</li>
+</ol>
+
+<p>为什么 bootstrap 能降相关？两个训练集 $\mathcal{D}_m$ 和 $\mathcal{D}_k$ 各自从原始数据有放回抽样，
+  每个样本出现在两个 bootstrap 集中的概率是 $(1/N)^2$——近似独立。
+  但注意，它们<strong>共享原始数据的分布</strong>，所以模型不完全独立，$\rho$ 只是变小而非归零。</p>
+
+<p>Bagging 对偏差-方差的影响：</p>
+<ul>
+  <li><strong>偏差基本不变</strong>：每个模型的期望大致相同，平均后偏差不变。</li>
+  <li><strong>方差降低</strong>：因为 $\rho$ 变小了，方差从 $\sigma^2$ 降到 $\rho\sigma^2 + \frac{1-\rho}{M}\sigma^2$。</li>
+</ul>
+
+<div class="warning">
+  <strong>Bagging 对高方差低偏差模型最有效。</strong>
+  深决策树（fully grown tree）是典型的高方差模型——对训练数据的微小变化敏感。
+  Bagging 能大幅降低它的方差。但对低方差高偏差模型（如线性模型），bagging 几乎没用——
+  方差本来就不大，降不了多少，偏差又没变。
+</div>
+
+<p>一个实用的副产品：<strong>out-of-bag (OOB) 误差</strong>。
+  每个 bootstrap 集大约包含 $63.2\%$ 的原始样本，剩下的 $36.8\%$ 是 OOB 样本。
+  对第 $n$ 个样本，用所有<strong>没用到它</strong>的模型做预测，平均得到 OOB 预测。
+  OOB 误差是交叉验证的免费替代——不需要额外留出验证集。</p>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #4 · "方差分解 + 相关系数"——集成方法的核心分析工具</h4>
+  $\operatorname{Var}(\bar{f}) = \rho\sigma^2 + \frac{1-\rho}{M}\sigma^2$ 这一公式贯穿本课。
+  它告诉我们：降方差的极限是 $\rho\sigma^2$（$M\to\infty$），所以关键不是 $M$ 而是 $\rho$。
+  任何降方差的集成方法，本质上都是在<strong>降低 $\rho$</strong> 而非增加 $M$。
+  这个范式在后面随机森林（特征采样降 $\rho$）和 committees 分析中反复出现。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. AdaBoost：顺序训练，降偏差——把弱学习器变强</h2>
+
+<p>
+  AdaBoost（Adaptive Boosting, Freund & Schapire, 1997）走的是另一条路：<strong>降偏差</strong>。
+  它顺序训练一系列"弱学习器"（weak learners，如深度为 1 的决策树 stump），
+  每轮给被前一轮分错的样本更高权重，让新学习器"关注"难样本。
+</p>
+
+<p>二分类 AdaBoost 算法（$y_n \in \{-1,+1\}$）：</p>
+<ol>
+  <li>初始化权重 $w_n^{(1)} = 1/N$，$n=1,\dots,N$。</li>
+  <li>对 $m=1,\dots,M$：
+    <ol type="a">
+      <li>用权重 $w_n^{(m)}$ 训练弱学习器 $G_m(\mathbf{x})$。</li>
+      <li>计算加权错误率 $\text{err}_m = \frac{\sum_{n=1}^N w_n^{(m)} \mathbf{1}(y_n \neq G_m(\mathbf{x}_n))}{\sum_{n=1}^N w_n^{(m)}}$。</li>
+      <li>计算 $\alpha_m = \frac{1}{2}\log\frac{1-\text{err}_m}{\text{err}_m}$。</li>
+      <li>更新权重 $w_n^{(m+1)} = w_n^{(m)} \exp\big(-\alpha_m y_n G_m(\mathbf{x}_n)\big)$，然后归一化使 $\sum_n w_n^{(m+1)} = 1$。</li>
+    </ol>
+  </li>
+  <li>最终分类器 $G(\mathbf{x}) = \operatorname{sign}\big(\sum_{m=1}^M \alpha_m G_m(\mathbf{x})\big)$。</li>
+</ol>
+
+<p>关键观察：</p>
+<ul>
+  <li>$\alpha_m$ 是<strong>分类器权重</strong>：错误率越低，$\alpha_m$ 越大。$\text{err}_m < 1/2$ 时 $\alpha_m > 0$。</li>
+  <li>权重更新：分对的样本（$y_n G_m(\mathbf{x}_n) = 1$）权重乘以 $e^{-\alpha_m} < 1$（减小）；分错的样本（$y_n G_m(\mathbf{x}_n) = -1$）权重乘以 $e^{\alpha_m} > 1$（增大）。</li>
+  <li>每轮之后，被分错的样本权重<strong>指数级放大</strong>，迫使下一轮学习器关注它们。</li>
+</ul>
+
+<div class="insight">
+  <strong>AdaBoost 的偏差-方差效果：</strong>
+  每个弱学习器（如 stump）是高偏差（只能捕捉粗粒度模式）、低方差的模型。
+  但 AdaBoost 把它们<strong>顺序组合</strong>后，最终分类器的偏差大幅降低——
+  每个新学习器修正前一个的残差，逐步逼近真实边界。
+  方差则<strong>可能上升</strong>（因为组合了多个模型），但偏差下降的幅度远大于方差上升，
+  所以整体泛化误差下降。
+  <strong>Boosting 降偏差，bagging 降方差——这是选择集成方法的根本指南。</strong>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. AdaBoost 的前向分步加性模型视角</h2>
+
+<p>
+  AdaBoost 看起来像一套启发式规则（加权、更新、再加权）。
+  但 Friedman, Hastie & Tibshirani (2000) 给出了一个深刻的解释：
+  <strong>AdaBoost 等价于用指数损失的前向分步加性模型（forward stagewise additive model）</strong>。
+</p>
+
+<p>加性模型的形式：</p>
+<div class="formula-block">
+  $$f(\mathbf{x}) = \sum_{m=1}^M \alpha_m G_m(\mathbf{x})$$
+</div>
+
+<p>前向分步（forward stagewise）的意思是：不一次优化所有 $\alpha_m, G_m$，
+  而是<strong>逐轮</strong>添加一项，每轮只优化当前项的系数和基学习器，前面已加的保持不变。</p>
+
+<p>在第 $m$ 轮，已有 $f_{m-1}(\mathbf{x}) = \sum_{i=1}^{m-1} \alpha_i G_i(\mathbf{x})$，
+  要添加 $(\alpha_m, G_m)$ 使指数损失最小化：</p>
+
+<div class="formula-block">
+  $$(\alpha_m, G_m) = \arg\min_{\alpha,G} \sum_{n=1}^N \exp\big(-y_n (f_{m-1}(\mathbf{x}_n) + \alpha G(\mathbf{x}_n))\big)$$
+</div>
+
+<p>令 $w_n^{(m)} = \exp(-y_n f_{m-1}(\mathbf{x}_n))$（与 $G,\alpha$ 无关），则目标为：</p>
+
+<div class="formula-block">
+  $$\min_{\alpha,G} \sum_{n=1}^N w_n^{(m)} \exp\big(-\alpha y_n G(\mathbf{x}_n)\big)$$
+</div>
+
+<div class="derivation">
+  <h4>推导 · 前向分步推出 AdaBoost 的 $\alpha_m$ 和权重更新</h4>
+
+  <div class="step">
+    <strong>第一步：求 $G_m$。</strong> 对固定的 $\alpha>0$，$\exp(-\alpha y_n G(\mathbf{x}_n))$ 在 $y_n=G(\mathbf{x}_n)$ 时小、不等时大。
+    最优 $G_m$ 是使加权 0-1 损失最小的分类器：
+    $G_m = \arg\min_G \sum_{n=1}^N w_n^{(m)} \mathbf{1}(y_n \neq G(\mathbf{x}_n))$。
+    <span class="reason">因为 $\exp(-\alpha)$ 和 $\exp(\alpha)$ 都是常数，最小化指数损失等价于最小化加权错误数</span>
+  </div>
+
+  <div class="step">
+    <strong>第二步：求 $\alpha_m$。</strong> 给定 $G_m$，把样本分对/分错分开：
+    $\sum_n w_n^{(m)} \exp(-\alpha y_n G_m(\mathbf{x}_n)) = e^{-\alpha}\sum_{y_n=G_m} w_n^{(m)} + e^{\alpha}\sum_{y_n\neq G_m} w_n^{(m)}$。
+    <span class="reason">分对时 $y_n G_m=1$，分错时 $y_n G_m=-1$</span>
+  </div>
+
+  <div class="step">
+    令 $W_{\text{corr}} = \sum_{y_n=G_m} w_n^{(m)}$，$W_{\text{err}} = \sum_{y_n\neq G_m} w_n^{(m)}$。
+    目标 $= e^{-\alpha}W_{\text{corr}} + e^{\alpha}W_{\text{err}}$。
+    对 $\alpha$ 求导令为零：
+    $-e^{-\alpha}W_{\text{corr}} + e^{\alpha}W_{\text{err}} = 0$。
+    <span class="reason">$\frac{\partial}{\partial\alpha}(e^{-\alpha}A + e^{\alpha}B) = -e^{-\alpha}A + e^{\alpha}B$</span>
+  </div>
+
+  <div class="step">
+    $e^{2\alpha} = W_{\text{corr}} / W_{\text{err}} = (1-\text{err}_m)/\text{err}_m$，其中 $\text{err}_m = W_{\text{err}}/(W_{\text{corr}}+W_{\text{err}})$。
+    <span class="reason">$W_{\text{corr}} = (1-\text{err}_m)(W_{\text{corr}}+W_{\text{err}})$，$W_{\text{err}} = \text{err}_m(W_{\text{corr}}+W_{\text{err}})$</span>
+  </div>
+
+  <div class="step">
+    $\boxed{\;\alpha_m = \frac{1}{2}\log\frac{1-\text{err}_m}{\text{err}_m}\;}$
+    <span class="reason">取对数即得</span>
+  </div>
+
+  <div class="step">
+    <strong>第三步：权重更新。</strong> 代入 $f_m = f_{m-1} + \alpha_m G_m$：
+    $w_n^{(m+1)} = \exp(-y_n f_m(\mathbf{x}_n)) = \exp(-y_n f_{m-1}(\mathbf{x}_n)) \cdot \exp(-\alpha_m y_n G_m(\mathbf{x}_n))$
+    $= w_n^{(m)} \cdot \exp(-\alpha_m y_n G_m(\mathbf{x}_n))$。
+    <span class="reason">这正是 AdaBoost 的权重更新规则——不是启发式，是从指数损失最小化推出来的</span>
+  </div>
+</div>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #5 · "前向分步加性模型"——把顺序优化分解为逐轮贪心</h4>
+  前向分步的思想是：不一次优化所有参数，而是逐轮添加一项，每轮只优化当前项。
+  这等价于坐标下降（coordinate descent）在函数空间中的版本。
+  这个范式不仅解释 AdaBoost，也出现在梯度提升（Gradient Boosting）中——
+  后者把指数损失换成任意可微损失，用梯度拟合每轮的残差。
+  逻辑回归、SVM 也可以看成加性模型 + 不同损失的特例（见下一节）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 损失函数对比：指数损失 vs 对数损失 vs Hinge</h2>
+
+<p>
+  0008 课从损失函数的视角对比了逻辑回归（对数损失）和 SVM（hinge 损失）。
+  现在加入 AdaBoost 的指数损失，放在一起看：</p>
+
+<div class="formula-block">
+  $$\begin{aligned}
+  \text{指数损失 (AdaBoost)} &: \quad L_{\exp}(y,f) = e^{-y f} \\
+  \text{对数损失 (Logistic)} &: \quad L_{\log}(y,f) = \log(1+e^{-y f}) \\
+  \text{Hinge 损失 (SVM)} &: \quad L_{\text{hinge}}(y,f) = \max(0, 1-y f) \\
+  \text{0-1 损失} &: \quad L_{0-1}(y,f) = \mathbf{1}(y f < 0)
+  \end{aligned}$$
+</div>
+
+<p>画成曲线（$y=1$ 固定，横轴 $f$）：</p>
+<ul>
+  <li>三种损失都是 0-1 损失的<strong>凸上界</strong>——最小化它们都能间接最小化 0-1 损失。</li>
+  <li>当 $y f$ 很大（正确且置信高）时：指数损失趋近 0 最快，对数损失次之，hinge 在 $y f \geq 1$ 时恰为 0。</li>
+  <li>当 $y f$ 为很大的负数（被严重分错）时：指数损失 $e^{-y f}$ 爆炸式增长，对异常值极度敏感；对数损失线性增长；hinge 损失线性增长。</li>
+</ul>
+
+<div class="insight">
+  <strong>指数损失对异常值敏感的根本原因：</strong>
+  当 $y_n f(\mathbf{x}_n)$ 是很大的负数（样本被严重分错或标签错误），
+  指数损失 $e^{-y_n f}$ 给这个样本<strong>指数级巨大</strong>的权重。
+  这导致 AdaBoost 会"拼命"去拟合异常值，牺牲其他正常样本。
+  对数损失的增长是线性的，所以逻辑回归对异常值更鲁棒。
+  这是 0008 课"损失函数决定模型行为"的又一次印证。
+</div>
+
+<p>三种损失对应的最优解（population minimizer）：</p>
+<ul>
+  <li>指数损失：$f^\ast(\mathbf{x}) = \frac{1}{2}\log\frac{p(y=1\mid\mathbf{x})}{p(y=-1\mid\mathbf{x})}$——估计对数几率的一半。</li>
+  <li>对数损失：$f^\ast(\mathbf{x}) = \log\frac{p(y=1\mid\mathbf{x})}{p(y=-1\mid\mathbf{x})}$——估计对数几率。</li>
+  <li>Hinge 损失：$f^\ast(\mathbf{x})$ 是最大间隔分离超平面。</li>
+</ul>
+
+<p>指数损失和对数损失的最优解只差一个常数因子 1/2——所以 AdaBoost 和逻辑回归在样本量足够大时估计的是同一个量（对数几率），只是缩放不同。但指数损失的<strong>有限样本行为</strong>（对异常值的敏感性）与对数损失截然不同。</p>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #6 · "损失函数决定模型行为"——0008 课的框架在本课的延伸</h4>
+  0008 课展示了逻辑回归（对数损失）、SVM（hinge）、线性回归（平方损失）都可以统一在"最小化某个损失"的框架下。
+  本课把 AdaBoost（指数损失）也纳入这个框架。
+  加上前向分步加性模型，我们看到：<strong>boosting、逻辑回归、SVM 都是加性模型 + 不同损失的特例</strong>，
+  区别只在于损失函数的选择和优化方式（前向分步 vs 一次优化）。
+  这个统一视角是理解整个监督学习的核心范式。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 随机森林：bagging + 特征采样，降相关降方差</h2>
+
+<p>
+  随机森林（Random Forest, Breiman, 2001）在 bagging 的基础上加了一个关键改动：
+  <strong>在每棵树的每个分裂点，只从随机选出的 $p$ 个特征子集中选最优分裂特征</strong>。
+  默认 $p \approx \sqrt{D}$（分类）或 $p \approx D/3$（回归），$D$ 是总特征数。
+</p>
+
+<p>为什么特征采样能进一步降方差？回到方差公式：</p>
+
+<div class="formula-block">
+  $$\operatorname{Var}(\bar{f}) = \rho\sigma^2 + \frac{1-\rho}{M}\sigma^2$$
+</div>
+
+<p>Bagging 通过 bootstrap 让 $\rho$ 从接近 1 降到某个中等值。
+  但 bagging 树之间仍然有很强的相关性——因为每棵树都在<strong>全部特征</strong>中选最优分裂，
+  强特征会被几乎所有树选中，导致树的结构相似。</p>
+
+<p>随机森林的特征采样<strong>强制</strong>树之间使用不同的特征子集。
+  即使有强特征，某些分裂点也选不到它，树的结构因此更加多样化。
+  这进一步降低了 $\rho$，从而降低了 $\operatorname{Var}(\bar{f})$ 的极限值 $\rho\sigma^2$。</p>
+
+<div class="insight">
+  <strong>随机森林 vs Bagging：</strong>
+  Bagging 只通过样本扰动（bootstrap）引入多样性；
+  随机森林通过<strong>样本扰动 + 特征扰动</strong>引入双重多样性。
+  特征扰动是"额外"的多样性来源，让 $\rho$ 降得更低。
+  当特征数 $D$ 很大时，特征采样的效果尤其显著——因为特征越多，不采样时树的相关性越高。
+</div>
+
+<p>随机森林的另一个优点：<strong>完全并行</strong>。每棵树独立训练，可以分布到不同机器上。
+  这与 boosting 的顺序训练形成鲜明对比。</p>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. Boosting vs Bagging：何时用哪个</h2>
+
+<p>把四种方法放在一张表里对比：</p>
+
+<table>
+  <tr><th>方法</th><th>训练方式</th><th>主要效果</th><th>对偏差-方差的影响</th><th>抗过拟合</th><th>典型基学习器</th></tr>
+  <tr>
+    <td>Committees</td>
+    <td>并行</td>
+    <td>降方差</td>
+    <td>偏差不变，方差降（受 $\rho$ 限制）</td>
+    <td>一般</td>
+    <td>任意</td>
+  </tr>
+  <tr>
+    <td>Bagging</td>
+    <td>并行</td>
+    <td>降方差</td>
+    <td>偏差不变，方差降（bootstrap 降 $\rho$）</td>
+    <td>强</td>
+    <td>深决策树</td>
+  </tr>
+  <tr>
+    <td>随机森林</td>
+    <td>并行</td>
+    <td>降方差</td>
+    <td>偏差不变，方差降更多（特征采样进一步降 $\rho$）</td>
+    <td>很强</td>
+    <td>深决策树</td>
+  </tr>
+  <tr>
+    <td>AdaBoost</td>
+    <td>顺序</td>
+    <td>降偏差</td>
+    <td>偏差大幅降，方差可能升</td>
+    <td>弱（深树时易过拟合）</td>
+    <td>浅决策树（stump）</td>
+  </tr>
+</table>
+
+<div class="warning">
+  <strong>Boosting 的过拟合风险：</strong>
+  因为 boosting 顺序地"修正"残差，如果基学习器太强（如深决策树），
+  或者 boosting 轮数太多，它会过度拟合训练数据中的噪声。
+  实践中，<strong>浅树（stump）+ 适量轮数</strong>是 boosting 的安全配置。
+  Bagging 和随机森林则天然抗过拟合——增加树的数量不会导致过拟合（只会让方差继续降低直到 $\rho\sigma^2$ 的极限）。
+</div>
+
+<p>选择指南：</p>
+<ul>
+  <li><strong>高方差模型（深树、大 $D$ 小 $N$）</strong> $\rightarrow$ 随机森林或 bagging。降方差。</li>
+  <li><strong>高偏差模型（浅树、线性模型在非线性问题上）</strong> $\rightarrow$ boosting。降偏差。</li>
+  <li><strong>数据有噪声/异常值</strong> $\rightarrow$ 随机森林（鲁棒）。避免 AdaBoost（指数损失对异常值敏感）。</li>
+  <li><strong>需要可解释性</strong> $\rightarrow$ 都不好。集成方法本质上是黑箱。</li>
+  <li><strong>需要概率输出</strong> $\rightarrow$ 用逻辑回归或带概率校准的 boosting 变体（如 LogitBoost）。</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 推导与演算</h2>
+
+<p>6 道题，难度递增。<strong>先自己做，做不出看提示，做完对解答。</strong></p>
+
+<div class="problem">
+  <div class="ptitle">题 1 · 独立同分布模型平均的方差 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    $M$ 个独立同分布的模型，每个方差 $\sigma^2$，偏差 $b$。证明平均预测 $\bar{f} = \frac{1}{M}\sum_{m=1}^M \hat{f}_m$ 的偏差为 $b$、方差为 $\sigma^2/M$。
+  </div>
+  <details><summary>提示</summary><div class="hint">偏差：$\mathbb{E}[\bar{f}] = \frac{1}{M}\sum \mathbb{E}[\hat{f}_m]$。方差：$\operatorname{Var}(\bar{f}) = \frac{1}{M^2}\sum \operatorname{Var}(\hat{f}_m)$（独立时协方差为零）。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\mathbb{E}[\bar{f}] = \frac{1}{M}\sum_{m=1}^M \mathbb{E}[\hat{f}_m] = \frac{1}{M}\cdot M\cdot \mathbb{E}[\hat{f}_1] = \mathbb{E}[\hat{f}_1]$，所以 $\text{Bias}(\bar{f}) = \mathbb{E}[\bar{f}] - f = \mathbb{E}[\hat{f}_1] - f = b$。偏差不变。</div>
+    <div class="step">$\operatorname{Var}(\bar{f}) = \frac{1}{M^2}\sum_{m=1}^M \operatorname{Var}(\hat{f}_m) = \frac{1}{M^2}\cdot M\cdot\sigma^2 = \sigma^2/M$。方差降至 $1/M$。</div>
+    <div class="step"><strong>关键洞察：</strong>独立假设下方差随 $M$ 线性下降，但现实中模型不独立，所以实际效果远不如 $1/M$。这正是 bagging 引入 bootstrap 的动机。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 2 · 相关模型平均的方差（范式 #4） <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    $M$ 个模型，每个方差 $\sigma^2$，任意两个模型之间的相关系数为 $\rho$。证明 $\operatorname{Var}(\bar{f}) = \rho\sigma^2 + \frac{1-\rho}{M}\sigma^2$。讨论 $M\to\infty$ 时的极限，以及 $\rho=0$ 和 $\rho=1$ 的含义。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\operatorname{Var}(\sum X_m) = \sum \operatorname{Var}(X_m) + \sum_{m\neq k}\operatorname{Cov}(X_m,X_k)$。$\operatorname{Cov} = \rho\sigma^2$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\operatorname{Var}(\bar{f}) = \frac{1}{M^2}\big(M\sigma^2 + M(M-1)\rho\sigma^2\big) = \frac{\sigma^2}{M} + \frac{M-1}{M}\rho\sigma^2 = \rho\sigma^2 + \frac{1-\rho}{M}\sigma^2$。</div>
+    <div class="step"><strong>$M\to\infty$：</strong>$\operatorname{Var} \to \rho\sigma^2$。极限方差由 $\rho$ 决定，与 $M$ 无关。所以增加 $M$ 只能降到 $\rho\sigma^2$，再增加也没用。</div>
+    <div class="step"><strong>$\rho=0$：</strong>$\operatorname{Var}=\sigma^2/M$——理想独立情况。</div>
+    <div class="step"><strong>$\rho=1$：</strong>$\operatorname{Var}=\sigma^2$——完全相关，平均无效。</div>
+    <div class="step"><strong>实践含义：</strong>集成的关键是降 $\rho$（多样性），不是增加 $M$。bagging 用 bootstrap 降 $\rho$，随机森林用特征采样进一步降 $\rho$。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 3 · 推 AdaBoost 的 $\alpha_m$（范式 #5） <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    从前向分步加性模型出发，给定 $G_m$，证明最小化指数损失 $\sum_n w_n^{(m)} \exp(-\alpha y_n G_m(\mathbf{x}_n))$ 得到 $\alpha_m = \frac{1}{2}\log\frac{1-\text{err}_m}{\text{err}_m}$，其中 $\text{err}_m$ 是加权错误率。
+  </div>
+  <details><summary>提示</summary><div class="hint">把样本分为分对和分错两组，损失 = $e^{-\alpha}W_{\text{corr}} + e^{\alpha}W_{\text{err}}$。对 $\alpha$ 求导令为零。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">令 $W_{\text{corr}} = \sum_{y_n=G_m(\mathbf{x}_n)} w_n^{(m)}$，$W_{\text{err}} = \sum_{y_n\neq G_m(\mathbf{x}_n)} w_n^{(m)}$。</div>
+    <div class="step">损失 $L(\alpha) = e^{-\alpha}W_{\text{corr}} + e^{\alpha}W_{\text{err}}$。</div>
+    <div class="step">$\frac{\partial L}{\partial\alpha} = -e^{-\alpha}W_{\text{corr}} + e^{\alpha}W_{\text{err}} = 0$。</div>
+    <div class="step">$\Rightarrow e^{2\alpha} = W_{\text{corr}}/W_{\text{err}} = (1-\text{err}_m)/\text{err}_m$。</div>
+    <div class="step">$\Rightarrow \alpha_m = \frac{1}{2}\log\frac{1-\text{err}_m}{\text{err}_m}$。</div>
+    <div class="step">验证：$\text{err}_m < 1/2$ 时 $\alpha_m > 0$，且 $\text{err}_m$ 越小 $\alpha_m$ 越大——好的分类器权重更大。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 4 · AdaBoost 样本权重更新 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    从前向分步模型 $f_m = f_{m-1} + \alpha_m G_m$ 和 $w_n^{(m)} = \exp(-y_n f_{m-1}(\mathbf{x}_n))$ 出发，推导权重更新公式 $w_n^{(m+1)} = w_n^{(m)} \exp(-\alpha_m y_n G_m(\mathbf{x}_n))$。解释为什么分对样本权重减小、分错样本权重增大。
+  </div>
+  <details><summary>提示</summary><div class="hint">直接代入 $f_m$ 的定义：$w_n^{(m+1)} = \exp(-y_n f_m(\mathbf{x}_n)) = \exp(-y_n (f_{m-1}(\mathbf{x}_n) + \alpha_m G_m(\mathbf{x}_n)))$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$w_n^{(m+1)} = \exp(-y_n f_m(\mathbf{x}_n)) = \exp(-y_n f_{m-1}(\mathbf{x}_n) - \alpha_m y_n G_m(\mathbf{x}_n))$。</div>
+    <div class="step">$= \exp(-y_n f_{m-1}(\mathbf{x}_n)) \cdot \exp(-\alpha_m y_n G_m(\mathbf{x}_n)) = w_n^{(m)} \cdot \exp(-\alpha_m y_n G_m(\mathbf{x}_n))$。</div>
+    <div class="step"><strong>分对</strong>：$y_n G_m(\mathbf{x}_n) = 1$，权重乘以 $e^{-\alpha_m} < 1$（减小）。</div>
+    <div class="step"><strong>分错</strong>：$y_n G_m(\mathbf{x}_n) = -1$，权重乘以 $e^{\alpha_m} > 1$（增大）。</div>
+    <div class="step">更新后需要归一化使 $\sum_n w_n^{(m+1)} = 1$，但归一化不影响相对权重比例。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 5 · AdaBoost 训练误差上界 <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    证明 AdaBoost 的训练误差满足上界 $\frac{1}{N}\sum_{n=1}^N \mathbf{1}(y_n \neq G(\mathbf{x}_n)) \leq \prod_{m=1}^M Z_m$，其中 $Z_m = \sum_{n=1}^N w_n^{(m)} \exp(-\alpha_m y_n G_m(\mathbf{x}_n))$ 是第 $m$ 轮的归一化因子。进一步证明 $Z_m = 2\sqrt{\text{err}_m(1-\text{err}_m)}$，并说明若每个弱学习器满足 $\text{err}_m \leq 1/2 - \gamma$，则训练误差以指数速度下降。
+  </div>
+  <details><summary>提示</summary><div class="hint">用 $\mathbf{1}(y_n \neq G(\mathbf{x}_n)) \leq \exp(-y_n f(\mathbf{x}_n))$（因为 $y_n f(\mathbf{x}_n) \leq 0$ 时左边=1，右边$\geq 1$；$>0$ 时左边=0，右边$\geq 0$）。然后用权重递推关系把指数损失乘积展开。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step"><strong>第一步：</strong>$\mathbf{1}(y_n \neq G(\mathbf{x}_n)) \leq \exp(-y_n f(\mathbf{x}_n))$，其中 $f = \sum_m \alpha_m G_m$。</div>
+    <div class="step">因为 $y_n f(\mathbf{x}_n) \leq 0$ 时，$\exp(-y_n f) \geq 1$；$y_n f > 0$ 时，$\exp(-y_n f) < 1$ 但左边=0，不等式成立。</div>
+    <div class="step"><strong>第二步：</strong>$\frac{1}{N}\sum_n \mathbf{1}(y_n \neq G(\mathbf{x}_n)) \leq \frac{1}{N}\sum_n \exp(-y_n f(\mathbf{x}_n))$。</div>
+    <div class="step"><strong>第三步：</strong>利用权重递推。$w_n^{(1)} = 1/N$，$w_n^{(m+1)} = w_n^{(m)} e^{-\alpha_m y_n G_m(\mathbf{x}_n)} / Z_m$，其中 $Z_m$ 是归一化因子。</div>
+    <div class="step">展开：$\frac{1}{N}\sum_n e^{-y_n f} = \sum_n w_n^{(1)} \prod_{m=1}^M e^{-\alpha_m y_n G_m(\mathbf{x}_n)} = \sum_n \big(\prod_{m=1}^M Z_m\big) w_n^{(M+1)} = \prod_{m=1}^M Z_m$。</div>
+    <div class="step">因为 $\sum_n w_n^{(M+1)} = 1$。所以训练误差 $\leq \prod_{m=1}^M Z_m$。</div>
+    <div class="step"><strong>第四步：</strong>$Z_m = \sum_n w_n^{(m)} e^{-\alpha_m y_n G_m(\mathbf{x}_n)} = e^{-\alpha_m}(1-\text{err}_m) + e^{\alpha_m}\text{err}_m$。</div>
+    <div class="step">代入 $\alpha_m = \frac{1}{2}\log\frac{1-\text{err}_m}{\text{err}_m}$：$e^{-\alpha_m} = \sqrt{\frac{\text{err}_m}{1-\text{err}_m}}$，$e^{\alpha_m} = \sqrt{\frac{1-\text{err}_m}{\text{err}_m}}$。</div>
+    <div class="step">$Z_m = \sqrt{\frac{\text{err}_m}{1-\text{err}_m}}(1-\text{err}_m) + \sqrt{\frac{1-\text{err}_m}{\text{err}_m}}\text{err}_m = 2\sqrt{\text{err}_m(1-\text{err}_m)}$。</div>
+    <div class="step"><strong>第五步：</strong>若 $\text{err}_m \leq 1/2 - \gamma$，则 $\text{err}_m(1-\text{err}_m) \leq (1/2-\gamma)(1/2+\gamma) = 1/4 - \gamma^2$。</div>
+    <div class="step">$Z_m \leq 2\sqrt{1/4 - \gamma^2} = \sqrt{1 - 4\gamma^2} < 1$。</div>
+    <div class="step">训练误差 $\leq \prod_{m=1}^M Z_m \leq (1-4\gamma^2)^{M/2} \xrightarrow{M\to\infty} 0$——<strong>指数收敛</strong>。</div>
+    <div class="step"><strong>核心意义：</strong>只要每个弱学习器略好于随机猜测（$\text{err}_m < 1/2$），AdaBoost 的训练误差就指数级降至零。这是 AdaBoost 能"把弱学习器变强"的理论保证。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 6 · 三种损失函数的比较（范式 #6） <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    画出指数损失 $e^{-yf}$、对数损失 $\log(1+e^{-yf})$、hinge 损失 $\max(0,1-yf)$ 在 $y=1$ 时关于 $f$ 的曲线草图。回答：
+    <ol type="a">
+      <li>三种损失在 $yf \to +\infty$（正确且置信高）时的渐近行为有何不同？</li>
+      <li>在 $yf \to -\infty$（严重分错）时的渐近行为有何不同？这对异常值鲁棒性意味着什么？</li>
+      <li>为什么说 AdaBoost（指数损失）和逻辑回归（对数损失）在无限样本下估计的是同一量，但有限样本行为不同？</li>
+    </ol>
+  </div>
+  <details><summary>提示</summary><div class="hint">考虑 $yf$ 很大正数时的极限：$e^{-yf} \to 0$（最快），$\log(1+e^{-yf}) \to e^{-yf} \to 0$（次快），hinge 在 $yf \geq 1$ 时恰为 0。$yf$ 很大负数时：$e^{-yf}$ 指数增长，$\log(1+e^{-yf}) \approx -yf$ 线性增长，hinge $\approx 1-yf$ 线性增长。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step"><strong>(a) $yf \to +\infty$：</strong>
+    <br>指数损失 $\to 0$（指数衰减最快）。
+    <br>对数损失 $\to 0$（指数衰减，但比指数损失慢）。
+    <br>Hinge 损失在 $yf \geq 1$ 时恰为 0——SVM 只关心间隔内的点，对已正确分类且远离边界的点不再优化。</div>
+    <div class="step"><strong>(b) $yf \to -\infty$：</strong>
+    <br>指数损失 $\to \infty$（<strong>指数增长</strong>）——对严重分错的样本施加极大惩罚，权重指数放大，对异常值极度敏感。
+    <br>对数损失 $\approx -yf$（<strong>线性增长</strong>）——对异常值的惩罚温和得多。
+    <br>Hinge 损失 $\approx 1-yf$（<strong>线性增长</strong>）——同样线性增长。</div>
+    <div class="step"><strong>(c) 无限样本等价性：</strong>
+    指数损失的最优解 $f^\ast_{\exp} = \frac{1}{2}\log\frac{p}{1-p}$，对数损失的最优解 $f^\ast_{\log} = \log\frac{p}{1-p}$，只差常数因子 $1/2$。所以无限样本下 AdaBoost 和逻辑回归估计的是同一条件对数几率。
+    <br><strong>有限样本差异：</strong>指数损失的指数增长意味着一个异常值就能主导权重分布，使 AdaBoost 把大量资源花在拟合异常值上。对数损失的线性增长不会产生这种效应。所以数据有噪声时逻辑回归更鲁棒。</div>
+    <div class="step"><strong>范式提炼（回接 0008）：</strong>三种损失都是 0-1 损失的凸上界。选哪个损失 = 选什么样的"错误惩罚增长方式"——指数增长（异常值敏感）、线性增长（鲁棒）、还是分段线性（只关心间隔内）。损失函数的选择决定了模型的行为。</div>
+  </div></details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s10">10. 自测</h2>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q1 · 偏差-方差分解如何指导集成方法的选择？</div>
+  <details><summary>答案</summary><div class="sol">偏差主导（欠拟合）→ 用 boosting（降偏差）。方差主导（过拟合）→ 用 bagging/随机森林（降方差）。选错方向会让问题更糟：对高方差模型用 boosting 会进一步放大方差，导致过拟合。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q2 · Bagging 和 committees 的核心区别是什么？为什么 bagging 通常比 committees 效果好？</div>
+  <details><summary>答案</summary><div class="sol">Committees 用同一份数据训练多个模型（不同初始化），模型间高度相关（$\rho$ 大），方差降幅有限。Bagging 用 bootstrap 生成不同训练集，模型间相关性降低（$\rho$ 变小），方差降得更多。集成的关键是多样性（降 $\rho$），bootstrap 是引入多样性的有效手段。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q3 · 为什么 AdaBoost 用浅决策树（stump）而随机森林用深决策树？</div>
+  <details><summary>答案</summary><div class="sol">AdaBoost 降偏差：浅树是高偏差低方差模型，boosting 顺序组合后偏差大幅降低。如果基学习器太强（深树），boosting 会过拟合。随机森林降方差：深树是低偏差高方差模型，bagging 平均后方差降低，偏差不变。如果基学习器太弱（浅树），偏差本身就大，平均后偏差仍然大。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q4 · 为什么随机森林通常比 bagging 效果好？特征采样是如何帮助降低方差的？</div>
+  <details><summary>答案</summary><div class="sol">Bagging 只通过 bootstrap 引入样本多样性。随机森林在此基础上增加特征采样，强制树使用不同的特征子集，进一步降低树之间的相关性 $\rho$。从方差公式 $\operatorname{Var} = \rho\sigma^2 + (1-\rho)\sigma^2/M$ 看，$\rho$ 越小，极限方差 $\rho\sigma^2$ 越小。特征采样是降低 $\rho$ 的有效手段，尤其当特征数 $D$ 很大时效果更显著。</div></details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;">
+    <strong>PRML §14.2（Committee 集成）</strong>——委员会平均的偏差-方差分析，模型相关性的影响。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>PRML §14.3（Boosting）</strong>——§14.3.1 前向分步加性模型、§14.3.2 指数损失与 AdaBoost。PRML 图 14.6（bagging 的方差降低效果）必看。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>Hastie ESL §10（Boosting 与加性模型）</strong>——§10.1-10.4 AdaBoost 的完整推导，§10.5-10.6 前向分步加性模型视角，§10.7-10.8 损失函数对比。比 PRML 更详细。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>Hastie ESL §15（随机森林）</strong>——§15.1-15.4 随机森林的算法、方差分析、OOB 误差、特征重要性。
+  </p>
+  <p style="margin-bottom:0; font-size:0.9rem;">
+    <strong>Friedman, Hastie & Tibshirani (2000) "Additive Logistic Regression"</strong>——AdaBoost = 前向分步加性模型 + 指数损失的原始论文。
+  </p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">
+    本课的核心逻辑链：偏差-方差分解 $\rightarrow$ 集成方法的两条路（降方差 vs 降偏差）$\rightarrow$ committees 的 $\rho$ 瓶颈 $\rightarrow$ bagging 用 bootstrap 降 $\rho$ $\rightarrow$ AdaBoost 的前向分步推导 $\rightarrow$ 损失函数对比 $\rightarrow$ 随机森林的特征采样进一步降 $\rho$。
+    题 5（训练误差上界）和题 6（损失函数对比）是最能检验理解的——做出来说明你真正理解了 AdaBoost 为什么 work 以及它的局限性。卡住直接问。
+  </p>
+</div>
+
+<div class="lesson-footer">
+  <a href="0012-bias-variance.html">← 0012 偏差–方差分解</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0014-neural-networks.html">0014 神经网络</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<template id="card-data-loss-compare">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">对比</span><h3>分类损失函数对比</h3></div>
+  <div class="cc-section"><h4>三种主要损失</h4>
+  <p><strong>0/1 损失</strong>：$\mathbf{1}[y\hat{y}\leq 0]$——不连续、不可导，直接优化 NP-hard。</p>
+  <p><strong>Hinge loss</strong>（SVM 0008）：$\max(0,1-y\hat{y})$——凸代理，只关心"够不够远"，间隔够大就不再罚。</p>
+  <p><strong>指数损失</strong>（AdaBoost 0013）：$e^{-y\hat{y}}$——对错分类施指数级惩罚 → 对异常值极敏感。</p>
+  <p><strong>交叉熵/Log loss</strong>（逻辑回归 0009）：$\log(1+e^{-y\hat{y}})$——来自 Bernoulli MLE，概率校准最好。</p>
+  </div>
+  <div class="cc-connections"><span class="conn-badge">→ 0008: hinge</span><span class="conn-badge">→ 0009: 交叉熵</span><span class="conn-badge">→ 0013: 指数损失</span></div>
+</div>
+</template>
+
+</body>
+</html>

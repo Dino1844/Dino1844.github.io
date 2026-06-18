@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0001 · 概率视角下的线性回归</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+
+  .quiz { margin: 2rem 0; }
+  .quiz-question { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin-bottom: 1rem; transition: border-color 0.2s; }
+  .quiz-question.correct { border-color: var(--correct); background: #f0faf5; }
+  .quiz-question.incorrect { border-color: var(--incorrect); background: #fff5f5; }
+  .quiz-question h4 { font-size: 1rem; margin-bottom: 0.8rem; color: #1a1a1a; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.45rem; }
+  .quiz-option { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.5rem 0.7rem; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: background 0.12s; }
+  .quiz-option:hover { background: var(--light-accent); }
+  .quiz-option input { margin-top: 0.25rem; }
+  .quiz-option label { cursor: pointer; flex: 1; }
+  .quiz-feedback { font-size: 0.9rem; margin-top: 0.7rem; padding: 0.6rem 0.8rem; border-radius: 5px; display: none; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb { background: #d8f3dc; color: var(--correct); }
+  .quiz-feedback.incorrect-fb { background: #ffd7d7; color: var(--incorrect); }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+  /* ===== 概念卡片（aimath 风格）===== */
+  .concept-card {
+    background: #fffdfb;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.3rem 1.5rem;
+    margin: 1.8rem 0;
+    transition: box-shadow 0.2s;
+  }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header {
+    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+    margin-bottom: 0.7rem;
+  }
+  .concept-card .cc-tag {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+    color: white; background: #2d6a4f;
+  }
+  .concept-card .cc-header h3 { font-size: 1.15rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-aliases { font-size: 0.82rem; color: var(--muted); }
+  .concept-card .cc-essence {
+    background: var(--light-accent);
+    border-left: 3px solid var(--accent);
+    padding: 0.6rem 1rem;
+    margin: 0.8rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.93rem;
+  }
+  .concept-card .cc-section { margin-top: 0.8rem; }
+  .concept-card .cc-section h4 {
+    font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin-bottom: 0.3rem;
+  }
+  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.92rem; }
+  .concept-card .cc-formula { text-align: center; margin: 0.6rem 0; }
+  .concept-card .cc-connections { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.8rem; }
+  .concept-card .conn-badge {
+    font-size: 0.78rem; padding: 0.2em 0.6em; border-radius: 12px;
+    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+  }
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0001 · 概率视角下的线性回归</h1>
+<div class="subtitle">从高斯噪声这一个假设出发，推出损失、解、几何、代价、信息论意义——整条链没有跳跃 · 阅读时间 ~35 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 故事的起点：一个生成假设</a><br>
+  <a href="#s2">2. 假设推出损失：为什么是平方</a><br>
+  <a href="#s3">3. 损失推出解：正规方程</a><br>
+  <a href="#s4">4. 解的几何：正交投影</a><br>
+  <a href="#s5">5. 解的代价：σ² 被低估，过拟合</a><br>
+  <a href="#s6">6. 解的意义：MLE 即最小化 KL 散度</a><br>
+  <a href="#s7">7. 自测</a>
+</div>
+
+<p>
+  线性回归是机器学习里最"简单"的模型，但大多数人只学了<strong>做法</strong>——最小二乘。
+  这节课不讲做法，讲<strong>一个公理集</strong>：从"噪声是高斯分布"这一个假设出发，
+	  推出平方损失，推出闭式解，看出解的几何意义（投影），看出解的代价（过拟合、σ² 被低估），
+	  看出解在信息论里意味着什么（MLE = 最小化 KL）。
+  每一步都是上一步的必然结果，没有跳跃。</p>
+
+	<p>但这条链只假设了<strong>高斯噪声</strong>。换成 Bernoulli？Poisson？指数族里的其他分布？
+	  解的投影几何怎么推广到无限维？MLE 这个点估计怎么升级成分布估计？
+	  这些不是本课要回答的——它们是后续<strong>三条路径</strong>各自的起点。
+</p>
+
+<div class="insight">
+  <strong>本课是全书公理集，不是线性链的第一环。</strong>
+	  后续课程在三条路径上展开本课的各个推论，引用本课时是<strong>回到公理</strong>而非"上一课"。
+  
+</div>
+
+<table style="width:100%; border-collapse:collapse; margin:1.3rem 0; font-size:0.9rem;">
+  <thead><tr style="border-bottom:2px solid var(--border);">
+    <th style="text-align:left; padding:0.45rem 0.7rem; width:5rem;">本课节</th>
+    <th style="text-align:left; padding:0.45rem 0.7rem;">建立的公理/对象</th>
+    <th style="text-align:left; padding:0.45rem 0.7rem; width:2.5rem;">路径</th>
+	    <th style="text-align:left; padding:0.45rem 0.7rem;">展开它的后续课</th>
+  </tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.7rem;"><strong>§1–2</strong></td><td style="padding:0.4rem 0.7rem;">噪声假设 → 损失（损失是噪声的影子）</td><td style="padding:0.4rem 0.7rem; font-size:0.82rem;">C</td><td style="padding:0.4rem 0.7rem; font-size:0.84rem;">0009 逻辑回归 · 0008 hinge · 0017 因子损失</td></tr>
+    <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.7rem;"><strong>§3–4</strong></td><td style="padding:0.4rem 0.7rem;">正规方程 · 正交投影 $I-P$</td><td style="padding:0.4rem 0.7rem; font-size:0.82rem;">C</td><td style="padding:0.4rem 0.7rem; font-size:0.84rem;">0006 核方法 · 0011 PCA · 0017 中性化</td></tr>
+    <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.7rem;"><strong>§5</strong></td><td style="padding:0.4rem 0.7rem;">MLE 低估 σ² · 过拟合</td><td style="padding:0.4rem 0.7rem; font-size:0.82rem;">B</td><td style="padding:0.4rem 0.7rem; font-size:0.84rem;">0012 偏差–方差 · 0016 过拟合陷阱</td></tr>
+    <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.7rem;"><strong>§6</strong></td><td style="padding:0.4rem 0.7rem;">MLE = 最小 KL · 交叉熵</td><td style="padding:0.4rem 0.7rem; font-size:0.82rem;">A</td><td style="padding:0.4rem 0.7rem; font-size:0.84rem;">0010 ELBO · 0015 变分推断</td></tr>
+
+  </tbody>
+</table>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <p style="margin-bottom:0.5rem;">先从记忆里调取以下内容。费力回忆本身就在加强记忆：</p>
+  <ol style="margin-bottom:0.5rem;">
+    <li>线性回归的残差平方和写成数学形式是什么？</li>
+    <li>高斯分布 $\mathcal{N}(\mu, \sigma^2)$ 的概率密度函数完整写出来。</li>
+    <li>"似然" $p(\mathcal{D}\mid\mathbf{w})$ 和"概率" $p(\mathbf{y}\mid\mathbf{w})$ 在概念上有什么区别？</li>
+    <li>矩阵 $\mathbf{X}^\top\mathbf{X}$ 什么时候可逆？</li>
+  </ol>
+  <p style="font-size:0.85rem; color:var(--muted); margin:0.5rem 0 0;">想不起来的就是今天要补的缺口。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 故事的起点：一个生成假设</h2>
+
+<p>
+  给定数据 $\{(\mathbf{x}_n, y_n)\}_{n=1}^N$，$\mathbf{x}_n \in \mathbb{R}^D$，$y_n \in \mathbb{R}$。
+  我们想用模型预测 $y$。整条逻辑链的起点不是"最小化误差"，而是一个关于<strong>数据是怎么来的</strong>假设：
+</p>
+
+<div class="formula-block">
+  $$y = \mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}) + \varepsilon, \qquad \varepsilon \sim \mathcal{N}(0, \sigma^2)$$
+</div>
+
+<p>
+  即：真实世界有一个确定性规律 $\mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x})$，我们观测到的是它加上一个高斯噪声。
+  这里 $\boldsymbol{\phi}(\mathbf{x})$ 是<strong>基函数</strong>向量，$\phi_0(\mathbf{x})=1$ 吸收偏置项。
+  取 $\boldsymbol{\phi}(\mathbf{x})=\mathbf{x}$ 就是普通线性回归；取 $\phi_j(x)=x^j$ 就是多项式回归；
+  取高斯基函数就是 RBF 回归。<strong>"线性回归"指的是对参数 $\mathbf{w}$ 线性，输入可以任意非线性变换</strong>——
+  这一点记牢，后面核方法、GLM、神经网络都靠它。
+</p>
+
+<p>为什么噪声取高斯？不只是"好算"。两个深层理由：</p>
+<ol>
+  <li><span class="cr" data-card="clt"><strong>中心极限定理</strong></span>。噪声通常是大量独立微小扰动（测量误差、未建模因素……）的叠加。CLT 说这种和趋向高斯——高斯是"许多小扰动之和"的吸引子。</li>
+  <li><span class="cr" data-card="maxent"><strong>最大熵原理</strong></span>。只给定均值和方差时，高斯是熵最大的分布，假设得最少。用高斯等于声明："除了知道噪声均值 0、方差 $\sigma^2$，我对它一无所知。"</li>
+</ol>
+<p>这两点让高斯成为缺省假设而非任意选择。当然它会失效——金融收益的厚尾就是反例，那时该换 Student-t 或拉普拉斯。<strong>换噪声分布就换一切</strong>，这是后面反复出现的主题。</p>
+
+<p>等价地把假设写成条件分布：</p>
+<div class="formula-block">
+  $$p(y\mid\mathbf{x},\mathbf{w},\sigma^2) = \mathcal{N}(y\mid \mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}),\, \sigma^2)$$
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 假设推出损失：为什么是平方</h2>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag">MLE</span>
+    <h3>最大似然估计 · Maximum Likelihood Estimation</h3>
+    <span class="cc-aliases">频率派 · Fisher</span>
+  </div>
+  <div class="cc-essence">
+    <strong>数学本质：</strong>参数 $\theta$ 是固定未知量（不是随机变量），在所有候选 $\theta$ 里挑让<em>已观测数据出现概率最大</em>的那个——"既然这份数据出现了，那它出现的概率应该不小"。
+  </div>
+  <div class="cc-section">
+    <h4>核心公式</h4>
+    <div class="cc-formula">$$\hat\theta_{\text{MLE}}=\arg\max_\theta\ p(\mathcal{D}\mid\theta)\;=\;\arg\max_\theta\ \log p(\mathcal{D}\mid\theta)$$</div>
+    <p>取 $\log$ 不改极值点，只把乘积 $\prod_n$ 变求和 $\sum_n$，好求导。似然 $p(\mathcal{D}\mid\theta)$ 是<strong>数据的概率看成 $\theta$ 的函数</strong>，不是"$\theta$ 的概率"。</p>
+  </div>
+  <div class="cc-section">
+    <h4>三步流程</h4>
+    <ul>
+      <li><strong>建模型</strong>：写出 $p(\mathcal{D}\mid\theta)$（本课即假设高斯噪声）</li>
+      <li><strong>取对数</strong>：$\ell(\theta)=\log p(\mathcal{D}\mid\theta)$</li>
+      <li><strong>求极值</strong>：$\partial\ell/\partial\theta=0$ 解 $\hat\theta$</li>
+    </ul>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ MAP：加先验 $p(\theta)$ 取众数</span>
+    <span class="conn-badge">→ 贝叶斯：求整个后验 $p(\theta\mid\mathcal{D})$</span>
+    <span class="conn-badge">→ 本课 §6：MLE ⟺ 最小化 KL 散度</span>
+  </div>
+</div>
+
+<p>
+  假设数据 <span class="cr" data-card="iid">i.i.d.</span>。把所有数据点的条件概率乘起来，得到<strong>似然函数</strong>——
+  它是参数 $\mathbf{w}$ 的函数（数据固定），表达"如果参数是 $\mathbf{w}$，观察到这份数据的概率有多大"：
+</p>
+
+<div class="formula-block">
+  $$p(\mathbf{y}\mid\mathbf{X},\mathbf{w},\sigma^2) = \prod_{n=1}^N \mathcal{N}(y_n\mid \mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n),\, \sigma^2)$$
+</div>
+
+<p>
+  最大似然的原则是：选让数据概率最大的 $\mathbf{w}$。直接最大化这个乘积不好算——
+  $N$ 个小概率相乘会数值下溢，求导要用乘积法则反复展开。
+  取对数一举两得：单调变换不改变极值点，乘积变求和，求导变线性。
+</p>
+
+<div class="derivation">
+  <h4>对数似然</h4>
+  <div class="step">
+    $\displaystyle \log p = \sum_{n=1}^N \log \mathcal{N}(y_n\mid \mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n), \sigma^2)$
+    <span class="reason">log 把 ∏ 变 ∑</span>
+  </div>
+  <div class="step">
+    $\displaystyle = -\frac{N}{2}\log(2\pi\sigma^2) - \frac{1}{2\sigma^2}\sum_{n=1}^N (y_n - \mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n))^2$
+    <span class="reason">代入高斯密度，拆出与 $\mathbf{w}$ 无关的常数项</span>
+  </div>
+</div>
+
+<p>关于 $\mathbf{w}$ 最大化。第一项与 $\mathbf{w}$ 无关，第二项前有负号，于是：</p>
+
+<div class="formula-block">
+  $$\arg\max_{\mathbf{w}}\; \log p \;=\; \arg\min_{\mathbf{w}}\; \sum_{n=1}^N (y_n - \mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n))^2$$
+</div>
+
+<div class="insight">
+  <strong>最小二乘不是设计出来的，是从高斯噪声假设里推出来的。</strong>
+  "平方"是高斯密度里那个 $(y-\mu)^2$ 的直接后果。
+  换噪声分布就换损失：拉普拉斯噪声 $\Rightarrow$ 绝对值损失（L1）；均匀噪声 $\Rightarrow$ 最大偏差型损失。
+  <strong>损失函数是噪声假设的影子。</strong>
+</div>
+
+<p>注意一个细节：$\sigma^2$ 在整个推导里只是损失前面的一个正系数 $\frac{1}{2\sigma^2}$，不影响 $\mathbf{w}$ 的极值点位置。所以 $\mathbf{w}$ 的解与 $\sigma^2$ 无关——这点后面 GLM 还会用到。</p>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 损失推出解：正规方程</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#c44d4d;">范式</span>
+	    <h3>正规方程 · Normal Equation</h3>
+	    <span class="cc-aliases">闭式解 · 最小二乘解</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>损失函数是 $\mathbf{w}$ 的二次型，梯度为零给出线性方程组——<strong>二次损失 + 线性模型 = 闭式解</strong>。
+	  </div>
+	  <div class="cc-section">
+	    <h4>核心公式</h4>
+	    <div class="cc-formula">$$\boxed{\;\mathbf{w}_{\text{ML}} = (\boldsymbol{\Phi}^\top\!\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top\mathbf{y}\;}$$</div>
+	    <p>$\boldsymbol{\Phi}^\top\!\boldsymbol{\Phi}$ 是 $M\times M$ Hessian，$\boldsymbol{\Phi}^\top\mathbf{y}$ 是参数-输出相关性向量。</p>
+	  </div>
+	  <div class="cc-section">
+	    <h4>三步推导</h4>
+	    <ol>
+	      <li>写损失：$\mathcal{L}=\frac{1}{2\sigma^2}\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}\|^2$</li>
+	      <li>求梯度：$\nabla_{\mathbf{w}}\mathcal{L} = -\frac{1}{\sigma^2}\boldsymbol{\Phi}^\top(\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}) = \mathbf{0}$</li>
+	      <li>解方程：$\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w} = \boldsymbol{\Phi}^\top\mathbf{y}$</li>
+	    </ol>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ §4: 解即投影</span>
+	    <span class="conn-badge">→ 0006: 核化 $\mathbf{w}=\boldsymbol{\Phi}^\top\boldsymbol{\alpha}$</span>
+	    <span class="conn-badge">→ 0004(指数族): MLE 即矩匹配</span>
+	  </div>
+	</div>
+
+
+<p>把设计矩阵记作 $\boldsymbol{\Phi}\in\mathbb{R}^{N\times M}$（第 $n$ 行是 $\boldsymbol{\phi}(\mathbf{x}_n)^\top$），负对数似然写成矩阵形式：</p>
+
+<div class="formula-block">
+  $$\mathcal{L}(\mathbf{w}) = \frac{1}{2\sigma^2}\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}\|^2 = \frac{1}{2\sigma^2}(\mathbf{y}-\boldsymbol{\Phi}\mathbf{w})^\top(\mathbf{y}-\boldsymbol{\Phi}\mathbf{w})$$
+</div>
+
+<p>这是 $\mathbf{w}$ 的二次函数，求梯度令为零：</p>
+
+<div class="derivation">
+  <h4>正规方程的推导</h4>
+  <div class="step">
+    $\displaystyle \nabla_{\mathbf{w}}\mathcal{L} = \frac{1}{2\sigma^2}\nabla_{\mathbf{w}}\big(\mathbf{y}^\top\mathbf{y} - 2\mathbf{y}^\top\boldsymbol{\Phi}\mathbf{w} + \mathbf{w}^\top\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w}\big)$
+    <span class="reason">展开平方，用 $\mathbf{a}^\top\mathbf{b}=\mathbf{b}^\top\mathbf{a}$</span>
+  </div>
+  <div class="step">
+    $\displaystyle = \frac{1}{\sigma^2}(-\boldsymbol{\Phi}^\top\mathbf{y} + \boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w})$
+    <span class="reason">用 $\nabla \mathbf{b}^\top\mathbf{x}=\mathbf{b}$，$\nabla \mathbf{x}^\top\mathbf{A}\mathbf{x}=2\mathbf{A}\mathbf{x}$（$\mathbf{A}$ 对称）</span>
+  </div>
+  <div class="step">
+    令其为 $\mathbf{0}$，得 <strong>正规方程</strong> $\;\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\,\mathbf{w} = \boldsymbol{\Phi}^\top\mathbf{y}$，解出
+    $\boxed{\;\mathbf{w}_{\text{ML}} = (\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top\mathbf{y}\;}$
+  </div>
+</div>
+
+<p>几个要点串起来：</p>
+<ul>
+  <li><strong>唯一全局最小。</strong>Hessian $\nabla^2_{\mathbf{w}}\mathcal{L}=\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 半正定，列满秩时正定——所以这是凸优化，没有局部极值。线性回归"好算"的根源在此。</li>
+  <li><strong>可逆条件。</strong>$\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 可逆要求 $\operatorname{rk}(\boldsymbol{\Phi})=M$，即 $N\geq M$ 且特征线性无关。多重共线性或 $M>N$ 时矩阵奇异，解不唯一——这正是过拟合的信号，也是正则化登场的时机。</li>
+  <li><strong>伪逆。</strong>$(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top$ 是 Moore–Penrose 伪逆在列满秩时的特例，把"逆"推广到非方阵。</li>
+  <li><strong>偏置的解。</strong>若显式写出偏置 $w_0$，令 $\partial\mathcal{L}/\partial w_0=0$ 得 $w_0 = \bar{y} - \sum_{j\geq1} w_j\bar{\phi}_j$——偏置补偿目标均值与基函数加权均值之差，所以回归线总穿过数据中心。</li>
+  <li><strong>数值实现别直接求逆。</strong>$(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}$ 条件数被平方，数值不稳定。工程上用 SVD 或 QR 分解。理解原理时写逆没问题，<strong>实现时别这么写</strong>。</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 解的几何：正交投影</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#4a7bab;">几何</span>
+	    <h3>正交投影 · Orthogonal Projection</h3>
+	    <span class="cc-aliases">Hat Matrix · 投影矩阵</span>
+	  </div>
+<div class="viz-container" style="background:white;border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.5rem 0;text-align:center;">
+  <svg viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg" style="max-width:500px;width:100%;">
+    <defs>
+      <marker id="arr" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><polygon points="0 0, 6 2, 0 4" fill="#555"/></marker>
+      <linearGradient id="planeGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5b8c5a" stop-opacity="0.15"/><stop offset="100%" stop-color="#5b8c5a" stop-opacity="0.05"/></linearGradient>
+    </defs>
+
+    <!-- Column space plane -->
+    <polygon points="80,260 420,160 460,190 120,290" fill="url(#planeGrad)" stroke="#5b8c5a" stroke-width="1.5"/>
+    <text x="440" y="175" font-size="12" fill="#5b8c5a" font-style="italic">col(&#x3a6;)</text>
+
+    <!-- y vector (from origin to point above plane) -->
+    <line x1="250" y1="280" x2="310" y2="80" stroke="#c44d4d" stroke-width="2.2" marker-end="url(#arr)"/>
+    <text x="316" y="72" font-size="13" fill="#c44d4d" font-weight="700">y</text>
+
+    <!-- Projection ŷ on plane -->
+    <line x1="250" y1="280" x2="370" y2="190" stroke="#4a7bab" stroke-width="2.2" marker-end="url(#arr)"/>
+    <text x="378" y="182" font-size="13" fill="#4a7bab" font-weight="700">ŷ = Py</text>
+
+    <!-- Residual (dashed) -->
+    <line x1="370" y1="190" x2="310" y2="80" stroke="#e07b39" stroke-width="1.8" stroke-dasharray="6,3" marker-end="url(#arr)"/>
+    <text x="300" y="132" font-size="12" fill="#e07b39">y−ŷ</text>
+
+    <!-- Right angle symbol at projection -->
+    <rect x="360" y="180" width="18" height="18" fill="none" stroke="#e07b39" stroke-width="1" transform="rotate(-32,369,189)"/>
+
+    <!-- Origin -->
+    <circle cx="250" cy="280" r="3.5" fill="#1a1a1a"/>
+    <text x="238" y="298" font-size="11" fill="#555">0</text>
+
+    <!-- Basis vectors on plane -->
+    <line x1="250" y1="280" x2="360" y2="250" stroke="#5b8c5a" stroke-width="1.2" opacity="0.6" marker-end="url(#arr)"/>
+    <text x="366" y="248" font-size="10" fill="#5b8c5a">φ₁</text>
+    <line x1="250" y1="280" x2="320" y2="310" stroke="#5b8c5a" stroke-width="1.2" opacity="0.6" marker-end="url(#arr)"/>
+    <text x="326" y="318" font-size="10" fill="#5b8c5a">φ₂</text>
+
+    <!-- Notation box -->
+    <rect x="10" y="8" width="200" height="66" rx="6" fill="#faf8f3" stroke="var(--border)" stroke-width="1"/>
+    <text x="110" y="28" text-anchor="middle" font-size="11" fill="#555">P = Φ(ΦᵀΦ)⁻¹Φᵀ</text>
+    <text x="110" y="46" text-anchor="middle" font-size="11" fill="#555">ŷ = Py &perp; y−ŷ</text>
+    <text x="110" y="64" text-anchor="middle" font-size="11" fill="#555">tr(P) = M, tr(I−P) = N−M</text>
+  </svg>
+  <div class="viz-caption">正交投影：观测向量 y 被投影到设计矩阵 Φ 的列空间上。残差 y−ŷ 与列空间正交。</div>
+</div>
+
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>$\hat{\mathbf{y}} = \mathbf{P}\mathbf{y}$，其中 $\mathbf{P} = \boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\!\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top$ 是到 $\boldsymbol{\Phi}$ 列空间的正交投影。$\mathbf{P}^2=\mathbf{P}$（幂等），残差与拟合值正交。
+	  </div>
+	  <div class="cc-section">
+	    <h4>核心性质</h4>
+	    <ul>
+	      <li>$\operatorname{tr}(\mathbf{P}) = M$（投影到的维度 = 参数个数）</li>
+	      <li>$\operatorname{tr}(\mathbf{I}-\mathbf{P}) = N-M$（→ 这就是 §5 $\sigma^2$ 偏差中 $N-M$ 的来源）</li>
+	      <li>$\hat{\mathbf{y}} = \mathbf{P}\mathbf{y}$，残差 $\mathbf{y}-\hat{\mathbf{y}} = (\mathbf{I}-\mathbf{P})\mathbf{y}$</li>
+	    </ul>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ §5: $\mathbb{E}[\hat\sigma^2]=\frac{N-M}{N}\sigma^2$</span>
+	    <span class="conn-badge">→ 0003: 边缘似然 = 贝叶斯版投影</span>
+	    <span class="conn-badge">→ 0011: PCA = 低秩投影</span>
+	  </div>
+	</div>
+
+
+<p>
+  正规方程 $\boldsymbol{\Phi}^\top(\mathbf{y}-\boldsymbol{\Phi}\mathbf{w})=\mathbf{0}$ 有一个一眼能看穿的几何含义。
+  把 $N$ 个目标值 $y_1,\dots,y_N$ 看成 $\mathbb{R}^N$ 里的向量 $\mathbf{y}$。
+  每个基函数在 $N$ 个数据点上的取值也是 $\mathbb{R}^N$ 里的向量，记作 $\boldsymbol{\varphi}_j$（即 $\boldsymbol{\Phi}$ 的第 $j$ 列）。
+  $M$ 个 $\boldsymbol{\varphi}_j$ 张成一个 $M$ 维子空间 $S$（当 $M<N$）。
+</p>
+
+<p>
+  预测向量 $\boldsymbol{\Phi}\mathbf{w}$ 永远落在 $S$ 里。残差 $\mathbf{r}=\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}$。
+  正规方程说的正是 $\boldsymbol{\Phi}^\top\mathbf{r}=\mathbf{0}$，即<strong>残差正交于 $S$ 的每一列</strong>。
+  而一个向量到子空间距离最近的点，恰是它在该子空间上的正交投影——这是欧氏几何的基本事实。
+</p>
+
+<div class="insight">
+  <strong>最小二乘解 = $\mathbf{y}$ 在列空间 $S=\operatorname{col}(\boldsymbol{\Phi})$ 上的正交投影。</strong>
+  $\mathbf{w}_{\text{ML}}$ 是这个投影在基 $\{\boldsymbol{\varphi}_j\}$ 下的坐标；
+  投影矩阵是 $\boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top$。
+  "最小化平方距离"和"正交投影"是同一件事的两个说法。
+</div>
+
+<p>一个漂亮的推论：若基函数<strong>正交归一</strong>（$\boldsymbol{\Phi}^\top\boldsymbol{\Phi}=\mathbf{I}$，如 Fourier 基、小波基），投影退化为 $\sum_k \boldsymbol{\varphi}_k\boldsymbol{\varphi}_k^\top\mathbf{y}$——各特征完全解耦，每个系数独立计算。这是信号处理偏爱正交基的原因：没有"特征间耦合"，加一个基函数不影响已有系数。</p>
+
+<p>非正交基时，$\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 那个矩阵就是在处理基函数之间的耦合——它把"在斜基下求坐标"修正成"在正交意义下求投影"。Gram–Schmidt 可以把任意线性无关基正交化，本质上就是在消这个耦合。</p>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 解的代价：σ² 被低估，过拟合</h2>
+
+<p>
+  $\sigma^2$ 也能用 MLE 估。对对数似然求 $\partial/\partial\sigma^2$ 令为零，得
+  $\widehat{\sigma^2}_{\text{ML}} = \frac{1}{N}\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}_{\text{ML}}\|^2$——残差平方的均值。
+  看起来自然，但它<strong>系统性低估</strong>真实 $\sigma^2$：
+</p>
+
+<div class="formula-block">
+  $$\mathbb{E}\big[\widehat{\sigma^2}_{\text{ML}}\big] = \frac{N-M}{N}\,\sigma^2 \;<\; \sigma^2$$
+</div>
+
+<p>
+  原因很具体：$\mathbf{w}_{\text{ML}}$ 是<strong>用同一份数据</strong>拟合出来的，它会"贴着"数据走，使残差比真实噪声小。
+  模型用掉 $M$ 个参数去解释数据，残差里只剩 $N-M$ 个独立信息——自由度从 $N$ 降到 $N-M$。
+  无偏修正版除以 $N-M$ 而非 $N$。
+</p>
+
+<details class="derivation" style="margin-top:1.3rem;">
+  <summary style="cursor:pointer; font-size:0.92rem; color:var(--accent); font-weight:600;">▸ 展开 · $\mathbb{E}[\widehat{\sigma^2}_{\text{ML}}]=\tfrac{N-M}{N}\sigma^2$ 的完整推导</summary>
+  <div style="margin-top:0.8rem;">
+  <p>设真模型 $\mathbf{y}=\boldsymbol{\Phi}\mathbf{w}_*+\boldsymbol\varepsilon$，$\boldsymbol\varepsilon\sim\mathcal{N}(\mathbf{0},\sigma^2\mathbf{I})$，$\boldsymbol\Phi\in\mathbb{R}^{N\times M}$ 列满秩。要证 $\mathbb{E}\!\left[\tfrac{1}{N}\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}_{\text{ML}}\|^2\right]=\tfrac{N-M}{N}\sigma^2$。</p>
+
+  <div class="step"><strong>① 残差 = 噪声在正交补上的投影。</strong>拟合值 $\hat{\mathbf{y}}=P\mathbf{y}$，$P=\boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top$ 为正交投影（$P^2=P,\ P^\top=P$）。残差 $\mathbf{r}=(I-P)\mathbf{y}$。</div>
+  <div class="step"><strong>② 确定部分被投影消掉。</strong>代入 $\mathbf{y}=\boldsymbol{\Phi}\mathbf{w}_*+\boldsymbol\varepsilon$：
+  $\mathbf{r}=(I-P)\boldsymbol{\Phi}\mathbf{w}_*+(I-P)\boldsymbol\varepsilon$。因 $P\boldsymbol{\Phi}=\boldsymbol{\Phi}$，$(I-P)\boldsymbol{\Phi}=\mathbf{0}$，第一项消失：
+  $$\mathbf{r}=(I-P)\boldsymbol\varepsilon$$
+  <span class="reason">残差只含噪声，与真值 $\mathbf{w}_*$ 无关——几何把信号投影掉了。</span></div>
+  <div class="step"><strong>③ 残差平方 = 噪声的二次型。</strong>用 $(I-P)^2=I-P$：
+  $$\|\mathbf{r}\|^2=\boldsymbol\varepsilon^\top(I-P)\boldsymbol\varepsilon$$</div>
+  <div class="step"><strong>④ 高斯二次型期望。</strong>对 $\boldsymbol\varepsilon\sim\mathcal{N}(\mathbf{0},\sigma^2\mathbf{I})$，$\mathbb{E}[\boldsymbol\varepsilon^\top A\boldsymbol\varepsilon]=\sigma^2\,\text{tr}(A)$：
+  $$\mathbb{E}[\|\mathbf{r}\|^2]=\sigma^2\,\text{tr}(I-P)$$</div>
+  <div class="step"><strong>⑤ 投影矩阵的迹 = 子空间维数。</strong>用 $\text{tr}(AB)=\text{tr}(BA)$：
+  $$\text{tr}(P)=\text{tr}\!\big((\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\big)=\text{tr}(I_M)=M$$
+  故 $\text{tr}(I-P)=N-M$。</div>
+  <div class="step"><strong>⑥ 合起来。</strong>
+  $$\mathbb{E}[\widehat{\sigma^2}_{\text{ML}}]=\tfrac{1}{N}\sigma^2(N-M)=\tfrac{N-M}{N}\sigma^2<\sigma^2\quad\square$$</div>
+
+  <p style="margin-top:0.6rem; font-size:0.88rem;"><strong>三个关键点</strong>：(i) $\mathbf{r}=(I-P)\boldsymbol\varepsilon$ 把信号消掉只剩噪声；(ii) $\text{tr}(I-P)=N-M$ 即残差空间维数，模型消耗了 $M$ 个自由度；(iii) 二次型期望公式把"平方的期望"化成"迹 × 方差"。除以 $N$ 把 $N-M$ 份噪声摊到 $N$ 份 → 低估；除以 $N-M$ 才无偏。</p>
+  </div>
+</details>
+
+<div class="warning">
+  这是<strong>过拟合的微观体现</strong>：用数据估参数，再用同一数据估噪声，必然乐观偏误。
+  把它放大就是宏观现象——用 $M$ 阶多项式拟合 $N$ 个点，$M$ 增大时 $\mathbf{w}_{\text{ML}}$ 让训练残差趋零，
+  但系数绝对值爆炸、曲线剧烈震荡，测试点预测灾难性偏离。
+  根子是同一个：MLE 把模型<strong>贴到带噪的有限样本上</strong>，把噪声也当信号学了。
+</div>
+
+<p>这个病不是线性回归独有，是<strong>点估计 + 高容量模型</strong>的通病。它直接逼出三条出路：</p>
+
+<table>
+  <tr><th>思路</th><th>做法</th><th>概率视角</th></tr>
+  <tr><td><strong>正则化</strong></td><td>损失加 $\lambda\|\mathbf{w}\|_2^2$（Ridge）或 $\lambda\|\mathbf{w}\|_1$（Lasso）</td><td>给 $\mathbf{w}$ 加先验：高斯先验 $\Rightarrow$ L2，拉普拉斯先验 $\Rightarrow$ L1。即 MAP 估计</td></tr>
+  <tr><td><strong>模型选择</strong></td><td>交叉验证选 $M$；或 AIC/BIC</td><td>在似然里罚模型复杂度</td></tr>
+  <tr><td><strong>贝叶斯方法</strong></td><td>不取点，对 $\mathbf{w}$ 积分求预测分布</td><td>完整后验 $p(\mathbf{w}\mid\mathcal{D})\propto p(\mathcal{D}\mid\mathbf{w})p(\mathbf{w})$，自带不确定性</td></tr>
+</table>
+
+<p>正则化只是贝叶斯的"贫民版"——它取后验的众数（MAP），丢掉了后验的形状（不确定性）。Ridge 让 $\boldsymbol{\Phi}^\top\boldsymbol{\Phi}+\lambda\mathbf{I}$ 强制可逆，几何上把投影"收缩"向原点；Lasso 在 $\lambda$ 足大时让某些系数<strong>恰好为零</strong>，产生稀疏模型——稀疏性来自 L1 球的角点与等高线相切，是约束区域几何形状的后果，不是概率假设的直接推论。<strong>下一课</strong>就做完整的贝叶斯线性回归，看不确定性如何被显式表达。</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 解的意义：MLE 即最小化 KL 散度</h2>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag" style="background:#4a7bab;">KL</span>
+    <h3>KL 散度 · Kullback–Leibler Divergence</h3>
+    <span class="cc-aliases">相对熵 · 信息论</span>
+  </div>
+  <div class="cc-essence">
+    <strong>数学本质：</strong>用分布 $q$ 去近似 $p$ 时，多付出的"额外惊讶"——$\mathrm{KL}(p\|q)$ 衡量两个分布的差距，是<em>用 $q$ 编码来自 $p$ 的样本时比最优多用的比特数</em>。
+  </div>
+  <div class="cc-section">
+    <h4>核心公式</h4>
+    <div class="cc-formula">$$\mathrm{KL}(p\,\|\,q)=\mathbb{E}_{p}\!\left[\log\frac{p(x)}{q(x)}\right]=\int p(x)\log\frac{p(x)}{q(x)}\,dx\;\geq\;0$$</div>
+    <p>非负（Gibbs 不等式），当且仅当 $p=q$ 处处成立时为 0。<strong>不对称</strong>：$\mathrm{KL}(p\|q)\neq\mathrm{KL}(q\|p)$，方向 matters。</p>
+  </div>
+  <div class="cc-section">
+    <h4>拆成交叉熵 − 熵</h4>
+    <div class="cc-formula">$$\mathrm{KL}(p\|q)=\underbrace{\mathbb{E}_p[-\log q(x)]}_{\text{交叉熵 }H(p,q)}-\underbrace{H(p)}_{\text{与 }q\text{ 无关}}$$</div>
+    <p>对 $q$ 最小化 KL ⟺ 最小化交叉熵（$H(p)$ 固定）。这就是为什么分类用交叉熵损失。</p>
+  </div>
+  <div class="cc-section">
+    <h4>方向选择</h4>
+    <ul>
+      <li><strong>前向 $\mathrm{KL}(p\|q)$</strong>（mean-seeking）：$p$ 大处 $q$ 必须大，否则被重罚。MLE 用此方向，$p=\widehat{p}_{\text{data}}$。</li>
+      <li><strong>反向 $\mathrm{KL}(q\|p)$</strong>（mode-seeking）：$q$ 只在 $p$ 高概率区有支撑，常用于变分推断（0015）。</li>
+    </ul>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 本节：MLE ⟺ 最小化 $\mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}})$</span>
+    <span class="conn-badge">→ 0010/0015：ELBO = $\log p - \mathrm{KL}$</span>
+    <span class="conn-badge">→ 深度学习交叉熵损失 = 同一物</span>
+  </div>
+</div>
+
+<p>
+  前面把 MLE 当成"让数据概率最大"。还有一个更深的视角，把它和<strong>信息论</strong>接上。
+  定义<strong>经验分布</strong> $\widehat{p}_{\text{data}}$ 为数据集上的均匀分布（每个样本权重 $1/N$），
+  模型分布 $p_{\mathbf{w}}$。模型与数据之间的 KL 散度：
+</p>
+
+<div class="formula-block">
+  $$\mathrm{KL}(\widehat{p}_{\text{data}} \,\|\, p_{\mathbf{w}}) = \underbrace{\mathbb{E}_{\widehat{p}_{\text{data}}}[-\log p_{\mathbf{w}}(\mathbf{x},y)]}_{\text{交叉熵}} \;-\; \underbrace{H(\widehat{p}_{\text{data}})}_{\text{与 }\mathbf{w}\text{ 无关}}$$
+</div>
+
+<p>第二项是经验分布的熵，与 $\mathbf{w}$ 无关。第一项正是负对数似然的样本均值。所以：</p>
+
+<div class="formula-block">
+  $$\arg\min_{\mathbf{w}}\; \mathrm{KL}(\widehat{p}_{\text{data}} \,\|\, p_{\mathbf{w}}) \;=\; \arg\max_{\mathbf{w}}\; \frac{1}{N}\sum_n \log p_{\mathbf{w}}(\mathbf{x}_n,y_n) \;=\; \mathbf{w}_{\text{ML}}$$
+</div>
+
+<div class="insight">
+  <strong>最大似然 = 最小化 KL 散度 = 最小化交叉熵，三位一体。</strong>
+  这把"最大似然"从一个人为的量，提升为"让模型分布尽量贴近数据分布"这一基本原则。
+  深度学习里的交叉熵损失不是另起炉灶，就是这同一个东西。
+</div>
+
+<p>方向不能反：是 $\mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}})$，不是 $\mathrm{KL}(p_{\mathbf{w}}\|\widehat{p}_{\text{data}})$。反向要求 $\widehat{p}_{\text{data}}$ 处处非零，但经验分布是离散的、对连续数据无意义。这就是为什么分类用前向 KL（交叉熵）而非反向——前向 KL 对"模型没给数据足够概率"施重罚，正是我们想要的。</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 推导与自测</h2>
+
+<div class="problem">
+  <div class="ptitle">L1 · 从拉普拉斯噪声推出 L1 损失 <span class="plevel l1">L1</span></div>
+  <div class="pbody">拉普拉斯分布 $p(\varepsilon)=\frac{1}{2b}\exp(-|\varepsilon|/b)$。写出对数似然，证明高斯噪声换拉普拉斯后，MLE 等价于最小化 $\sum_n|y_n-\mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n)|$。为什么 L1 比 L2 对异常值更鲁棒？</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">$p(y_n|\mathbf{x}_n,\mathbf{w}) = \frac{1}{2b}\exp\!\big(-\frac{|y_n-\mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n)|}{b}\big)$<span class="reason">噪声服从拉普拉斯 → 条件分布也是拉普拉斯（位置参数平移）</span></div>
+    <div class="step">对数似然：$\log p = -N\log(2b) - \frac{1}{b}\sum_n|y_n-\mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n)|$<span class="reason">取 log 把指数消掉，$|·|$ 留在分子</span></div>
+    <div class="step">最大化 → 最小化 $\sum_n|y_n-\mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n)|$（L1 损失）<span class="reason">第一项与 $\mathbf{w}$ 无关，$1/b>0$ 只是正系数</span></div>
+    <div class="step">鲁棒性：高斯尾部 $\propto e^{-x^2}$（轻尾），拉普拉斯尾部 $\propto e^{-|x|}$（重尾）。大偏差在拉普拉斯下不那么"意外" → L1 不会被异常值主导。<span class="reason">这是"损失是噪声的影子"的直接例证</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L2 · 投影矩阵的幂等性证明 <span class="plevel l2">L2</span></div>
+  <div class="pbody">$\mathbf{P}=\boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top$。证明：(1) $\mathbf{P}^2=\mathbf{P}$（幂等）；(2) $\mathbf{P}^\top=\mathbf{P}$（对称）；(3) $\mathbf{I}-\mathbf{P}$ 也是幂等对称的；(4) $\operatorname{tr}(\mathbf{P})=M$。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">(1) $\mathbf{P}^2 = \boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top \cdot \boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top = \boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top = \boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top = \mathbf{P}$<span class="reason">中间 $(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})=\mathbf{I}_M$</span></div>
+    <div class="step">(2) $\mathbf{P}^\top = (\boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top)^\top = \boldsymbol{\Phi}((\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1})^\top\boldsymbol{\Phi}^\top = \boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top = \mathbf{P}$<span class="reason">$(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}$ 对称，因为它是对称矩阵的逆</span></div>
+    <div class="step">(3) $(\mathbf{I}-\mathbf{P})^2 = \mathbf{I} - 2\mathbf{P} + \mathbf{P}^2 = \mathbf{I} - 2\mathbf{P} + \mathbf{P} = \mathbf{I} - \mathbf{P}$<span class="reason">幂等性直接用 $\mathbf{P}^2=\mathbf{P}$</span></div>
+    <div class="step">(4) $\operatorname{tr}(\mathbf{P}) = \operatorname{tr}(\boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top) = \operatorname{tr}((\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top\boldsymbol{\Phi}) = \operatorname{tr}(\mathbf{I}_M) = M$<span class="reason">迹的循环性质：$\operatorname{tr}(AB)=\operatorname{tr}(BA)$</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L3 · 信息论视角：MLE = min KL 的完整推导 <span class="plevel l3">L3</span></div>
+  <div class="pbody">经验分布 $\widehat{p}_{\text{data}}(\mathbf{x},y)=\frac1N\sum_n\delta(\mathbf{x}-\mathbf{x}_n)\delta(y-y_n)$。证明：(1) $\mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}}) = -\frac1N\log p(\mathcal{D}|\mathbf{w}) + \text{const}$；(2) 因此最大化似然等价于最小化这个 KL；(3) 为什么用 $\mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}})$ 而非 $\mathrm{KL}(p_{\mathbf{w}}\|\widehat{p}_{\text{data}})$？</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">(1) $\mathrm{KL}(\widehat{p}\|p_{\mathbf{w}}) = \mathbb{E}_{\widehat{p}}[\log\widehat{p}] - \mathbb{E}_{\widehat{p}}[\log p_{\mathbf{w}}]$。第一项与 $\mathbf{w}$ 无关 = const。<span class="reason">KL = 交叉熵 − 熵</span></div>
+    <div class="step">$\mathbb{E}_{\widehat{p}}[\log p_{\mathbf{w}}] = \frac1N\sum_n\log p_{\mathbf{w}}(\mathbf{x}_n,y_n) = \frac1N\log p(\mathcal{D}|\mathbf{w})$（假设 i.i.d.）<span class="reason">经验期望 = 样本均值</span></div>
+    <div class="step">所以 $\mathrm{KL} = \text{const} - \frac1N\log p(\mathcal{D}|\mathbf{w})$。min KL ⇔ max $\log p$。<span class="reason">这就是为什么 MLE 的深层含义是"让模型分布尽可能接近数据的经验分布"</span></div>
+    <div class="step">(3) $\mathrm{KL}(p_{\mathbf{w}}\|\widehat{p})$ 需要 $\widehat{p}$ 处处非零，但经验分布是 Dirac 脉冲——在没数据的点 $\widehat{p}=0$，$p_{\mathbf{w}}$ 若给正概率 → KL 无穷大。$\mathrm{KL}(\widehat{p}\|p_{\mathbf{w}})$ 只要求 $p_{\mathbf{w}}$ 在数据点非零，合理。<span class="reason">方向不是任选的——数据分布的性质决定了哪个方向有定义</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="quiz">
+  <div class="quiz-question" data-correct="b">
+    <h4>Q1 · 假设噪声服从拉普拉斯分布 $p(\varepsilon)\propto\exp(-|\varepsilon|/b)$，MLE 导出哪种损失？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q1" value="a"><label>A. 平方损失 $\sum(y_n-\mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n))^2$</label></div>
+      <div class="quiz-option"><input type="radio" name="q1" value="b"><label>B. 绝对值损失 $\sum|y_n-\mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n)|$</label></div>
+      <div class="quiz-option"><input type="radio" name="q1" value="c"><label>C. Huber 损失</label></div>
+      <div class="quiz-option"><input type="radio" name="q1" value="d"><label>D. 0-1 损失</label></div>
+    </div>
+    <div class="quiz-feedback">拉普拉斯对数密度正比于 $-|y-\mu|/b$，MLE ⟺ 最小 $\sum|y_n-\mathbf{w}^\top\boldsymbol{\phi}(\mathbf{x}_n)|$。L1 对异常值更鲁棒，因为拉普拉斯尾部比高斯厚，大偏差不那么"意外"。这正是"损失是噪声假设的影子"。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="c">
+    <h4>Q2 · $\widehat{\sigma^2}_{\text{ML}} = \frac{1}{N}\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}_{\text{ML}}\|^2$ 的期望是？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q2" value="a"><label>A. $\sigma^2$（无偏）</label></div>
+      <div class="quiz-option"><input type="radio" name="q2" value="b"><label>B. $\frac{N}{N-M}\sigma^2$（高估）</label></div>
+      <div class="quiz-option"><input type="radio" name="q2" value="c"><label>C. $\frac{N-M}{N}\sigma^2$（低估）</label></div>
+      <div class="quiz-option"><input type="radio" name="q2" value="d"><label>D. 与 $M$ 无关</label></div>
+    </div>
+    <div class="quiz-feedback">$\mathbb{E}[\widehat{\sigma^2}_{\text{ML}}]=\frac{N-M}{N}\sigma^2$。模型用 $M$ 个参数消耗了 $M$ 个自由度，残差只剩 $N-M$ 个独立信息，故系统性低估。无偏修正除以 $N-M$ 而非 $N$。这是过拟合的微观体现。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="c">
+    <h4>Q3 · 从信息论看，MLE 等价于最小化哪个量？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q3" value="a"><label>A. 模型分布的熵 $H(p_{\mathbf{w}})$</label></div>
+      <div class="quiz-option"><input type="radio" name="q3" value="b"><label>B. $\mathrm{KL}(p_{\mathbf{w}}\,\|\,\widehat{p}_{\text{data}})$（方向反了）</label></div>
+      <div class="quiz-option"><input type="radio" name="q3" value="c"><label>C. $\mathrm{KL}(\widehat{p}_{\text{data}}\,\|\,p_{\mathbf{w}})$，等价于交叉熵</label></div>
+      <div class="quiz-option"><input type="radio" name="q3" value="d"><label>D. 两个分布的 Wasserstein 距离</label></div>
+    </div>
+    <div class="quiz-feedback">$\mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}}) = \mathbb{E}_{\widehat{p}}[-\log p_{\mathbf{w}}] - H(\widehat{p})$。第二项与 $\mathbf{w}$ 无关，第一项即负对数似然。方向不能反：$\mathrm{KL}(p_{\mathbf{w}}\|\widehat{p})$ 要求 $\widehat{p}$ 处处非零，对连续数据无意义。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="b">
+    <h4>Q4 · Ridge 回归 $\min\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}\|^2+\lambda\|\mathbf{w}\|^2$ 在概率上等价于？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q4" value="a"><label>A. MLE + 均匀先验</label></div>
+      <div class="quiz-option"><input type="radio" name="q4" value="b"><label>B. MAP 估计 + 高斯先验 $\mathbf{w}\sim\mathcal{N}(\mathbf{0},\tau^2\mathbf{I})$</label></div>
+      <div class="quiz-option"><input type="radio" name="q4" value="c"><label>C. MAP 估计 + 拉普拉斯先验</label></div>
+      <div class="quiz-option"><input type="radio" name="q4" value="d"><label>D. 完整贝叶斯后验的均值</label></div>
+    </div>
+    <div class="quiz-feedback">高斯先验 $\log p(\mathbf{w})\propto-\|\mathbf{w}\|^2/(2\tau^2)$，MAP 最大化 $\log p(\mathcal{D}|\mathbf{w})+\log p(\mathbf{w})$ 即得 Ridge，$\lambda=\sigma^2/\tau^2$。拉普拉斯先验给 L1（Lasso）。MAP 是后验众数，不是完整贝叶斯——丢掉了不确定性。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="a">
+    <h4>Q5 · 当 $M&gt;N$（特征多于样本），$\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 必然奇异，MLE 会怎样？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q5" value="a"><label>A. 解不唯一，且存在使训练残差恰为零的 $\mathbf{w}$——严重过拟合</label></div>
+      <div class="quiz-option"><input type="radio" name="q5" value="b"><label>B. 无解，必须放弃</label></div>
+      <div class="quiz-option"><input type="radio" name="q5" value="c"><label>C. 唯一解，且泛化良好</label></div>
+      <div class="quiz-option"><input type="radio" name="q5" value="d"><label>D. 等价于贝叶斯后验</label></div>
+    </div>
+    <div class="quiz-feedback">$M&gt;N$ 时 $\operatorname{col}(\boldsymbol{\Phi})$ 维度 $\leq N$，$\mathbf{y}$ 几乎总在列空间内，存在 $\mathbf{w}$ 使 $\boldsymbol{\Phi}\mathbf{w}=\mathbf{y}$（零残差）。但解空间是 $M-N$ 维仿射子空间，不唯一，且范数极大的解对应剧烈震荡的预测。这正是高维场景必须正则的原因。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="b">
+    <h4>Q6 · 把 Bernoulli 写成指数族后，自然参数 $\eta=\log(\phi/(1-\phi))$，反解 $\phi$ 得到 sigmoid。这说明了什么？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q6" value="a"><label>A. Sigmoid 是为二分类专门设计的激活函数</label></div>
+      <div class="quiz-option"><input type="radio" name="q6" value="b"><label>B. Sigmoid 是 Bernoulli 似然 + 线性自然参数假设下 MLE 的自然产物</label></div>
+      <div class="quiz-option"><input type="radio" name="q6" value="c"><label>C. Sigmoid 只在逻辑回归里出现，与指数族无关</label></div>
+      <div class="quiz-option"><input type="radio" name="q6" value="d"><label>D. Sigmoid 等价于高斯分布的 CDF</label></div>
+    </div>
+    <div class="quiz-feedback">Sigmoid 不是拍脑袋选的——它是 Bernoulli 在指数族下，自然参数与输入线性相关（$\eta=\mathbf{w}^\top\mathbf{x}$）时，预测 $\mathbb{E}[y\mid\mathbf{x}]=\phi=\sigma(\eta)$ 的必然结果。和"平方损失来自高斯"是同一类事：激活函数来自输出分布的假设。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="b">
+    <h4>Q7 · 正规方程 $\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w}=\boldsymbol{\Phi}^\top\mathbf{y}$ 的几何含义是？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q7" value="a"><label>A. $\mathbf{w}$ 与 $\mathbf{y}$ 正交</label></div>
+      <div class="quiz-option"><input type="radio" name="q7" value="b"><label>B. 残差 $\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}$ 正交于列空间，即 $\mathbf{y}$ 在列空间上的正交投影</label></div>
+      <div class="quiz-option"><input type="radio" name="q7" value="c"><label>C. $\boldsymbol{\Phi}\mathbf{w}$ 是 $\mathbf{y}$ 的归一化</label></div>
+      <div class="quiz-option"><input type="radio" name="q7" value="d"><label>D. 列空间收缩到一维</label></div>
+    </div>
+    <div class="quiz-feedback">$\boldsymbol{\Phi}^\top(\mathbf{y}-\boldsymbol{\Phi}\mathbf{w})=\mathbf{0}$ 即残差正交于 $\boldsymbol{\Phi}$ 的每一列，也就是正交于整个列空间。向量到子空间距离最近的点恰是正交投影——所以最小二乘解就是 $\mathbf{y}$ 在 $\operatorname{col}(\boldsymbol{\Phi})$ 上的正交投影，$\mathbf{w}_{\text{ML}}$ 是投影坐标。</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;">
+    <strong>PRML §3.1（线性基函数模型）</strong>——§3.1.1 最大似然与最小二乘、§3.1.2 几何描述、§3.1.4 正则化。本课第 1–6 节的母本。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>MML §9.2（MLE）、§9.4（MLE 即正交投影）、§9.5（GLM 与神经网络）</strong>——矩阵推导、Hessian 正定、伪逆、GLM 作为神经网络构件讲得最透。
+  </p>
+  <p style="margin-bottom:0; font-size:0.9rem;">
+    <strong>CS229 Notes 1 §1.3（概率解释）+ Chapter 3（GLM）</strong>——指数族三假设的"配方"最清晰，sigmoid 从 Bernoulli 推出来的过程最干净。
+  </p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">
+    这课是一条逻辑链：假设 → 损失 → 解 → 几何 → 代价 → 信息论 → 贝叶斯 → GLM。
+    任一环卡住，整条链就断了——<strong>直接问我</strong>。
+    特别是第 4 节（投影几何）、第 6 节（KL 视角）、第 8 节（GLM），它们是"会算"到"懂为什么"的关键跃迁。
+    解释不清楚是我的责任，不是你的。
+  </p>
+</div>
+
+<div class="lesson-footer">
+  <a href="../reference/math-primer.html">📐 数学手册</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  <a href="../MISSION.md">Mission</a> ·
+  下一课：<a href="0002-bayesian-linear-regression.html">贝叶斯线性回归</a> — 路径 A 起点<br>
+  <span style="color:#bbb;">课程路线图见 NOTES.md</span>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise();
+  }
+  document.querySelectorAll('.quiz-question').forEach(q => {
+    const correct = q.dataset.correct;
+    const feedback = q.querySelector('.quiz-feedback');
+    q.querySelectorAll('.quiz-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (q.dataset.answered) return;
+        q.dataset.answered = '1';
+        const input = opt.querySelector('input');
+        const chosen = input.value;
+        const isCorrect = chosen === correct;
+        q.classList.add(isCorrect ? 'correct' : 'incorrect');
+        q.querySelectorAll('.quiz-option').forEach(o => {
+          if (o.querySelector('input').value === correct) o.style.background = '#e8f5e9';
+          if (o === opt && !isCorrect) o.style.background = '#fdecea';
+        });
+        feedback.classList.add('show');
+        feedback.classList.add(isCorrect ? 'correct-fb' : 'incorrect-fb');
+      });
+    });
+  });
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<!-- ===== CARD POPUP DATA ===== -->
+<template id="card-data-iid">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">基础</span><h3>i.i.d. 假设</h3><span class="cc-aliases">Independent and Identically Distributed</span></div>
+  <div class="cc-essence"><strong>独立同分布</strong>——每个数据点来自同一个分布，且相互独立。这是大多数 ML 模型的默认假设（虽然现实中经常不成立）。</div>
+  <div class="cc-section"><h4>为什么重要</h4><p>独立 → 似然可分解为乘积 $\prod_n p(y_n|\mathbf{x}_n)$。同分布 → 所有点用同一组参数。违反 i.i.d.（如时序数据）→ 需特殊处理（0016）。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0016: 时序数据的 i.i.d. 失效</span></div>
+</div>
+</template>
+
+<template id="card-data-matrix-calc">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">工具</span><h3>矩阵微积分</h3><span class="cc-aliases">Matrix Calculus · 向量求导</span></div>
+  <div class="cc-essence">标量对向量求导：$\nabla_{\mathbf{w}} f(\mathbf{w})$ 是一个与 $\mathbf{w}$ 同维的列向量，每个分量是 $f$ 对对应 $w_j$ 的偏导。</div>
+  <div class="cc-section"><h4>最常用的两条</h4><p>$\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{x}) = \mathbf{x}$（线性项的梯度就是系数向量）</p><p>$\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{A}\mathbf{w}) = 2\mathbf{A}\mathbf{w}$（当 $\mathbf{A}$ 对称时，二次型梯度 = 2×矩阵×向量）</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0001 §3: 正规方程推导</span><span class="conn-badge">→ 0014: 反传 = 链式法则</span></div>
+</div>
+</template>
+
+<template id="card-data-colspace">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">几何</span><h3>列空间</h3><span class="cc-aliases">Column Space · 像空间</span></div>
+  <div class="cc-essence">矩阵 $\boldsymbol{\Phi}$ 的列空间 = 所有列的线性组合构成的子空间。$\boldsymbol{\Phi}$ 有 $M$ 列 → 列空间维度 ≤ $\min(N,M)$。如果列满秩，列空间是 $\mathbb{R}^N$ 的 $M$ 维子空间。</div>
+  <div class="cc-section"><h4>为什么在投影里关键</h4><p>$\hat{\mathbf{y}} = \boldsymbol{\Phi}\mathbf{w}$ 必须在列空间里（$\mathbf{w}$ 选什么都只是列的线性组合）。最小二乘本质：在列空间里找离 $\mathbf{y}$ 最近的点 → 正交投影。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0001 §4: 正交投影图</span><span class="conn-badge">→ 0006: 核方法 = 升高列空间</span></div>
+</div>
+</template>
+
+<template id="card-data-empirical">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">概念</span><h3>经验分布</h3><span class="cc-aliases">Empirical Distribution</span></div>
+  <div class="cc-essence">$\widehat{p}_{\text{data}}(\mathbf{x}) = \frac{1}{N}\sum_n \delta(\mathbf{x}-\mathbf{x}_n)$——在每个观测数据点放一个等质量的 Dirac 脉冲。是真实分布 $p_{\text{data}}$ 的<strong>有限样本近似</strong>。</div>
+  <div class="cc-section"><h4>与 MLE/KL 的关系</h4><p>MLE = $\arg\min \mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}})$。把模型贴到经验分布上 → $N$ 小时 $\widehat{p}_{\text{data}}$ 粗糙 → 过拟合。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0001 §6: MLE = min KL</span><span class="conn-badge">→ 0012: 有限 N → 过拟合</span></div>
+</div>
+</template>
+
+<template id="card-data-clt">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">基础</span><h3>中心极限定理</h3><span class="cc-aliases">Central Limit Theorem</span></div>
+  <div class="cc-essence">大量独立同分布随机变量之和（经标准化）趋近于正态分布。不管原始分布是什么——这是高斯在自然界/工程中无处不在的数学原因。</div>
+  <div class="cc-section"><h4>对 ML 的意义</h4><p>噪声 = 许多未建模因素的叠加 → CLT 说这种叠加趋近高斯 → 高斯噪声是"最少假设"的缺省选择。但厚尾数据（金融）不适用。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0001 §1: 为什么取高斯噪声</span><span class="conn-badge">→ 0016: 金融厚尾反例</span></div>
+</div>
+</template>
+
+<template id="card-data-maxent">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">概念</span><h3>最大熵原理</h3><span class="cc-aliases">Maximum Entropy Principle</span></div>
+  <div class="cc-essence">给定约束（如均值和方差），选择熵最大的分布——因为熵越大 = 越不确定 = 假设得越少。高斯在"给定均值和方差"条件下熵最大。</div>
+  <div class="cc-section"><h4>直觉</h4><p>如果你只知道"平均 0，方差 σ²"，说数据是高斯 = "我除了这两个数字外什么都不假设"。任何其他分布在同等条件下熵更低 = 暗中假设了更多结构。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0001 §1: 高斯噪声的深层理由</span></div>
+</div>
+</template>
+
+
+<template id="card-data-trace-trick">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">技巧</span><h3>高斯二次型期望</h3><span class="cc-aliases">Trace Trick</span></div>
+  <div class="cc-essence">$\mathbb{E}[\boldsymbol{\varepsilon}^\top\mathbf{A}\boldsymbol{\varepsilon}] = \sigma^2\operatorname{tr}(\mathbf{A})$ 当 $\boldsymbol{\varepsilon}\sim\mathcal{N}(0,\sigma^2\mathbf{I})$。推导：$\boldsymbol{\varepsilon}^\top\mathbf{A}\boldsymbol{\varepsilon} = \sum_{i,j}A_{ij}\varepsilon_i\varepsilon_j$，取期望后 $\mathbb{E}[\varepsilon_i\varepsilon_j]=\sigma^2\delta_{ij}$，只剩对角线 $A_{ii}$，求和 = $\sigma^2\operatorname{tr}(\mathbf{A})$。</div>
+  <div class="cc-section"><h4>为什么在这个推导里关键</h4><p>残差 $\mathbf{r}=(\mathbf{I}-\mathbf{P})\mathbf{y}$ 把 $\sigma^2$ 偏差计算变成 $\mathbb{E}[\mathbf{r}^\top\mathbf{r}]=\sigma^2\operatorname{tr}(\mathbf{I}-\mathbf{P})=\sigma^2(N-M)$。trace trick 把"期望的二次型"变成"矩阵的迹"——一步从概率跨越到线性代数。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0001 §5: σ² 偏差推导</span><span class="conn-badge">→ 0012: 偏差-方差分解</span></div>
+</div>
+</template>
+
+<template id="card-data-hessian">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">微积分</span><h3>Hessian 矩阵</h3><span class="cc-aliases">二阶导数矩阵</span></div>
+  <div class="cc-essence">$\mathbf{H}_{ij} = \frac{\partial^2 f}{\partial w_i\partial w_j}$。$M$ 维参数的 $M\times M$ 对称矩阵。凸函数 ⇔ Hessian 处处半正定。</div>
+  <div class="cc-section"><h4>为什么重要</h4><p>$\mathbf{H}$ 正定 → 函数在该点是局部极小。$\mathbf{H}$ 的逆 $\mathbf{H}^{-1}$ 做 pre-conditioning = Newton 法。线性回归的 $\mathbf{H}=\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$（常数，与 $\mathbf{w}$ 无关）→ 直接给闭式解。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0001 §3</span><span class="conn-badge">→ 0009: IRLS 用 Hessian</span></div>
+</div>
+</template>
+
+</body>
+</html>

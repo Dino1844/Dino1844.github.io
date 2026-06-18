@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0003 · 制度如何变迁</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --text-light: #5c5c5c;
+    --accent: #8b4513; --accent-dim: #a0522d; --border: #d4c5b2; --card-bg: #f8f5f0;
+    --history: #8b4513; --economics: #2d6a4f; --politics: #1a659e; --philosophy: #7b2d8b;
+    --highlight: #fef3c7; --correct: #2d6a4f; --incorrect: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Serif SC', 'SimSun', serif; background: var(--bg); color: var(--text); line-height: 1.85; max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 1.02rem; }
+  h1 { font-size: 1.8rem; font-weight: 700; margin: 2rem 0 0.6rem; letter-spacing: 0.02em; line-height: 1.3; }
+  h2 { font-size: 1.25rem; font-weight: 600; margin: 2.6rem 0 0.7rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+  p { margin: 0.9rem 0; } li { margin: 0.4rem 0; }
+  a { color: var(--accent-dim); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); } strong { font-weight: 600; }
+  .meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-light); margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .meta .tag { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 3px; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; color: white; }
+  .tag-history { background: var(--history); } .tag-economics { background: var(--economics); } .tag-politics { background: var(--politics); } .tag-philosophy { background: var(--philosophy); }
+  .hook { background: var(--highlight); border-left: 4px solid var(--accent); padding: 1.3rem 1.5rem; margin: 1.5rem 0; font-size: 1.02rem; border-radius: 0 6px 6px 0; }
+  blockquote { border-left: 3px solid var(--border); padding: 0.6rem 1.2rem; margin: 1.2rem 0; color: var(--text-light); background: var(--card-bg); border-radius: 0 4px 4px 0; font-size: 0.96rem; }
+  blockquote.important { border-left-color: var(--accent); background: var(--highlight); color: var(--text); }
+  table { width: 100%; border-collapse: collapse; margin: 1.3rem 0; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; font-size: 0.82rem; letter-spacing: 0.03em; color: var(--text-light); }
+  tr:hover td { background: #fef9f0; }
+  .theory { background: var(--card-bg); border-radius: 6px; padding: 1.1rem 1.3rem; margin: 0.9rem 0; border-left: 3px solid var(--border); }
+  .theory .theory-name { font-weight: 600; } .theory .theory-scholar { font-size: 0.82rem; color: var(--text-light); }
+  .concept-box { border: 2px solid var(--accent); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 2rem 0; background: var(--card-bg); }
+  .concept-box .concept-name { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem; }
+  .concept-box h3 { margin-top: 0; }
+  .quiz-section { margin: 2rem 0; }
+  .quiz-question { background: var(--card-bg); border-radius: 6px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; }
+  .quiz-question .q-num { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.3rem; }
+  .quiz-question .q-text { font-weight: 600; margin-bottom: 0.9rem; font-size: 1.02rem; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz-option { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; transition: background 0.12s, border-color 0.12s; font-size: 0.93rem; }
+  .quiz-option:hover { background: #fdf5e8; }
+  .quiz-option.selected { border-color: var(--accent); background: var(--highlight); }
+  .quiz-option.correct { border-color: var(--correct) !important; background: #e8f5e9 !important; }
+  .quiz-option.incorrect { border-color: var(--incorrect) !important; background: #fdecea !important; }
+  .quiz-feedback { margin-top: 0.7rem; font-size: 0.9rem; display: none; padding: 0.7rem 0.9rem; border-radius: 4px; line-height: 1.7; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.fb-correct { background: #e8f5e9; color: #1b5e20; }
+  .quiz-feedback.fb-incorrect { background: #fdecea; color: #b71c1c; }
+  .exercise { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .exercise h3 { margin-top: 0; }
+  .exercise textarea { width: 100%; min-height: 100px; margin: 0.8rem 0; padding: 0.6rem; font-family: inherit; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px; background: white; resize: vertical; line-height: 1.7; }
+  .exercise .hint { font-size: 0.84rem; color: var(--text-light); font-style: italic; }
+  .lesson-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.87rem; color: var(--text-light); }
+  .lesson-footer .links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
+  .lens-header { display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+  .lens-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .case-box { background: var(--card-bg); border-radius: 6px; padding: 1.2rem 1.4rem; margin: 1rem 0; }
+  .case-box h4 { margin-top: 0; font-size: 0.96rem; }
+  .case-box .case-meta { font-size: 0.82rem; color: var(--text-light); margin-bottom: 0.5rem; }
+  @media (max-width: 600px) { body { padding: 1.5rem 1rem 4rem; font-size: 0.98rem; } h1 { font-size: 1.4rem; } }
+  @media print { body { max-width: 100%; padding: 1rem; font-size: 10pt; } }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <span>📅 Lesson 0003 · L3</span>
+  <span>⏱ ~30 分钟</span>
+  <span><span class="tag tag-politics">政治</span> <span class="tag tag-economics">经济</span> <span class="tag tag-history">历史</span></span>
+  <span>🔗 <a href="../reference/glossary.html">术语表</a></span>
+</div>
+
+<h1>制度如何变迁</h1>
+<p style="font-size:1.05rem;color:var(--text-light);margin-top:-0.2rem;">
+  路径依赖、关键节点、制度锁定——为什么低效的制度能存活几个世纪
+</p>
+
+<div class="hook">
+  <strong>一个谜题。</strong>QWERTY 键盘布局发明于 1870 年代，目的是<strong>故意放慢</strong>打字员的速度——早期机械打字机的连杆会卡住，所以把常用字母对分开排列。卡住的问题在电动打字机时代（1930s）就消失了，更不用说计算机时代。<br><br>
+
+  今天没有任何技术理由继续用 QWERTY。Dvorak 简化键盘在 1930 年代就被证明能让打字快 30–40%。但 QWERTY 仍然是全球标准，每年有数十亿人在用一种<strong>已知低效</strong>的布局。<br><br>
+
+  <strong>为什么一个明显低效的制度能持续 150 年？</strong><br><br>
+
+  这个问题不只是关于键盘。它关乎<strong>所有制度</strong>：为什么法国大革命前的三级会议能延续近三个世纪？为什么中华帝国的科举制在明显无法应对西方挑战后仍坚持了 40 年？为什么许多非洲国家独立时继承的殖民边界——明明是外人任意画的——至今仍是冲突的根源？<br><br>
+
+  <em>制度变迁理论要回答的，正是这个反直觉的问题：为什么制度如此粘滞？以及，它们偶尔又是如何被撬动的？</em>
+</div>
+
+<!-- ====== PART 1: WHAT IS AN INSTITUTION ====== -->
+<h2>1. 什么是「制度」？</h2>
+
+<p>「制度」是社会科学中用得最滥的词之一。我们先把它的含义钉死。</p>
+
+<h3>诺斯的工作定义</h3>
+
+<blockquote class="important">
+  「制度是一个社会的<strong>游戏规则</strong>，更正式地说，是人为设计的、约束人类互动的规范。它们定义了激励结构。」<br>
+  <span style="font-size:0.85rem;">— Douglass North, <em>Institutions, Institutional Change and Economic Performance</em> (1990)</span>
+</blockquote>
+
+<p>关键要点：</p>
+<ul>
+  <li><strong>制度 ≠ 组织。</strong>组织（政党、公司、工会、教会）是游戏的<strong>玩家</strong>；制度是<strong>规则</strong>。这个区分至关重要——同一个组织在不同制度下行为完全不同（中国国企在计划经济 vs 市场经济中的行为差异）。</li>
+  <li><strong>制度包含正式规则和非正式约束。</strong>宪法、法律、产权制度是正式规则；规范、习惯、禁忌、潜规则是非正式约束。诺斯强调非正式约束往往比正式规则更重要、更难改变——你可以一夜之间颁布新宪法，但你无法一夜之间改变人们的习惯。</li>
+  <li><strong>制度的核心功能是降低不确定性。</strong>它们让人们对彼此的行为有稳定预期，从而能够合作、投资、分工。没有制度，每一次交易都要重新谈判，社会无法复杂化。</li>
+  <li><strong>制度定义激励。</strong>「激励结构」是诺斯定义的灵魂——制度决定了什么行为被奖励、什么被惩罚。改变激励，就改变了行为；要解释行为差异，先看制度差异。</li>
+</ul>
+
+<p>诺斯进一步把制度分为两层，这个区分在解释变迁时极其重要：</p>
+
+<table>
+  <tr><th>类型</th><th>内容</th><th>变迁速度</th><th>例子</th></tr>
+  <tr>
+    <td><strong>正式规则</strong></td>
+    <td>宪法、法律、产权、规章</td>
+    <td>可一夜改变（革命、立法）</td>
+    <td>1991 年苏联解体后俄罗斯一夜颁布新宪法</td>
+  </tr>
+  <tr>
+    <td><strong>非正式约束</strong></td>
+    <td>规范、习惯、禁忌、社会信任、潜规则</td>
+    <td>极慢，常需代际更替</td>
+    <td>俄罗斯的「关系」文化在正式制度剧变后依然主导经济行为</td>
+  </tr>
+</table>
+
+<p>这个表已经预告了本课的核心张力：<strong>正式规则可以快变，非正式约束不能</strong>。两者脱节时，正式规则往往沦为纸面文章——这正是 L2 比瑟姆「虚假合法性」的制度版。</p>
+
+<!-- ====== PART 2: PATH DEPENDENCE ====== -->
+<h2>2. 路径依赖：制度变迁的第一定律</h2>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--economics);"></span>
+  <span style="font-weight:600;color:var(--economics);">核心命题：历史重要——今天的制度选择被昨天的选择约束。</span>
+</div>
+
+<p>「路径依赖」由经济学家保罗·大卫（Paul David）在 1985 年关于 QWERTY 的论文中正式提出，后由布莱恩·阿瑟（W. Brian Arthur）用数学模型严格化。政治学家保罗·皮尔逊（Paul Pierson）在 2000 年把它系统引入政治学。它的核心是一个反直觉的命题：</p>
+
+<blockquote class="important">
+  <strong>路径依赖：</strong>在收益递增的条件下，<em>最初的小事件（甚至偶然事件）</em>会把系统锁定在某条路径上，即使后来证明这条路径不是最优的，切换成本也高到使系统无法离开。<br><br>
+
+  关键是：<strong>这不是因为人们愚蠢或非理性</strong>——恰恰相反，每个个体在每一步都做了理性选择。但个体理性的累积，把整个系统锁进了一个集体次优的结果。
+</blockquote>
+
+<h3>四个机制（Pierson, 2000）</h3>
+
+<p>皮尔逊指出，路径依赖之所以发生，是因为有四种「自我强化」机制在起作用。理解这四种机制，你就能在任何具体案例中识别路径依赖的来源：</p>
+
+<ol>
+  <li><strong>规模收益递增（large set-up costs）：</strong>制度一旦建立，初始固定成本已经沉没，继续用它比换一个新制度的边际成本低得多。QWERTY 的整个培训体系（教材、教师、熟练用户）就是沉没成本。换 Dvorak 要重新训练所有人——这个切换成本高于任何个人或组织的收益。</li>
+  <li><strong>学习效应（learning effects）：</strong>人们在一种制度下积累了专门技能和知识，这些人力资本在另一种制度下无用。一个在计划经济中精通「批条子」的官员，在市场经济中毫无竞争力。人们因此抵抗制度切换——不是出于意识形态，而是出于对自己人力资本的保护。</li>
+  <li><strong>协调效应（coordination effects）：</strong>制度的价值随采用人数增加而增加（网络外部性）。QWERTY 之所以难换，是因为<em>所有其他人</em>都在用 QWERTY——你换 Dvorak 就无法用别人的键盘、无法被别人雇用。协调成本使个体无法单独切换。</li>
+  <li><strong>适应性预期（adaptive expectations）：</strong>人们根据「制度会持续」的预期来决策，而这些决策反过来使制度持续。如果所有人都预期科举制会延续，他们就投资于科举所需的人力资本（八股文、经学），这些投资使科举制更难被取代——一个自我实现的循环。</li>
+</ol>
+
+<div class="case-box">
+  <h4>案例：QWERTY 的四机制</h4>
+  <p class="case-meta">Paul David (1985) 的经典分析</p>
+  <p>(1) 沉没成本：全球的打字培训基础设施。<br>(2) 学习效应：数亿人练就的 QWERTY 肌肉记忆。<br>(3) 协调效应：你换 Dvorak 就用不了别人的键盘、雇不到会用 Dvorak 的员工。<br>(4) 适应性预期：所有人都预期 QWERTY 会持续，所以新设备都生产 QWERTY——预期自我实现。<br><br>每个机制单独都不致命，四个叠加就形成了几乎不可逆的锁定。</p>
+</div>
+
+<h3>路径依赖的政治学翻译</h3>
+
+<p>皮尔逊的关键贡献是指出：<strong>政治中的路径依赖比经济中更强</strong>。原因有四：</p>
+
+<ul>
+  <li><strong>没有退出选项：</strong>市场中如果你不喜欢一个产品可以买别的；政治中你很难「退出」你的国家（移民成本极高）。这使得政治制度更难通过竞争被淘汰。</li>
+  <li><strong>集体行动的难度：</strong>改变制度是公共品——好处分给所有人，成本由行动者承担。搭便车问题使制度变革的政治供给不足。</li>
+  <li><strong>权力的非对称性：</strong>现有制度塑造了权力分布，掌权者有能力和激励去维护塑造他们权力的制度。市场中的低效企业会被竞争淘汰；政治中的低效制度可以靠权力无限期维持。</li>
+  <li><strong>时间视野更长、反馈更弱：</strong>政治制度的后果常在几十年后才显现，且因果模糊，使得「学习纠错」机制远弱于市场。一个错误的经济政策几个月就会在利润表上显示；一个错误的政治制度可能要两代人才能被普遍承认是错的。</li>
+</ul>
+
+<p>这四点合起来意味着：<strong>政治制度一旦走上某条路径，比经济制度更难切换</strong>。这解释了为什么国家能力的差异如此持久——Acemoglu 和 Robinson 的核心经验发现是，国家间制度差异的持续性远超地理、文化或资源差异。</p>
+
+<!-- ====== PART 3: CRITICAL JUNCTURES ====== -->
+<h2>3. 关键节点：制度如何被撬动</h2>
+
+<p>路径依赖解释了<strong>稳定</strong>。但制度确实会变——有时是剧变。如何解释？阿西莫格鲁和罗宾逊在《国家为什么会失败》（2012）中给出了路径依赖的补充机制：<strong>关键节点</strong>（critical junctures）。</p>
+
+<div class="theory">
+  <div class="theory-name">关键节点 + 制度漂移</div>
+  <div class="theory-scholar">Daron Acemoglu & James Robinson, <em>Why Nations Fail</em> (2012); <em>Economic Origins of Dictatorship and Democracy</em> (2006)</div>
+
+  <p>他们的核心框架：</p>
+  <ol>
+    <li><strong>正常时期：</strong>路径依赖主导。制度在小修小补中自我强化，结构性变革的政治供给几乎为零。</li>
+    <li><strong>关键节点：</strong>偶发的重大扰动——战争、革命、瘟疫、殖民、经济大崩溃、技术革命——<em>暂时松动</em>了路径依赖的锁定。原本不可能的制度变革成为可能。这些节点往往是<strong>外生的</strong>（不是制度本身造成的），且<strong>不可预测</strong>。</li>
+    <li><strong>节点上的选择：</strong>在松动窗口期，不同集团争夺新制度的方向。这里的微小差异——谁掌权、什么联盟、什么意识形态——会被随后的路径依赖<strong>放大并锁定</strong>。节点的「选择」往往不是深思熟虑的最优选择，而是当时力量对比和偶然事件的产物。</li>
+    <li><strong>制度漂移（institutional drift）：</strong>节点之后，不同社会沿着各自的新路径演化，制度逐渐分化。即使起点相似，几个世纪后差异巨大。</li>
+  </ol>
+
+  <p>关键洞察：<strong>历史不是平滑连续的，而是「长时段的停滞 + 偶发的剧变 + 剧变后的再锁定」</strong>。这呼应了布罗代尔的长时段历史观，也解释了为什么重大制度差异往往可以追溯到几个世纪前的某个具体节点。</p>
+</div>
+
+<div class="case-box">
+  <h4>案例：黑死病（1346–1353）——东西分流的节点</h4>
+  <p class="case-meta">Acemoglu & Robinson 的核心案例</p>
+  <p>黑死病杀死了欧洲约 1/3 人口。这个外生冲击<strong>暂时打破了</strong>封建制的路径依赖：</p>
+  <ul>
+    <li><strong>西欧：</strong>劳动力骤减 → 农民议价能力上升 → 领主被迫改善条件、废除农奴制 → 劳动者获得更多自由和议价权 → 为后来的宪政发展和工业化铺路（英国 1381 年农民起义）。制度向<strong>包容性</strong>方向漂移。</li>
+    <li><strong>东欧：</strong>同样的瘟疫，但土地贵族的反应相反——他们利用劳动力短缺<strong>强化</strong>了农奴制（「第二次农奴制」），把农民更紧地绑定在土地上。制度向<strong>榨取性</strong>方向漂移。</li>
+  </ul>
+  <p>同一个外生冲击，因为节点上<strong>既有制度结构和力量对比的差异</strong>，把东西欧推上了截然不同的路径——这个差异在 500 年后的工业革命中结出了完全不同的果实。这就是关键节点 + 制度漂移的威力。</p>
+</div>
+
+<h3>包容性 vs 榨取性制度</h3>
+
+<p>阿西莫格鲁和罗宾逊用一对概念来概括制度差异：</p>
+
+<table>
+  <tr><th></th><th>包容性 (Inclusive)</th><th>榨取性 (Extractive)</th></tr>
+  <tr>
+    <td>政治</td>
+    <td>多元、权力集中但受约束、法治</td>
+    <td>权力集中于少数人、无约束</td>
+  </tr>
+  <tr>
+    <td>经济</td>
+    <td>保护产权、开放进入、允许创造性破坏</td>
+    <td>产权不安全、进入受垄断、抑制创造性破坏</td>
+  </tr>
+  <tr>
+    <td>激励</td>
+    <td>奖励投资、创新、努力</td>
+    <td>奖励寻租、掠夺、维护垄断</td>
+  </tr>
+  <tr>
+    <td>长期结果</td>
+    <td>增长</td>
+    <td>停滞或短期增长后崩溃</td>
+  </tr>
+</table>
+
+<p>他们的核心命题：<strong>包容性制度是长期增长的必要条件</strong>。榨取性制度可以靠追赶和资源红利产生短期增长（苏联 1930s、许多资源国家），但无法持续——因为它系统性地抑制创造性破坏，而创造性破坏是持续增长的引擎。这个命题有争议（地理派、文化派都反对），但它把制度变迁和经济增长清晰挂钩，是本框架的枢纽。</p>
+
+<!-- ====== PART 4: GRADUAL CHANGE ====== -->
+<h2>4. 渐进变迁：不只有革命和停滞</h2>
+
+<p>路径依赖 + 关键节点的框架有一个偏向：它把制度变迁想象成「长期停滞 → 节点剧变 → 再停滞」。但现实中大量变迁是<strong>渐进的、持续的、不经过明显节点</strong>的。马奥尼和塞伦（Mahoney & Thelen, 2010）补充了这一维度。</p>
+
+<div class="theory">
+  <div class="theory-name">四种渐进变迁模式</div>
+  <div class="theory-scholar">James Mahoney & Kathleen Thelen, <em>Explaining Institutional Change</em> (2010)</div>
+
+  <p>他们指出，即使没有关键节点，制度也会通过四种模式缓慢变迁。哪种模式出现，取决于<strong>制度本身的模糊性</strong>和<strong>权力分布</strong>：</p>
+
+  <table>
+    <tr><th>模式</th><th>机制</th><th>例子</th></tr>
+    <tr>
+      <td><strong>置换 (Displacement)</strong></td>
+      <td>旧制度被全新制度取代</td>
+      <td>东欧计划经济 → 市场经济（虽有路径依赖残余）</td>
+    </tr>
+    <tr>
+      <td><strong>层叠 (Layering)</strong></td>
+      <td>新规则加在旧制度之上，旧制度逐渐被边缘化但不废除</td>
+      <td>美国福利国家：新项目不断添加，旧框架名义保留</td>
+    </tr>
+    <tr>
+      <td><strong>漂移 (Drift)</strong></td>
+      <td>规则不变，但外部环境变了，规则的实际效果改变</td>
+      <td>美国最低工资：名义不变，通胀使其真实价值持续下降</td>
+    </tr>
+    <tr>
+      <td><strong>转换 (Conversion)</strong></td>
+      <td>规则不变，但被新行动者按新方式诠释和执行</td>
+      <td>美国商务部：同一法定职权，从「促进商业」被诠释为「监管商业」</td>
+    </tr>
+  </table>
+
+  <p>关键洞察：<strong>制度变迁常常不需要改规则</strong>。层叠、漂移、转换都发生在规则名义不变的情况下——这解释了为什么光看法律文本会错过大量真实变迁。这也是为什么比较制度分析必须看<strong>制度的实际运作</strong>而非纸面规则。</p>
+</div>
+
+<!-- ====== PART 5: WHY BAD INSTITUTIONS PERSIST ====== -->
+<h2>5. 为什么坏制度能存活？</h2>
+
+<p>把前面所有机制合起来，我们就有了回答本课开场谜题的完整工具箱。低效制度之所以能持续，不是因为人们不知道它低效，而是因为：</p>
+
+<ol>
+  <li><strong>路径依赖的四种自我强化机制</strong>（沉没成本、学习效应、协调效应、适应性预期）使切换的私人成本高于私人收益——即使社会收益为正。</li>
+  <li><strong>权力的非对称性</strong>：低效制度往往<strong>对掌权者高效</strong>——他们的私人收益在制度低效时反而最大。变革的公共收益对他们是私人损失。</li>
+  <li><strong>集体行动困难</strong>：制度变革是公共品，搭便车使政治供给不足。受害者分散且难以协调；受益者（少数权贵）集中且容易组织——奥尔森的「窄利益战胜宽利益」。</li>
+  <li><strong>非正式约束的滞后</strong>：即使正式规则改了，非正式约束（习惯、信任文化、关系网络）需要代际更替才能变。俄罗斯 1991 年颁布市场经济宪法，但「关系经济」至今未消失。</li>
+  <li><strong>不确定性与时间视野</strong>：制度变革的后果高度不确定且长期才显现。即使新制度更好，过渡期的阵痛由当代人承担，收益由后代人享受——政治上几乎没有激励去承担这个不对称。</li>
+</ol>
+
+<p>这五条不是并列的「原因」，而是相互强化的<strong>锁死机制</strong>。任何一条单独都可能被突破；五条叠加就形成了 Acemoglu 和 Robinson 所说的「制度陷阱」——低效制度不仅存续，而且<strong>自我强化</strong>，越来越难突破。</p>
+
+<div class="concept-box">
+  <div class="concept-name">🧠 可带走的概念工具</div>
+  <h3>制度变迁五问：分析任何制度粘滞的工具</h3>
+  <p>面对一个「明明低效却不改变」的制度，依次问：</p>
+  <ol>
+    <li><strong>锁定机制：</strong>四种自我强化机制（沉没/学习/协调/预期）中哪几个在起作用？哪个最强？</li>
+    <li><strong>谁受益：</strong>这个制度对谁有<strong>私人</strong>收益（即使对社会低效）？这些人在政治上有多强？</li>
+    <li><strong>变革的公共品性：</strong>变革收益是否分散、成本是否集中？受害者能否协调？</li>
+    <li><strong>正式 vs 非正式：</strong>问题在正式规则还是非正式约束？改正式规则够吗，还是需要代际尺度的文化变迁？</li>
+    <li><strong>节点条件：</strong>什么样的外生冲击能松动锁定？历史上类似制度是被什么节点撬动的？</li>
+  </ol>
+  <p style="margin-bottom:0;">这五问在后续课程中反复使用：科举制的存续与废除（L10）、中华帝国周期律（L10）、苏联体制的僵化（L21 扩展）、中国改革的渐进性（L22）。</p>
+</div>
+
+<!-- ====== PART 6: SYNTHESIS ====== -->
+<h2>6. 综汇：四学科看制度变迁</h2>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--economics);"></span>
+  <span style="font-weight:600;color:var(--economics);">经济学：</span>
+  <span>路径依赖的<strong>微观机制</strong>——收益递增、沉没成本、网络外部性、学习效应。这些机制最早在技术经济学（QWERTY、VHS vs Betamax）中被识别，后扩展到制度。经济学还提供「激励结构」这一核心分析维度。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--politics);"></span>
+  <span style="font-weight:600;color:var(--politics);">政治学：</span>
+  <span>路径依赖在政治中<strong>更强</strong>的原因（无退出、集体行动难、权力非对称、反馈弱）；关键节点上的权力斗争如何决定新路径；渐进变迁的四种模式。政治学贡献了「权力」这一经济学模型常忽略的变量。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--history);"></span>
+  <span style="font-weight:600;color:var(--history);">历史学：</span>
+  <span><strong>关键节点的具体案例</strong>——黑死病、大发现、工业革命、世界大战、去殖民化。历史学提供节点的实证证据，并警告：节点不是「必然的」，而是偶然事件和当时力量对比的产物。布罗代尔的「长时段」与关键节点理论高度互补。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--philosophy);"></span>
+  <span style="font-weight:600;color:var(--philosophy);">哲学：</span>
+  <span><strong>规范判断</strong>——什么使一个制度「好」或「正当」？包容性 vs 榨取性的区分不仅是实证的，也是规范的（涉及自由、公平、尊严）。哲学还追问：制度变迁中谁有权决定？革命 vs 改良的正当性边界？这将在 L16（法国大革命）深入。</span>
+</div>
+
+<p>四学科合起来给出一个完整的制度变迁图景：<strong>经济学给微观机制，政治学给权力和集体行动，历史学给节点和实证，哲学给规范判断</strong>。任何只用一个视角的制度分析都是残缺的——只看经济会忽略权力，只看政治会忽略激励，只看历史会缺乏机制，只看哲学会脱离实情。</p>
+
+<!-- ====== PART 7: EXERCISES ====== -->
+<h2>7. 练习与思考</h2>
+
+<div class="quiz-section">
+
+  <div class="quiz-question" id="q1">
+    <div class="q-num">练习 1 · 概念辨析</div>
+    <div class="q-text">诺斯定义中「制度」与「组织」的区别是？</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option" data-answer="wrong">制度是正式的，组织是非正式的</div>
+      <div class="quiz-option" data-answer="correct">制度是游戏规则，组织是玩家——同一组织在不同制度下行为不同</div>
+      <div class="quiz-option" data-answer="wrong">制度是宏观的，组织是微观的</div>
+      <div class="quiz-option" data-answer="wrong">制度是稳定的，组织是变动 的</div>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <div class="q-num">练习 2 · 机制识别</div>
+    <div class="q-text">某国计划经济时代的官员精通「批条子、搞关系、寻租」，市场经济改革后这些技能在新体制下大多无用，他们因此抵制改革。这最对应路径依赖的哪种机制？</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option" data-answer="wrong">规模收益递增（沉没成本）</div>
+      <div class="quiz-option" data-answer="correct">学习效应——人们在旧制度下积累的人力资本在新制度下无用</div>
+      <div class="quiz-option" data-answer="wrong">协调效应</div>
+      <div class="quiz-option" data-answer="wrong">适应性预期</div>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <div class="q-num">练习 3 · 关键节点</div>
+    <div class="q-text">黑死病后，西欧强化了议价权走向包容性，东欧强化了农奴制走向榨取性。同样的外生冲击产生相反结果。这个案例最核心的方法论启示是？</div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option" data-answer="wrong">外生冲击不重要，关键是内生的制度选择</div>
+      <div class="quiz-option" data-answer="best">关键节点只是「松动窗口」，节点的结果取决于当时既有的制度结构和力量对比——节点是必要条件但非充分条件，且结果不可由冲击本身预测</div>
+      <div class="quiz-option" data-answer="wrong">东西欧的差异是文化决定的，与制度无关</div>
+      <div class="quiz-option" data-answer="wrong">证明路径依赖理论是错的</div>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q4">
+    <div class="q-num">练习 4 · 渐进变迁</div>
+    <div class="q-text">某国最低工资法名义金额 20 年未变，但因通胀，其实际购买力下降了 40%。这对应 Mahoney & Thelen 的哪种渐进变迁模式？</div>
+    <div class="quiz-options" id="q4-opts">
+      <div class="quiz-option" data-answer="wrong">置换——旧制度被新制度取代</div>
+      <div class="quiz-option" data-answer="wrong">层叠——新规则加在旧规则之上</div>
+      <div class="quiz-option" data-answer="correct">漂移——规则不变，外部环境变了，规则的实际效果改变</div>
+      <div class="quiz-option" data-answer="wrong">转换——规则被新行动者按新方式诠释</div>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q5">
+    <div class="q-num">练习 5 · 综合应用</div>
+    <div class="q-text">中华帝国的科举制在 1905 年被废除。此前几十年，它已明显无法培养应对西方挑战所需的人才（工程、军事、科学）。用本课框架分析它为何能存续到 1905，以下最有洞察力的是？</div>
+    <div class="quiz-options" id="q5-opts">
+      <div class="quiz-option" data-answer="wrong">清政府愚蠢，看不到科举的问题</div>
+      <div class="quiz-option" data-answer="best">科举制有极强的路径依赖：学习效应（数百万士人的人力资本系于八股）、协调效应（整个官僚选拔、社会流动、士绅身份都围绕它）、适应性预期（所有人预期科举延续而投资其中）。受益者（士绅、考官）集中且有政治影响力；受害者（需要新式人才的国家）分散。只有甲午战败这样的关键节点才松动锁定，且即使废除后非正式约束（士绅文化）仍延续一代人</div>
+      <div class="quiz-option" data-answer="wrong">科举制其实不低效，是西方冲击才使它显得低效</div>
+      <div class="quiz-option" data-answer="wrong">这是文化问题，与制度无关</div>
+    </div>
+    <div class="quiz-feedback" id="q5-fb"></div>
+  </div>
+
+</div>
+
+<div class="exercise">
+  <h3>✏️ 制度粘滞分析（开放练习，10 分钟）</h3>
+  <p>选一个你熟悉的「明明低效却不改变」的制度——可以是当代的（户籍制度、房产 70 年产权、某行业准入垄断、大学排名体系、美国选举人团），也可以是历史的。用「制度变迁五问」做完整分析：</p>
+  <ol style="margin-left:1.5rem;">
+    <li>锁定机制（四种中哪几个最强）</li>
+    <li>谁受益（私人收益 + 政治力量）</li>
+    <li>变革的公共品性（收益/成本分布）</li>
+    <li>正式 vs 非正式（改规则够吗）</li>
+    <li>节点条件（什么冲击能撬动）</li>
+  </ol>
+  <textarea placeholder="选择制度：……&#10;&#10;1. 锁定机制：……&#10;2. 谁受益：……&#10;3. 公共品性：……&#10;4. 正式vs非正式：……&#10;5. 节点条件：……&#10;&#10;你的预测：……"></textarea>
+  <p class="hint">💡 把分析发给 Claude——我会回应你忽略的机制、补充历史对照、挑战你的预测。这是把框架变成分析能力的核心练习。</p>
+</div>
+
+<!-- ====== FURTHER READING ====== -->
+<h2>8. 推荐阅读</h2>
+
+<div style="background:var(--card-bg);border-radius:6px;padding:1.3rem 1.5rem;margin:1.2rem 0;">
+  <p style="font-weight:600;margin-top:0;">📖 主读</p>
+  <p style="margin-bottom:0.3rem;"><strong>Daron Acemoglu & James Robinson —《国家为什么会失败》（Why Nations Fail, 2012）</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">包容性 vs 榨取性制度、关键节点、制度漂移的核心论述。案例丰富，可读性极强。有中译本。注意：本书有争议（地理派、文化派批评它低估了非制度因素），但其框架的清晰度和启发性无可替代。</p>
+
+  <p style="font-weight:600;margin-top:1rem;">📖 辅读</p>
+  <p style="margin-bottom:0.3rem;"><strong>Paul Pierson —《时间中的政治》（Politics in Time, 2004）</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">路径依赖系统引入政治学的奠基之作。第 1 章和第 3 章是本课路径依赖部分的核心来源。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>Douglass North —《制度、制度变迁与经济绩效》（1990）</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">诺斯的工作定义、正式 vs 非正式区分、制度作为激励结构。比较学术，但概念密度极高。有中译本。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>James Mahoney & Kathleen Thelen —《解释制度变迁》（2010）第 1 章</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:0;">四种渐进变迁模式的提出。短短一章，概念极清晰。</p>
+</div>
+
+<!-- ====== CROSS-REFERENCES ====== -->
+<h2>9. 关联与展望</h2>
+<ul style="font-size:0.92rem;">
+  <li><strong>L1 回扣：</strong>本课解释了 L1 中「路径依赖」一词——六大原生国家为何走上不同路径并长期锁定。</li>
+  <li><strong>L2 回扣：</strong>合法性类型本身是制度——传统型/法理型的转换是制度变迁；「虚假合法性」对应「正式规则与非正式约束脱节」。</li>
+  <li><strong>L4 预告：</strong>权力的三维（强制/交易/说服）将与本课的「激励结构」结合，形成更完整的制度分析。</li>
+  <li><strong>L10 中华帝国：</strong>科举制、郡县制、王朝周期律都是路径依赖与关键节点的经典案例——本课的科举练习是 L10 的预习。</li>
+  <li><strong>L14 大分流：</strong>「为什么是欧洲」本质上是一个制度漂移问题——本课的黑死病案例是其微观基础。</li>
+  <li><strong>L22 中国改革：</strong>渐进式改革 vs 休克疗法的辩论，核心就是路径依赖与节点选择的张力。</li>
+</ul>
+
+<div class="lesson-footer">
+  <p>🎯 本课服务于你的 <a href="../MISSION.md">MISSION</a>：<em>构建跨学科理解框架。</em>制度变迁理论是发展经济学、比较政治学、经济史的核心枢纽，也是理解「为什么国家有富有穷」的主流框架。</p>
+  <p>💬 任何一个机制你不同意？五问分析中你的判断和框架有冲突？想应用到你关心的具体制度？<strong>直接问 Claude。</strong></p>
+  <div class="links">
+    <span><a href="./0002-faces-of-legitimacy.html">← L2 合法性</a></span>
+    <span><a href="#" style="color:var(--text-light);">L4 权力的三维 →</a>（即将推出）</span>
+    <span><a href="../reference/glossary.html">📚 术语表</a></span>
+    <span><a href="../index.html">↑ 课程路径</a></span>
+  </div>
+</div>
+
+<script>
+(function() {
+  function setup(qId) {
+    const opts = document.querySelectorAll('#' + qId + '-opts .quiz-option');
+    const fb = document.getElementById(qId + '-fb');
+    opts.forEach(o => {
+      o.addEventListener('click', function() {
+        opts.forEach(x => { x.classList.remove('selected', 'correct', 'incorrect'); });
+        o.classList.add('selected');
+        const ans = o.dataset.answer;
+        if (ans === 'correct' || ans === 'best') {
+          o.classList.add('correct');
+          fb.className = 'quiz-feedback show fb-correct';
+          if (qId === 'q1') fb.innerHTML = '✅ <strong>正确。</strong>这个区分是诺斯框架的灵魂。混用它们会导致错误分析——比如把「国企行为变了」归因于「国企变了」，而真正的原因是「约束国企的制度变了」。';
+          else if (qId === 'q2') fb.innerHTML = '✅ <strong>正确。</strong>学习效应是路径依赖最隐蔽也最强的机制之一——它把人变成制度的既得利益者，即使他们本不是既得利益者。改革的最大阻力往往来自那些在旧制度下投资最多的人，这不是意识形态，是人力资本保护。';
+          else if (qId === 'q3') fb.innerHTML = '✅ <strong>正确。</strong>这是关键节点理论最微妙之处——节点不「决定」结果，它只是打开一个原本不存在的可能性窗口。窗口里发生什么，取决于既有结构。这意味着历史不是「冲击 → 结果」的简单因果，而是「冲击 × 既有结构 → 结果」。同样的冲击打在不同结构上，结果可以相反。';
+          else if (qId === 'q4') fb.innerHTML = '✅ <strong>正确。</strong>漂移是四种模式中最隐蔽的——没有任何立法动作，制度却实质改变了。它解释了为什么「光看法律文本」会严重误判制度现状。许多国家的「制度停滞」其实是漂移在悄悄改变制度。';
+          else if (qId === 'q5') fb.innerHTML = '✅ <strong>正确。</strong>这是制度变迁五问的标准应用。注意几个层次：(1) 多机制叠加形成锁死；(2) 受益者集中/受害者分散的奥尔森逻辑；(3) 只有外生关键节点（甲午战败暴露制度无能）才松动锁定；(4) 即使废除正式规则，非正式约束（士绅文化、功名身份认同）仍延续一代人——这正是诺斯强调非正式约束更难变的原因。1905 废科举后民国初年的乱象，部分就是非正式约束与正式规则脱节的阵痛。';
+        } else {
+          o.classList.add('incorrect');
+          fb.className = 'quiz-feedback show fb-incorrect';
+          if (qId === 'q1') fb.innerHTML = '❌ 制度可以是正式或非正式的，组织也可以（如非正式网络）。这个区分不对应正式/非正式。';
+          else if (qId === 'q2') fb.innerHTML = '❌ 沉没成本是<strong>基础设施</strong>已投入无法回收；这里说的是<strong>人的技能</strong>在旧制度下积累、在新制度下无用——这是学习效应，不是沉没成本。两者相关但不同。';
+          else if (qId === 'q3') {
+            if (o.textContent.includes('外生冲击不重要')) fb.innerHTML = '❌ 恰恰相反——没有外生冲击就没有松动窗口，节点是必要条件。但它不是充分条件，结果不能由冲击单独预测。';
+            else if (o.textContent.includes('文化')) fb.innerHTML = '❌ 「文化」是偷懒的解释。东西欧的差异在 1346 年前远没有后来那么大；是<strong>节点上的制度结构差异</strong>（西欧领主较弱、东欧领主较强）放大了分歧。把它归为文化既无法检验，也错过了机制。';
+            else fb.innerHTML = '❌ 路径依赖理论没有错——它解释了节点之间的长期稳定。关键节点是路径依赖的<strong>补充</strong>而非替代：稳定期靠路径依赖，变革靠节点。两者是一个完整理论的两个部分。';
+          } else if (qId === 'q4') fb.innerHTML = '❌ 仔细看四种模式的定义。置换是取代，层叠是叠加，转换是重新诠释——本题中规则<strong>完全没变</strong>，只是环境变了使规则效果改变，这是漂移。';
+          else if (qId === 'q5') {
+            if (o.textContent.includes('愚蠢')) fb.innerHTML = '❌ 「愚蠢」是非解释。清廷中的改革派（李鸿章、张之洞、后期袁世凯）看得很清楚。问题不是看不见，而是<strong>看见了也改不动</strong>——这正是制度粘滞理论要解释的。';
+            else if (o.textContent.includes('其实不低效')) fb.innerHTML = '❌ 科举在农业帝国的语境下确实高效（社会流动、文化整合、官僚选拔），但在工业竞争语境下确实低效。「低效」是相对外部挑战而言的——这正是制度变迁常发生的情形：制度在原环境高效，在新环境低效，但路径依赖使它无法快速切换。';
+            else fb.innerHTML = '❌ 「文化问题」是放弃分析。科举制是一个有明确规则、激励、权力分布的<strong>制度</strong>，完全可以用制度变迁理论分析。把它推给「文化」既无法检验，也错过了所有可操作的机制。';
+          }
+        }
+      });
+    });
+  }
+  ['q1','q2','q3','q4','q5'].forEach(setup);
+})();
+</script>
+
+</body>
+</html>

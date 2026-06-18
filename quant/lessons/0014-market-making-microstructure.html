@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0014 · 做市与微观结构</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.75; color: #1a1a1a; background: #fdfdfb; max-width: 760px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .insight h3 { margin-top: 0; color: #8b5a20; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .formula { text-align: center; font-size: 1.05rem; margin: 1.4rem 0; }
+  .danger { background: #fff0f0; border-left: 3px solid #c44; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .danger h3 { margin-top: 0; color: #a33; }
+  .connection { background: #f0f8f8; border-left: 3px solid #4a9a9a; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #345; }
+  .connection h3 { margin-top: 0; color: #2a6a6a; }
+  .open-q { background: #fafafa; border: 1px dashed #bbb; border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #555; }
+  .open-q h3 { margin-top: 0; color: #666; }
+  .finale { background: linear-gradient(135deg, #f0f8f0, #f5f9ff); border: 1px solid #c0d8c0; border-radius: 8px; padding: 2rem 1.8rem; margin: 2rem 0; text-align: center; }
+  .finale h2 { border: none; margin-top: 0; color: #2a6a2a; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<h1>做市与微观结构</h1>
+<p class="meta">Lesson 0014（重写·深度版）· 全部课程收官 · 预计 40-50 分钟</p>
+
+<div class="retrieval">
+  <h3>🔁 衔接</h3>
+  <p>前 13 课讲的都是"什么时候买/卖、买/卖多少"——信号和组合。这节讲更底层：<strong>订单怎么变成成交、做市商怎么赚价差、微观结构怎么产生 alpha</strong>。即使你不做做市（散户难做），理解微观结构能让你下更聪明的单、更准地建模滑点、更早察觉大单方向——这些直接影响你策略的实盘表现。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、市场微观结构——订单簿的动态信息</h2>
+
+<p>第一课讲了订单簿静态结构。现在讲<strong>动态</strong>——订单簿的变化本身就是信息流。</p>
+
+<div class="card">
+  <h3>关键微观量</h3>
+  <table>
+    <tr><th>量</th><th>定义</th><th>信号</th></tr>
+    <tr><td>订单流不平衡 OFI</td><td>买单新增量 − 卖单新增量（累计）</td><td>正→买压→短期可能涨</td></tr>
+    <tr><td>价差 Spread</td><td>$A - B$（ask − bid）</td><td>大→流动性差→交易成本高</td></tr>
+    <tr><td>深度 Depth</td><td>离 mid 一定距离的累计挂单量</td><td>深→能吃大单→流动性好</td></tr>
+    <tr><td>斜率 Slope</td><td>挂单量随距离衰减速度</td><td>陡→流动性集中→大单冲击大</td></tr>
+    <tr><td>中间价 Mid</td><td>$(A+B)/2$</td><td>公允价的一阶近似</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>OFI（Order Flow Imbalance）——最重要的微观信号</h3>
+  <p>Cont et al. (2014) 发现：OFI 对短期价格变动有<strong>极强的线性解释力</strong>（R² ~50% 在高频）。公式：</p>
+  <div class="formula">
+    $$\text{OFI}_t = \sum_{\text{events}} (\text{买单量变化}) - (\text{卖单量变化})$$
+  </div>
+  <p>每个订单簿事件（新增/取消/成交）都更新 OFI。OFI 持续正 → 买方持续更积极 → 价格被推上。这是高频做市和短期预测的核心信号。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>二、做市的盈亏结构</h2>
+
+<div class="card">
+  <h3>做市商 PnL 分解</h3>
+  <div class="formula">
+    $$\text{PnL} = \underbrace{\text{价差收益}}_{\text{inventory 在 bid/ask 间弹跳}} - \underbrace{\text{存货风险}}_{\text{方向性仓位的价格波动}} - \underbrace{\text{逆向选择损失}}_{\text{被知情者割韭菜}}$$
+  </div>
+</div>
+
+<h3>2.1 价差收益——做市商怎么赚钱</h3>
+<p>同时在 bid 挂买单、ask 挂卖单。两边成交就赚价差。价格在 bid/ask 间来回弹跳（均值回归），做市商每次弹跳赚半个 spread。这是做市的<strong>正收益来源</strong>。</p>
+
+<h3>2.2 存货风险——被动积累的方向暴露</h3>
+<p>做市商被动成交——买的多卖的少就攒多头，反之攒空头。存货有方向风险：攒多头时价格跌就亏。这是做市商要主动管理的。</p>
+
+<div class="card">
+  <h3>存货管理：Avellaneda-Stoikov 模型</h3>
+  <p>经典做市模型。核心思想：报价围绕"公允价 + 存货调整"对称展开。攒了 $q$ 单多头时，把报价下移 $\delta \propto q$：</p>
+  <div class="formula">
+    $$\text{bid} = m - \delta - \kappa q, \quad \text{ask} = m + \delta - \kappa q$$
+  </div>
+  <p>$m$ 是公允价，$\delta$ 是基础半价差，$\kappa q$ 是存货调整。攒多头 → 报价下移 → 鼓励别人卖给你（平多头）、抑制别人买（不再攒多）。$\kappa$ 越大越激进平存货。这是做市商"偏移报价"的数学化。</p>
+</div>
+
+<h3>2.3 逆向选择——做市商最怕的</h3>
+<div class="danger">
+  <h3>⚠️ 逆向选择 <span class="en">Adverse Selection</span></h3>
+  <p>有人<strong>知道你不知道的信息</strong>（知情交易者 informed trader）。知情者只在价格有利时成交——他买是因为他知道要涨，你卖给他就立刻亏。这是做市的<strong>负收益来源</strong>，且是尾部风险。</p>
+  <p>例：某鲸鱼得知大额卖单即将到来，先在你 ask 挂的单上买入对冲——你卖给了他，价格随后崩。你"被毒单打中"。Glosten-Milgrom (1985) 模型：价差本质上是对逆向选择的补偿——做市商用和不知情者交易的盈利，弥补和知情者交易的亏损。</p>
+</div>
+
+<div class="insight">
+  <h3>⚡ 做市的核心权衡</h3>
+  <p style="margin-bottom:0;">价差越窄 → 成交多 → 赚多 → 但更容易被毒单打中（知情者也喜欢窄价差低成本进场）。价差越宽 → 安全 → 但成交少。做市商的技艺全在<strong>动态调价差</strong>：根据订单流不平衡、存货方向、波动率、近期被毒单频率实时调整。这是高频做市的全部内容。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、Kyle (1985) —— 知情交易者怎么隐藏信息</h3>
+
+<div class="card">
+  <h3>Kyle 模型：鲸鱼怎么慢慢建仓</h3>
+  <p>一个知情者（知道真实价值 $v$）要买入大量头寸。如果一次性下大单，价格瞬间跳到 $v$，他赚不到。Kyle 证明：最优策略是<strong>慢慢交易</strong>，把大单拆成小单，每单混在不知情者的噪声单里。价格<strong>线性漂移</strong>到 $v$，知情者全程在赚。</p>
+  <p>推论：大单（鲸鱼）的<strong>足迹</strong>是价格缓慢漂移 + OFI 持续偏一边。这就是为什么 OFI 能预测短期价格——它在检测鲸鱼的缓慢建仓。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、微观结构信号——低延迟 alpha</h2>
+
+<table>
+  <tr><th>信号</th><th>逻辑</th><th>半衰期</th></tr>
+  <tr><td>OFI</td><td>持续买压→短期涨</td><td>秒-分</td></tr>
+  <tr><td>大单检测（冰山单）</td><td>大单拆小单→隐含方向</td><td>分</td></tr>
+  <tr><td>价差突变</td><td>价差突然扩大→有人撤单→信息将至</td><td>秒</td></tr>
+  <tr><td>成交速度</td><td>某价位成交突然加速→知情者在抢</td><td>秒</td></tr>
+  <tr><td>订单簿不对称</td><td>bid 侧深度 ≫ ask 侧→买方更积极</td><td>分</td></tr>
+</table>
+
+<div class="danger">
+  <h3>⚠️ 微观信号的陷阱</h3>
+  <ul>
+    <li><strong>衰减极快</strong>——半衰期秒-分，套利者涌入迅速吃掉。需要低延迟基础设施</li>
+    <li><strong>对交易成本极敏感</strong>——信号本身收益小，手续费/滑点就能吃掉</li>
+    <li><strong>前视风险</strong>——订单簿数据时间戳精度不够会造成前视</li>
+    <li><strong>容量小</strong>——订单簿信号能容纳的资金有限，大资金自己就把信号打飞</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>五、对你做策略的实际意义（不做做市也要懂）</h2>
+
+<div class="card">
+  <h3>5.1 滑点建模——回测可信度的关键</h3>
+  <p>回测里假设按 mid 成交 = 自欺。真实成交：</p>
+  <ul>
+    <li>买入按 ask，卖出按 bid——立刻亏半个 spread</li>
+    <li>大单吃光订单簿深度——按成交量加权平均价成交，越大量越差</li>
+    <li>你的单子本身<strong>冲击市场</strong>——大买单推高价格再成交</li>
+  </ul>
+  <p>线性冲击模型：执行价 = mid + $\lambda \cdot \text{下单量}$。$\lambda$ 从订单簿斜率估。回测必须扣这个，否则高估收益。第八课的回测陷阱里"忽略滑点"指的就是这个。</p>
+</div>
+
+<div class="card">
+  <h3>5.2 下单策略——怎么减少冲击</h3>
+  <table>
+    <tr><th>策略</th><th>做法</th><th>适用</th></tr>
+    <tr><td>市价单</td><td>立刻成交，吃价差</td><td>紧急、小单。大单最差选择</td></tr>
+    <tr><td>限价单</td><td>挂单等成交，赚价差但有不成交风险</td><td>有耐心、流动性好</td></tr>
+    <tr><td>TWAP</td><td>把大单均匀拆成 N 份，按时间等间隔下</td><td>没有明显时间规律</td></tr>
+    <tr><td>VWAP</td><td>按历史成交量分布拆单，成交量高峰多下</td><td>有日内成交量规律</td></tr>
+    <tr><td>实施 shortfall (IS)</td><td>权衡冲击风险 vs 越拖越久的 alpha 流失</td><td>大单、有 alpha 衰减</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>5.3 流动性择时</h3>
+  <p>同一信号在价差小、深度大时执行成本低得多。<strong>把交易集中在流动性好的时段</strong>（币圈：亚洲/欧洲/美洲重叠时段；美股：开盘后 30 分钟和收盘前）。流动性差时挂限价单等，不强行市价。</p>
+</div>
+
+<div class="card">
+  <h3>5.4 察觉大单方向</h3>
+  <p>OFI 持续偏一边、订单簿一侧深度异常、价差突变——这些是鲸鱼在动的信号。对你的方向信号是<strong>确认或警告</strong>：OFI 和你信号同向 → 加仓；反向 → 谨慎（可能你的信号晚了，鲸鱼已在平仓）。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="crypto-note">
+  <h3>🔗 币圈微观结构</h3>
+  <p><strong>特点</strong>：</p>
+  <ul>
+    <li><strong>24/7</strong>——没有收盘，做市商不能下班。但流动性有日内规律（亚洲时段 BTC 活跃、美股时段山寨币活跃）</li>
+    <li><strong>跨所套利空间大</strong>——同一币在币安/Coinbase/Kraken 多所挂牌，跨所做市/套利机会多。价差因子（0011）</li>
+    <li><strong>API 友好</strong>——币安等提供低延迟 WebSocket、详细订单簿。技术门槛比传统市场低，散户也能拿数据</li>
+    <li><strong>尾部风险大</strong>——币圈穿仓更频繁（清算雪崩、交易所宕机），做市商风险控制要更严。2018 币安宕机、2021 BitMEX 清算瀑布</li>
+    <li><strong>费率透明 + maker rebate</strong>——币圈所常给 maker 负费率（挂单奖励），做市商有额外收益来源</li>
+  </ul>
+  <p><strong>散户做市难</strong>（拼不过机构的延迟、colocation、资金），但<strong>理解微观结构能帮你下更好的单</strong>：避免市价单吃光订单簿、用 TWAP/VWAP 拆大单、在流动性好时交易、用 OFI 确认方向信号。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="finale">
+  <h2>🎓 14 课全部完成（深度版）</h2>
+  <p style="margin-bottom:0.5rem;">从零基础到完整量化思维框架</p>
+  <p style="font-size:0.9rem; color:#666;">
+    地基 5 课 · 工具 3 课 · 因子 4 课 · 进阶 2 课<br>
+    你现在具备：审视任何策略的批判性框架 · 设计币圈多因子策略的完整概念基础 · 识别回测陷阱 · 理解期权定价和微观结构
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<div class="connection">
+  <h3>🔗 与其他课的连接</h3>
+  <p><strong>前置</strong>：第一课订单簿（本节是其动态）、0008 回测（滑点建模是回测可信度关键）、0011 清算带因子（微观结构 alpha 的一种）、0013 期权（期权做市要动态 delta 对冲，比现货做市复杂）。</p>
+  <p><strong>这是最后一课</strong>。所有概念现在串成闭环：信号（因子）→ 组合（多因子）→ 执行（微观结构）→ 验证（回测）→ 风险（波动率/肥尾/希腊字母）。</p>
+</div>
+
+<div class="open-q">
+  <h3>❓ 开放问题</h3>
+  <ul>
+    <li>币圈<strong>跨所微观结构</strong>——同一币在多所的订单簿怎么相互影响？跨所 OFI 信号？</li>
+    <li>DEX（Uniswap 等）的微观结构完全不同——AMM 没有订单簿，做市机制是恒定乘积公式。这是另一个完整话题</li>
+    <li>MEV（最大可提取价值）——链上交易的抢跑/三明治攻击，是 DEX 微观结构的独特现象</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 做市商最怕的风险是什么？机制是什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">价差太小，赚不到</span>
+    <span class="opt" data-answer="correct">逆向选择——知情者用信息优势只在有利时成交，做市商被动接盘立刻亏</span>
+    <span class="opt" data-answer="wrong">成交太少</span>
+    <span class="opt" data-answer="wrong">手续费</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 攒了多头存货，Avellaneda-Stoikov 模型怎么调报价？为什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">上移报价，赚更多</span>
+    <span class="opt" data-answer="correct">下移报价——鼓励别人卖给你平多头、抑制别人买避免继续攒多</span>
+    <span class="opt" data-answer="wrong">不动</span>
+    <span class="opt" data-answer="wrong">扩大价差</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. OFI 为什么能预测短期价格？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">OFI 是公开信息</span>
+    <span class="opt" data-answer="correct">OFI 检测鲸鱼缓慢建仓（Kyle 模型）——持续买压 = 知情者在慢慢买，价格将被推上</span>
+    <span class="opt" data-answer="wrong">OFI 和价格无关</span>
+    <span class="opt" data-answer="wrong">OFI 是随机的</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. 回测假设按 mid 成交，为什么高估收益？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">mid 是公允价</span>
+    <span class="opt" data-answer="correct">真实买入按 ask、卖出按 bid（亏半个 spread），大单还有冲击成本——全被忽略</span>
+    <span class="opt" data-answer="wrong">mid 比成交价高</span>
+    <span class="opt" data-answer="wrong">没有影响</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="q">5. 大单应该怎么下？为什么不用市价单？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">市价单最快最好</span>
+    <span class="opt" data-answer="correct">用 TWAP/VWAP 拆分，避免一次性吃光订单簿造成大冲击。市价单大单是最差选择</span>
+    <span class="opt" data-answer="wrong">一次性下完</span>
+    <span class="opt" data-answer="wrong">不下</span>
+  </div>
+  <p class="feedback" id="f5"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 学术</h3>
+  <p><strong>O'Hara —《市场微观结构理论》</strong>。微观结构圣经。<br>
+  <strong>Cont, Kukanov & Stoikov — "The Price Impact of Order Flow" (2014)</strong>。OFI 的实证和理论。<br>
+  <strong>Kyle — "Continuous Auctions and Insider Trading" (1985)</strong>。鲸鱼建仓模型。</p>
+</div>
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 做市实务</h3>
+  <p><strong>Avellaneda & Stoikov — "High-frequency Trading in a Limit Order Book" (2008)</strong>。做市商报价模型。<br>
+  <strong>Almgren — "Optimal Trading with Direct Price Impact" </strong>。执行算法基础。</p>
+</div>
+
+<div class="reminder">
+  <strong>💬 课程结束，学习没结束。</strong> 14 课给你的是<strong>概念框架</strong>。下一步落地到你的币圈策略：选 2-3 个因子（动量 + 费率 + MVRV）→ AI 写回测代码 → 严格按第八课检查清单验证 → 小仓位实盘 → 持续监控因子衰减。任何一课想深挖、任何概念想落地、任何新方向（DEX/MEV/ML）想探索，随时来问。
+</div>
+
+<div class="nav">
+  上一课：<a href="0013-derivatives-pricing.html">0013 · 衡生品定价</a> &nbsp;|&nbsp;
+  <a href="../index.html">↑ 返回目录</a><br>
+  全部 14 课完成 🎓
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

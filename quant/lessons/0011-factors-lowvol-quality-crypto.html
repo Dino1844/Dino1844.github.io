@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0011 · 常见因子（下）+ 币圈特有</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.75; color: #1a1a1a; background: #fdfdfb; max-width: 760px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .insight h3 { margin-top: 0; color: #8b5a20; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .formula { text-align: center; font-size: 1.05rem; margin: 1.4rem 0; }
+  .danger { background: #fff0f0; border-left: 3px solid #c44; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .danger h3 { margin-top: 0; color: #a33; }
+  .connection { background: #f0f8f8; border-left: 3px solid #4a9a9a; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #345; }
+  .connection h3 { margin-top: 0; color: #2a6a6a; }
+  .open-q { background: #fafafa; border: 1px dashed #bbb; border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #555; }
+  .open-q h3 { margin-top: 0; color: #666; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<h1>常见因子（下）+ 币圈特有因子</h1>
+<p class="meta">Lesson 0011（重写·深度版）· 预计 40-50 分钟</p>
+
+<div class="retrieval">
+  <h3>🔁 衔接</h3>
+  <p>上节讲了三个传统因子。这节先补两个传统因子（低波动、质量），然后<strong>重点展开币圈特有因子</strong>——这是你做币圈量化最有 edge 的地方。传统因子在币圈要么不适用、要么已被充分定价，但链上数据、资金费率信号、稳定币流、清算带这些币圈因子很多还没被研究透，alpha 衰减更慢。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、低波动因子 <span class="en">Low Volatility / Bet Against Beta (BAB)</span></h2>
+
+<h3>1.1 现象</h3>
+<p>按波动率（或 β）排序，做多低波动组、做空高波动组，长期<strong>风险调整后</strong>跑赢。这直接违反 CAPM——CAPM 预测 β 与收益线性正相关，实证却发现低 β 资产收益<strong>高于</strong>线性预测，高 β 资产<strong>低于</strong>。</p>
+
+<div class="card">
+  <h3>Frazzini-Pedersen (2014) BAB 构造</h3>
+  <p>关键技巧：不能简单按 β 排序等权做多空——因为低 β 资产波动小，等权下风险贡献太小。BAB 按 <strong>β 的倒数</strong>定仓位：</p>
+  <div class="formula">
+    $$w_i \propto \frac{1}{\beta_i} \quad (\text{低 } \beta \text{ 多配，高 } \beta \text{ 空配})$$
+  </div>
+  <p>且做多端和做空端各自<strong>波动率归一化</strong>，使两端风险贡献相等。这样构造的组合才是"赌低 β 跑赢高 β"，而不是被高波动端主导。</p>
+</div>
+
+<h3>1.2 为什么有效——两个机制</h3>
+
+<div class="card">
+  <h3>机制 A：杠杆约束 <span class="en">Leverage Constraint</span></h3>
+  <p>很多机构（养老金、共同基金）<strong>不能或不愿加杠杆</strong>。为了达到目标收益，它们只能买高 β 资产（β>1 的股票，自带"杠杆"效果）→ 高 β 资产被推贵 → 未来收益降低。低 β 资产被冷落 → 便宜 → 未来收益高。这是 BAB 的核心解释——<strong>杠杆约束导致高 β 被高估</strong>。</p>
+</div>
+
+<div class="card">
+  <h3>机制 B：彩票偏好 <span class="en">Lottery Preference</span></h3>
+  <p>散户偏好右偏的"彩票型"资产（高波动、可能暴涨）→ 高波动资产被推贵 → 收益降低。这和 BAB 互补——一个讲机构杠杆约束，一个讲散户彩票偏好，都把高波动资产推贵。</p>
+</div>
+
+<h3>1.3 实证与失败模式</h3>
+<p>BAB 在美股 1929-2020 夏普 ~0.7，跨 24 国市场都成立。但有两个陷阱：</p>
+<div class="danger">
+  <h3>⚠️ 陷阱 1：低波动 = 低流动性？</h3>
+  <p style="margin-bottom:0;">低波动资产往往<strong>流动性差</strong>（没人交易才波动小）。回测买入"低波动山寨币"看起来稳——但实盘里你的单子本身就把价格打飞，回测的波动率是<strong>没有你参与时</strong>的波动率。必须配流动性过滤：只选日均成交额 > 阈值的标的。</p>
+</div>
+<div class="danger">
+  <h3>⚠️ 陷阱 2：低波动在牛市跑输</h3>
+  <p style="margin-bottom:0;">低波动资产在<strong>单边牛市跑输</strong>（高 β 资产涨更多）。2017-2021 低波动因子连续跑输。它有体制性——在震荡/熊市有效，在狂暴牛市失效。</p>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈低波动</h3>
+  <p>币圈低波动因子<strong>陷阱更严重</strong>：币圈低波动币往往是死币（没流动性、没叙事），不是"稳健"。且币圈整体波动高，"低波动"的币年化也有 30-50%，仍远高于传统资产。<strong>币圈慎用低波动因子</strong>，要用必须严格过滤流动性和"项目还活着"。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>二、质量因子 <span class="en">Quality</span></h2>
+
+<h3>2.1 构造</h3>
+<p>质量 = 基本面"好"。Novy-Marx (2013) 用<strong>毛利率</strong>（Gross Profitability = (收入-成本)/资产）作为质量度量，发现它预测收益。Fama-French 五因子的 RMW（盈利强减弱）也是质量类。</p>
+
+<table>
+  <tr><th>指标</th><th>含义</th></tr>
+  <tr><td>ROE / ROA</td><td>净资产/资产收益率——越高越好</td></tr>
+  <tr><td>毛利率</td><td>盈利能力稳定性</td></tr>
+  <tr><td>负债率</td><td>越低越稳健</td></tr>
+  <tr><td>盈利波动</td><td>越低越稳定</td></tr>
+  <tr><td>Piotroski F-score</td><td>9 个基本面信号的合成评分</td></tr>
+</table>
+
+<h3>2.2 为什么有效</h3>
+<div class="card">
+  <p>Novy-Marx 解释：高质量公司<strong>盈利能力可持续</strong>，市场低估了这种持续性，所以高质量股被低估。也有风险补偿视角：质量股在衰退期更抗跌，但平时被低估作为补偿。</p>
+</div>
+
+<h3>2.3 核心用途：过滤价值陷阱</h3>
+<div class="insight">
+  <h3>⚡ 价值 + 质量是经典组合</h3>
+  <p>上节讲价值因子最大的坑是价值陷阱——"便宜但烂"。质量因子专门识别"烂不烂"。组合起来：在便宜股里挑质量好的 = <strong>便宜且好</strong>，过滤掉便宜且烂。Asness et al. (2019) "Quality Minus Junk" 证明价值+质量组合夏普比单价值高 50%+。这是 Warren Buffett "以合理价格买好公司" 的量化版。</p>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈质量</h3>
+  <p>币圈"质量"度量（没有财报，用链上/项目数据）：</p>
+  <table>
+    <tr><th>指标</th><th>含义</th><th>数据源</th></tr>
+    <tr><td>GitHub 开发活跃度</td><td>commits/PR/贡献者数——项目还活着</td><td>Glassnode, Santiment</td></tr>
+    <tr><td>TVL 稳定性</td><td>DeFi 锁仓量是否在流失</td><td>DefiLlama</td></tr>
+    <tr><td>持币集中度</td><td>前 10 地址占比——越分散越健康</td><td>链上</td></tr>
+    <tr><td>审计与 multisig</td><td>是否经审计、金库是否多签</td><td>DefiSafety 等</td></tr>
+    <tr><td>上线交易所数</td><td>越多 = 越被认可</td><td>CoinGecko</td></tr>
+  </table>
+  <p>逻辑相同——筛掉"便宜但烂"的项目。币圈质量因子数据噪声大（GitHub 可刷、TVL 可刷），需多指标交叉验证。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、币圈特有因子 ⭐（重点）</h2>
+
+<p>以下因子在传统市场不存在或不可观测，是币圈量化的独特 edge。每个讲清楚<strong>怎么算、为什么有效、怎么用、陷阱</strong>。</p>
+
+<!-- ----- 3.1 资金费率信号 ----- -->
+<h3>3.1 资金费率方向信号 <span class="en">Funding Rate Signal</span></h3>
+
+<p>上节讲了费率<strong>套利</strong>（carry，对冲掉方向赚费率）。费率还能做<strong>方向信号</strong>——不对冲，赌反转。</p>
+
+<div class="card">
+  <h3>机制</h3>
+  <p>费率极端值 = 单边过度拥挤。费率 +0.15%/8h 意味着多头愿意付年化 ~164% 维持多头头寸——这种拥挤度不可持续，反转临近。逻辑链：</p>
+  <p>费率极高 → 多头过度杠杆 → 价格稍有下跌 → 多头被清算 → 强制卖出 → 价格继续跌 → 更多清算 → 反转</p>
+  <p>这是<strong>杠杆清算的正反馈</strong>，币圈独有（传统市场没有如此透明的杠杆/清算数据）。</p>
+</div>
+
+<div class="card">
+  <h3>构造</h3>
+  <p>信号 = 费率的 z-score（相对历史均值的标准化）：</p>
+  <div class="formula">
+    $$\text{sig}_t = -\frac{f_t - \mu_f}{\sigma_f}$$
+  </div>
+  <p>负号：费率极高（z 大正）→ 信号负 → 做空。费率极负 → 信号正 → 做多。只在 |z| 超过阈值（如 2）时开仓——常态费率无信号。</p>
+</div>
+
+<div class="danger">
+  <h3>⚠️ 陷阱</h3>
+  <p>费率极端可以<strong>持续很久</strong>——牛市里费率 0.1% 可以维持数周（多头一直在付钱且一直在赚，费率没回归）。过早反向开仓会被趋势打爆。<strong>必须配趋势过滤</strong>：只在动量信号也转负时才用费率反转信号。或等费率<strong>开始回落</strong>（二阶导转负）再进——确认反转已开始。</p>
+</div>
+
+<!-- ----- 3.2 链上活跃度 ----- -->
+<h3>3.2 链上活跃度因子 <span class="en">On-Chain Activity</span></h3>
+
+<div class="card">
+  <h3>核心指标与算法</h3>
+  <table>
+    <tr><th>指标</th><th>怎么算</th><th>信号</th></tr>
+    <tr><td>活跃地址数</td><td>当日发起/接收交易的去重地址数</td><td>上升→使用增加→基本面改善</td></tr>
+    <tr><td>新增地址</td><td>当日首次出现的地址数</td><td>加速→新用户涌入→可能顶部（散户 FOMO）</td></tr>
+    <tr><td>交易所净流入</td><td>流入交易所地址的币量 − 流出</td><td>大量流入→准备抛售→看跌</td></tr>
+    <tr><td>SOPR</td><td>Spent Output Profit Ratio = Σ(支出价值)/Σ(获取价值)</td><td>>1 持有者整体盈利，<1 亏损</td></tr>
+    <tr><td>MVRV</td><td>市值 / 已实现市值（按链上最后移动价计的总成本）</td><td>极高→顶部，极低→底部</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>MVRV 详解（最重要的链上指标之一）</h3>
+  <p><strong>已实现市值</strong>（Realized Cap）= 每个币按它<strong>最后一次链上移动时的价格</strong>计价，全网络求和。可理解为"全网持仓成本基础"。</p>
+  <div class="formula">
+    $$\text{MVRV} = \frac{\text{Market Cap}}{\text{Realized Cap}} = \frac{\text{当前价}}{\text{全网平均持仓成本}}$$
+  </div>
+  <p>MVRV = 2 → 当前价是全网平均成本的 2 倍 → 持有者整体浮盈 100% → 抛售压力大。MVRV < 1 → 整体亏损，抛售动力弱（亏着不卖）。</p>
+  <p>历史：BTC MVRV > 3.5 是顶部区域（2013、2017、2021 顶部都触过），< 1 是底部区域（2015、2018、2022 底部）。这是<strong>币圈少数有清晰历史阈值的指标</strong>。</p>
+</div>
+
+<div class="danger">
+  <h3>⚠️ 陷阱</h3>
+  <p>链上指标有<strong>滞后和噪声</strong>：地址可刷（交易所内部地址、刷量团队）、UTXO 模型 vs 账户模型算法不同、隐私链/二层网络活动看不到。且 MVRV 阈值<strong>每周期都在变</strong>——2017 顶部 MVRV 4，2021 顶部只到 3.5，市场在进化。不能机械套历史阈值。</p>
+</div>
+
+<!-- ----- 3.3 稳定币流量 ----- -->
+<h3>3.3 稳定币流量因子 <span class="en">Stablecoin Flows</span></h3>
+
+<div class="card">
+  <h3>机制</h3>
+  <p>稳定币（USDT/USDC）是币圈<strong>弹药</strong>。USDT 大量流入交易所 = 资金准备买币 = 看涨。流出 = 资金撤离 = 看跌。这个因子在牛市初期尤其有效——往往先有稳定币涌入，后有币价上涨（领先信号）。</p>
+  <p>构造：监测稳定币在交易所余额的变化率。余额周环比 +5% → 看涨信号。</p>
+</div>
+
+<div class="danger">
+  <h3>⚠️ 陷阱</h3>
+  <p>稳定币流入也可能是<strong>准备卖币换稳定币</strong>（不确定方向）。要区分：流入 + 后续 BTC 流出交易所（提到冷钱包）= 真买；流入 + BTC 留在交易所 = 可能要卖。需结合币的流向一起看。且稳定币本身有发行/赎回（USDT 增发）干扰——要剔除稳定币市值变化。</p>
+</div>
+
+<!-- ----- 3.4 清算带 ----- -->
+<h3>3.4 清算带 / 持仓结构因子 <span class="en">Liquidation Clusters</span></h3>
+
+<div class="card">
+  <h3>机制</h3>
+  <p>开放合约持仓量（OI）+ 杠杆分布 → 推算<strong>清算价格带</strong>。价格穿越某杠杆密集区时，触发连环清算 → 可预测的剧烈波动。</p>
+  <p>例：BTC 在 $60k，大量 10x 多单的清算价在 $54k。价格跌到 $54k → 这些多单被强平 → 强制卖出 → 价格跌到 $52k → 触发更多清算 → 雪崩。这是币圈"闪崩"的主因。</p>
+</div>
+
+<div class="card">
+  <h3>构造</h3>
+  <p>从交易所 API 拿 OI 分布（或用 Coinglass 等聚合数据），估算各杠杆档位的清算价。清算密度高的价格带 = <strong>磁吸区</strong>（价格倾向被吸过去触发清算）也是<strong>反弹区</strong>（清算完后卖压消失）。</p>
+  <p>信号：价格接近下方清算密集带 → 做空（赌清算雪崩）；清算已发生 → 做多（赌反弹）。</p>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 这是币圈独有的微观结构 alpha</h3>
+  <p style="margin-bottom:0;">传统市场没有如此透明的杠杆/清算数据。币圈交易所公开 OI、费率、有时清算数据。这个因子<strong>币圈特有、逻辑清晰、衰减较快</strong>（套利者也在用）。适合中高频，需实时数据。</p>
+</div>
+
+<!-- ----- 3.5 跨所价差 ----- -->
+<h3>3.5 跨交易所价差因子 <span class="en">Cross-Exchange Basis</span></h3>
+
+<div class="card">
+  <p>同一币在币安、Coinbase、Kraken 上价格短暂偏离。价差超过阈值 → 在贵的卖、便宜的买 → 等价差回归。这是<strong>极短尺度均值回归</strong>，半衰期秒-分钟。</p>
+  <p>陷阱：需要低延迟执行 + 跨所资金调拨 + 提币时间（链上确认）风险。散户难做（拼不过机构的延迟和费用），但理解它有助于理解流动性和滑点。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、币圈因子全景与适用性</h2>
+
+<table>
+  <tr><th>因子</th><th>类型</th><th>币圈有效性</th><th>衰减速度</th><th>数据源</th></tr>
+  <tr><td>时间序列动量</td><td>传统</td><td>★★★★★</td><td>慢</td><td>价格</td></tr>
+  <tr><td>资金费率套利（carry）</td><td>传统/币圈</td><td>★★★★★</td><td>中</td><td>永续合约</td></tr>
+  <tr><td>资金费率方向信号</td><td>币圈特有</td><td>★★★★</td><td>中</td><td>永续合约</td></tr>
+  <tr><td>链上活跃度/MVRV</td><td>币圈特有</td><td>★★★★</td><td>慢</td><td>链上</td></tr>
+  <tr><td>稳定币流量</td><td>币圈特有</td><td>★★★</td><td>中</td><td>交易所/链上</td></tr>
+  <tr><td>清算带</td><td>币圈特有</td><td>★★★</td><td>快</td><td>OI/杠杆</td></tr>
+  <tr><td>跨所价差</td><td>币圈特有</td><td>★★</td><td>极快</td><td>多交易所</td></tr>
+  <tr><td>价值（链上版）</td><td>传统</td><td>★★</td><td>慢</td><td>链上基本面</td></tr>
+  <tr><td>低波动</td><td>传统</td><td>★★（慎用）</td><td>慢</td><td>价格</td></tr>
+  <tr><td>质量（链上版）</td><td>传统</td><td>★★★</td><td>慢</td><td>链上/项目</td></tr>
+</table>
+
+<div class="insight">
+  <h3>⚡ 选因子的原则</h3>
+  <p style="margin-bottom:0;">对你（币圈、概念驱动、AI 写代码）：优先选<strong>逻辑清晰、衰减慢、数据可得</strong>的因子——动量、费率套利、费率方向信号、MVRV。这些有明确经济逻辑（不是数据挖掘），衰减慢（alpha 还在），且数据从 Glassnode/币安 API 容易拿。清算带和跨所价差虽有效但需低延迟基础设施，不适合现阶段。价值/低波动在币圈证据弱，慎用。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="connection">
+  <h3>🔗 与其他课的连接</h3>
+  <p><strong>前置</strong>：0010（动量/价值/Carry，本节是补充）、0003 肥尾（费率反转信号靠清算雪崩，是肥尾事件）、0008 回测（链上因子有前视风险——链上数据确认时间）。</p>
+  <p><strong>后续</strong>：0012 把这些因子组合成多因子策略，会用到本节的衰减速度和适用性排序。</p>
+</div>
+
+<div class="open-q">
+  <h3>❓ 开放问题</h3>
+  <ul>
+    <li>币圈因子模型的<strong>系统性识别</strong>——有没有币圈的"Fama-French"？学术界还在做，Liu-Tsyvinski (2021) 是早期尝试，发现市场+动量能解释大部分</li>
+    <li>链上因子的<strong>衰减速度</strong>——随着更多人用 Glassnode 等，链上 alpha 会不会快速消失？</li>
+    <li>清算带因子的<strong>容量</strong>——清算就那么多，能容纳多大资金？</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. BAB（Bet Against Beta）为什么有效？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">低 β 资产收益更高</span>
+    <span class="opt" data-answer="correct">杠杆约束迫使不能加杠杆的机构买高 β 资产推贵它，低 β 被冷落而便宜——未来低 β 跑赢</span>
+    <span class="opt" data-answer="wrong">低 β 没有风险</span>
+    <span class="opt" data-answer="wrong">CAPM 预测的</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 质量因子最核心的用途是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">单独做策略</span>
+    <span class="opt" data-answer="correct">和价值因子组合，过滤"便宜但烂"的价值陷阱</span>
+    <span class="opt" data-answer="wrong">替代动量</span>
+    <span class="opt" data-answer="wrong">替代低波动</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. MVRV = 2 意味着什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">市值是 2 倍</span>
+    <span class="opt" data-answer="correct">当前价是全网平均持仓成本的 2 倍，持有者整体浮盈 100%，抛售压力大</span>
+    <span class="opt" data-answer="wrong">要涨 2 倍</span>
+    <span class="opt" data-answer="wrong">无意义</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. 资金费率方向信号（极端费率反向开仓）的最大陷阱是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">费率不能算</span>
+    <span class="opt" data-answer="correct">费率极端可维持很久（牛市多头一直付钱一直赚），过早反向会被趋势打爆——需配趋势过滤</span>
+    <span class="opt" data-answer="wrong">费率总是均值回归</span>
+    <span class="opt" data-answer="wrong">费率信号无效</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="q">5. 清算带因子的信号逻辑是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">清算带无法预测</span>
+    <span class="opt" data-answer="correct">价格接近杠杆密集清算带→触发连环清算→可预测剧烈波动；清算后卖压消失→反弹</span>
+    <span class="opt" data-answer="wrong">清算带和价格无关</span>
+    <span class="opt" data-answer="wrong">只在牛市有效</span>
+  </div>
+  <p class="feedback" id="f5"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 传统因子</h3>
+  <p><strong>Frazzini & Pedersen — "Betting Against Beta" (2014, JFE)</strong>。BAB 奠基论文。<br>
+  <strong>Novy-Marx — "The Other Side of Value" (2013)</strong>。质量因子/毛利率。<br>
+  <strong>Asness, Frazzini & Pedersen — "Quality Minus Junk" (2019)</strong>。质量+价值组合。</p>
+</div>
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 币圈因子</h3>
+  <p><strong>Liu & Tsyvinski — "Risks and Returns of Cryptocurrency" (2021, RFS)</strong>。币圈因子模型早期尝试。<br>
+  <strong>Glassnode Academy</strong> (academy.glassnode.com) — MVRV、SOPR 等链上指标系统讲解。<br>
+  <strong>Messari Research</strong> — 币圈因子研究优质来源。</p>
+</div>
+
+<div class="reminder">
+  <strong>💬 有问题随时问。</strong> MVRV 怎么从链上数据算、费率信号怎么和动量组合、清算带数据从哪拿——任何一点都可以深挖。下节讲怎么把这些因子组合成完整策略，以及因子择时和衰减监控。
+</div>
+
+<div class="nav">
+  上一课：<a href="0010-factors-momentum-value-carry.html">0010 · 因子（上）</a> &nbsp;|&nbsp;
+  <a href="../index.html">↑ 返回目录</a><br>
+  下一课：<a href="0012-multifactor-combination.html">0012 · 多因子组合与因子择时</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

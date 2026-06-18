@@ -4,293 +4,230 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lesson 0002 · 收益与风险</title>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.7; color: #1a1a1a; background: #fdfdfb; max-width: 720px; margin: 0 auto; padding: 4rem 2rem 6rem; }
-  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
-  h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; }
-  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
-  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
-  p { margin-bottom: 1rem; }
-  strong { font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
-  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
-  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
-  tr:last-child td { border-bottom: none; }
-  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
-  .card h3 { margin-top: 0; }
-  .formula { text-align: center; font-size: 1.15rem; margin: 1.2rem 0; font-family: 'Inter', sans-serif; color: #333; }
-  .quiz { margin: 2rem 0; }
-  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
-  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
-  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
-  .quiz .opt:hover { background: #f0f0e8; }
-  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
-  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
-  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
-  .quiz .feedback.show { display: block; }
-  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
-  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
-  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
-  .primary-source h3 { margin-top: 0; }
-  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
-  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
-  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
-  .nav a { color: #5577aa; text-decoration: none; }
-  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
-  .en { color: #888; font-size: 0.85em; }
-  .danger { color: #c44; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Serif 4',Georgia,serif;font-size:18px;line-height:1.75;color:#1a1a1a;background:#fdfdfb;max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+  h1{font-size:2.2rem;font-weight:700;margin-bottom:.3rem;letter-spacing:-.02em}
+  h2{font-size:1.45rem;font-weight:600;margin:3rem 0 .8rem;color:#2c2c2c}
+  h3{font-size:1.1rem;font-weight:600;margin:1.8rem 0 .5rem;color:#333}
+  .meta{color:#888;font-size:.9rem;margin-bottom:2rem;font-family:'Inter',sans-serif}
+  p{margin-bottom:1rem} strong{font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.95rem}
+  th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid #e0e0d8}
+  th{font-weight:600;font-family:'Inter',sans-serif;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:#666}
+  tr:last-child td{border-bottom:none}
+  .card{background:#fafaf8;border:1px solid #e8e8e0;border-radius:6px;padding:1.5rem 1.8rem;margin:1.5rem 0}
+  .card h3{margin-top:0}
+  .insight{background:#fff8f0;border-left:3px solid #e08830;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .insight h3{margin-top:0;color:#8b5a20}
+  .retrieval{background:#f8f4ff;border:1px solid #d8d0e8;border-radius:6px;padding:1.2rem 1.5rem;margin:2rem 0}
+  .retrieval h3{margin-top:0;color:#5b4a8a}
+  .crypto-note{background:#f5f9ff;border-left:3px solid #4a90d9;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .crypto-note h3{margin-top:0;color:#2a5a9a}
+  .formula{text-align:center;font-size:1.05rem;margin:1.4rem 0}
+  .danger{background:#fff0f0;border-left:3px solid #c44;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .danger h3{margin-top:0;color:#a33}
+  .connection{background:#f0f8f8;border-left:3px solid #4a9a9a;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#345}
+  .connection h3{margin-top:0;color:#2a6a6a}
+  .open-q{background:#fafafa;border:1px dashed #bbb;border-radius:6px;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#555}
+  .open-q h3{margin-top:0;color:#666}
+  .quiz{margin:2rem 0} .quiz .q{font-weight:600;margin-bottom:.6rem}
+  .quiz .options{display:flex;flex-direction:column;gap:.4rem}
+  .quiz .opt{padding:.6rem 1rem;border:1px solid #d8d8d0;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;transition:background .15s}
+  .quiz .opt:hover{background:#f0f0e8}
+  .quiz .opt.correct{background:#e6f4ea;border-color:#4a9}
+  .quiz .opt.wrong{background:#fce8e8;border-color:#c44}
+  .quiz .feedback{margin-top:.8rem;font-size:.9rem;color:#555;display:none} .quiz .feedback.show{display:block}
+  .primary-source{background:#fffdf5;border-left:3px solid #e6c030;padding:1rem 1.5rem;margin:2.5rem 0 1.5rem;font-size:.95rem}
+  .primary-source h3{margin-top:0}
+  .nav{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #e0e0d8;font-family:'Inter',sans-serif;font-size:.85rem;color:#999}
+  .nav a{color:#5577aa;text-decoration:none}
+  .reminder{background:#f5f7fa;border:1px solid #dde;border-radius:6px;padding:1.2rem 1.5rem;margin:2.5rem 0;font-size:.9rem;color:#445}
+  .en{color:#888;font-size:.85em}
 </style>
 </head>
 <body>
 
 <h1>收益与风险</h1>
-<p class="meta">Lesson 0002 · 2026-06-15 · 预计 15 分钟</p>
+<p class="meta">Lesson 0002（重写·深度版）· 第一阶段 · 预计 40-50 分钟</p>
 
-<p>
-  昨天我们知道了市场上有什么、怎么交易。今天要学的是量化策略最基本的两个量：
-  <strong>你赚了多少？</strong>（收益）和 <strong>你冒了多大险？</strong>（风险）。
-  这是所有策略评估、比较和优化的共同语言。
-</p>
+<div class="retrieval"><h3>🔁 衔接</h3>
+<p>上一课讲了市场结构——你看到的是价格。但量化不直接建模价格，而是建模<strong>收益</strong>。为什么？价格是非平稳的（BTC 从 1 美元到 6 万美元，均值和方差随时间漂移），直接建模没有统计意义。收益是把价格转换成的、统计性质好得多的量。这节讲清：为什么用对数收益、波动率怎么年化、Sharpe 怎么算以及它的三个致命缺陷、最大回撤、币圈的无风险利率是什么。</p></div>
 
 <!-- ============================================================ -->
-<div class="retrieval">
-  <h3>🔁 回顾·上节课</h3>
-  <p style="margin-bottom:0.5rem;">在开始新内容之前，先激活上节课的记忆：</p>
-  <ol style="padding-left:1.2rem; margin-bottom:0;">
-    <li>IPO 发生在哪个市场？（一级 / 二级 / OTC）</li>
-    <li>你要在 CEX 上买入 BTC，最低的成交价对应买方还是卖方？（Bid / Ask）</li>
-    <li>OHLCV 中哪个价格被金融理论认为最接近"市场共识价"？</li>
-  </ol>
-  <p style="font-size:0.85rem; color:#888; margin:0.5rem 0 0;">答案在测验区。先回忆再对答案——回忆越费力，记得越牢。</p>
-</div>
+<h2>一、为什么不直接建模价格</h2>
+
+<p>价格序列 $P_0, P_1, \ldots, P_T$ 看起来是最直接的建模对象。但有几个根本问题：</p>
+<ul>
+  <li><strong>非平稳</strong>：BTC 2013 年均价 100，2024 年均价 6 万。整个序列的均值/方差没有意义——你算的"平均价 3 万"既不代表 2013 也不代表 2024。</li>
+  <li><strong>量纲依赖</strong>：股价 100 涨 1 块和股价 10 涨 1 块是完全不同的事件，但直接比价格变动会混为一谈。</li>
+  <li><strong>有下界无上界</strong>：价格 ≥ 0 但可以无限涨，分布严重右偏，正态假设彻底失效。</li>
+</ul>
+<p>收益解决了这些问题。最朴素的收益定义是<strong>简单收益</strong>：</p>
+<div class="formula">$$R_t = \frac{P_t - P_{t-1}}{P_{t-1}} = \frac{P_t}{P_{t-1}} - 1$$</div>
+<p>但量化几乎不用它，而用<strong>对数收益</strong>：</p>
+<div class="formula">$$r_t = \ln\frac{P_t}{P_{t-1}} = \ln P_t - \ln P_{t-1}$$</div>
 
 <!-- ============================================================ -->
-<h2>一、收益：你赚了多少</h2>
+<h2>二、对数收益——为什么它更好</h2>
 
-<p>
-  价格在变化，但价格本身没法直接比较。BTC 从 $60,000 涨到 $63,000 和 ETH 从 $1,800 涨到 $1,890——绝对涨了 $3,000 vs $90，但哪个涨得更多？<strong>收益率把价格变化标准化为百分比</strong>，让你可以在不同资产之间做公平比较。
-</p>
+<p>对数收益不是数学家的小癖好，它有三个简单收益没有的性质，每一个都直接关系到建模。</p>
 
-<h3>简单收益率</h3>
-<div class="formula">
-  R<sub>t</sub> = (P<sub>t</sub> − P<sub>t−1</sub>) / P<sub>t−1</sub>
-</div>
-<p>最简单的形式：本期价格比上期涨（或跌）了百分之几。</p>
+<div class="card"><h3>性质 1：可加性 <span class="en">Additivity</span></h3>
+<p>多期对数收益 = 单期之和：</p>
+<div class="formula">$$r_{0\to T} = \ln\frac{P_T}{P_0} = \ln\frac{P_1}{P_0} + \ln\frac{P_2}{P_1} + \cdots + \ln\frac{P_T}{P_{T-1}} = \sum_{t=1}^T r_t$$</div>
+<p>简单收益没有这个性质：$R_{0\to T} = \prod(1+R_t) - 1$，是乘法关系，多期收益不能直接相加。可加性意味着<strong>多期收益的分布是单期分布的卷积</strong>，CLT（中心极限定理）能直接用——这是"收益近似正态"的理论根基。</p></div>
 
+<div class="card"><h3>性质 2：对称性 <span class="en">Symmetry</span></h3>
+<p>涨 50% 和跌 50% 在简单收益下不对称：+50% 是 $R=0.5$，-50% 是 $R=-0.5$，看起来对称，但实际价格：100→150→75，<strong>涨 50% 再跌 50% 亏了 25%</strong>。对数收益下：$\ln 1.5 = 0.405$，$\ln 0.5 = -0.693$，明显看出跌的幅度更大——这才是真实情况。对数收益正确反映了"亏损比同等百分比的盈利破坏力更大"。</p></div>
+
+<div class="card"><h3>性质 3：正态性更合理</h3>
+<p>如果 $r_t$ 正态，则 $P_T = P_0 \cdot e^{\sum r_t}$ 是<strong>对数正态</strong>——自动 ≥ 0，解决了价格有下界的问题。且多期 $r_{0\to T} \sim N(\mu T, \sigma^2 T)$，方差随时间线性增长，标准差随 $\sqrt{T}$ 增长——这就是后面波动率年化的来源。</p></div>
+
+<div class="insight"><h3>⚡ 什么时候两者差不多</h3>
+<p style="margin-bottom:0;">当收益小（$|R| < 0.05$），$\ln(1+R) \approx R$，对数收益 ≈ 简单收益。日收益通常很小，所以日频下两者几乎一样。差异在<strong>大收益</strong>时显现——币圈单日 ±20% 很常见，这时必须用对数收益，简单收益会系统性高估涨、低估跌。</p></div>
+
+<!-- ============================================================ -->
+<h2>三、波动率与年化</h2>
+
+<p>波动率 = 收益的标准差：</p>
+<div class="formula">$$\sigma = \sqrt{\text{Var}(r_t)}$$</div>
+<p>但日波动率和年波动率是不同的量。由对数正态的方差可加性：$\text{Var}(r_{0\to T}) = \sigma_{\text{日}}^2 \cdot T$。所以年化波动率：</p>
+<div class="formula">$$\sigma_{\text{年}} = \sigma_{\text{日}} \cdot \sqrt{T}$$</div>
+<p>其中 $T$ 是一年的周期数：股票 252 个交易日、币圈 365 天（24/7）。</p>
+
+<div class="card"><h3>具体数字</h3>
+<p>BTC 日波动率约 3-4%。年化：$3.5\% \times \sqrt{365} \approx 67\%$。这就是"BTC 年化波动率 60-80%"的来源——不是直接观测的，是日波动率乘 $\sqrt{365}$ 推的。</p>
+<p>标普 500 日波动率约 1%，年化 $1\% \times \sqrt{252} \approx 16\%$。BTC 波动率是美股的 4-5 倍。</p></div>
+
+<div class="danger"><h3>⚠️ $\sqrt{T}$ 法则的假设</h3>
+<p style="margin-bottom:0;">$\sqrt{T}$ 年化假设收益<strong>独立同分布</strong>。但第三课会讲：金融收益有波动率聚集——高波动期后还是高波动，收益不独立。在聚集存在时，$\sqrt{T}$ 年化会<strong>低估</strong>长周期波动率。实务中短期（日内→周）用 $\sqrt{T}$ 没问题，长期（日→年）要警惕。更严谨的做法是直接用不同频率的收益算波动率，而不是从日频外推。</p></div>
+
+<!-- ============================================================ -->
+<h2>四、Sharpe 比率——风险调整收益</h2>
+
+<p>收益本身不能比——20% 收益配 50% 波动和 15% 收益配 10% 波动，后者好得多。Sharpe 把收益按波动率归一化：</p>
+<div class="formula">$$\text{Sharpe} = \frac{\mu - r_f}{\sigma}$$</div>
+<p>$\mu$ 是策略预期收益，$r_f$ 是无风险利率，$\sigma$ 是策略波动率。分子是<strong>超额收益</strong>（超过无脑放无风险资产的收益），分母是承担的风险。Sharpe = 每承担一单位风险换多少超额收益。</p>
+
+<div class="card"><h3>一个具体计算</h3>
+<p>策略 A：年化收益 20%，波动率 15%，$r_f = 4\%$。Sharpe $= (20-4)/15 = 1.07$。</p>
+<p>策略 B：年化收益 40%，波动率 40%。Sharpe $= (40-4)/40 = 0.9$。</p>
+<p>B 收益更高，但风险调整后<strong>不如 A</strong>。如果你能加杠杆，A 加 2.67 倍杠杆就得到 40% 收益、40% 波动——但收益是 $(20-4)\times 2.67 + 4 = 46.7\%$，超过 B。<strong>Sharpe 高的策略杠杆化后永远胜过 Sharpe 低的</strong>——这就是 Sharpe 是策略核心指标的原因。</p></div>
+
+<div class="danger"><h3>⚠️ Sharpe 的三个致命缺陷</h3>
+<ul>
+  <li><strong>假设正态</strong>：Sharpe 用 $\sigma$ 衡量风险，只对正态分布有意义。肥尾策略（如做空波动率、卖期权）平时低波动高 Sharpe，崩盘时一次性亏几年收益——Sharpe 看不出这个。这类策略叫"捡硬币在压路机前"，Sharpe 高但致命。</li>
+  <li><strong>对时间周期敏感</strong>：$\text{Sharpe}_{\text{年}} = \text{Sharpe}_{\text{日}} \times \sqrt{252}$。同一个策略日 Sharpe 0.1 看着差，年 Sharpe 1.59 看着好——是同一个东西。比较策略必须同频。</li>
+  <li><strong>不区分上下波动</strong>：$\sigma$ 把涨和跌都算风险。但涨是好的！只把下跌算风险的指标是 Sortino（分母用下行标准差）。对右偏策略 Sortino 更公平。</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2>五、最大回撤 <span class="en">Max Drawdown</span></h2>
+
+<p>Sharpe 看不出的"中间过程有多惨"，最大回撤看得出：</p>
+<div class="formula">$$\text{MDD} = \max_t \frac{V_t - \min_{s \geq t} V_s}{V_t}$$</div>
+<p>即从历史任一高点到之后最低点的最大跌幅。它衡量"持有这个策略最惨的时候亏多少"。</p>
+
+<div class="card"><h3>为什么 MDD 比 Sharpe 更影响实盘</h3>
+<p>一个 Sharpe 2.0 的策略如果 MDD 40%，绝大多数人扛不住——在亏 40% 时赎回/停手。实盘能拿住 = MDD 在心理承受范围内。机构通常要求 MDD < 15-20%。币圈策略 MDD 普遍 30-50%，这是币圈策略容量受限的原因之一。</p></div>
+
+<!-- ============================================================ -->
+<h2>六、币圈的无风险利率 $r_f$</h2>
+
+<div class="crypto-note"><h3>🔗 币圈的 $r_f$ 是什么</h3>
+<p>传统市场 $r_f$ = 国债利率（美国政府借钱，几乎无违约）。币圈没有"币圈国债"，但有功能等价物：</p>
+<ul>
+  <li><strong>稳定币活期理财</strong>：币安/Bybit 把 USDC/USDT 借出去赚 5-15% 年化。这是币圈的"无风险"基准——不持币、不承担方向风险就能拿的收益。</li>
+  <li><strong>资金费率套利</strong>（第十课）：现货+空永续对冲，赚费率。年化 10-30%，几乎无方向风险。这也可作为 $r_f$ 基准。</li>
+</ul>
+<p>所以币圈算 Sharpe 时 $r_f$ 不是 0，而是 5-15%（稳定币理财利率）。一个年化 20% 的币圈策略，扣掉 10% 的 $r_f$，超额收益只有 10%——没你想的那么好。<strong>币圈的高收益很多是承担了币圈特有的风险（交易所违约、智能合约风险）换来的</strong>，不是纯 alpha。</p></div>
+
+<!-- ============================================================ -->
+<h2>七、把概念串起来——一个策略评估的完整例子</h2>
+
+<div class="card"><h3>策略对比</h3>
 <table>
-  <tr><th>日期</th><th>BTC 价格</th><th>简单收益率</th></tr>
-  <tr><td>周一</td><td>$62,000</td><td>—</td></tr>
-  <tr><td>周二</td><td>$65,100</td><td>+5.0%</td></tr>
-  <tr><td>周三</td><td>$61,845</td><td>−5.0%</td></tr>
-  <tr><td>周四</td><td>$64,937</td><td>+5.0%</td></tr>
+<tr><th>指标</th><th>策略 A（BTC 动量）</th><th>策略 B（做空波动率）</th></tr>
+<tr><td>年化收益</td><td>35%</td><td>25%</td></tr>
+<tr><td>年化波动</td><td>50%</td><td>8%</td></tr>
+<tr><td>Sharpe</td><td>$(35-10)/50 = 0.5$</td><td>$(25-10)/8 = 1.875$</td></tr>
+<tr><td>最大回撤</td><td>40%</td><td>15%（历史）</td></tr>
+<tr><td>尾部</td><td>肥尾但已含在波动里</td><td>极肥尾——崩盘时 -50%+</td></tr>
 </table>
-
-<p>
-  注意一个细节：先涨 5% 再跌 5%，你不会回到原点——$62,000 × 1.05 × 0.95 = <strong>$61,845</strong>，比起点少了 $155。这个不对称性在量化建模中很重要。
-</p>
-
-<h3>对数收益率</h3>
-<div class="formula">
-  r<sub>t</sub> = ln(P<sub>t</sub> / P<sub>t−1</sub>) = ln(P<sub>t</sub>) − ln(P<sub>t−1</sub>)
-</div>
-
-<p>量化中更常用<strong>对数收益率</strong>（log return）。为什么？三个原因：</p>
-
-<div class="card">
-  <ol>
-    <li style="margin-bottom:0.5rem;"><strong>可加性</strong>——简单收益率乘起来麻烦，对数收益率直接相加。周一+周二的总收益 = r<sub>周一</sub> + r<sub>周二</sub></li>
-    <li style="margin-bottom:0.5rem;"><strong>对称性</strong>——涨 5% 再跌 5%，在 log return 世界里正好抵消：ln(1.05) + ln(0.95) = −0.00125（几乎为零）</li>
-    <li><strong>正态性假设</strong>——很多金融模型（Black-Scholes 期权定价等）假设收益率服从正态分布，log return 比 simple return 更接近这个假设</li>
-  </ol>
-</div>
-
-<p>
-  在实际应用中，小幅度变化时两者几乎一样（±4% 以内差异 < 0.1%）。量化分析中默认用 log return，除非有特殊理由。
-</p>
+<p>只看 Sharpe，B 完胜。但 B 是"捡硬币在压路机前"——平时稳赚小钱，崩盘时一次性爆。2018 "Volmageddon"、2020 3 月做空波动率基金一周亏掉几年收益。A 的 Sharpe 低但风险透明。<strong>选哪个取决于你的尾部承受能力和对崩盘时机的判断</strong>。这就是为什么不能只看 Sharpe。</p></div>
 
 <!-- ============================================================ -->
-<h2>二、风险：你冒了多大险</h2>
+<div class="connection"><h3>🔗 与其他课的连接</h3>
+<p><strong>前置</strong>：0001 OHLCV（用 Close 算收益）。</p>
+<p><strong>后续</strong>：0003 肥尾——Sharpe 失效的根源；0004 时间序列——收益的自相关结构；0007 组合——多资产 Sharpe 怎么算；0008 回测——Sharpe 在回测里的偏差（过拟合拉高 Sharpe）；0010 动量——A 策略的具体化。</p></div>
 
-<p>收益告诉你赚了多少。但两个策略可能赚得一样多，风险却天差地别——这才是量化选策略的关键。</p>
-
-<h3>波动率：风险的第一定义</h3>
-<div class="formula">
-  σ = std(r<sub>1</sub>, r<sub>2</sub>, …, r<sub>n</sub>)
-</div>
-<p>
-  <strong>波动率 = 收益率的标准差。</strong> 这是金融中对"风险"最基础的量化定义：收益率波动越大，不确定性越大。
-</p>
-
-<div class="card">
-  <h3>为什么用标准差衡量风险？</h3>
-  <p>假设你有两个策略，过去 100 天的日收益均值都是 +0.1%：</p>
-  <table>
-    <tr><th>策略</th><th>日收益范围</th><th>年化波动率</th><th>直觉</th></tr>
-    <tr><td>A</td><td>−0.5% ~ +0.7%</td><td>~10%</td><td>稳，像债券</td></tr>
-    <tr><td>B</td><td>−5% ~ +5%</td><td>~60%</td><td>猛，像山寨币</td></tr>
-  </table>
-  <p style="margin-bottom:0;">同样的平均回报，A 让你睡得着，B 让你失眠。波动率量化了这个差异。</p>
-</div>
-
-<h3>年化波动率</h3>
-<p>日收益率的标准差 × √365（币圈用 365，因为 24/7 交易；股票用 √252 个交易日）。</p>
-
-<div class="crypto-note">
-  <h3>🔗 币圈对照</h3>
-  <table>
-    <tr><th>资产</th><th>年化波动率（约）</th></tr>
-    <tr><td>标普 500</td><td>15–20%</td></tr>
-    <tr><td>黄金</td><td>15–18%</td></tr>
-    <tr><td>BTC</td><td>50–80%</td></tr>
-    <tr><td>ETH</td><td>70–100%</td></tr>
-    <tr><td>山寨币</td><td>100–200%+</td></tr>
-  </table>
-  <p style="margin-bottom:0;">币圈的风险是传统资产的 3–10 倍。这意味着同样的收益率数字背后，币圈策略承担了高得多的风险。在币圈做量化，波动率管理是第一优先级。</p>
-</div>
-
-<!-- ============================================================ -->
-<h2>三、收益与风险的统一：夏普比率</h2>
-
-<p>如果只看收益，高杠杆的山寨币策略可能年化 +200%，但这忽略了你可能一夜归零的风险。<strong>夏普比率把收益和风险放在一起比较。</strong></p>
-
-<div class="formula">
-  Sharpe = (R<sub>策略</sub> − R<sub>无风险</sub>) / σ<sub>策略</sub>
-</div>
-
-<p>
-  <strong>分子</strong>：你比无风险利率多赚了多少（超额收益）<br>
-  <strong>分母</strong>：你为此冒了多大波动<br>
-  <strong>含义</strong>：每承担一单位风险，你获得多少超额回报
-</p>
-
-<div class="card">
-  <h3>直觉例子</h3>
-  <table>
-    <tr><th>策略</th><th>年化收益</th><th>年化波动</th><th>无风险利率</th><th>夏普比率</th></tr>
-    <tr><td>X</td><td>+30%</td><td>60%</td><td>5%</td><td>0.42</td></tr>
-    <tr><td>Y</td><td>+15%</td><td>12%</td><td>5%</td><td>0.83</td></tr>
-  </table>
-  <p style="margin-bottom:0;">
-    X 赚得多，但每冒 1% 的波动才赚 0.42% 的超额收益。<br>
-    Y 赚得少，但稳——夏普几乎是 X 的两倍。<strong>Y 是更好的策略。</strong>
-  </p>
-</div>
-
-<p>夏普比率 > 1 算不错，> 2 算优秀，> 3 几乎没人能持续做到。现实中很多币圈策略夏普 < 1。</p>
-
-<div class="crypto-note">
-  <h3>🔗 币圈的无风险利率</h3>
-  <p style="margin-bottom:0;">传统金融用国债利率（~5%）。币圈常用稳定币借贷利率（如 Aave 上 USDC 存款利率，~5–15% 不等）。但币圈的无风险利率本身波动大，不是真正的"无风险"——这是算币圈夏普时的一个常见争议。</p>
-</div>
-
-<!-- ============================================================ -->
-<h2>四、另一个重要的风险视角：最大回撤</h2>
-
-<p>波动率衡量的是"颠簸"，但很多交易者更关心另一个问题：<strong>最惨的时候，我从顶到底亏了多少？</strong></p>
-
-<div class="formula">
-  Max Drawdown = (峰顶 − 谷底) / 峰顶
-</div>
-
-<p>
-  如果你的净值从 $100,000 涨到 $150,000，然后跌到 $90,000——<br>
-  最大回撤 = (150,000 − 90,000) / 150,000 = <strong>40%</strong>。
-</p>
-
-<p>最大回撤直接对应一个心理事实：<strong>你能承受多大的账户缩水而不割肉离场？</strong>很多策略历史夏普很好，但最大回撤 60%——真人根本拿不住。</p>
+<div class="open-q"><h3>❓ 开放问题</h3>
+<ul>
+<li>币圈 $r_f$ 到底用稳定币理财还是费率套利？两者利率不同，且都有违约风险，不真"无风险"。</li>
+<li>有没有比 Sharpe 更好的单一指标？Calmar（收益/MDD）、Sortino 都有缺陷，业内没共识。</li>
+<li>对数收益在极端事件（归零）时 $\ln 0 = -\infty$——怎么处理？实务截断或用简单收益。</li>
+</ul></div>
 
 <!-- ============================================================ -->
 <h2>测验</h2>
+<div class="quiz" id="q1"><p class="q">1. 为什么量化用对数收益而不是简单收益？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">算起来简单</span>
+<span class="opt" data-answer="correct">可加（多期=单期之和，CLT 可用）、对称（正确反映亏损破坏力更大）、正态性合理（价格自动对数正态 ≥0）</span>
+<span class="opt" data-answer="wrong">简单收益是错的</span>
+<span class="opt" data-answer="wrong">监管要求</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q1">
-  <p class="q">1. 量化分析中默认使用对数收益率的一个核心原因是？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">计算更简单，不需要除法</span>
-    <span class="opt" data-answer="correct">多期收益率可以直接相加，且更接近正态分布</span>
-    <span class="opt" data-answer="wrong">数值总是比简单收益率大</span>
-    <span class="opt" data-answer="wrong">交易所规定的标准格式</span>
-  </div>
-  <p class="feedback" id="f1"></p>
-</div>
+<div class="quiz" id="q2"><p class="q">2. BTC 日波动率 3.5%，年化波动率约？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">3.5% × 365 = 1277%</span>
+<span class="opt" data-answer="correct">3.5% × √365 ≈ 67%（标准差随 √T 增长）</span>
+<span class="opt" data-answer="wrong">3.5%</span>
+<span class="opt" data-answer="wrong">3.5% × 365²</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q2">
-  <p class="q">2. 策略 A 年化收益 +20%，年化波动 15%；策略 B 年化收益 +50%，年化波动 60%。无风险利率 5%。哪个策略的夏普比率更高？</p>
-  <div class="options">
-    <span class="opt" data-answer="correct">策略 A（夏普 = 1.0）</span>
-    <span class="opt" data-answer="wrong">策略 B（夏普 = 0.75）</span>
-    <span class="opt" data-answer="wrong">两个一样</span>
-    <span class="opt" data-answer="wrong">夏普不考虑无风险利率</span>
-  </div>
-  <p class="feedback" id="f2"></p>
-</div>
+<div class="quiz" id="q3"><p class="q">3. Sharpe = 2 的策略一定比 Sharpe = 0.5 的好吗？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">是，Sharpe 越高风险调整收益越高</span>
+<span class="opt" data-answer="correct">不一定——Sharpe 假设正态，肥尾策略（做空波动率/卖期权）Sharpe 高但崩盘时致命，要看 MDD 和尾部</span>
+<span class="opt" data-answer="wrong">Sharpe 无意义</span>
+<span class="opt" data-answer="wrong">必须看收益</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q3">
-  <p class="q">3. （回顾·上节课）你要在 CEX 上<strong>立即卖出</strong> BTC，成交价对应什么？</p>
-  <div class="options">
-    <span class="opt" data-answer="correct">Bid——买方愿意支付的最高价</span>
-    <span class="opt" data-answer="wrong">Ask——卖方愿意接受的最低价</span>
-    <span class="opt" data-answer="wrong">Last Price——最近成交价</span>
-    <span class="opt" data-answer="wrong">Spread 的中点</span>
-  </div>
-  <p class="feedback" id="f3"></p>
-</div>
+<div class="quiz" id="q4"><p class="q">4. 币圈算 Sharpe 时无风险利率 $r_f$ 应该用什么？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">0，币圈没有无风险</span>
+<span class="opt" data-answer="correct">稳定币理财/费率套利利率（5-15%）——不承担方向风险就能拿的收益</span>
+<span class="opt" data-answer="wrong">美国国债利率</span>
+<span class="opt" data-answer="wrong">BTC 涨幅</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q4">
-  <p class="q">4. 你的净值从 $100K 涨到 $200K，再跌到 $80K。最大回撤是多少？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">20%</span>
-    <span class="opt" data-answer="wrong">50%</span>
-    <span class="opt" data-answer="correct">60%</span>
-    <span class="opt" data-answer="wrong">80%</span>
-  </div>
-  <p class="feedback" id="f4"></p>
-</div>
+<div class="quiz" id="q5"><p class="q">5. 涨 50% 再跌 50%，最终？为什么简单收益误导？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">回到原点，+50% 和 -50% 对称</span>
+<span class="opt" data-answer="correct">亏 25%——对数收益下 ln1.5+ln0.5=ln0.75<0，正确反映跌的破坏力更大</span>
+<span class="opt" data-answer="wrong">赚 25%</span>
+<span class="opt" data-answer="wrong">无法计算</span>
+</div><p class="feedback"></p></div>
 
 <!-- ============================================================ -->
 <h2>主要参考资料</h2>
-<div class="primary-source">
-  <h3>📖 推荐阅读</h3>
-  <p><strong>Bodie, Kane & Marcus —《投资学》(Investments)</strong>，第 5 章（Risk, Return, and the Historical Record）。</p>
-  <p>这一章详细讲了如何从历史数据中提取收益率和波动率的估计值，以及不同资产类别的历史风险收益特征。本章的图表比任何文字都更有说服力。</p>
-</div>
+<div class="primary-source"><h3>📖 教材</h3>
+<p><strong>Campbell, Lo & MacKinlay —《金融市场的计量经济学》</strong>第 1-2 章。收益定义、可加性、分布性质的严格处理。<br>
+<strong>Bodie, Kane & Marcus —《投资学》</strong>第 5 章。Sharpe、风险调整收益的入门标准讲法。</p></div>
+<div class="primary-source" style="margin-top:.5rem;"><h3>📖 实务</h3>
+<p><strong>Bailey & López de Prado — "The Sharpe Ratio Efficient Frontier" (2012)</strong>。Sharpe 的统计性质和误用警示。</p></div>
 
-<!-- ============================================================ -->
-<div class="reminder">
-  <strong>💬 有疑问随时问。</strong> 对数收益率的直觉、夏普比率的计算、最大回撤和波动率的区别——任何一点不清楚都可以深挖。这些概念会在后续每一节课中反复出现，现在建立清晰直觉非常重要。
-</div>
+<div class="reminder"><strong>💬 有问题随时问。</strong> 对数收益的推导、$\sqrt{T}$ 年化什么时候失效、Sharpe 在你的策略上怎么算——任何一点都可以深挖。下一课讲金融数据最根本的"恶劣性质"：肥尾、波动率聚集、相关性崩溃。</div>
 
-<div class="nav">
-  上一课：<a href="0001-financial-markets-basics.html">0001 · 金融市场基础</a><br>
-  下一课预告：<a href="#">0003 · 金融数据的本性——肥尾、波动率聚集与相关性</a><br>
-  参考资料：<a href="../reference/glossary.html">金融术语表（已更新）</a>
-</div>
+<div class="nav">上一课：<a href="0001-financial-markets-basics.html">0001 · 金融市场基础</a> &nbsp;|&nbsp; <a href="../index.html">↑ 返回目录</a><br>下一课：<a href="0003-nature-of-financial-data.html">0003 · 金融数据的本质</a></div>
 
 <script>
-document.querySelectorAll('.quiz').forEach(quiz => {
-  quiz.querySelectorAll('.opt').forEach(opt => {
-    opt.addEventListener('click', function() {
-      const feedback = this.parentElement.nextElementSibling;
-      this.parentElement.querySelectorAll('.opt').forEach(o => {
-        o.classList.remove('correct', 'wrong');
-        o.style.pointerEvents = 'none';
-      });
-      if (this.dataset.answer === 'correct') {
-        this.classList.add('correct');
-        feedback.textContent = '✓ 正确。';
-        feedback.className = 'feedback show';
-      } else {
-        this.classList.add('wrong');
-        const correct = this.parentElement.querySelector('[data-answer="correct"]');
-        correct.classList.add('correct');
-        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
-        feedback.className = 'feedback show';
-      }
-    });
-  });
-});
+document.querySelectorAll('.quiz').forEach(q=>{q.querySelectorAll('.opt').forEach(o=>{o.addEventListener('click',function(){const f=this.parentElement.nextElementSibling;this.parentElement.querySelectorAll('.opt').forEach(x=>{x.classList.remove('correct','wrong');x.style.pointerEvents='none'});if(this.dataset.answer==='correct'){this.classList.add('correct');f.textContent='✓ 正确。';f.className='feedback show'}else{this.classList.add('wrong');this.parentElement.querySelector('[data-answer="correct"]').classList.add('correct');f.textContent='✗ 不对。绿色高亮的是正确答案。';f.className='feedback show'}})})});
 </script>
-
 </body>
 </html>

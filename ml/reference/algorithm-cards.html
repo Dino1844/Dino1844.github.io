@@ -141,11 +141,11 @@ window.MathJax = {
 <body>
 
 <header>
-  <h1>📇 算法知识卡片</h1>
-  <div class="subtitle">聚焦数学本质，而非工程细节。每张卡片回答一个问题：「这个算法在数学上到底在做什么？」</div>
+  <h1>📇 参考手册 · 算法卡片与术语</h1>
+  <div class="subtitle">算法卡片聚焦数学本质 · 基础术语提供快速查阅 · 合起来是一本迷你 ML 参考手册</div>
   <div class="nav">
-    <a href="../lessons/0000-the-mathematical-landscape.html">← Lesson 0000 · 地貌</a>
-    <a href="../lessons/0001-the-score-function.html">Lesson 0001</a>
+    <a href="../index.html">← 学习路径 · 地貌</a>
+    <a href="../lessons/0001-probabilistic-linear-regression.html">Lesson 0001</a>
     <a href="../MISSION.md">🎯 Mission</a>
   </div>
 </header>
@@ -498,14 +498,125 @@ window.MathJax = {
   </div>
 </div>
 
+
+<!-- ================================================================== -->
+<!-- GLOSSARY / 基础术语                                                   -->
+<!-- ================================================================== -->
+<h2 style="margin-top:3rem;">📖 基础术语</h2>
+<p style="margin-bottom:1.5rem;">以下术语在所有课程中保持一致的用法。每组卡片展示概念之间的逻辑链——它们不是孤立的定义，而是一条推导链上的不同环节。</p>
+
+<!-- CARD 1: 概率推断链 -->
+<div class="card" id="term-inference-chain">
+  <div class="card-header">
+    <span class="card-tag tag-VAE">概率推断</span>
+    <h2>从似然到后验：概率推断的五环链</h2>
+  </div>
+
+  <div class="card-essence">
+    <strong>似然</strong> $p(\mathcal{D}|\theta)$（参数的函数，不是数据的函数）
+    → <strong>MLE</strong> $\hat\theta=\arg\max p(\mathcal{D}|\theta)$（频率派：参数是固定未知量，挑让数据概率最大的那个）
+    → <strong>先验</strong> $p(\theta)$（在看数据前对参数的信念，高斯先验→L2正则，拉普拉斯先验→L1稀疏）
+    → <strong>后验</strong> $p(\theta|\mathcal{D})\propto p(\mathcal{D}|\theta)p(\theta)$（贝叶斯：参数是随机变量，更新后的信念）
+    → <strong>MAP</strong> $\hat\theta=\arg\max p(\theta|\mathcal{D})$（贝叶斯派的"点估计"，比MLE多了正则化，但丢掉了后验的形状——不表达不确定性）
+  </div>
+
+  <div class="card-section">
+    <h4>核心区分</h4>
+    <table style="font-size:0.82rem;">
+      <tr><th></th><th>频率派 (MLE)</th><th>贝叶斯派 (后验/MAP)</th></tr>
+      <tr><td>参数 $\theta$</td><td>固定未知量</td><td>随机变量，有分布</td></tr>
+      <tr><td>输出</td><td>点估计</td><td>后验分布 (MAP 退化到点)</td></tr>
+      <tr><td>不确定性</td><td>仅来自采样 (置信区间)</td><td>采样 + 先验信念 (可信区间)</td></tr>
+    </table>
+  </div>
+
+  <div class="card-connections">
+    <span class="conn-badge">→ 0001 §2: MLE 完整推导</span>
+    <span class="conn-badge">→ 0002 §2-§4: 先验→后验→MAP</span>
+    <span class="conn-badge">→ 0015: VI 近似后验</span>
+  </div>
+</div>
+
+<!-- CARD 2: 损失与正则化 -->
+<div class="card" id="term-loss-reg">
+  <div class="card-header">
+    <span class="card-tag tag-EBM">损失与正则化</span>
+    <h2>损失函数、MSE 与正则化：噪声假设的影子</h2>
+  </div>
+
+  <div class="card-essence">
+    <strong>损失函数是噪声假设的影子。</strong>高斯噪声 → 平方损失 (MSE/RSS)；拉普拉斯噪声 → L1 损失；Bernoulli → 交叉熵。这不是设计偏好——<strong>换噪声分布，损失自动跟着换</strong>。
+  </div>
+
+  <div class="card-section">
+    <h4>噪声 ↔ 损失 ↔ 正则化 对应表</h4>
+    <table style="font-size:0.82rem;">
+      <tr><th>噪声假设</th><th>MLE 损失</th><th>MAP 正则化</th></tr>
+      <tr><td>高斯 $\mathcal{N}(0,\sigma^2)$</td><td>MSE = $\frac1N\sum(y-\hat{y})^2$</td><td>L2 (Ridge)</td></tr>
+      <tr><td>拉普拉斯</td><td>MAE = $\frac1N\sum|y-\hat{y}|$</td><td>L1 (Lasso, 稀疏)</td></tr>
+      <tr><td>Bernoulli</td><td>交叉熵 $-\sum y\log\hat{y}$</td><td>—</td></tr>
+    </table>
+  </div>
+
+  <div class="card-section">
+    <h4>正则化 = 先验的对数</h4>
+    <p>在损失里加 $\lambda\|\mathbf{w}\|^2$ 不是外加的"技巧"——它等价于假设 $\mathbf{w}$ 服从高斯先验，然后做 MAP。正则化强度 $\lambda$ = 先验精度 $\alpha$。L1 正则产生稀疏解——因为 L1 球的角点与损失等高线相切时，某些系数恰好为零。</p>
+  </div>
+
+  <div class="card-connections">
+    <span class="conn-badge">→ 0001 §2: 损失是噪声的影子</span>
+    <span class="conn-badge">→ 0001 §7: MAP = 正则化</span>
+    <span class="conn-badge">→ 0002 §4: 贝叶斯视角</span>
+    <span class="conn-badge">→ 0008: hinge loss</span>
+    <span class="conn-badge">→ 0012: MSE = 偏差²+方差+噪声</span>
+  </div>
+</div>
+
+<!-- CARD 3: 模型分类 -->
+<div class="card" id="term-model-types">
+  <div class="card-header">
+    <span class="card-tag tag-Flow">模型分类</span>
+    <h2>判别/生成 · 参数/非参数：两种正交的分类维度</h2>
+  </div>
+
+  <div class="card-section">
+    <h4>按"建什么模"分：判别 vs 生成</h4>
+    <table style="font-size:0.82rem;">
+      <tr><th></th><th>判别模型</th><th>生成模型</th></tr>
+      <tr><td>建模目标</td><td>$p(y|\mathbf{x})$ 或决策边界</td><td>$p(\mathbf{x},y)$ 或 $p(\mathbf{x})$</td></tr>
+      <tr><td>核心问题</td><td>优化（损失曲面、泛化）</td><td>归一化（配分函数 $Z$、高维积分）</td></tr>
+      <tr><td>典型代表</td><td>逻辑回归、SVM、NN</td><td>朴素贝叶斯、LDA、GMM、GAN、VAE</td></tr>
+      <tr><td>优势</td><td>参数少、训练简单</td><td>可生成新数据、处理缺失值</td></tr>
+    </table>
+  </div>
+
+  <div class="card-section">
+    <h4>按"参数量"分：参数 vs 非参数</h4>
+    <table style="font-size:0.82rem;">
+      <tr><th></th><th>参数模型</th><th>非参数模型</th></tr>
+      <tr><td>参数数量</td><td>固定（与数据量无关）</td><td>随数据量增长</td></tr>
+      <tr><td>典型代表</td><td>线性回归、逻辑回归、NN</td><td>k-NN、核方法、高斯过程</td></tr>
+      <tr><td>注意</td><td colspan="2">"非参数"不是没有参数——是参数数量不固定，模型复杂度自适应数据规模。</td></tr>
+    </table>
+  </div>
+
+  <div class="card-connections">
+    <span class="conn-badge">→ 0005: LDA vs 逻辑回归对照</span>
+    <span class="conn-badge">→ 0006: 核方法 (非参数)</span>
+    <span class="conn-badge">→ 0018: 生成模型统一 (score)</span>
+    <span class="conn-badge">→ 算法卡片: GAN/VAE/Flow/Diffusion 都是生成模型</span>
+  </div>
+</div>
+
+
 <!-- ====== Footer ====== -->
 <footer>
   <p>
     这些卡片会随课程进展持续更新。每个算法只记录其<strong>数学本质</strong>和<strong>与其他算法的关系</strong>——工程细节（网络结构、训练技巧、超参调优）不在此处展开。
   </p>
   <p style="margin-top: 0.5rem;">
-    <a href="../lessons/0001-the-score-function.html">L0001 · Score</a> &emsp;
-    <a href="../lessons/0002-information-geometry.html">L0002 · 信息几何</a> &emsp;
+    <a href="../lessons/0018-score-function.html">0018 · Score</a> &emsp;
+    <a href="../lessons/0019-information-geometry.html">0019 · 信息几何</a> &emsp;
     <a href="math-primer.html">📐 数学手册</a> &emsp;
     <a href="empirical-evidence.html">🔬 实证证据</a> &emsp;
     <a href="../MISSION.md">🎯 Mission</a>

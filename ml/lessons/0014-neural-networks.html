@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0014 · 神经网络：反传、梯度下降、与 GLM 的关系</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .quiz { margin: 2rem 0; }
+  .quiz-question { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin-bottom: 1rem; transition: border-color 0.2s; }
+  .quiz-question.correct { border-color: var(--correct); background: #f0faf5; }
+  .quiz-question.incorrect { border-color: var(--incorrect); background: #fff5f5; }
+  .quiz-question h4 { font-size: 1rem; margin-bottom: 0.8rem; color: #1a1a1a; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.45rem; }
+  .quiz-option { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.5rem 0.7rem; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: background 0.12s; }
+  .quiz-option:hover { background: var(--light-accent); }
+  .quiz-option input { margin-top: 0.25rem; }
+  .quiz-option label { cursor: pointer; flex: 1; }
+  .quiz-feedback { font-size: 0.9rem; margin-top: 0.7rem; padding: 0.6rem 0.8rem; border-radius: 5px; display: none; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb { background: #d8f3dc; color: var(--correct); }
+  .quiz-feedback.incorrect-fb { background: #ffd7d7; color: var(--incorrect); }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0014 · 神经网络：反传、梯度下降、与 GLM 的关系</h1>
+<div class="subtitle">从 GLM 的递归复合到反向传播的链式法则，从万能近似到 Adam——一个统一的故事 · 阅读时间 ~55 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. GLM 递归复合推出多层网络</a><br>
+  <a href="#s2">2. 万能近似定理：为什么"深"比"宽"好</a><br>
+  <a href="#s3">3. 前向传播：逐层计算</a><br>
+  <a href="#s4">4. 反向传播：链式法则的动态规划</a><br>
+  <a href="#s5">5. 反传是自动微分的本质</a><br>
+  <a href="#s6">6. 损失与输出层：由输出分布决定</a><br>
+  <a href="#s7">7. 正则化：权重衰减、dropout、早停</a><br>
+  <a href="#s8">8. 梯度下降变体：动量、Adam、学习率与曲率</a><br>
+  <a href="#s9">9. 推导与演算</a><br>
+  <a href="#s10">10. 自测</a>
+</div>
+
+<p>
+  前八课我们从概率视角走通了线性回归、贝叶斯方法、逻辑回归、核方法。
+  在基石 0001 的 GLM 推广 的结尾，我们看到了一个关键的推广：<strong>GLM 是单层网络，多层网络是 GLM 的递归复合</strong>。
+  本课就从这里展开，把"堆叠"这件事讲透——前向传播、反向传播、梯度下降、正则化，
+  以及为什么"链式法则 + 动态规划"这个范式构成了整个深度学习的计算引擎。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <ol>
+    <li>GLM 的三个假设是什么？指数族分布、线性自然参数、预测期望——回接基石 0001 的 GLM 推广。</li>
+    <li>逻辑回归的梯度 $\nabla J = \sum (\sigma(\mathbf{w}^\top\mathbf{x}) - y)\mathbf{x}$ 是怎么推出来的？回接 0004 §3。</li>
+    <li>链式法则：若 $y = f(g(x))$，$\frac{dy}{dx} = ?$</li>
+    <li>什么是 MAP 估计？L2 正则化对应什么先验？回接 0002 §4。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. GLM 递归复合推出多层网络</h2>
+
+<p>
+  回顾基石 0001 的 GLM 推广 的结论。一个 GLM 由三部分组成：
+</p>
+<ul>
+  <li>输出服从指数族分布 $y \sim \text{ExponentialFamily}(\eta)$；</li>
+  <li>自然参数与输入线性：$\eta = \mathbf{w}^\top\mathbf{x}$；</li>
+  <li>预测输出分布的期望：$\hat{y} = \mathbb{E}[y\mid\mathbf{x}] = \sigma(\eta)$，其中 $\sigma$ 是"响应函数"（sigmoid、恒等、指数……）。</li>
+</ul>
+
+<p>
+  写成计算形式：$\hat{y} = \sigma(\mathbf{w}^\top\mathbf{x} + b)$——单层网络。
+  现在的问题是：<strong>如果一层不够用呢？</strong>
+</p>
+
+<p>
+  答案很直接：把上一层的输出 $\hat{y}$ 当作下一层的输入。
+  记第 $k$ 层的输出为 $\mathbf{a}_k$，则：
+</p>
+
+<div class="formula-block">
+  $$\mathbf{a}_{k+1} = \sigma_k(\mathbf{W}_k \mathbf{a}_k + \mathbf{b}_k)$$
+</div>
+
+<p>
+  其中 $\mathbf{W}_k$ 是权重矩阵，$\mathbf{b}_k$ 是偏置向量，$\sigma_k$ 是<strong>激活函数</strong>。
+  整个网络就是 $K$ 个 GLM 的复合：$f(\mathbf{x}) = f^{K-1} \circ f^{K-2} \circ \cdots \circ f^0(\mathbf{x})$。
+</p>
+
+<div class="insight">
+  <strong>多层神经网络 = GLM 的递归复合。</strong>
+  每一层都是一个"对参数线性、对输入可能非线性、带某种噪声假设"的模型。
+  堆叠让每一层学到更高层次的抽象——第一层学边缘，第二层学形状，第三层学物体。
+  这个"层次化抽象"是深度网络优于浅层网络的核心原因。
+</div>
+
+<p>
+  注意一个关键区别：输出层的激活函数由<strong>输出分布</strong>决定（回接基石 0001 的 GLM 推广 GLM 框架），
+  而<strong>隐藏层</strong>的激活函数是<strong>设计选择</strong>——ReLU、tanh、sigmoid 等。
+  输出层不能随便选（回归用恒等，二分类用 sigmoid，多分类用 softmax），
+  但隐藏层可以自由设计，只要是非线性的。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 万能近似定理：为什么"深"比"宽"好</h2>
+
+<p>
+  一个隐藏层、足够宽、带非线性激活的网络，可以任意逼近任何紧支集上的连续函数。
+  这就是<strong>万能近似定理</strong>（Universal Approximation Theorem）。
+</p>
+
+<div class="formula-block">
+  $$\forall f \in C([0,1]^D),\; \forall \varepsilon > 0,\; \exists\; \text{单隐藏层网络 } \hat{f} \text{ 使得 } \|f - \hat{f}\|_\infty < \varepsilon$$
+</div>
+
+<p>
+  证明思路（以 sigmoid 为例）：用阶梯函数逼近 $f$，而单隐藏层可以用 sigmoid 神经元构造"阶梯"。
+  每个神经元 $\sigma(wx + b)$ 在 $w$ 很大时近似一个阶跃函数；多个阶跃叠加就是阶梯函数。
+  只要隐藏层宽度足够，就能逼近任意精度。
+</p>
+
+<div class="warning">
+  <strong>"足够宽"可能是指数大的。</strong>
+  对于某些函数，单隐藏层需要 $O(2^D)$ 个神经元才能达到精度 $\varepsilon$，
+  而深层网络可以用 $O(\text{poly}(D))$ 个参数达到同样精度。
+  <strong>深度带来的是"参数效率"</strong>：深而窄比浅而宽更高效地表达某些函数。
+</div>
+
+<p>
+  直觉：考虑 $D$ 维异或函数 $f(x_1,\dots,x_D) = \text{XOR}(x_1,\dots,x_D)$。
+  单隐藏层需要 $O(2^D)$ 个神经元来"切分"超立方体。
+  但用 $\log_2 D$ 层二叉树结构，每层做一次 XOR 组合，总参数 $O(D)$。
+  这就是深度带来的指数级效率提升。
+</p>
+
+<div class="meta-box">
+  <h4>范式 #7 · 深度 vs 宽度的权衡</h4>
+  <p>
+    万能近似定理保证"足够宽"一定行，但没说要多宽。对某些函数，宽需要指数参数，
+    而深只需要多项式参数。<strong>深度让网络学会"层次化复用"</strong>——低层特征被高层重复使用。
+    这本质上是"组合性"的体现：复杂函数由简单函数递归组合而成。
+    后课（CNN、ResNet、Transformer）全是这个"层次化复用"思想的具体实现。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 前向传播：逐层计算</h2>
+
+<p>
+  给定输入 $\mathbf{x} = \mathbf{a}_0$，逐层向前计算：
+</p>
+
+<div class="formula-block">
+  $$\begin{aligned}
+  \mathbf{z}_l &= \mathbf{W}_l \mathbf{a}_{l-1} + \mathbf{b}_l \quad (\text{线性变换})\\
+  \mathbf{a}_l &= \sigma_l(\mathbf{z}_l) \quad (\text{非线性激活})
+  \end{aligned}$$
+</div>
+
+<p>
+  其中 $l = 1, 2, \dots, L$，$L$ 是层数。$\mathbf{a}_L$ 是网络的最终输出。
+</p>
+
+<p>
+  维度：设 $\mathbf{a}_{l-1} \in \mathbb{R}^{M_{l-1}}$，$\mathbf{a}_l \in \mathbb{R}^{M_l}$，
+  则 $\mathbf{W}_l \in \mathbb{R}^{M_l \times M_{l-1}}$，$\mathbf{b}_l \in \mathbb{R}^{M_l}$。
+  总参数数 $\sum_l (M_l M_{l-1} + M_l)$。
+</p>
+
+<p>
+  前向传播的计算量：每层一次矩阵乘法 $O(M_l M_{l-1})$ 加一次逐元素激活。
+  整个网络一次前向的复杂度是 $O(\text{总参数数})$。
+</p>
+
+<p>
+  激活函数 $\sigma$ 的几个常见选择：
+</p>
+
+<table>
+  <tr><th>名称</th><th>公式</th><th>导数</th><th>特点</th></tr>
+  <tr><td>Sigmoid</td><td>$\sigma(z) = 1/(1+e^{-z})$</td><td>$\sigma(z)(1-\sigma(z))$</td><td>输出范围 (0,1)，但饱和区梯度近零 → 梯度消失</td></tr>
+  <tr><td>Tanh</td><td>$\tanh(z) = (e^z-e^{-z})/(e^z+e^{-z})$</td><td>$1-\tanh^2(z)$</td><td>输出范围 (-1,1)，零中心，仍会饱和</td></tr>
+  <tr><td>ReLU</td><td>$\max(0, z)$</td><td>$1_{z>0}$（0 处次梯度 0）</td><td>不饱和，计算快，但"死神经元"问题</td></tr>
+  <tr><td>Leaky ReLU</td><td>$\max(\alpha z, z)$</td><td>$1_{z>0} + \alpha 1_{z\leq 0}$</td><td>缓解死神经元</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 反向传播：链式法则的动态规划</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#c44d4d;">核心算法</span>
+	    <h3>反向传播 · Backpropagation</h3>
+	    <span class="cc-aliases">链式法则 + 动态规划</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>反向传播不是新算法——它是<strong>链式法则在计算图上的动态规划实现</strong>。对第 $k$ 层：$\frac{\partial J}{\partial \mathbf{W}_k} = \boldsymbol{\delta}_{k+1} \cdot \mathbf{a}_k^\top$，其中 $\boldsymbol{\delta}_k$ 从顶层递归向下传播。
+	  </div>
+	  <div class="cc-section">
+	    <h4>为什么不是前向求导</h4>
+	    <p>前向求导对每个参数都需一次完整前向传播 → $O(P^2)$。反向传播利用链式法则叠加性：一次前向+一次反向 = 所有参数梯度 → $O(P)$。$P$ 在深度学习里是百万到千亿级。</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0001 §3: 正规方程梯度 = 单层反传</span>
+	    <span class="conn-badge">→ 0019: 自然梯度 = $\mathbf{F}^{-1}\nabla J$</span>
+	    <span class="conn-badge">→ 自动微分: 反传的泛化</span>
+	  </div>
+	</div>
+
+
+<p>
+  训练网络需要计算损失 $\mathcal{L}$ 对每个参数的梯度。直接对每个参数用数值微分（有限差分）
+  需要 $O(\text{参数数})$ 次前向传播——对百万参数的网络不可行。
+  <strong>反向传播</strong>（backpropagation）用两次遍历（一次前向、一次反向）就计算出所有梯度，
+  复杂度与一次前向相同。
+</p>
+
+<h3>4.1 核心记号</h3>
+
+<p>
+  定义损失 $\mathcal{L}$（对单个样本或 mini-batch 的平均）。
+  记第 $l$ 层的"误差"为：
+</p>
+
+<div class="formula-block">
+  $$\boldsymbol{\delta}_l = \frac{\partial \mathcal{L}}{\partial \mathbf{z}_l} \in \mathbb{R}^{M_l}$$
+</div>
+
+<p>
+  即损失对第 $l$ 层<strong>线性变换输出</strong>（激活前）的梯度。
+  有了 $\boldsymbol{\delta}_l$，参数梯度就是：
+</p>
+
+<div class="formula-block">
+  $$\frac{\partial \mathcal{L}}{\partial \mathbf{W}_l} = \boldsymbol{\delta}_l \mathbf{a}_{l-1}^\top, \qquad
+    \frac{\partial \mathcal{L}}{\partial \mathbf{b}_l} = \boldsymbol{\delta}_l$$
+</div>
+
+<h3>4.2 反向递推</h3>
+
+<p>
+  关键问题：如何从 $\boldsymbol{\delta}_{l+1}$ 算出 $\boldsymbol{\delta}_l$？
+  用链式法则：
+</p>
+
+<div class="derivation">
+  <h4>反传递推公式</h4>
+  <div class="step">
+    $\mathbf{z}_{l+1} = \mathbf{W}_{l+1} \mathbf{a}_l + \mathbf{b}_{l+1} = \mathbf{W}_{l+1} \sigma_l(\mathbf{z}_l) + \mathbf{b}_{l+1}$
+    <span class="reason">前向关系：$\mathbf{a}_l = \sigma_l(\mathbf{z}_l)$</span>
+  </div>
+  <div class="step">
+    $\displaystyle \boldsymbol{\delta}_l = \frac{\partial \mathcal{L}}{\partial \mathbf{z}_l}
+      = \frac{\partial \mathcal{L}}{\partial \mathbf{z}_{l+1}} \frac{\partial \mathbf{z}_{l+1}}{\partial \mathbf{a}_l}
+        \frac{\partial \mathbf{a}_l}{\partial \mathbf{z}_l}$
+    <span class="reason">链式法则</span>
+  </div>
+  <div class="step">
+    $\displaystyle = \boldsymbol{\delta}_{l+1} \cdot \mathbf{W}_{l+1} \cdot \sigma_l'(\mathbf{z}_l)$
+    <span class="reason">$\partial \mathbf{z}_{l+1}/\partial \mathbf{a}_l = \mathbf{W}_{l+1}$，
+    $\partial \mathbf{a}_l/\partial \mathbf{z}_l = \sigma_l'(\mathbf{z}_l)$（逐元素）</span>
+  </div>
+  <div class="step">
+    $\boxed{\;\boldsymbol{\delta}_l = (\mathbf{W}_{l+1}^\top \boldsymbol{\delta}_{l+1}) \odot \sigma_l'(\mathbf{z}_l)\;}$
+    <span class="reason">转置把梯度从 $l+1$ 层"传回" $l$ 层，$\odot$ 是逐元素乘</span>
+  </div>
+</div>
+
+<p>
+  这个递推公式是整个反向传播的核心。<strong>误差从输出层反向"传播"到每一层</strong>，
+  每层只需要知道下一层的误差 $\boldsymbol{\delta}_{l+1}$ 和本层的激活导数 $\sigma_l'(\mathbf{z}_l)$。
+</p>
+
+<h3>4.3 完整算法</h3>
+
+<p>
+  <strong>前向传播：</strong> 从 $\mathbf{a}_0 = \mathbf{x}$ 开始，逐层计算 $\mathbf{z}_l, \mathbf{a}_l$ 并缓存。
+</p>
+<p>
+  <strong>反向传播：</strong>
+</p>
+<ol>
+  <li>计算输出层误差 $\boldsymbol{\delta}_L = \partial \mathcal{L} / \partial \mathbf{z}_L$（取决于损失和输出激活）</li>
+  <li>对 $l = L-1, \dots, 1$：$\boldsymbol{\delta}_l = (\mathbf{W}_{l+1}^\top \boldsymbol{\delta}_{l+1}) \odot \sigma_l'(\mathbf{z}_l)$</li>
+  <li>对每个 $l$：$\partial \mathcal{L} / \partial \mathbf{W}_l = \boldsymbol{\delta}_l \mathbf{a}_{l-1}^\top$，$\partial \mathcal{L} / \partial \mathbf{b}_l = \boldsymbol{\delta}_l$</li>
+</ol>
+
+<div class="insight">
+  <strong>一次前向 + 一次反向 = 所有参数的梯度。</strong>
+  复杂度 $O(\text{参数数})$，与数值微分的 $O(\text{参数数} \times \text{前向})$ 相比是指数级加速。
+  这就是深度学习的计算可行性所在。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 反传是自动微分的本质</h2>
+
+<p>
+  反向传播不是神经网络的专属——它是<strong>自动微分</strong>（automatic differentiation, autodiff）的一种特殊形式。
+  理解这一点，就理解了 PyTorch/TensorFlow/JAX 的计算图引擎。
+</p>
+
+<p>
+  计算微分的三种方式：
+</p>
+
+<table>
+  <tr><th>方法</th><th>做法</th><th>精度</th><th>复杂度</th></tr>
+  <tr><td><strong>数值微分</strong></td><td>$(f(x+h)-f(x))/h$</td><td>截断误差 $O(h)$</td><td>$O(\text{参数数} \times \text{前向})$</td></tr>
+  <tr><td><strong>符号微分</strong></td><td>代数展开求导公式</td><td>精确</td><td>表达式可能指数膨胀</td></tr>
+  <tr><td><strong>自动微分</strong></td><td>链式法则 + 追踪计算图</td><td>精确</td><td>$O(\text{前向})$</td></tr>
+</table>
+
+<p>
+  <strong>自动微分</strong>把计算过程表示成一个有向无环图（DAG），节点是中间变量，边是运算。
+  前向传播时计算每个节点的值（前向模式），反向传播时从输出向输入传播梯度（反向模式）。
+  <strong>反向传播就是自动微分的反向模式在神经网络上的具体实现。</strong>
+</p>
+
+<div class="meta-box">
+  <h4>范式 #8 · 链式法则 + 动态规划 = 反向传播</h4>
+  <p>
+    反向传播的本质是：<strong>用动态规划避免重复计算中间导数</strong>。
+    如果不缓存 $\boldsymbol{\delta}_l$，每次求 $\partial \mathcal{L} / \partial \mathbf{W}_l$ 都要重新从输出层开始链式展开，
+    总复杂度 $O(L \times \text{参数数})$。缓存 $\boldsymbol{\delta}_l$ 后，每个中间导数只算一次。
+    这个"缓存中间结果避免重复计算"就是动态规划的核心思想——和 Fibonacci 数列用备忘录法是一个道理。
+  </p>
+  <p>
+    <strong>这个范式在后面的课里反复出现：</strong>
+    Viterbi 算法（HMM 解码）是动态规划在概率图上的应用；
+    Baum-Welch（HMM 学习）的前向-后向算法也是 DP；
+    CRF 的推理也用 DP。
+    学会"链式法则 + 缓存 = 高效梯度计算"，就学会了自动微分的根基。
+  </p>
+</div>
+
+<h3>5.1 计算图示例</h3>
+
+<p>
+  考虑一个简单网络：2 输入 $\to$ 3 隐藏（sigmoid）$\to$ 1 输出（线性，平方损失）。
+  计算图如下（箭头表示前向方向）：
+</p>
+
+<div class="example-box">
+  <h4>计算图：2→3→1</h4>
+  <pre style="font-size:0.85rem; line-height:1.4; background:#f7f4ef; padding:0.8rem; border-radius:5px;">
+  输入层          隐藏层                   输出层
+  x₁ ──┐
+       ├── W₁·x+b₁ ──→ z₁ ──σ──→ a₁ ──┐
+  x₂ ──┘                                ├── W₂·a+b₂ ──→ z₂ ──→ ŷ ──L──→ ℒ
+       ├── W₁·x+b₁ ──→ z₂ ──σ──→ a₂ ──┘
+       ├── W₁·x+b₁ ──→ z₃ ──σ──→ a₃ ──┘
+  </pre>
+  <p style="font-size:0.9rem; margin-top:0.3rem;">
+    反向时：$\delta_{\text{out}} = \partial \mathcal{L}/\partial z_2 = \hat{y} - y$（平方损失）。
+    然后 $\boldsymbol{\delta}_{\text{hid}} = \mathbf{W}_2^\top \delta_{\text{out}} \odot \sigma'(\mathbf{z}_1)$。
+    最后 $\partial \mathcal{L}/\partial \mathbf{W}_2 = \delta_{\text{out}} \mathbf{a}^\top$，
+    $\partial \mathcal{L}/\partial \mathbf{W}_1 = \boldsymbol{\delta}_{\text{hid}} \mathbf{x}^\top$。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 损失与输出层：由输出分布决定</h2>
+
+<p>
+  输出层的激活函数和损失函数由<strong>输出变量的分布</strong>决定——这正是 基石 0001 的 GLM 推广 GLM 框架的直接推论。
+</p>
+
+<table>
+  <tr><th>任务</th><th>输出分布</th><th>输出激活</th><th>损失（负对数似然）</th></tr>
+  <tr><td>回归</td><td>高斯 $\mathcal{N}(\mu, \sigma^2)$</td><td>恒等（$\hat{y} = \mu$）</td><td>平方损失 $\frac{1}{2}(\hat{y} - y)^2$</td></tr>
+  <tr><td>二分类</td><td>Bernoulli$(\phi)$</td><td>Sigmoid（$\hat{y} = \sigma(z) = \phi$）</td><td>交叉熵 $-y\log\hat{y} - (1-y)\log(1-\hat{y})$</td></tr>
+  <tr><td>多分类</td><td>Categorical$(\boldsymbol{\pi})$</td><td>Softmax（$\hat{y}_k = e^{z_k}/\sum_j e^{z_j}$）</td><td>交叉熵 $-\sum_k y_k \log \hat{y}_k$</td></tr>
+</table>
+
+<h3>6.1 为什么交叉熵配 sigmoid 比平方配 sigmoid 好</h3>
+
+<p>
+  如果用平方损失 + sigmoid 做二分类，输出层误差为：
+</p>
+
+<div class="formula-block">
+  $$\delta_L = \frac{\partial \mathcal{L}}{\partial z} = (\hat{y} - y) \cdot \sigma'(z) = (\hat{y} - y) \cdot \hat{y}(1-\hat{y})$$
+</div>
+
+<p>
+  当 $\hat{y}$ 接近 0 或 1 时，$\hat{y}(1-\hat{y}) \approx 0$，梯度被"杀死"——即使预测完全错误（$y=1, \hat{y}\approx 0$），梯度也接近零。
+  这就是<strong>梯度消失</strong>。
+</p>
+
+<p>
+  如果用交叉熵 + sigmoid，输出层误差为（回接 0004 §3 的推导）：
+</p>
+
+<div class="formula-block">
+  $$\delta_L = \frac{\partial \mathcal{L}}{\partial z} = \hat{y} - y$$
+</div>
+
+<p>
+  没有 $\sigma'$ 因子！当 $y=1, \hat{y}\approx 0$ 时，梯度 $\approx -1$，信号强劲。
+  <strong>交叉熵配 sigmoid 自动抵消了 sigmoid 的饱和效应。</strong>
+  这就是为什么分类任务几乎不用平方损失——不是因为它"不 work"，而是因为交叉熵是 Bernoulli 的负对数似然，
+  它天然与 sigmoid 配对，梯度不衰减。
+</p>
+
+<div class="insight">
+  <strong>输出层激活 + 损失 = 指数族分布的负对数似然 + 响应函数。</strong>
+  这不是设计选择，是概率假设的必然结果。
+  回归用平方、二分类用交叉熵、多分类用交叉熵——它们分别对应高斯、Bernoulli、Categorical 的 MLE。
+  这个统一视角来自基石 0001 的 GLM 推广 的 GLM 框架。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 正则化：权重衰减、dropout、早停</h2>
+
+<h3>7.1 权重衰减（Weight Decay）= L2 正则化</h3>
+
+<p>
+  损失上加 $\frac{\lambda}{2} \sum_l \|\mathbf{W}_l\|_F^2$。
+  从贝叶斯视角（回接 0002 §4），这等价于给权重加高斯先验 $\mathbf{W}_l \sim \mathcal{N}(0, 1/\lambda)$，
+  做 MAP 估计。梯度更新时，每个权重多一项 $-\lambda \mathbf{W}_l$——即<strong>权重衰减</strong>。
+</p>
+
+<div class="formula-block">
+  $$\mathbf{W}_l \leftarrow \mathbf{W}_l - \eta \left(\frac{\partial \mathcal{L}_{\text{data}}}{\partial \mathbf{W}_l} + \lambda \mathbf{W}_l\right)$$
+</div>
+
+<h3>7.2 Dropout：近似 Bagging</h3>
+
+<p>
+  Dropout（Srivastava et al., 2014）在训练时以概率 $p$ 随机"丢弃"每个神经元（将其激活置零）。
+  这等价于训练 $2^{M}$ 个共享参数的子网络，每个子网络只看到部分神经元。
+  测试时使用所有神经元，但权重乘以 $p$（保持期望一致）。
+</p>
+
+<div class="insight">
+  <strong>Dropout ≈ 高效的模型集成（Bagging）。</strong>
+  回接 0013 集成学习：Bagging 训练多个独立模型然后平均。
+  Dropout 是"隐式集成"——每次前向都是一个不同的子网络，所有子网络共享参数，
+  测试时相当于对这些子网络的几何平均做近似。
+  但 dropout 的"集成"不是独立的，子网络之间高度相关——这是它与真正 Bagging 的区别。
+</div>
+
+<h3>7.3 早停（Early Stopping）：梯度下降本身是正则</h3>
+
+<p>
+  在验证集误差停止下降时提前终止训练，是最简单也最常用的正则化手段。
+  从优化视角看（回接 0012 优化），<strong>梯度下降的迭代次数本身就是模型复杂度的控制参数</strong>。
+  初始化 $\mathbf{W} = 0$ 时，权重从零开始"生长"；迭代次数越少，权重范数越小。
+  早停等价于在权重空间里限制"从原点到当前点的距离"——和 L2 正则化类似，但更灵活。
+</p>
+
+<div class="meta-box">
+  <h4>范式 #9 · 正则化 = 先验（回接 0002）</h4>
+  <p>
+    本课三种正则化都可以从贝叶斯视角理解：
+  </p>
+  <ul>
+    <li><strong>权重衰减</strong> = 高斯先验 $\Rightarrow$ MAP</li>
+    <li><strong>Dropout</strong> = 在隐变量上做贝叶斯平均（近似）</li>
+    <li><strong>早停</strong> = 限制"有效模型容量"的隐式先验</li>
+  </ul>
+  <p>
+    正则化不是"修复过拟合的补丁"——它是"告诉模型什么参数更合理"的先验知识。
+    这个视角贯穿全书：0002 的贝叶斯线性回归、0013 的集成学习、以及后课的贝叶斯神经网络。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 梯度下降变体：动量、Adam、学习率与曲率</h2>
+
+<h3>8.1 Batch GD vs SGD vs Mini-batch SGD</h3>
+
+<table>
+  <tr><th>变体</th><th>每次更新用的样本数</th><th>梯度噪声</th><th>每次迭代计算量</th></tr>
+  <tr><td>Batch GD</td><td>全部 $N$</td><td>无（精确梯度）</td><td>$O(N)$</td></tr>
+  <tr><td>SGD</td><td>1</td><td>大</td><td>$O(1)$</td></tr>
+  <tr><td>Mini-batch SGD</td><td>$B$（如 32/64/256）</td><td>中等</td><td>$O(B)$</td></tr>
+</table>
+
+<p>
+  Mini-batch 是实践中标准选择。它比 SGD 更稳定（梯度方差更小），比 Batch GD 更快（每轮计算量小）。
+  此外，mini-batch 的噪声本身有正则化效果——它防止模型陷入尖锐的局部极小。
+</p>
+
+<h3>8.2 动量（Momentum）</h3>
+
+<p>
+  动量累积过去梯度的指数衰减平均，在梯度方向一致时加速，在方向变化时平滑：
+</p>
+
+<div class="formula-block">
+  $$\begin{aligned}
+  \mathbf{v}_{t+1} &= \mu \mathbf{v}_t - \eta \nabla \mathcal{L}(\mathbf{W}_t) \\
+  \mathbf{W}_{t+1} &= \mathbf{W}_t + \mathbf{v}_{t+1}
+  \end{aligned}$$
+</div>
+
+<p>
+  $\mu$ 是动量系数（通常 0.9）。动量让更新方向不仅依赖当前梯度，还依赖历史梯度方向——
+  在"峡谷"地形中（一个方向陡、另一个方向弯曲），动量抑制震荡、加速收敛。
+</p>
+
+<h3>8.3 Adam</h3>
+
+<p>
+  Adam（Kingma & Ba, 2014）结合了动量（一阶矩）和 RMSProp（二阶矩自适应学习率）：
+</p>
+
+<div class="formula-block">
+  $$\begin{aligned}
+  \mathbf{m}_t &= \beta_1 \mathbf{m}_{t-1} + (1-\beta_1) \mathbf{g}_t \\
+  \mathbf{v}_t &= \beta_2 \mathbf{v}_{t-1} + (1-\beta_2) \mathbf{g}_t^2 \\
+  \hat{\mathbf{m}}_t &= \mathbf{m}_t / (1-\beta_1^t),\quad
+  \hat{\mathbf{v}}_t = \mathbf{v}_t / (1-\beta_2^t) \\
+  \mathbf{W}_{t+1} &= \mathbf{W}_t - \eta \frac{\hat{\mathbf{m}}_t}{\sqrt{\hat{\mathbf{v}}_t} + \varepsilon}
+  \end{aligned}$$
+</div>
+
+<p>
+  Adam 为每个参数自适应地调整学习率——频繁更新的参数学习率小，稀疏更新的参数学习率大。
+  它几乎不需要调学习率，是深度学习的默认优化器。
+</p>
+
+<h3>8.4 学习率与曲率（Hessian）的关系</h3>
+
+<p>
+  梯度下降 $\mathbf{W}_{t+1} = \mathbf{W}_t - \eta \nabla \mathcal{L}(\mathbf{W}_t)$ 可以看作对损失函数的<strong>一阶近似</strong>。
+  但损失函数在 $\mathbf{W}_t$ 附近的曲率由 Hessian $\mathbf{H} = \nabla^2 \mathcal{L}$ 决定。
+  如果 $\eta > 2/\lambda_{\max}(\mathbf{H})$，更新会发散——这就是为什么学习率不能太大。
+</p>
+
+<p>
+  Newton 方法 $\mathbf{W}_{t+1} = \mathbf{W}_t - \eta \mathbf{H}^{-1} \nabla \mathcal{L}$ 用 Hessian 逆修正方向，
+  对曲率各向异性的地形更有效。但 Hessian 是 $P \times P$ 矩阵（$P$ 是参数数），
+  对深度网络不可行。Adam 的 $\sqrt{\hat{\mathbf{v}}_t}$ 是对角近似的 Hessian 估计——它只捕捉每个参数的曲率，
+  忽略参数间的协方差。
+</p>
+
+<div class="insight">
+  <strong>优化器的进化 = 对 Hessian 的逐步更好的近似。</strong>
+  SGD 用恒等矩阵近似 Hessian，动量加了一阶记忆，Adam 加了对角曲率估计，
+  K-FAC 加了对角块近似，Newton 用完整 Hessian。
+  越好的近似收敛越快，但每步计算量越大——这是精度与效率的权衡。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 推导与演算</h2>
+
+<div class="problem">
+  <div class="ptitle">问题 1 <span class="plevel l1">L1</span></div>
+  <div class="pbody">
+    考虑一个单隐藏层网络：输入 $x \in \mathbb{R}^D$，隐藏层 $h = \sigma(\mathbf{W}_1 x + \mathbf{b}_1)$，
+    输出 $\hat{y} = \mathbf{w}_2^\top h + b_2$，平方损失 $\mathcal{L} = \frac{1}{2}(\hat{y} - y)^2$。
+    推导 $\partial \mathcal{L} / \partial \mathbf{w}_2$ 和 $\partial \mathcal{L} / \partial \mathbf{W}_1$。
+  </div>
+  <details>
+    <summary>💡 提示</summary>
+    <div class="hint">
+      先算输出层误差 $\delta_{\text{out}} = \partial \mathcal{L} / \partial z_{\text{out}}$（注意输出层是线性激活）。
+      然后 $\partial \mathcal{L} / \partial \mathbf{w}_2 = \delta_{\text{out}} \cdot h$。
+      再用反传递推算 $\boldsymbol{\delta}_{\text{hid}} = (\mathbf{w}_2 \delta_{\text{out}}) \odot \sigma'(\mathbf{z}_1)$，
+      最后 $\partial \mathcal{L} / \partial \mathbf{W}_1 = \boldsymbol{\delta}_{\text{hid}} x^\top$。
+    </div>
+  </details>
+  <details>
+    <summary>📖 完整解答</summary>
+    <div class="sol">
+      <div class="step">
+        记 $z_{\text{out}} = \mathbf{w}_2^\top h + b_2$，$\hat{y} = z_{\text{out}}$（线性输出）。
+        $\mathcal{L} = \frac{1}{2}(\hat{y} - y)^2$。
+        <span class="reason">平方损失</span>
+      </div>
+      <div class="step">
+        $\delta_{\text{out}} = \frac{\partial \mathcal{L}}{\partial z_{\text{out}}} = \hat{y} - y$
+        <span class="reason">平方损失对线性输出的梯度</span>
+      </div>
+      <div class="step">
+        $\frac{\partial \mathcal{L}}{\partial \mathbf{w}_2} = \frac{\partial \mathcal{L}}{\partial z_{\text{out}}} \cdot \frac{\partial z_{\text{out}}}{\partial \mathbf{w}_2} = (\hat{y} - y) \cdot h$
+        <span class="reason">$z_{\text{out}} = \mathbf{w}_2^\top h + b_2$</span>
+      </div>
+      <div class="step">
+        $\frac{\partial \mathcal{L}}{\partial b_2} = \hat{y} - y$
+      </div>
+      <div class="step">
+        记 $\mathbf{z}_1 = \mathbf{W}_1 x + \mathbf{b}_1$，$h = \sigma(\mathbf{z}_1)$。
+        $\boldsymbol{\delta}_{\text{hid}} = \frac{\partial \mathcal{L}}{\partial \mathbf{z}_1}
+        = \frac{\partial \mathcal{L}}{\partial z_{\text{out}}} \cdot \frac{\partial z_{\text{out}}}{\partial h} \cdot \frac{\partial h}{\partial \mathbf{z}_1}
+        = (\hat{y} - y) \cdot \mathbf{w}_2 \odot \sigma'(\mathbf{z}_1)$
+        <span class="reason">链式法则：$\partial z_{\text{out}}/\partial h = \mathbf{w}_2$，$\partial h/\partial \mathbf{z}_1 = \sigma'(\mathbf{z}_1)$ 逐元素</span>
+      </div>
+      <div class="step">
+        $\frac{\partial \mathcal{L}}{\partial \mathbf{W}_1} = \boldsymbol{\delta}_{\text{hid}} \cdot x^\top$
+        <span class="reason">$\mathbf{z}_1 = \mathbf{W}_1 x + \mathbf{b}_1$，$\partial \mathbf{z}_1/\partial \mathbf{W}_1$ 是四阶张量，但 $\partial \mathcal{L}/\partial W_{ij} = (\delta_{\text{hid}})_i \cdot x_j$</span>
+      </div>
+      <div class="step">
+        $\frac{\partial \mathcal{L}}{\partial \mathbf{b}_1} = \boldsymbol{\delta}_{\text{hid}}$
+      </div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">问题 2 <span class="plevel l1">L1</span></div>
+  <div class="pbody">
+    证明：对于二分类，sigmoid 输出 + 交叉熵损失 $\mathcal{L} = -y\log\hat{y} - (1-y)\log(1-\hat{y})$，
+    其中 $\hat{y} = \sigma(z)$，输出层误差为 $\partial \mathcal{L} / \partial z = \hat{y} - y$。
+    并解释为什么交叉熵配 sigmoid 比平方配 sigmoid 好。
+  </div>
+  <details>
+    <summary>💡 提示</summary>
+    <div class="hint">
+      回接 0004 §3 的推导。用 $\sigma'(z) = \sigma(z)(1-\sigma(z)) = \hat{y}(1-\hat{y})$。
+      直接对 $\mathcal{L}$ 求 $\partial / \partial z$，注意 $y$ 是 0 或 1。
+    </div>
+  </details>
+  <details>
+    <summary>📖 完整解答</summary>
+    <div class="sol">
+      <div class="step">
+        $\mathcal{L} = -y\log\hat{y} - (1-y)\log(1-\hat{y})$，$\hat{y} = \sigma(z) = 1/(1+e^{-z})$
+      </div>
+      <div class="step">
+        $\frac{\partial \mathcal{L}}{\partial z} = \frac{\partial \mathcal{L}}{\partial \hat{y}} \cdot \frac{\partial \hat{y}}{\partial z}
+        = \left(-\frac{y}{\hat{y}} + \frac{1-y}{1-\hat{y}}\right) \cdot \hat{y}(1-\hat{y})$
+        <span class="reason">$\partial \hat{y}/\partial z = \hat{y}(1-\hat{y})$</span>
+      </div>
+      <div class="step">
+        $= -y(1-\hat{y}) + (1-y)\hat{y} = -y + y\hat{y} + \hat{y} - y\hat{y} = \hat{y} - y$
+        <span class="reason">化简后 $\sigma'$ 被抵消，得简洁形式</span>
+      </div>
+      <div class="step">
+        <strong>对比平方损失 + sigmoid：</strong>
+        $\mathcal{L} = \frac{1}{2}(\hat{y} - y)^2$，则
+        $\frac{\partial \mathcal{L}}{\partial z} = (\hat{y} - y) \cdot \hat{y}(1-\hat{y})$。
+        当 $\hat{y} \to 0$ 或 $1$ 时，$\hat{y}(1-\hat{y}) \to 0$，即使预测完全错误梯度也消失。
+        交叉熵的 $\sigma'$ 被抵消，梯度始终正比于误差 $\hat{y} - y$——信号强劲。
+      </div>
+      <div class="step">
+        <strong>本质原因：</strong>交叉熵是 Bernoulli 的负对数似然，sigmoid 是 Bernoulli 的响应函数。
+        它们是一对"自然配对"——就像平方损失和高斯分布是一对一样。
+        用平方损失配 sigmoid 相当于用高斯似然去拟合 Bernoulli 数据，模型假设错了。
+      </div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">问题 3 <span class="plevel l2">L2</span></div>
+  <div class="pbody">
+    证明一般 $L$ 层网络的反传递推公式：
+    $\boldsymbol{\delta}_l = (\mathbf{W}_{l+1}^\top \boldsymbol{\delta}_{l+1}) \odot \sigma_l'(\mathbf{z}_l)$。
+    其中 $\boldsymbol{\delta}_l = \partial \mathcal{L} / \partial \mathbf{z}_l$。
+  </div>
+  <details>
+    <summary>💡 提示</summary>
+    <div class="hint">
+      写出 $\mathbf{z}_{l+1} = \mathbf{W}_{l+1} \sigma_l(\mathbf{z}_l) + \mathbf{b}_{l+1}$，
+      用链式法则 $\partial \mathcal{L} / \partial \mathbf{z}_l = (\partial \mathcal{L} / \partial \mathbf{z}_{l+1}) \cdot (\partial \mathbf{z}_{l+1} / \partial \mathbf{a}_l) \cdot (\partial \mathbf{a}_l / \partial \mathbf{z}_l)$。
+      注意 $\partial \mathbf{z}_{l+1} / \partial \mathbf{a}_l = \mathbf{W}_{l+1}$（线性映射的导数就是矩阵本身）。
+    </div>
+  </details>
+  <details>
+    <summary>📖 完整解答</summary>
+    <div class="sol">
+      <div class="step">
+        由前向传播定义：$\mathbf{a}_l = \sigma_l(\mathbf{z}_l)$，$\mathbf{z}_{l+1} = \mathbf{W}_{l+1} \mathbf{a}_l + \mathbf{b}_{l+1}$
+      </div>
+      <div class="step">
+        由链式法则：
+        $\boldsymbol{\delta}_l = \frac{\partial \mathcal{L}}{\partial \mathbf{z}_l}
+        = \frac{\partial \mathcal{L}}{\partial \mathbf{z}_{l+1}} \cdot
+          \frac{\partial \mathbf{z}_{l+1}}{\partial \mathbf{a}_l} \cdot
+          \frac{\partial \mathbf{a}_l}{\partial \mathbf{z}_l}$
+      </div>
+      <div class="step">
+        $\frac{\partial \mathcal{L}}{\partial \mathbf{z}_{l+1}} = \boldsymbol{\delta}_{l+1}$（定义）
+      </div>
+      <div class="step">
+        $\frac{\partial \mathbf{z}_{l+1}}{\partial \mathbf{a}_l} = \mathbf{W}_{l+1}$
+        <span class="reason">$\mathbf{z}_{l+1} = \mathbf{W}_{l+1} \mathbf{a}_l + \mathbf{b}_{l+1}$，对 $\mathbf{a}_l$ 求导得 $\mathbf{W}_{l+1}$</span>
+      </div>
+      <div class="step">
+        $\frac{\partial \mathbf{a}_l}{\partial \mathbf{z}_l} = \operatorname{diag}(\sigma_l'(\mathbf{z}_l))$
+        <span class="reason">$\mathbf{a}_l = \sigma_l(\mathbf{z}_l)$ 是逐元素操作，Jacobian 是对角阵</span>
+      </div>
+      <div class="step">
+        $\boldsymbol{\delta}_l = \boldsymbol{\delta}_{l+1}^\top \mathbf{W}_{l+1} \operatorname{diag}(\sigma_l'(\mathbf{z}_l))$
+        <span class="reason">注意维度：$\boldsymbol{\delta}_{l+1} \in \mathbb{R}^{M_{l+1}}$ 是列向量，
+        但 $\partial \mathcal{L}/\partial \mathbf{z}_l$ 是行向量还是列向量取决于约定。
+        用列向量约定：$\boldsymbol{\delta}_l = \mathbf{W}_{l+1}^\top \boldsymbol{\delta}_{l+1} \odot \sigma_l'(\mathbf{z}_l)$</span>
+      </div>
+      <div class="step">
+        $\boxed{\boldsymbol{\delta}_l = (\mathbf{W}_{l+1}^\top \boldsymbol{\delta}_{l+1}) \odot \sigma_l'(\mathbf{z}_l)}$
+        <span class="reason">$\odot$ 是逐元素乘（Hadamard 积），$\operatorname{diag}(\sigma_l'(\mathbf{z}_l))$ 乘向量等价于逐元素乘</span>
+      </div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">问题 4 <span class="plevel l2">L2</span></div>
+  <div class="pbody">
+    ReLU 激活函数 $\sigma(z) = \max(0, z)$。
+    (a) 写出 ReLU 的导数 $\sigma'(z)$，说明它在 $z=0$ 处不可导。
+    (b) 解释为什么 ReLU 比 sigmoid 更不容易出现梯度消失。
+    (c) 什么是"死 ReLU"问题？如何缓解？
+  </div>
+  <details>
+    <summary>💡 提示</summary>
+    <div class="hint">
+      (a) 分段考虑 $z>0$ 和 $z<0$。$z=0$ 处的"导数"用次梯度。
+      (b) 比较 sigmoid 和 ReLU 的导数取值范围。
+      (c) 如果权重初始化不当或学习率太大，神经元可能永远输出负值。
+    </div>
+  </details>
+  <details>
+    <summary>📖 完整解答</summary>
+    <div class="sol">
+      <div class="step">
+        <strong>(a)</strong>
+        $\sigma'(z) = \begin{cases} 1 & z > 0 \\ 0 & z < 0 \end{cases}$
+        <span class="reason">$z=0$ 处不可导，实践中取次梯度为 0 或 1</span>
+      </div>
+      <div class="step">
+        <strong>(b)</strong>
+        Sigmoid 的导数 $\sigma'(z) = \sigma(z)(1-\sigma(z)) \in (0, 0.25]$。
+        当 $|z|$ 大时，$\sigma'(z) \approx 0$——梯度消失。
+        深层网络里多层 sigmoid 的导数相乘，梯度指数衰减到零。
+        ReLU 在 $z>0$ 时导数为 1，梯度不衰减——信号可以顺畅地传回浅层。
+        这就是 ReLU 解决梯度消失的关键。
+      </div>
+      <div class="step">
+        <strong>(c)</strong>
+        如果某个神经元的输入 $z$ 总是负值，ReLU 输出恒为 0，导数为 0，
+        梯度无法通过这个神经元更新——它"死了"且永远活不过来。
+        原因：权重初始化太大、学习率太大、或偏置更新使 $z$ 长期为负。
+        缓解方法：Leaky ReLU（$\max(\alpha z, z)$，$\alpha$ 小正数）、
+        PReLU（$\alpha$ 可学习）、或更好的初始化（He initialization）。
+      </div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">问题 5 <span class="plevel l3">L3</span></div>
+  <div class="pbody">
+    万能近似定理证明思路：证明一个单隐藏层、sigmoid 激活的网络可以任意逼近 $[0,1]$ 上的连续函数。
+    给出关键步骤：用阶梯函数逼近 $f$，然后用 sigmoid 神经元构造阶梯函数。
+  </div>
+  <details>
+    <summary>💡 提示</summary>
+    <div class="hint">
+      第一步：对任意 $\varepsilon > 0$，存在阶梯函数 $g(x) = \sum_{k=1}^K c_k \cdot 1_{[t_{k-1}, t_k)}(x)$ 使得 $\|f - g\|_\infty < \varepsilon/2$。
+      第二步：用 sigmoid 神经元逼近指示函数 $1_{[a,b)}(x)$。
+      注意 $\sigma(w(x-a))$ 当 $w \to \infty$ 时趋近于阶跃函数 $1_{x \geq a}$。
+    </div>
+  </details>
+  <details>
+    <summary>📖 完整解答</summary>
+    <div class="sol">
+      <div class="step">
+        <strong>第一步：阶梯函数逼近。</strong>
+        由于 $f$ 在 $[0,1]$ 上连续，所以一致连续。
+        对任意 $\varepsilon > 0$，存在 $\delta > 0$ 使得 $|x-y|<\delta \Rightarrow |f(x)-f(y)|<\varepsilon/2$。
+        将 $[0,1]$ 等分为 $K = \lceil 1/\delta \rceil$ 个小区间 $[t_{k-1}, t_k)$，
+        取 $g(x) = \sum_{k=1}^K f(t_k) \cdot 1_{[t_{k-1}, t_k)}(x)$。
+        则 $\|f - g\|_\infty < \varepsilon/2$。
+      </div>
+      <div class="step">
+        <strong>第二步：用 sigmoid 逼近指示函数。</strong>
+        考虑 $\sigma(w(x-a)) = 1/(1+e^{-w(x-a)})$。
+        当 $w \to \infty$ 时：
+        <br>
+        - 若 $x > a$，$w(x-a) \to +\infty$，$\sigma \to 1$
+        <br>
+        - 若 $x < a$，$w(x-a) \to -\infty$，$\sigma \to 0$
+        <br>
+        即 $\lim_{w\to\infty} \sigma(w(x-a)) = 1_{[a,\infty)}(x)$。
+      </div>
+      <div class="step">
+        <strong>第三步：构造区间指示函数。</strong>
+        $1_{[a,b)}(x) = 1_{[a,\infty)}(x) - 1_{[b,\infty)}(x)$。
+        因此 $\sigma(w(x-a)) - \sigma(w(x-b)) \to 1_{[a,b)}(x)$ 当 $w\to\infty$。
+      </div>
+      <div class="step">
+        <strong>第四步：构造网络。</strong>
+        隐藏层用 $2K$ 个神经元：每对神经元逼近一个区间指示函数。
+        输出层是线性组合 $\hat{f}(x) = \sum_{k=1}^K c_k [\sigma(w(x-t_{k-1})) - \sigma(w(x-t_k))]$。
+        取 $w$ 足够大，$\|g - \hat{f}\|_\infty < \varepsilon/2$。
+        由三角不等式 $\|f - \hat{f}\|_\infty \leq \|f - g\|_\infty + \|g - \hat{f}\|_\infty < \varepsilon$。
+      </div>
+      <div class="step">
+        <strong>推广到多维：</strong>
+        对 $f: [0,1]^D \to \mathbb{R}$，用多维"砖块"（boxes）代替区间。
+        每个砖块指示函数是 $D$ 个一维指示函数的乘积。
+        单隐藏层可以用 sigmoid 逼近砖块（需要 $O(2^D)$ 个神经元在最坏情况下）。
+        这就是为什么"足够宽"可能指数大——深度网络通过层次化组合避免了这个指数爆炸。
+      </div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">问题 6 <span class="plevel l3">L3</span></div>
+  <div class="pbody">
+    考虑一个具体的小网络：2 输入 $\to$ 3 隐藏（sigmoid）$\to$ 1 输出（线性，平方损失）。
+    给定输入 $\mathbf{x} = [1, 0]^\top$，目标 $y = 1$，权重为：
+    <br>
+    $\mathbf{W}_1 = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{bmatrix}$,
+    $\mathbf{b}_1 = [0, 0, 0]^\top$,
+    $\mathbf{w}_2 = [1, -1, 1]^\top$, $b_2 = 0$。
+    <br>
+    (a) 做一次完整的前向传播，计算所有 $\mathbf{z}_1, \mathbf{a}_1, \hat{y}$。
+    (b) 做一次完整的反向传播，计算所有 $\boldsymbol{\delta}$ 和梯度 $\partial \mathcal{L}/\partial \mathbf{W}_1, \partial \mathcal{L}/\partial \mathbf{w}_2$。
+    (c) 说明为什么反传是"链式法则的动态规划"——指出哪些中间结果被复用了。
+  </div>
+  <details>
+    <summary>💡 提示</summary>
+    <div class="hint">
+      Sigmoid: $\sigma(z) = 1/(1+e^{-z})$，$\sigma'(z) = \sigma(z)(1-\sigma(z))$。
+      先算 $\mathbf{z}_1 = \mathbf{W}_1 \mathbf{x} + \mathbf{b}_1$，然后 $\mathbf{a}_1 = \sigma(\mathbf{z}_1)$。
+      输出 $z_2 = \mathbf{w}_2^\top \mathbf{a}_1 + b_2$，$\hat{y} = z_2$。
+      损失 $\mathcal{L} = \frac{1}{2}(\hat{y} - y)^2$。
+    </div>
+  </details>
+  <details>
+    <summary>📖 完整解答</summary>
+    <div class="sol">
+      <div class="step">
+        <strong>(a) 前向传播</strong>
+      </div>
+      <div class="step">
+        $\mathbf{z}_1 = \mathbf{W}_1 \mathbf{x} + \mathbf{b}_1
+        = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{bmatrix} \begin{bmatrix}1\\0\end{bmatrix}
+        = \begin{bmatrix}1\\0\\1\end{bmatrix}$
+      </div>
+      <div class="step">
+        $\mathbf{a}_1 = \sigma(\mathbf{z}_1) = \begin{bmatrix}\sigma(1)\\\sigma(0)\\\sigma(1)\end{bmatrix}
+        = \begin{bmatrix}0.7311\\0.5\\0.7311\end{bmatrix}$
+        <span class="reason">$\sigma(1) = 1/(1+e^{-1}) \approx 0.7311$，$\sigma(0) = 0.5$</span>
+      </div>
+      <div class="step">
+        $z_2 = \mathbf{w}_2^\top \mathbf{a}_1 = 1\cdot0.7311 + (-1)\cdot0.5 + 1\cdot0.7311 = 0.9622$
+      </div>
+      <div class="step">
+        $\hat{y} = z_2 = 0.9622$，$\mathcal{L} = \frac{1}{2}(0.9622 - 1)^2 = \frac{1}{2}(-0.0378)^2 \approx 0.000714$
+      </div>
+      <div class="step">
+        <strong>(b) 反向传播</strong>
+      </div>
+      <div class="step">
+        $\delta_2 = \partial \mathcal{L} / \partial z_2 = \hat{y} - y = 0.9622 - 1 = -0.0378$
+      </div>
+      <div class="step">
+        $\frac{\partial \mathcal{L}}{\partial \mathbf{w}_2} = \delta_2 \cdot \mathbf{a}_1
+        = -0.0378 \times \begin{bmatrix}0.7311\\0.5\\0.7311\end{bmatrix}
+        = \begin{bmatrix}-0.0276\\-0.0189\\-0.0276\end{bmatrix}$
+      </div>
+      <div class="step">
+        $\sigma'(\mathbf{z}_1) = \mathbf{a}_1 \odot (1 - \mathbf{a}_1)
+        = \begin{bmatrix}0.7311 \times 0.2689\\0.5 \times 0.5\\0.7311 \times 0.2689\end{bmatrix}
+        = \begin{bmatrix}0.1966\\0.25\\0.1966\end{bmatrix}$
+      </div>
+      <div class="step">
+        $\boldsymbol{\delta}_1 = (\mathbf{w}_2 \delta_2) \odot \sigma'(\mathbf{z}_1)
+        = \left(\begin{bmatrix}1\\-1\\1\end{bmatrix} \times (-0.0378)\right) \odot \begin{bmatrix}0.1966\\0.25\\0.1966\end{bmatrix}
+        = \begin{bmatrix}-0.0378\\0.0378\\-0.0378\end{bmatrix} \odot \begin{bmatrix}0.1966\\0.25\\0.1966\end{bmatrix}
+        = \begin{bmatrix}-0.00743\\0.00945\\-0.00743\end{bmatrix}$
+      </div>
+      <div class="step">
+        $\frac{\partial \mathcal{L}}{\partial \mathbf{W}_1} = \boldsymbol{\delta}_1 \mathbf{x}^\top
+        = \begin{bmatrix}-0.00743\\0.00945\\-0.00743\end{bmatrix} \begin{bmatrix}1 & 0\end{bmatrix}
+        = \begin{bmatrix}-0.00743 & 0\\0.00945 & 0\\-0.00743 & 0\end{bmatrix}$
+      </div>
+      <div class="step">
+        <strong>(c) 为什么是动态规划</strong>
+        <br>
+        在反向传播中，$\boldsymbol{\delta}_2$ 被复用了 4 次：
+        (1) 算 $\partial \mathcal{L}/\partial \mathbf{w}_2$，(2) 算 $\partial \mathcal{L}/\partial b_2$，
+        (3) 作为 $\boldsymbol{\delta}_1$ 的输入，(4) 通过 $\mathbf{w}_2$ 传播到隐藏层。
+        $\boldsymbol{\delta}_1$ 又被复用于 $\partial \mathcal{L}/\partial \mathbf{W}_1$ 和 $\partial \mathcal{L}/\partial \mathbf{b}_1$。
+        如果不缓存这些 $\boldsymbol{\delta}$，每次求一个参数的梯度都要重新从输出开始链式展开，
+        总复杂度 $O(L \times P)$（$L$ 层数，$P$ 参数数）。
+        缓存后复杂度降到 $O(P)$——这就是动态规划的核心：<strong>不重复计算已经算过的中间结果</strong>。
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s10">10. 自测</h2>
+
+<div class="quiz">
+  <div class="quiz-question" data-correct="c">
+    <h4>Q1 · 多层神经网络在概念上等价于什么？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q1" value="a"><label>A. 多个线性回归的并联</label></div>
+      <div class="quiz-option"><input type="radio" name="q1" value="b"><label>B. 一个巨大的线性模型</label></div>
+      <div class="quiz-option"><input type="radio" name="q1" value="c"><label>C. GLM 的递归复合</label></div>
+      <div class="quiz-option"><input type="radio" name="q1" value="d"><label>D. 核方法的特例</label></div>
+    </div>
+    <div class="quiz-feedback">每层 $a_{k+1} = \sigma_k(W_k a_k + b_k)$ 就是一个 GLM。多层就是 GLM 的递归复合 $f^{K-1}\circ\cdots\circ f^0$。输出层激活由输出分布决定，隐藏层激活是设计选择。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="b">
+    <h4>Q2 · 反向传播的核心递推公式是什么？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q2" value="a"><label>A. $\boldsymbol{\delta}_l = \sigma_l'(\mathbf{z}_l) \odot \mathbf{W}_{l+1} \boldsymbol{\delta}_{l+1}$</label></div>
+      <div class="quiz-option"><input type="radio" name="q2" value="b"><label>B. $\boldsymbol{\delta}_l = (\mathbf{W}_{l+1}^\top \boldsymbol{\delta}_{l+1}) \odot \sigma_l'(\mathbf{z}_l)$</label></div>
+      <div class="quiz-option"><input type="radio" name="q2" value="c"><label>C. $\boldsymbol{\delta}_l = \sigma_l(\mathbf{z}_l) \odot \mathbf{W}_{l+1}^\top \boldsymbol{\delta}_{l+1}$</label></div>
+      <div class="quiz-option"><input type="radio" name="q2" value="d"><label>D. $\boldsymbol{\delta}_l = \mathbf{W}_{l+1} \boldsymbol{\delta}_{l+1} \odot \sigma_l(\mathbf{z}_l)$</label></div>
+    </div>
+    <div class="quiz-feedback">$\boldsymbol{\delta}_l = (\mathbf{W}_{l+1}^\top \boldsymbol{\delta}_{l+1}) \odot \sigma_l'(\mathbf{z}_l)$。转置把梯度从 $l+1$ 层传回 $l$ 层，$\odot$ 是逐元素乘激活导数。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="c">
+    <h4>Q3 · 为什么交叉熵配 sigmoid 比平方损失配 sigmoid 好？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q3" value="a"><label>A. 交叉熵计算更快</label></div>
+      <div class="quiz-option"><input type="radio" name="q3" value="b"><label>B. 平方损失不凸</label></div>
+      <div class="quiz-option"><input type="radio" name="q3" value="c"><label>C. 交叉熵的梯度 $\hat{y}-y$ 不含 $\sigma'$ 因子，不会因 sigmoid 饱和而消失</label></div>
+      <div class="quiz-option"><input type="radio" name="q3" value="d"><label>D. 平方损失只能用于回归</label></div>
+    </div>
+    <div class="quiz-feedback">平方损失 + sigmoid 的梯度含 $\sigma' = \hat{y}(1-\hat{y})$，预测极端时梯度消失。交叉熵 + sigmoid 的梯度是 $\hat{y}-y$，$\sigma'$ 被抵消。这是因为交叉熵是 Bernoulli 的负对数似然，sigmoid 是其响应函数——它们天然配对。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="a">
+    <h4>Q4 · 反向传播在算法设计上属于哪种范式？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q4" value="a"><label>A. 动态规划——缓存中间结果避免重复计算</label></div>
+      <div class="quiz-option"><input type="radio" name="q4" value="b"><label>B. 分治——把大问题分解为子问题</label></div>
+      <div class="quiz-option"><input type="radio" name="q4" value="c"><label>C. 贪心——每步选局部最优</label></div>
+      <div class="quiz-option"><input type="radio" name="q4" value="d"><label>D. 随机搜索——随机采样参数</label></div>
+    </div>
+    <div class="quiz-feedback">反向传播缓存 $\boldsymbol{\delta}_l$ 避免重复链式展开，每个中间导数只算一次。如果不缓存，每次求一个参数的梯度都要从输出重新开始——复杂度 $O(L\times P)$。缓存后降到 $O(P)$。这就是动态规划的核心思想。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="b">
+    <h4>Q5 · 权重衰减在贝叶斯视角下等价于什么？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q5" value="a"><label>A. MLE + 均匀先验</label></div>
+      <div class="quiz-option"><input type="radio" name="q5" value="b"><label>B. MAP 估计 + 高斯先验</label></div>
+      <div class="quiz-option"><input type="radio" name="q5" value="c"><label>C. 完整贝叶斯后验的均值</label></div>
+      <div class="quiz-option"><input type="radio" name="q5" value="d"><label>D. 经验风险最小化</label></div>
+    </div>
+    <div class="quiz-feedback">L2 正则化（权重衰减）等价于给权重加高斯先验后做 MAP 估计。回接 0002 §4：高斯先验 $\log p(\mathbf{w}) \propto -\|\mathbf{w}\|^2/(2\tau^2)$，MAP 最大化 $\log p(\mathcal{D}|\mathbf{w}) + \log p(\mathbf{w})$ 即得权重衰减。</div>
+  </div>
+
+  <div class="quiz-question" data-correct="c">
+    <h4>Q6 · 为什么深度网络比浅层宽网络更"参数高效"？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q6" value="a"><label>A. 深度网络参数更少</label></div>
+      <div class="quiz-option"><input type="radio" name="q6" value="b"><label>B. 深度网络训练更快</label></div>
+      <div class="quiz-option"><input type="radio" name="q6" value="c"><label>C. 深度允许层次化复用特征，某些函数用深度只需多项式参数，宽度需要指数参数</label></div>
+      <div class="quiz-option"><input type="radio" name="q6" value="d"><label>D. 深度网络不需要激活函数</label></div>
+    </div>
+    <div class="quiz-feedback">万能近似定理保证单隐藏层足够宽可以逼近任何函数，但"足够宽"可能指数大。深度网络通过层次化组合（低层特征被高层复用），对某些函数只需多项式参数。如 $D$ 维 XOR 函数：单层需 $O(2^D)$ 神经元，深层二叉树结构只需 $O(D)$ 参数。</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;">
+    <strong>PRML §5.1（前向传播）、§5.3（反向传播）、§5.5（正则化）</strong>——本课第 1-4、7 节的母本。
+    §5.1 的记号（$z_j = \sum_i w_{ji} a_i$）是经典反传记号的起源。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>CS231n Lecture Notes（反向传播计算图）</strong>——计算图视角的反向传播，
+    把反传理解为"本地梯度 × 上游梯度"的递归模式，最直观。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>Goodfellow DL Book §6（深度前馈网络）</strong>——§6.2（万能近似定理）、
+    §6.4（架构设计）、§6.5（反传与自动微分）讲得最系统。
+  </p>
+  <p style="margin-bottom:0; font-size:0.9rem;">
+    <strong>Kingma & Ba, Adam: A Method for Stochastic Optimization (2014)</strong>——Adam 原始论文。
+    Srivastava et al., Dropout: A Simple Way to Prevent Neural Networks from Overfitting (2014)——Dropout 原始论文。
+  </p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">
+    本课的故事链是：GLM 递归复合 → 前向传播 → 反向传播（链式法则+动态规划）→ 输出层由分布决定 → 正则化 → 梯度下降变体。
+    重点是第 4 节的反向传递推和第 5 节的"自动微分本质"——它们是深度学习的计算引擎。
+    如果反传递推 $\boldsymbol{\delta}_l = (\mathbf{W}_{l+1}^\top \boldsymbol{\delta}_{l+1}) \odot \sigma_l'(\mathbf{z}_l)$ 没吃透，
+    后面所有优化器都是空中楼阁。<strong>直接问我</strong>。
+  </p>
+</div>
+
+<div class="lesson-footer">
+  <a href="0013-ensembles.html">← 0013 集成方法</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0015-variational-inference.html">0015 变分推断与采样</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise();
+  }
+  document.querySelectorAll('.quiz-question').forEach(q => {
+    const correct = q.dataset.correct;
+    const feedback = q.querySelector('.quiz-feedback');
+    q.querySelectorAll('.quiz-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (q.dataset.answered) return;
+        q.dataset.answered = '1';
+        const input = opt.querySelector('input');
+        const chosen = input.value;
+        const isCorrect = chosen === correct;
+        q.classList.add(isCorrect ? 'correct' : 'incorrect');
+        q.querySelectorAll('.quiz-option').forEach(o => {
+          if (o.querySelector('input').value === correct) o.style.background = '#e8f5e9';
+          if (o === opt && !isCorrect) o.style.background = '#fdecea';
+        });
+        feedback.classList.add('show');
+        feedback.classList.add(isCorrect ? 'correct-fb' : 'incorrect-fb');
+      });
+    });
+  });
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<template id="card-data-chainrule">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">微积分</span><h3>链式法则</h3><span class="cc-aliases">Chain Rule</span></div>
+  <div class="cc-essence">$f(g(x))$ 的导数 = $f'(g(x)) \cdot g'(x)$。多元版：$\frac{\partial z}{\partial x} = \sum_k \frac{\partial z}{\partial y_k}\frac{\partial y_k}{\partial x}$。反向传播 = 链式法则在计算图上的<strong>动态规划</strong>实现。</div>
+  <div class="cc-section"><h4>为什么反传用链式法则</h4><p>前向求导：对每个参数单独求 $\partial J/\partial w$ → $O(P^2)$。反向求导：从输出层往回传梯度，一次前向+一次反向 = 所有参数梯度 → $O(P)$。$P$ 在深度学习里是百万到千亿。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0014 §4: 反传推导</span></div>
+</div>
+</template>
+
+</body>
+</html>

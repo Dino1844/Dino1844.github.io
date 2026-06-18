@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0011 · PCA 与概率 PCA</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0011 · PCA 与概率 PCA</h1>
+<div class="subtitle">最大方差 → 协方差<span class="cr" data-card="eigendecomp">特征分解</span> → 概率 PCA 隐变量 + EM → 因子分析，几何与概率两条路汇合 · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 降维问题：$D$ 维数据找 $M$ 维表示</a><br>
+  <a href="#s2">2. 最大方差视角：投影后保留最多方差</a><br>
+  <a href="#s3">3. 拉格朗日解：主成分 = 协方差特征向量</a><br>
+  <a href="#s4">4. 最小重构误差视角：同一问题的对偶</a><br>
+  <a href="#s5">5. 概率 PCA：线性高斯隐变量模型</a><br>
+  <a href="#s6">6. EM 解概率 PCA：E 给后验坐标，M 给载荷</a><br>
+  <a href="#s7">7. 因子分析：各向异性噪声的推广</a><br>
+  <a href="#s8">8. 推导与演算</a><br>
+  <a href="#s9">9. 自测</a>
+</div>
+
+<p>
+  PCA 是最经典的降维方法。本课讲它的两条路：<strong>几何路</strong>（最大方差 / 最小重构误差 → 协方差特征分解）和<strong>概率路</strong>（线性高斯隐变量模型 → EM）。
+  两条路给出同一个解，但概率路更富——它给似然、给后验、给自然推广到因子分析和混合 PCA。
+  PCA 的推导把 0007 的拉格朗日、0009 的指数族/高斯、0010 的 EM 串起来，是"同一问题多视角"的范例。
+</p>
+
+<p>
+  量化里 PCA 是因子模型的雏形——把多资产收益压成几个共同因子。0017 会把概率 PCA / 因子分析接进统计因子模型。本课把基础打牢。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>协方差矩阵 $\mathbf{S}=\frac1N\sum_n(\mathbf{x}_n-\bar{\mathbf{x}})(\mathbf{x}_n-\bar{\mathbf{x}})^\top$，对称半正定，特征值 $\geq0$，特征向量正交。</li>
+    <li>0007 拉格朗日：$\max\mathbf{u}^\top\mathbf{S}\mathbf{u}$ s.t. $\mathbf{u}^\top\mathbf{u}=1$ → $\mathbf{S}\mathbf{u}=\lambda\mathbf{u}$。</li>
+    <li>0009 高斯指数族、0002 高斯边缘化（配平方 + Woodbury）：线性高斯 $\mathbf{x}=\mathbf{W}\mathbf{z}+\boldsymbol\mu+\boldsymbol\epsilon$ 的边缘仍是高斯。</li>
+    <li>0010 EM：隐变量 + ELBO + E/M 交替。概率 PCA 的隐变量是低维坐标 $\mathbf{z}$。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 降维问题：$D$ 维数据找 $M$ 维表示</h2>
+
+<p>
+  数据 $\{\mathbf{x}_n\}\subset\mathbb{R}^D$，中心化 $\sum\mathbf{x}_n=\mathbf{0}$。想找 $M<D$ 维表示：每个 $\mathbf{x}_n\approx\mathbf{W}\mathbf{z}_n+\boldsymbol\mu$，$\mathbf{z}_n\in\mathbb{R}^M$，$\mathbf{W}\in\mathbb{R}^{D\times M}$。
+  $\mathbf{z}_n$ 是低维坐标（latent / score），$\mathbf{W}$ 的列是主方向（loadings）。
+  两个自然目标：<strong>投影后方差最大</strong>（保留最多信息）或<strong>重构误差最小</strong>（丢最少信息）——它们等价。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 最大方差视角：投影后保留最多方差</h2>
+
+<p>先看 $M=1$。投影到单位向量 $\mathbf{u}$（$\mathbf{u}^\top\mathbf{u}=1$），投影坐标 $y_n=\mathbf{u}^\top\mathbf{x}_n$。投影方差：</p>
+
+<div class="formula-block">
+  $$\operatorname{Var}(y)=\frac1N\sum_n(\mathbf{u}^\top\mathbf{x}_n)^2=\mathbf{u}^\top\mathbf{S}\mathbf{u}$$
+</div>
+
+<p>最大化 $\mathbf{u}^\top\mathbf{S}\mathbf{u}$ s.t. $\mathbf{u}^\top\mathbf{u}=1$。这是 0007 拉格朗日的标准形。</p>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 拉格朗日解：主成分 = 协方差特征向量</h2>
+
+<div class="derivation">
+  <h4>第一主成分</h4>
+  <div class="step">
+    $\mathcal{L}=\mathbf{u}^\top\mathbf{S}\mathbf{u}-\lambda(\mathbf{u}^\top\mathbf{u}-1)$
+    <span class="reason">拉格朗日，$\lambda$ 是乘子</span>
+  </div>
+  <div class="step">
+    $\nabla_{\mathbf{u}}\mathcal{L}=2\mathbf{S}\mathbf{u}-2\lambda\mathbf{u}=0\;\Rightarrow\;\mathbf{S}\mathbf{u}=\lambda\mathbf{u}$
+    <span class="reason">特征值方程！$\mathbf{u}$ 是 $\mathbf{S}$ 的特征向量</span>
+  </div>
+  <div class="step">
+    代回：$\mathbf{u}^\top\mathbf{S}\mathbf{u}=\mathbf{u}^\top\lambda\mathbf{u}=\lambda$
+    <span class="reason">投影方差 = 对应特征值</span>
+  </div>
+  <div class="step">
+    最大化方差 = 取最大特征值 $\lambda_1$，$\mathbf{u}_1$ 是对应特征向量。
+  </div>
+</div>
+
+<p>
+  后续主成分：在与前几个正交的约束下最大化方差，得 $\mathbf{u}_2,\dots,\mathbf{u}_M$ 是 $\mathbf{S}$ 的前 $M$ 大特征值对应的特征向量。
+  <strong>主成分就是协方差矩阵的特征向量，按特征值（=投影方差）降序排。</strong>
+</p>
+
+<div class="insight">
+  <strong>特征值 = 该方向上的方差 = 信息量。</strong> 大特征值方向数据散得开（信息多），小特征值方向数据几乎不动（信息少，可丢）。
+  PCA 取前 $M$ 大特征值方向，保留总方差 $\sum_{i\leq M}\lambda_i$，丢弃 $\sum_{i>M}\lambda_i$。
+  "保留 95% 方差"就是选最小 $M$ 使 $\sum_{i\leq M}\lambda_i\geq0.95\sum_i\lambda_i$。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 最小重构误差视角：同一问题的对偶</h2>
+
+<p>用 $M$ 维子空间重构 $\mathbf{x}$，重构 $\tilde{\mathbf{x}}=\sum_{i=1}^M(\mathbf{u}_i^\top\mathbf{x})\mathbf{u}_i$。最小化平均重构误差：</p>
+
+<div class="formula-block">
+  $$J=\frac1N\sum_n\|\mathbf{x}_n-\tilde{\mathbf{x}}_n\|^2=\sum_{i=1}^D\lambda_i-\sum_{i=1}^M\lambda_i=\sum_{i=M+1}^D\lambda_i$$
+</div>
+
+<p>
+  用了 $\|\mathbf{x}\|^2=\sum_i(\mathbf{u}_i^\top\mathbf{x})^2$（正交基展开）和 $\mathbb{E}[(\mathbf{u}_i^\top\mathbf{x})^2]=\lambda_i$。
+  最小化 $J$ = 最大化 $\sum_{i\leq M}\lambda_i$ = 取前 $M$ 大特征值。<strong>与最大方差完全等价</strong>——保留最多方差 = 丢最少方差。
+</p>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #13 · "对称矩阵的极值 = 特征值，极值方向 = 特征向量"</h4>
+  任何 $\max \mathbf{u}^\top\mathbf{A}\mathbf{u}$ s.t. $\|\mathbf{u}\|=1$（$\mathbf{A}$ 对称）的解是 $\mathbf{A}$ 最大特征值对应特征向量。Rayleigh 商。带正交约束的后续极值是后续特征值（Courant-Fischer）。
+  <strong>本课 PCA、0007 SVM 的 $\mathbf{w}^\top\mathbf{S}\mathbf{w}$、0017 因子模型的谱分解、谱聚类、PCA 后的 GMM——全是这一招。</strong> 对称矩阵的谱定理是线性代数里最该内化的工具。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 概率 PCA：线性高斯隐变量模型</h2>
+
+<p>概率 PCA 给 PCA 一个生成式概率模型：</p>
+
+<div class="formula-block">
+  $$\mathbf{z}\sim\mathcal{N}(\mathbf{0},\mathbf{I}_M),\qquad \mathbf{x}\mid\mathbf{z}\sim\mathcal{N}(\mathbf{W}\mathbf{z}+\boldsymbol\mu,\,\sigma^2\mathbf{I}_D)$$
+</div>
+
+<p>
+  $\mathbf{z}\in\mathbb{R}^M$ 是隐变量（低维坐标），$\mathbf{W}\in\mathbb{R}^{D\times M}$ 是载荷，$\sigma^2$ 各向同性噪声。
+  边缘化 $\mathbf{z}$（高斯边缘化，0002 范式 #3）：
+</p>
+
+<div class="formula-block">
+  $$\mathbf{x}\sim\mathcal{N}(\boldsymbol\mu,\,\mathbf{C}),\qquad \mathbf{C}=\mathbf{W}\mathbf{W}^\top+\sigma^2\mathbf{I}_D$$
+</div>
+
+<p>
+  $\mathbf{C}$ 是 $D\times D$ 协方差，但只有 $\mathbf{W}$（$DM$ 参数）+ $\sigma^2$ 待估——比满协方差 $\frac{D(D+1)}2$ 少很多。这是降维的参数节省。
+</p>
+
+<p>后验 $\mathbf{z}\mid\mathbf{x}$（用 0002 配平方/Woodbury）：</p>
+
+<div class="formula-block">
+  $$\mathbf{z}\mid\mathbf{x}\sim\mathcal{N}(\mathbf{M}^{-1}\mathbf{W}^\top(\mathbf{x}-\boldsymbol\mu),\,\sigma^2\mathbf{M}^{-1}),\qquad \mathbf{M}=\mathbf{W}^\top\mathbf{W}+\sigma^2\mathbf{I}_M$$
+</div>
+
+<p>$\sigma^2\to0$ 时 $\mathbf{M}^{-1}\mathbf{W}^\top\to(\mathbf{W}^\top\mathbf{W})^{-1}\mathbf{W}^\top$（伪逆），后验均值 = 最小二乘坐标 = PCA 投影。<strong>概率 PCA 退化为经典 PCA。</strong></p>
+
+<div class="insight">
+  <strong>概率 PCA 的 MLE 给出经典 PCA 的解。</strong> 设 $\mathbf{S}$ 的特征分解 $\mathbf{S}=\mathbf{U}\boldsymbol\Lambda\mathbf{U}^\top$，MLE 是 $\mathbf{W}_{\text{ML}}=\mathbf{U}_M(\boldsymbol\Lambda_M-\sigma^2\mathbf{I})^{1/2}\mathbf{R}$（$\mathbf{R}$ 任意正交，旋转不确定性），$\sigma^2_{\text{ML}}=\frac{1}{D-M}\sum_{i=M+1}^D\lambda_i$（丢弃方向的平均方差）。
+  $\mathbf{W}\mathbf{W}^\top$ 的列空间 = 前 $M$ 主成分张成的空间。概率视角给出经典 PCA，外加似然（可做模型选择、混合）和后验（给坐标不确定性）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. EM 解概率 PCA：E 给后验坐标，M 给载荷</h2>
+
+<p>概率 PCA 用 EM（0010 范式）。隐变量 $\mathbf{z}_n$。</p>
+
+<p><strong>E 步</strong>：算后验 $\mathbf{z}_n\mid\mathbf{x}_n$ 的均值 $\mathbb{E}[\mathbf{z}_n]=\mathbf{M}^{-1}\mathbf{W}^\top(\mathbf{x}_n-\boldsymbol\mu)$ 和二阶矩 $\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top]=\sigma^2\mathbf{M}^{-1}+\mathbb{E}[\mathbf{z}_n]\mathbb{E}[\mathbf{z}_n]^\top$。</p>
+
+<p><strong>M 步</strong>：最大化完整对数似然期望，更新（中心化数据 $\boldsymbol\mu=\bar{\mathbf{x}}$）：</p>
+
+<div class="formula-block">
+  $$\mathbf{W}^{\text{new}}=\Big(\sum_n(\mathbf{x}_n-\boldsymbol\mu)\mathbb{E}[\mathbf{z}_n]^\top\Big)\Big(\sum_n\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top]\Big)^{-1}$$
+  $$(\sigma^2)^{\text{new}}=\frac{1}{ND}\sum_n\big[\|\mathbf{x}_n-\boldsymbol\mu\|^2-2\mathbb{E}[\mathbf{z}_n]^\top\mathbf{W}^{\top}(\mathbf{x}_n-\boldsymbol\mu)+\operatorname{tr}(\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top]\mathbf{W}^\top\mathbf{W})\big]$$
+</div>
+
+<p>
+  EM 避免显式特征分解 $D\times D$ 矩阵（当 $D\gg M$ 时 $\mathbf{W}$ 小，EM 每步 $O(NMD)$ 比特征分解 $O(ND^2)$ 省）。这是 EM 在 PCA 上的实用价值——大数据/在线场景。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 因子分析：各向异性噪声的推广</h2>
+
+<p>把概率 PCA 的各向同性噪声 $\sigma^2\mathbf{I}$ 换成各向异性 $\boldsymbol\Psi$（对角）：</p>
+
+<div class="formula-block">
+  $$\mathbf{x}=\mathbf{W}\mathbf{z}+\boldsymbol\mu+\boldsymbol\epsilon,\quad \mathbf{z}\sim\mathcal{N}(\mathbf{0},\mathbf{I}),\;\boldsymbol\epsilon\sim\mathcal{N}(\mathbf{0},\boldsymbol\Psi)$$
+</div>
+
+<p>
+  这是<strong>因子分析</strong>（Factor Analysis）。$\boldsymbol\Psi$ 对角 = 每维独立噪声方差不同。概率 PCA 是 $\boldsymbol\Psi=\sigma^2\mathbf{I}$ 的特例。
+  因子分析假设观测是 $M$ 个公共因子 $\mathbf{z}$ 的线性组合 + 各维独立噪声——<strong>这正是量化因子模型的统计形式</strong>。
+</p>
+
+<div class="warning">
+  <strong>PCA vs 因子分析的关键差别：</strong> PCA 对各维噪声同方差，所以<strong>旋转等价</strong>（$\mathbf{W}\mathbf{R}$ 给同样的 $\mathbf{C}$，$\mathbf{R}$ 正交）——主方向有旋转自由度，需排序特征值定解。因子分析各维噪声不同，旋转不等价，需<strong>因子旋转</strong>（varimax 等）求可解释解。
+  量化里因子模型常需旋转让因子有经济含义（如"价值因子""动量因子"）。
+</div>
+
+<div class="meta-box">
+  <h4>🔗 联系 · PCA → 因子模型 → 量化</h4>
+  <strong>0017</strong> 把本课的概率 PCA / 因子分析接进统计因子模型：多资产收益 $\mathbf{r}=\mathbf{W}\mathbf{f}+\boldsymbol\epsilon$，$\mathbf{f}$ 是 $K$ 个共同因子（市场、价值、动量…），$\mathbf{W}$ 是因子暴露。
+  PCA/因子分析从收益协方差估计 $\mathbf{W}$——<strong>统计因子模型</strong>（数据驱动，因子无先验经济含义）vs <strong>基本面因子模型</strong>（人为指定因子）。两者在 0017 对比。
+  本课的 EM 解法、$\mathbf{C}=\mathbf{W}\mathbf{W}^\top+\boldsymbol\Psi$ 分解、旋转不确定性，全是 0017 的前置。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与演算</h2>
+
+<p>下面 6 道题，难度递增。把 PCA 两条路和概率 PCA 的 EM 推通。</p>
+
+<div class="problem">
+  <div class="ptitle">题 1 · 最大方差 → 特征值方程 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    从 $\max_{\mathbf{u}}\mathbf{u}^\top\mathbf{S}\mathbf{u}$ s.t. $\mathbf{u}^\top\mathbf{u}=1$ 出发，用拉格朗日推出 $\mathbf{S}\mathbf{u}=\lambda\mathbf{u}$，并说明投影方差 $=\lambda$。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\mathcal{L}=\mathbf{u}^\top\mathbf{S}\mathbf{u}-\lambda(\mathbf{u}^\top\mathbf{u}-1)$。$\nabla_{\mathbf{u}}=2\mathbf{S}\mathbf{u}-2\lambda\mathbf{u}=0$。$\mathbf{u}^\top\mathbf{S}\mathbf{u}=\mathbf{u}^\top\lambda\mathbf{u}=\lambda$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\mathcal{L}=\mathbf{u}^\top\mathbf{S}\mathbf{u}-\lambda(\mathbf{u}^\top\mathbf{u}-1)$。$\nabla_{\mathbf{u}}\mathcal{L}=2\mathbf{S}\mathbf{u}-2\lambda\mathbf{u}=0\Rightarrow\mathbf{S}\mathbf{u}=\lambda\mathbf{u}$。$\mathbf{u}$ 是 $\mathbf{S}$ 特征向量，$\lambda$ 对应特征值。$\square$</div>
+    <div class="step">投影方差 $=\mathbf{u}^\top\mathbf{S}\mathbf{u}=\mathbf{u}^\top(\lambda\mathbf{u})=\lambda\mathbf{u}^\top\mathbf{u}=\lambda$。所以最大化方差 = 取最大特征值。$\square$</div>
+    <div class="step">回接 0007：同一种拉格朗日招数。SVM 是带不等式约束的 QP，PCA 是带等式约束的 Rayleigh 商，都靠"拉格朗日 + 对称矩阵谱"。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 2 · 后续主成分正交 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    第二主成分在 $\mathbf{u}_1^\top\mathbf{u}=0$ 约束下最大化 $\mathbf{u}^\top\mathbf{S}\mathbf{u}$。用拉格朗日（两个乘子：$\|\mathbf{u}\|^2=1$ 和正交）证明 $\mathbf{u}_2$ 是 $\mathbf{S}$ 第二大特征值对应特征向量。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\mathcal{L}=\mathbf{u}^\top\mathbf{S}\mathbf{u}-\lambda(\mathbf{u}^\top\mathbf{u}-1)-\mu\mathbf{u}_1^\top\mathbf{u}$。求导 $\mathbf{S}\mathbf{u}-\lambda\mathbf{u}-\frac{\mu}{2}\mathbf{u}_1=0$。左乘 $\mathbf{u}_1^\top$，用 $\mathbf{u}_1^\top\mathbf{u}=0$ 和 $\mathbf{S}\mathbf{u}_1=\lambda_1\mathbf{u}_1$ 证 $\mu=0$，得 $\mathbf{S}\mathbf{u}=\lambda\mathbf{u}$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\mathcal{L}=\mathbf{u}^\top\mathbf{S}\mathbf{u}-\lambda(\mathbf{u}^\top\mathbf{u}-1)-\mu\,\mathbf{u}_1^\top\mathbf{u}$。$\nabla_{\mathbf{u}}=2\mathbf{S}\mathbf{u}-2\lambda\mathbf{u}-\mu\mathbf{u}_1=0$，即 $\mathbf{S}\mathbf{u}=\lambda\mathbf{u}+\frac{\mu}{2}\mathbf{u}_1$。</div>
+    <div class="step">左乘 $\mathbf{u}_1^\top$：$\mathbf{u}_1^\top\mathbf{S}\mathbf{u}=\lambda\mathbf{u}_1^\top\mathbf{u}+\frac{\mu}{2}\mathbf{u}_1^\top\mathbf{u}_1$。左边 $=(\mathbf{S}\mathbf{u}_1)^\top\mathbf{u}=\lambda_1\mathbf{u}_1^\top\mathbf{u}=0$（正交约束）。右边 $=0+\frac{\mu}{2}$。所以 $\mu=0$。</div>
+    <div class="step">$\mu=0$ 代回：$\mathbf{S}\mathbf{u}=\lambda\mathbf{u}$，$\mathbf{u}$ 是特征向量。正交于 $\mathbf{u}_1$ 的特征向量中方差 $\lambda$ 最大的是 $\lambda_2$（第二大特征值）。$\mathbf{u}_2$ 是其对应向量。$\square$ 归纳得后续主成分。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 3 · 最大方差 = 最小重构误差 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    证明用前 $M$ 主成分重构的误差 $J=\sum_{i=M+1}^D\lambda_i$，从而最小化 $J$ 等价于最大化 $\sum_{i=1}^M\lambda_i$（最大方差）。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\|\mathbf{x}\|^2=\sum_{i=1}^D(\mathbf{u}_i^\top\mathbf{x})^2$（正交基）。重构 $\tilde{\mathbf{x}}=\sum_{i=1}^M(\mathbf{u}_i^\top\mathbf{x})\mathbf{u}_i$。$\|\mathbf{x}-\tilde{\mathbf{x}}\|^2=\sum_{i=M+1}^D(\mathbf{u}_i^\top\mathbf{x})^2$。平均 $=\sum_{i=M+1}^D\lambda_i$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\{\mathbf{u}_i\}$ 是 $\mathbf{S}$ 正交特征基，$\mathbf{x}=\sum_i(\mathbf{u}_i^\top\mathbf{x})\mathbf{u}_i$。重构 $\tilde{\mathbf{x}}=\sum_{i=1}^M(\mathbf{u}_i^\top\mathbf{x})\mathbf{u}_i$。</div>
+    <div class="step">$\|\mathbf{x}-\tilde{\mathbf{x}}\|^2=\|\sum_{i=M+1}^D(\mathbf{u}_i^\top\mathbf{x})\mathbf{u}_i\|^2=\sum_{i=M+1}^D(\mathbf{u}_i^\top\mathbf{x})^2$（正交）。</div>
+    <div class="step">平均 $J=\frac1N\sum_n\|\mathbf{x}_n-\tilde{\mathbf{x}}_n\|^2=\sum_{i=M+1}^D\frac1N\sum_n(\mathbf{u}_i^\top\mathbf{x}_n)^2=\sum_{i=M+1}^D\mathbf{u}_i^\top\mathbf{S}\mathbf{u}_i=\sum_{i=M+1}^D\lambda_i$。$\square$</div>
+    <div class="step">总方差 $\sum_{i=1}^D\lambda_i$ 固定，$J=\text{总}-\sum_{i=1}^M\lambda_i$。最小化 $J$ $\Leftrightarrow$ 最大化 $\sum_{i\leq M}\lambda_i$（前 $M$ 方向方差和）。两视角等价。$\square$</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 4 · 概率 PCA 边缘与后验 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    对 $\mathbf{x}=\mathbf{W}\mathbf{z}+\boldsymbol\mu+\boldsymbol\epsilon$，$\mathbf{z}\sim\mathcal{N}(\mathbf{0},\mathbf{I})$，$\boldsymbol\epsilon\sim\mathcal{N}(\mathbf{0},\sigma^2\mathbf{I})$。证明边缘 $\mathbf{x}\sim\mathcal{N}(\boldsymbol\mu,\mathbf{W}\mathbf{W}^\top+\sigma^2\mathbf{I})$，后验 $\mathbf{z}\mid\mathbf{x}\sim\mathcal{N}(\mathbf{M}^{-1}\mathbf{W}^\top(\mathbf{x}-\boldsymbol\mu),\sigma^2\mathbf{M}^{-1})$，$\mathbf{M}=\mathbf{W}^\top\mathbf{W}+\sigma^2\mathbf{I}$。
+  </div>
+  <details><summary>提示</summary><div class="hint">线性高斯：$\mathbf{x}$ 是高斯，均值 $\mathbb{E}[\mathbf{W}\mathbf{z}+\boldsymbol\mu+\boldsymbol\epsilon]=\boldsymbol\mu$，协方差 $\mathbf{W}\mathbf{I}\mathbf{W}^\top+\sigma^2\mathbf{I}$。后验用 0002 配平方或 Woodbury：联合高斯 $(\mathbf{z},\mathbf{x})$，条件协方差 $=(\mathbf{I}+\mathbf{W}^\top\mathbf{W}/\sigma^2)^{-1}\sigma^2=\sigma^2\mathbf{M}^{-1}$，均值 $=\mathbf{M}^{-1}\mathbf{W}^\top(\mathbf{x}-\boldsymbol\mu)$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">边缘：$\mathbf{x}=\mathbf{W}\mathbf{z}+\boldsymbol\mu+\boldsymbol\epsilon$ 是独立高斯和。$\mathbb{E}[\mathbf{x}]=\boldsymbol\mu$。$\operatorname{Cov}[\mathbf{x}]=\mathbf{W}\operatorname{Cov}[\mathbf{z}]\mathbf{W}^\top+\operatorname{Cov}[\boldsymbol\epsilon]=\mathbf{W}\mathbf{W}^\top+\sigma^2\mathbf{I}\equiv\mathbf{C}$。$\square$</div>
+    <div class="step">后验：联合高斯。$\operatorname{Cov}[\mathbf{z},\mathbf{x}]=\operatorname{Cov}[\mathbf{z},\mathbf{W}\mathbf{z}+\boldsymbol\epsilon]=\mathbf{W}^\top$。条件高斯公式：$\operatorname{Cov}[\mathbf{z}\mid\mathbf{x}]=\mathbf{I}-\mathbf{W}^\top\mathbf{C}^{-1}\mathbf{W}$。</div>
+    <div class="step">用 Woodbury：$\mathbf{C}^{-1}=(\mathbf{W}\mathbf{W}^\top+\sigma^2\mathbf{I})^{-1}=\frac{1}{\sigma^2}\mathbf{I}-\frac{1}{\sigma^4}\mathbf{W}(\mathbf{M})^{-1}\mathbf{W}^\top$。整理得 $\operatorname{Cov}[\mathbf{z}\mid\mathbf{x}]=\sigma^2\mathbf{M}^{-1}$，$\mathbf{M}=\mathbf{W}^\top\mathbf{W}+\sigma^2\mathbf{I}$。</div>
+    <div class="step">均值 $=\operatorname{Cov}[\mathbf{z},\mathbf{x}]\operatorname{Cov}[\mathbf{x}]^{-1}(\mathbf{x}-\boldsymbol\mu)=\mathbf{W}^\top\mathbf{C}^{-1}(\mathbf{x}-\boldsymbol\mu)$。用 Woodbury 化简 $=\mathbf{M}^{-1}\mathbf{W}^\top(\mathbf{x}-\boldsymbol\mu)$。$\square$</div>
+    <div class="step">回接 0002 范式 #3：高斯边缘化/条件化 = 配平方 + Woodbury。本课、0002 贝叶斯回归、Kalman 滤波全是这一组恒等式。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 5 · $\sigma^2\to0$ 退化为经典 PCA <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    证明 $\sigma^2\to0$ 时概率 PCA 后验均值 $\mathbf{M}^{-1}\mathbf{W}^\top(\mathbf{x}-\boldsymbol\mu)$ 退化为经典 PCA 投影 $\mathbf{U}_M^\top(\mathbf{x}-\boldsymbol\mu)$（$\mathbf{U}_M$ 是前 $M$ 主成分）。用 MLE $\mathbf{W}_{\text{ML}}=\mathbf{U}_M(\boldsymbol\Lambda_M-\sigma^2\mathbf{I})^{1/2}\mathbf{R}$ 代入。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\sigma^2\to0$：$\mathbf{M}=\mathbf{W}^\top\mathbf{W}+\sigma^2\mathbf{I}\to\mathbf{W}^\top\mathbf{W}$。$\mathbf{W}_{\text{ML}}^\top\mathbf{W}_{\text{ML}}=\mathbf{R}^\top(\boldsymbol\Lambda_M-\sigma^2\mathbf{I})\mathbf{R}\to\mathbf{R}^\top\boldsymbol\Lambda_M\mathbf{R}$。$\mathbf{M}^{-1}\mathbf{W}^\top\to(\mathbf{W}^\top\mathbf{W})^{-1}\mathbf{W}^\top=\mathbf{W}^+$（伪逆）。代入 $\mathbf{W}_{\text{ML}}$ 化简得 $\mathbf{R}^\top\boldsymbol\Lambda_M^{-1/2}\mathbf{U}_M^\top$，作用到 $\mathbf{x}$ 给旋转缩放后的 PCA 坐标。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\sigma^2\to0$：$\mathbf{M}=\mathbf{W}^\top\mathbf{W}+\sigma^2\mathbf{I}\to\mathbf{W}^\top\mathbf{W}$。后验均值 $\to(\mathbf{W}^\top\mathbf{W})^{-1}\mathbf{W}^\top(\mathbf{x}-\boldsymbol\mu)=\mathbf{W}^+(\mathbf{x}-\boldsymbol\mu)$（伪逆）。</div>
+    <div class="step">代入 MLE $\mathbf{W}_{\text{ML}}=\mathbf{U}_M(\boldsymbol\Lambda_M-\sigma^2\mathbf{I})^{1/2}\mathbf{R}$：$\mathbf{W}^\top\mathbf{W}=\mathbf{R}^\top(\boldsymbol\Lambda_M-\sigma^2\mathbf{I})\mathbf{R}\to\mathbf{R}^\top\boldsymbol\Lambda_M\mathbf{R}$。</div>
+    <div class="step">$(\mathbf{W}^\top\mathbf{W})^{-1}\mathbf{W}^\top\to\mathbf{R}^\top\boldsymbol\Lambda_M^{-1}\mathbf{R}\cdot\mathbf{R}^\top(\boldsymbol\Lambda_M)^{1/2}\mathbf{U}_M^\top=\mathbf{R}^\top\boldsymbol\Lambda_M^{-1/2}\mathbf{U}_M^\top$（$\mathbf{R}\mathbf{R}^\top=\mathbf{I}$）。</div>
+    <div class="step">作用到 $\mathbf{x}-\boldsymbol\mu$：$\mathbf{R}^\top\boldsymbol\Lambda_M^{-1/2}\mathbf{U}_M^\top(\mathbf{x}-\boldsymbol\mu)$。这是 PCA 坐标 $\mathbf{U}_M^\top(\mathbf{x}-\boldsymbol\mu)$ 经 $\boldsymbol\Lambda_M^{-1/2}$ 缩放和 $\mathbf{R}^\top$ 旋转。</div>
+    <div class="step">$\boldsymbol\Lambda_M^{-1/2}$ 缩放把坐标标准化（除以 $\sqrt{\lambda_i}$），$\mathbf{R}^\top$ 是载荷的旋转自由度（$\sigma^2\to0$ 时 $\mathbf{W}$ 有旋转不确定性）。若固定 $\mathbf{R}=\mathbf{I}$ 且不缩放，后验均值 = PCA 投影坐标。<strong>概率 PCA 退化为经典 PCA，缩放/旋转是参数化的非本质自由度。</strong>$\square$</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 6 · EM 解概率 PCA 的 E/M 步（范式迁移） <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    用 0010 的 EM 范式推概率 PCA：(a) E 步给出 $\mathbb{E}[\mathbf{z}_n]$ 和 $\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top]$（用题 4 后验）；(b) M 步对完整对数似然期望求驻点，推出 $\mathbf{W}^{\text{new}}=(\sum_n\mathbf{x}_n\mathbb{E}[\mathbf{z}_n]^\top)(\sum_n\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top])^{-1}$。说明为什么 EM 比特征分解更适合 $D\gg M$。
+  </div>
+  <details><summary>提示</summary><div class="hint">(a) 后验 $\mathbf{z}_n\mid\mathbf{x}_n\sim\mathcal{N}(\mathbf{m}_n,\sigma^2\mathbf{M}^{-1})$，$\mathbb{E}[\mathbf{z}_n]=\mathbf{m}_n$，$\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top]=\sigma^2\mathbf{M}^{-1}+\mathbf{m}_n\mathbf{m}_n^\top$。(b) 完整对数似然 $\sum_n\log\mathcal{N}(\mathbf{x}_n\mid\mathbf{W}\mathbf{z}_n,\sigma^2\mathbf{I})$，对 $\mathbf{W}$ 求导，$\mathbf{z}_n$ 用其期望代。$\nabla_{\mathbf{W}}$ 给 $\sum_n(\mathbf{x}_n-\mathbf{W}\mathbb{E}[\mathbf{z}_n])\mathbb{E}[\mathbf{z}_n]^\top=0$，解出 $\mathbf{W}$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">(a) E 步：题 4 后验 $\mathbf{z}_n\mid\mathbf{x}_n\sim\mathcal{N}(\mathbf{m}_n,\sigma^2\mathbf{M}^{-1})$，$\mathbf{m}_n=\mathbf{M}^{-1}\mathbf{W}^\top\mathbf{x}_n$（中心化）。$\mathbb{E}[\mathbf{z}_n]=\mathbf{m}_n$，$\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top]=\operatorname{Cov}+\mathbb{E}[\mathbf{z}_n]\mathbb{E}[\mathbf{z}_n]^\top=\sigma^2\mathbf{M}^{-1}+\mathbf{m}_n\mathbf{m}_n^\top$。$\square$</div>
+    <div class="step">(b) 完整对数似然（$\mathbf{x}_n$ 中心化）：$\sum_n[-\frac{D}{2}\log(2\pi\sigma^2)-\frac{1}{2\sigma^2}\|\mathbf{x}_n-\mathbf{W}\mathbf{z}_n\|^2]$。期望：把 $\|\mathbf{x}_n-\mathbf{W}\mathbf{z}_n\|^2=\|\mathbf{x}_n\|^2-2\mathbf{x}_n^\top\mathbf{W}\mathbf{z}_n+\mathbf{z}_n^\top\mathbf{W}^\top\mathbf{W}\mathbf{z}_n$ 的 $\mathbf{z}_n$ 用 $\mathbb{E}[\mathbf{z}_n]$、$\mathbf{z}_n\mathbf{z}_n^\top$ 用 $\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top]$ 代。</div>
+    <div class="step">对 $\mathbf{W}$ 求导：$-\frac{1}{2\sigma^2}\sum_n[-2\mathbf{x}_n\mathbb{E}[\mathbf{z}_n]^\top+2\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top]\mathbf{W}^\top]^\top=0$，即 $\sum_n\mathbf{x}_n\mathbb{E}[\mathbf{z}_n]^\top=\mathbf{W}\sum_n\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top]$。</div>
+    <div class="step">$\mathbf{W}^{\text{new}}=(\sum_n\mathbf{x}_n\mathbb{E}[\mathbf{z}_n]^\top)(\sum_n\mathbb{E}[\mathbf{z}_n\mathbf{z}_n^\top])^{-1}$。$\square$ $\sigma^2$ 类似求。</div>
+    <div class="step">EM vs 特征分解：特征分解需 $D\times D$ 协方差 $\mathbf{S}$，$O(ND^2)$ 存 $+O(D^3)$ 分解。EM 每步只算 $M\times M$ 的 $\mathbf{M}$（$O(M^3)$）和 $N$ 个 $M$ 维后验（$O(NMD)$）。$D\gg M$（如 $D=10000,M=10$）时 EM $O(NMD)$ 远省于特征分解 $O(ND^2)$。<strong>范式迁移</strong>：0010 EM 的"E 算后验、M 矩匹配"原样搬到概率 PCA，只是隐变量从离散成分 $\mathbf{z}_n$ 变连续高斯坐标。同范式，不同实例。</div>
+  </div></details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 自测</h2>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q1 · 为什么主成分按特征值降序排？"保留 95% 方差"是什么意思？</div>
+  <details><summary>答案</summary><div class="sol">特征值 = 该方向投影方差 = 信息量。降序排 = 优先保留信息多的方向。总方差 $=\sum_i\lambda_i=\operatorname{tr}(\mathbf{S})$。前 $M$ 方向保留 $\sum_{i\leq M}\lambda_i$。"保留 95% 方差"= 选最小 $M$ 使 $\sum_{i\leq M}\lambda_i\geq0.95\sum_i\lambda_i$。这是数据驱动的降维维度选择，比拍定 $M$ 更有据。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q2 · 概率 PCA 相对经典 PCA 多给了什么？</div>
+  <details><summary>答案</summary><div class="sol">(1) 似然 $p(\mathbf{x}\mid\mathbf{W},\sigma^2)$——可做模型选择（比不同 $M$）、可放进混合模型（mixture of PPCA）、可加先验做贝叶斯。(2) 后验 $p(\mathbf{z}\mid\mathbf{x})$——给低维坐标的不确定性（方差 $\sigma^2\mathbf{M}^{-1}$），经典 PCA 只给点估计。(3) 自然推广到因子分析（各向异性噪声）、混合 PCA、贝叶斯 PCA。(4) EM 解法适合 $D\gg M$ 大数据。经典 PCA 是 $\sigma^2\to0$ 的极限，概率视角更富但退化回经典。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q3 · PCA 与因子分析的关键差别是什么？</div>
+  <details><summary>答案</summary><div class="sol">噪声结构：PCA（概率 PCA）各向同性 $\sigma^2\mathbf{I}$，因子分析各向异性对角 $\boldsymbol\Psi$。后果：PCA 有旋转等价（$\mathbf{W}\mathbf{R}$ 给同 $\mathbf{C}$，$\mathbf{R}$ 正交），主方向需排序特征值定解；因子分析旋转不等价，需因子旋转（varimax）求可解释因子。量化里因子模型常需旋转让因子有经济含义。PCA 假设各维噪声同方差较强，因子分析更灵活但需更多参数和旋转选择。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q4 · 为什么 EM 解概率 PCA 在 $D\gg M$ 时比特征分解好？</div>
+  <details><summary>答案</summary><div class="sol">特征分解需对 $D\times D$ 协方差 $\mathbf{S}$ 做 SVD/特征分解，存 $O(ND^2)$，算 $O(D^3)$。$D$ 大（如基因表达 $D=10000$）时不可行。EM 每步只涉及 $M\times M$ 矩阵 $\mathbf{M}=\mathbf{W}^\top\mathbf{W}+\sigma^2\mathbf{I}$（$O(M^3)$）和 $N$ 个 $M$ 维后验（$O(NMD)$），总 $O(NMD)$。$D\gg M$ 时 $NMD\ll ND^2$。EM 还可在线/增量更新，适合流式数据。代价：EM 迭代收敛，特征分解一步到位——$D$ 不大时特征分解更快。</div></details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;">
+    <strong>PRML §12.1（PCA）+ §12.2（概率 PCA）</strong>——§12.1.1–12.1.4 最大方差/最小误差/特征分解，§12.2 概率 PCA 的边缘、后验、MLE、EM。本课第 2–6 节的母本。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>PRML §12.2.4（因子分析）</strong>——各向异性噪声推广、与 PCA 的旋转差别。本课第 7 节来源。
+  </p>
+  <p style="margin-bottom:0; font-size:0.9rem;">
+    <strong>MML §10（PCA）</strong>——§10.2 最大方差、§10.3 投影视角、§10.4 特征分解。代数推导最干净。ESL §14.5 给统计视角和与因子分析的关系。
+  </p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">
+    这课的关键逻辑链：最大方差 → 拉格朗日 → 协方差特征分解（主成分=特征向量，方差=特征值）→ 最小重构误差等价 → 概率 PCA 线性高斯隐变量 → 边缘 $\mathbf{C}=\mathbf{W}\mathbf{W}^\top+\sigma^2\mathbf{I}$ + 后验 → EM 解（E 后验坐标，M 载荷）→ $\sigma^2\to0$ 退化经典 PCA → 因子分析各向异性推广。
+    题 5（$\sigma^2\to0$ 退化）和题 6（EM 推导）是钥匙——题 5 把两视角的统一性落到代数，题 6 把 0010 EM 范式迁移到连续隐变量。
+    <strong>本课是 0017 因子模型的直接前置。</strong>卡住直接问。
+  </p>
+</div>
+
+
+<div class="insight" style="margin-top:1.5rem;">
+  <strong>量化应用：</strong>PCA 从协方差矩阵提取主成分——金融里的因子模型做完全一样的事。
+  <a href="0017-factor-models-and-ml.html">0017 因子模型与 ML</a>
+  把 PCA、GBDT、和套利定价理论统一起来：统计因子就是主成分，APT 是线性因子模型的无套利约束，
+  GBDT 是函数空间梯度下降在因子组合上的应用。
+</div>
+
+<div class="lesson-footer">
+  <a href="0010-mixture-models-em.html">← 0010 混合模型与 EM</a> ·
+  <a href="0004-exponential-family.html">← 0004 指数族</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0012-bias-variance.html">0012 偏差–方差分解</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<template id="card-data-eigendecomp">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">线性代数</span><h3>特征分解</h3><span class="cc-aliases">Eigenvalue Decomposition · 谱分解</span></div>
+  <div class="cc-essence">对称矩阵 $\mathbf{A}$ 可分解为 $\mathbf{A}=\mathbf{V}\boldsymbol{\Lambda}\mathbf{V}^\top$。$\boldsymbol{\Lambda}=\text{diag}(\lambda_1,\ldots,\lambda_d)$，$\lambda_i$ = 特征值（该方向的方差）。$\mathbf{V}$ = 特征向量矩阵（正交，$\mathbf{V}^\top\mathbf{V}=\mathbf{I}$）。</div>
+  <div class="cc-section"><h4>在 PCA 里</h4><p>协方差矩阵 $\frac{1}{N}\mathbf{X}^\top\mathbf{X}$ 的特征向量 = 主成分方向；特征值 = 该方向上的方差。取前 $K$ 个最大特征值对应的特征向量 = 保留最多方差的 $K$ 维投影。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0011 §3: PCA 推导</span><span class="conn-badge">→ 0017: 统计因子 = 特征向量</span></div>
+</div>
+</template>
+
+</body>
+</html>

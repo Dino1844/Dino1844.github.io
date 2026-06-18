@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0010 · 常见因子（上）</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.75; color: #1a1a1a; background: #fdfdfb; max-width: 760px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .insight h3 { margin-top: 0; color: #8b5a20; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .formula { text-align: center; font-size: 1.05rem; margin: 1.4rem 0; }
+  .danger { background: #fff0f0; border-left: 3px solid #c44; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .danger h3 { margin-top: 0; color: #a33; }
+  .connection { background: #f0f8f8; border-left: 3px solid #4a9a9a; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #345; }
+  .connection h3 { margin-top: 0; color: #2a6a6a; }
+  .open-q { background: #fafafa; border: 1px dashed #bbb; border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #555; }
+  .open-q h3 { margin-top: 0; color: #666; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<h1>常见因子（上）：动量、价值、Carry</h1>
+<p class="meta">Lesson 0010（重写·深度版）· 预计 40-50 分钟</p>
+
+<div class="retrieval">
+  <h3>🔁 衔接</h3>
+  <p>上节建立了因子模型框架：收益 = Σβ·因子 + α。但"因子"还是抽象的——到底哪些因子真实存在、怎么构造、为什么有溢价、什么时候失效？这节展开三个<strong>最稳健、跨市场验证过、有清晰经济逻辑</strong>的因子。每个因子按同一结构讲：<strong>构造 → 为什么有效 → 实证 → 失败模式 → 币圈</strong>。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、动量因子 <span class="en">Momentum</span></h2>
+
+<h3>1.1 构造</h3>
+
+<p>两类构造（上节已区分，这里给精确公式）：</p>
+
+<div class="card">
+  <h3>时间序列动量（TSMOM）</h3>
+  <p>对每个资产 $i$，信号 = 过去 $k$ 期的对数收益：</p>
+  <div class="formula">
+    $$\text{sig}_{i,t} = \sum_{s=1}^{k} r_{i,t-s} = \ln(P_{t-1}/P_{t-k-1})$$
+  </div>
+  <p>仓位方向 = sign(sig)：正就做多，负就做空，零空仓。仓位大小常按波动率反比缩放（$w_i \propto \text{sig}_i / \sigma_i$）——这是波动率目标，让每个资产风险贡献相等。</p>
+</div>
+
+<div class="card">
+  <h3>横截面动量（XSMOM）</h3>
+  <p>在每个时点 $t$，对所有资产按过去 $k$ 期收益排序，分 $N$ 组（如十组）。做多最高组、做空最低组：</p>
+  <div class="formula">
+    $$\text{XSMOM}_t = R^{\text{top}}_t - R^{\text{bottom}}_t$$
+  </div>
+  <p>多空金额相等 → 市场中性。学术标准：$k=12$ 个月（剔除最近 1 个月，Carhart UMD），持有 1 个月，每月再平衡。</p>
+</div>
+
+<h3>1.2 为什么有效——三个解释</h3>
+
+<p>学术界争论 30 年，没有单一解释。三个机制都有证据：</p>
+
+<div class="card">
+  <h3>解释 A：信息扩散缓慢（underreaction）</h3>
+  <p>重大消息（盈利超预期、监管落地、技术升级）不是瞬间被所有人消化。Hong-Stein (1999) 的模型：信息<strong>缓慢扩散</strong>到投资者群体，早期反应者买入 → 价格部分上涨 → 后知后觉者陆续跟进 → 持续上涨。这解释了动量<strong>形成</strong>。</p>
+</div>
+
+<div class="card">
+  <h3>解释 B：行为偏差（disposition effect + extrapolation）</h3>
+  <p>两个行为偏差共同维持动量：</p>
+  <ul>
+    <li><strong>处置效应</strong>：投资者赢家卖得太早、输家拿得太久。这压抑了价格对新信息的充分调整——赢家本该涨更多但被提前卖出压制，输家本该跌更多但被死扛支撑。趋势因此被<strong>拉长</strong>。</li>
+    <li><strong>外推偏差</strong>：投资者把近期趋势外推到未来（"这币一直在涨，还会涨"），在趋势后期推高价格。</li>
+  </ul>
+  <p>外推解释了动量<strong>后期反转</strong>——外推过度导致价格越过基本面，然后崩。</p>
+</div>
+
+<div class="card">
+  <h3>解释 C：风险补偿</h3>
+  <p>趋势跟踪在<strong>震荡市持续小亏</strong>、在<strong>趋势市大赚</strong>。这种收益结构类似<strong>做空波动率</strong>——平时收小钱，偶尔大亏（动量崩溃）。动量溢价可能是对"承受震荡期痛苦 + 崩溃尾部风险"的补偿。这个解释能说明为什么动量<strong>没被套利消除</strong>——大多数人承受不了震荡期回撤，不会无限涌入。</p>
+</div>
+
+<h3>1.3 实证</h3>
+
+<table>
+  <tr><th>市场</th><th>样本期</th><th>横截面动量夏普</th><th>来源</th></tr>
+  <tr><td>美股</td><td>1927-2020</td><td>~0.8</td><td>Jegadeesh-Titman</td></tr>
+  <tr><td>欧洲股票</td><td>1990-2020</td><td>~0.6</td><td>Asness et al.</td></tr>
+  <tr><td>外汇 / 商品 / 债券（TSMOM）</td><td>1985-2020</td><td>~1.0</td><td>Moskowitz-Ooi-Pedersen (2012)</td></tr>
+  <tr><td>BTC（TSMOM，周线）</td><td>2015-2024</td><td>~1.2-1.5</td><td>多项研究</td></tr>
+</table>
+<p>动量是学术界发现的<strong>最稳健因子</strong>——跨资产、跨市场、跨时间尺度都成立。Asness et al. (2013) "Value and Momentum Everywhere" 在八个市场都找到它。</p>
+
+<h3>1.4 失败模式：动量崩溃 <span class="en">Momentum Crash</span></h3>
+
+<div class="danger">
+  <h3>⚠️ 2009 年 3 月的教训</h3>
+  <p>2008 金融危机中，动量策略大量做空"过去一年跌惨的"金融股。2009 年 3 月市场急速反弹，这些空头单边爆亏——动量策略在<strong>一个月内亏掉过去几年的累计收益</strong>。Daniel-Moskowitz (2016) 量化：动量崩溃是<strong>条件偏度</strong>现象——市场反弹时动量收益分布的左尾突然变肥。</p>
+  <p><strong>根本原因</strong>：动量策略在反弹时持有大量空头，空头在反弹中亏钱。这是<strong>结构性</strong>的，不是偶然。</p>
+</div>
+
+<div class="card">
+  <h3>缓解动量崩溃的方法</h3>
+  <ul>
+    <li><strong>波动率目标</strong>（最有效）：市场波动飙升时自动降仓。2009 年 3 月波动飙升 → 仓位自动缩小 → 崩溃损失被限制。Moskowitz-Ooi-Pedersen 加了 vol scaling 后，2009 年回撤从 -70% 降到 -25%。</li>
+    <li><strong>动量信号波动过滤</strong>：信号本身的波动大时降仓。</li>
+    <li><strong>加反转因子对冲</strong>：短期反转和长期动量组合，部分对冲崩溃。</li>
+    <li><strong>识别体制</strong>：在"急速反转"体制（如 VIX 飙升后）暂停动量。</li>
+  </ul>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈动量</h3>
+  <p><strong>为什么更强</strong>：散户占比高（行为偏差大）、信息不对称严重（叙事传播慢）、杠杆正反馈循环（涨→空头被清算→强制买入→继续涨）。这三个机制都比传统市场更剧烈。</p>
+  <p><strong>参数</strong>：BTC/ETH 用周-月级动量（12-26 周）较稳；日内动量噪声大。山寨币动量衰减更快（叙事周期短），用更短窗口（2-4 周）。</p>
+  <p><strong>崩溃</strong>：币圈动量崩溃更猛——Luna (2022.5) 一周从 $80 归零，FTX (2022.11) 一天 -30%。任何币圈动量策略<strong>必须配波动率目标</strong>，否则活不过一个完整周期。</p>
+  <p><strong>横截面山寨轮动</strong>：牛市中段资金从一个币轮到下一个，按相对强弱排序能捕捉。但熊市失效（一起跌，无相对强弱）且幸存者偏差严重——回测必须包含已归零的币。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>二、价值因子 <span class="en">Value</span></h2>
+
+<h3>2.1 构造</h3>
+
+<p>价值 = 便宜。度量"便宜"用价格相对某个基本面指标的比率：</p>
+
+<table>
+  <tr><th>指标</th><th>公式</th><th>含义</th></tr>
+  <tr><td>账面市值比</td><td>B/P = 账面价值 / 市值</td><td>Fama-French HML 用的</td></tr>
+  <tr><td>盈利收益率</td><td>E/P = 盈利 / 市值</td><td>1/PE，高=便宜</td></tr>
+  <tr><td>股息率</td><td>D/P = 股息 / 市值</td><td>高=便宜且付现</td></tr>
+  <tr><td>EV/EBITDA</td><td>企业价值 / 息税折旧前利润</td><td>剔除资本结构差异</td></tr>
+</table>
+
+<p>构造：按价值指标排序，做多便宜组（高 B/P、高 E/P），做空贵组。Fama-French HML 就是这么做的。</p>
+
+<h3>2.2 为什么有效</h3>
+
+<div class="card">
+  <h3>解释 A：过度反应与均值回归</h3>
+  <p>De Bondt-Thaler (1985)：投资者对坏消息<strong>过度反应</strong>，把困境公司股价砸得过低。后续现实没那么糟，价格回弹 → 便宜股跑赢。这是行为解释，和价值因子的<strong>长期反转</strong>性质一致（价值本质是 3-5 年均值回归）。</p>
+</div>
+
+<div class="card">
+  <h3>解释 B：风险补偿（distress risk）</h3>
+  <p>便宜股往往是<strong>陷入困境的公司</strong>——高 B/P 常因为价格跌了（市场在担心）。价值溢价是对承担<strong>困境风险</strong>的补偿：便宜股在经济衰退时更容易破产，需要溢价补偿。这个解释说价值不是免费午餐。</p>
+</div>
+
+<div class="card">
+  <h3>解释 C：错配久期（duration mismatch）</h3>
+  <p>成长股的现金流在远期，价值股在近期。利率上升时远期现金流折现更多 → 成长股跌更多 → 价值股相对跑赢。近年价值因子表现和利率变动高度相关——2022 年加息周期价值大爆发。</p>
+</div>
+
+<h3>2.3 实证</h3>
+<p>美股 1927-2020，HML 年化溢价 ~4-5%，夏普 ~0.4。但<strong>价值有长失效期</strong>：1998-2000 互联网泡沫连续 5 年跑输，2018-2020 又连续 3 年跑输（直到 2022 加息回来）。长期有效 ≠ 一直有效。</p>
+
+<h3>2.4 失败模式：价值陷阱 + 长失效期</h3>
+
+<div class="danger">
+  <h3>⚠️ 价值陷阱 <span class="en">Value Trap</span></h3>
+  <p>便宜可能有原因：基本面在恶化，"便宜"会变更便宜。例：某山寨币 TVL 在流失但市值还没跌完，看起来"便宜"（市值/TVL 低）——其实是 TVL 还会继续掉，市值会跟着跌。<strong>区分"便宜且好"和"便宜且烂"是价值因子的核心难点</strong>。质量因子（下节）就是用来过滤价值陷阱的——价值 + 质量组合夏普比单价值高得多。</p>
+</div>
+
+<div class="danger">
+  <h3>⚠️ 长失效期</h3>
+  <p>价值能连续跑输 5 年。单做价值的策略，多数人扛不住 5 年回撤就退出了——这恰恰是价值溢价能存在的原因（解释 C 的风险补偿）。但对你意味着：价值因子<strong>不能单用</strong>，必须和动量等组合（0012）。</p>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈的"价值"</h3>
+  <p>币圈没有 P/E、P/B，但有类比——价格相对<strong>链上基本面</strong>的比率：</p>
+  <table>
+    <tr><th>指标</th><th>含义</th></tr>
+    <tr><td>市值 / 日活地址 (NVT 类)</td><td>价格相对使用量</td></tr>
+    <tr><td>市值 / TVL（DeFi）</td><td>价格相对锁仓量</td></tr>
+    <tr><td>市值 / 开发者活跃度</td><td>价格相对开发投入</td></tr>
+    <tr><td>市值 / 已实现市值（MVRV）</td><td>价格相对链上成本基础</td></tr>
+  </table>
+  <p><strong>问题</strong>：币圈"基本面"噪声大、易操纵（TVL 刷量、地址刷量）、项目生命周期短。价值因子在币圈远不如股票市场稳健——Asness 等人的"Value Everywhere"在币圈证据最弱。<strong>慎用，且必须配质量过滤</strong>。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、Carry 因子 <span class="en">Carry</span></h2>
+
+<h3>3.1 构造</h3>
+
+<p>Carry = 持有某资产的<strong>即时现金流收益率</strong>（假设价格不变）。构造：做多高 carry 资产、做空低 carry 资产，赚利差。</p>
+
+<div class="formula">
+  $$\text{carry}_i = \frac{F_i(t, t+h) - S_i(t)}{h \cdot S_i(t)} \quad (\text{近似})$$
+</div>
+
+<p>$F$ 是 $h$ 期后的远期价格，$S$ 是现价。carry = 远期相对现货的折溢价率。Koijen et al. (2018) 证明这个统一公式跨资产都适用：</p>
+
+<table>
+  <tr><th>市场</th><th>carry 来源</th><th>机制</th></tr>
+  <tr><td>外汇</td><td>利率差 $r_{\text{高}} - r_{\text{低}}$</td><td>借低利率币买高利率币</td></tr>
+  <tr><td>债券</td><td>到期收益率 − 短端利率</td><td>期限溢价</td></tr>
+  <tr><td>商品</td><td>期现价差</td><td>backwardation（近>远）为正 carry</td></tr>
+  <tr><td>币圈永续</td><td>资金费率</td><td>做空高费率收钱</td></tr>
+</table>
+
+<h3>3.2 为什么有效</h3>
+
+<div class="card">
+  <h3>风险补偿视角</h3>
+  <p>carry 本质是<strong>对承担某种风险的即期补偿</strong>。外汇 carry：高利率币常有贬值风险（汇率崩盘），carry 溢价补偿贬值风险。商品 backwardation：补偿生产者的对冲需求（生产者卖远期保值，压低远期价格）。币圈费率：补偿做空者承担的逼空风险。</p>
+  <p>关键：carry <strong>不是无风险</strong>——它有"carry unwinding"尾部风险：平时收小钱，危机时标的暴涨（你做空）暴亏。</p>
+</div>
+
+<h3>3.3 实证</h3>
+<p>Koijen et al. (2018) 在外汇、债券、商品、指数四个市场都找到 carry 溢价，组合夏普 ~0.8-1.0。币圈费率套利实证夏普更高（~1.5-2.5），但样本短、可能含幸存者偏差（没经历极端挤兑）。</p>
+
+<h3>3.4 失败模式：carry unwinding</h3>
+
+<div class="danger">
+  <h3>⚠️ 危机时一起爆</h3>
+  <p>2008 金融危机：高利率货币（澳元、新西兰元）暴跌，外汇 carry 策略集体 unwinding，一个月亏掉数年累计收益。1998 LTCM：利差套利在俄罗斯违约时爆。</p>
+  <p>币圈版：FTX (2022.11) 崩盘时，费率套利者现货在 FTX、合约头寸在别处——交易所挤兑导致<strong>对冲失效</strong>，现货拿不回来，合约端还在亏。费率套利的尾部风险是<strong>对手方风险</strong>，不是市场风险。</p>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈 carry = 资金费率套利（详解）</h3>
+  <p><strong>费率机制</strong>（第一课已铺垫，这里给公式）：永续合约价格 $F$ 偏离现货 $S$ 时，每 8 小时多空间转移费率：</p>
+  <div class="formula">
+    $$\text{funding rate} \approx \frac{F - S}{S} \cdot \frac{1}{\text{周期}} \quad (\text{clamp 到 } \pm 0.75\%)$$
+  </div>
+  <p>$F > S$（多头狂热）→ 费率正 → 多头付空头 → 做多成本增 → 平多 → $F$ 压回 $S$。</p>
+  <p><strong>套利</strong>：费率 0.1%/8h（年化 ~100%）时，现货买 1 BTC + 永续做空 1 BTC。价格风险对冲掉，每 8 小时稳收 0.1%。这是币圈少数<strong>有明确经济逻辑、不是数据挖掘</strong>的因子——费率存在是因为投机者愿意付钱维持杠杆，套利者赚这个溢价。</p>
+  <p><strong>容量限制</strong>：套利者涌入 → 合约卖压 → $F$ 压回 $S$ → 费率回落。费率套利的容量有限，资金多了溢价就消失。这是 carry 因子普遍的拥挤效应。</p>
+  <p><strong>尾部风险</strong>：交易所挤兑（FTX）、现货和合约在不同所的跨所风险、极端行情下现货和合约价差拉大导致保证金不足被强平。<strong>不要把全部资金放一个所做费率套利</strong>。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、三个因子对比与组合直觉</h2>
+
+<table>
+  <tr><th></th><th>动量</th><th>价值</th><th>Carry</th></tr>
+  <tr><td>赌什么</td><td>趋势持续</td><td>便宜回归</td><td>利差持续</td></tr>
+  <tr><td>时间尺度</td><td>周-月</td><td>月-年</td><td>天-周</td></tr>
+  <tr><td>主要风险</td><td>动量崩溃</td><td>价值陷阱 + 长失效</td><td>carry unwinding</td></tr>
+  <tr><td>币圈适用性</td><td>★★★★★</td><td>★★</td><td>★★★★★</td></tr>
+  <tr><td>与传统比</td><td>更强</td><td>较弱</td><td>独特（费率）</td></tr>
+</table>
+
+<div class="insight">
+  <h3>⚡ 动量和价值负相关——组合的基石</h3>
+  <p>Asness et al. (2013) 关键发现：动量和价值在<strong>所有市场都负相关</strong>（约 -0.4 到 -0.7）。这反直觉但合理：动量买"涨的"（往往贵），价值买"便宜的"（往往跌的）——天然对立。负相关意味着组合起来夏普比单用高得多，且<strong>动量崩溃时价值往往表现好</strong>（2009 年 3 月动量崩、价值反弹）。这是 0012 多因子组合的理论基础。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="connection">
+  <h3>🔗 与其他课的连接</h3>
+  <p><strong>前置</strong>：0009 因子模型（本节是它的展开）、0004 自相关（动量 = 正自相关的因子化）、0008 回测（动量崩溃和价值陷阱都要靠回测识别）。</p>
+  <p><strong>后续</strong>：0011 讲低波动、质量（质量专门用来过滤价值陷阱）、币圈特有因子；0012 把这三个 + 0011 的组合起来，用到本节"动量-价值负相关"的结论。</p>
+</div>
+
+<div class="open-q">
+  <h3>❓ 开放问题</h3>
+  <ul>
+    <li>币圈动量溢价<strong>会不会衰减</strong>——随着机构涌入、市场效率提升，币圈动量会不会降到美股水平？目前数据显示 2020 后有所衰减但仍有 alpha</li>
+    <li>价值因子在币圈<strong>到底有没有效</strong>——现有研究样本短、定义不一，没有定论</li>
+    <li>费率套利的<strong>容量上限</strong>——多大资金会把它吃平？这关系到策略可扩展性</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 动量崩溃（如 2009 年 3 月）的结构性原因是什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">数据错误</span>
+    <span class="opt" data-answer="correct">策略持有大量"过去跌惨的"空头，市场急速反弹时空头单边爆亏</span>
+    <span class="opt" data-answer="wrong">过拟合</span>
+    <span class="opt" data-answer="wrong">手续费</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 缓解动量崩溃最有效的方法是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">缩短回看窗口</span>
+    <span class="opt" data-answer="correct">波动率目标——市场波动飙升时自动降仓，限制崩溃损失</span>
+    <span class="opt" data-answer="wrong">只做多</span>
+    <span class="opt" data-answer="wrong">增加杠杆</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. 价值陷阱是什么？怎么过滤？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">价值因子过拟合，用回测验证</span>
+    <span class="opt" data-answer="correct">便宜是因为基本面在恶化（会变更便宜），用质量因子过滤"便宜且烂"的</span>
+    <span class="opt" data-answer="wrong">价值因子不存在</span>
+    <span class="opt" data-answer="wrong">价值因子只适用股票</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. 资金费率套利的尾部风险主要是什么？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">BTC 价格暴跌</span>
+    <span class="opt" data-answer="correct">对手方风险——交易所挤兑导致现货和合约头寸分离，对冲失效（如 FTX）</span>
+    <span class="opt" data-answer="wrong">费率永远为负</span>
+    <span class="opt" data-answer="wrong">手续费太高</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="q">5. 动量和价值为什么负相关？为什么这是好事？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">它们用同一数据，所以负相关</span>
+    <span class="opt" data-answer="correct">动量买涨的（贵）、价值买便宜的（跌的）天然对立；负相关→组合夏普更高，且一方崩溃时另一方往往救场</span>
+    <span class="opt" data-answer="wrong">负相关意味着不能组合</span>
+    <span class="opt" data-answer="wrong">它们其实正相关</span>
+  </div>
+  <p class="feedback" id="f5"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 动量</h3>
+  <p><strong>Jegadeesh & Titman — "Returns to Buying Winners and Selling Losers" (1993)</strong>。动量因子奠基论文。<br>
+  <strong>Moskowitz, Ooi & Pedersen — "Time Series Momentum" (2012)</strong>。TSMOM 在 58 个资产上的实证。<br>
+  <strong>Daniel & Moskowitz — "Momentum Crashes" (2016)</strong>。动量崩溃的机制和缓解。</p>
+</div>
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 价值与组合</h3>
+  <p><strong>Asness, Moskiewicz & Pedersen — "Value and Momentum Everywhere" (2013)</strong>。两因子在八市场的稳健性 + 负相关。</p>
+</div>
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 Carry</h3>
+  <p><strong>Koijen et al. — "Carry" (2018, Journal of Financial Economics)</strong>。统一 carry 框架跨四市场。</p>
+</div>
+
+<div class="reminder">
+  <strong>💬 有问题随时问。</strong> 动量三个解释哪个主导、价值陷阱怎么量化识别、费率套利的跨所风险管理——任何一点都可以深挖。下节讲低波动、质量因子，以及币圈特有的链上/费率/稳定币因子（你做币圈最有 edge 的地方）。
+</div>
+
+<div class="nav">
+  上一课：<a href="0009-factor-foundations.html">0009 · 因子基础</a> &nbsp;|&nbsp;
+  <a href="../index.html">↑ 返回目录</a><br>
+  下一课：<a href="0011-factors-lowvol-quality-crypto.html">0011 · 常见因子（下）+ 币圈特有因子</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

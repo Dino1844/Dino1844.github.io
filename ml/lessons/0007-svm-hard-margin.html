@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0007 · SVM（上）硬间隔与对偶</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0007 · SVM（上）· 硬间隔与对偶</h1>
+<div class="subtitle">从"最大间隔"几何直觉到拉格朗日对偶、KKT、支持向量——把 SVM 的每一步推导都走通 · 阅读时间 ~55 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 几何直觉：间隔最大化推出约束优化</a><br>
+  <a href="#s2">2. 标准化约束：把间隔固定为 1，问题变干净</a><br>
+  <a href="#s3">3. 拉格朗日法：把约束吸进目标函数</a><br>
+  <a href="#s4">4. 求对偶：先对 $\mathbf{w},b$ 求偏导令零</a><br>
+  <a href="#s5">5. KKT 条件：互补松弛推出"支持向量"</a><br>
+  <a href="#s6">6. 强对偶成立：Slater 条件与凸性</a><br>
+  <a href="#s7">7. 核化：对偶里只有内积，换核即升维</a><br>
+  <a href="#s8">8. 推导与演算</a><br>
+  <a href="#s9">9. 自测</a>
+</div>
+
+<p>
+  SVM 是你"理解但不熟推导"的部分——本课的目标就是把每一步代数走通，让你能从"最大间隔"四个字一路推到对偶问题的标准形，
+  并说清每一步<strong>为什么这么做</strong>。SVM 的推导是 ML 里拉格朗日对偶最经典的实例，掌握它等于掌握了一整类"带约束的凸优化"套路。
+</p>
+
+<p>
+  故事的逻辑链：几何上想最大化决策边界到最近点的距离（间隔）→ 写成带约束的优化问题 → 约束碍事，用拉格朗日乘子吸进目标 →
+  对原始变量求偏导令零，消去它们，得到只含乘子的<strong>对偶问题</strong> → KKT 互补松弛条件揭示只有"边界上的点"（支持向量）的乘子非零 →
+  强对偶性由凸性 + Slater 保证，对偶解 = 原始解 → 对偶里数据只以内积出现，套核技巧即升维。
+  每一步都不是技巧堆砌，而是前一步的必然展开。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>超平面 $\{\mathbf{x}:\mathbf{w}^\top\mathbf{x}+b=0\}$。点 $\mathbf{x}_0$ 到超平面的（带符号）距离是 $\frac{\mathbf{w}^\top\mathbf{x}_0+b}{\|\mathbf{w}\|}$。这个公式怎么来的？（投影 $\mathbf{x}_0$ 到法方向 $\mathbf{w}/\|\mathbf{w}\|$）。</li>
+    <li>二分类标签 $y_n\in\{-1,+1\}$（注意 SVM 用 $\pm1$，不是逻辑回归的 $\{0,1\}$）。正确分类即 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)>0$。</li>
+    <li>带等式约束的拉格朗日法：$\min f$ s.t. $g=0$ → $\mathcal{L}=f-\lambda g$，对 $x$ 和 $\lambda$ 求驻点。不等式约束要加 KKT。</li>
+    <li>0006 的表示定理：正则化的解落在数据张成的子空间。SVM 的对偶是它的"约束优化版"。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 几何直觉：间隔最大化推出约束优化</h2>
+<div class="viz-container" style="background:white;border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.5rem 0;text-align:center;">
+  <svg viewBox="0 0 460 340" xmlns="http://www.w3.org/2000/svg" style="max-width:460px;width:100%;">
+    <!-- Separating hyperplane -->
+    <line x1="40" y1="280" x2="420" y2="60" stroke="#1a1a1a" stroke-width="2.5"/>
+    <text x="428" y="56" font-size="12" fill="#1a1a1a" font-weight="700">wᵀx+b=0</text>
+
+    <!-- Margin boundaries (dashed) -->
+    <line x1="80" y1="300" x2="440" y2="100" stroke="#8b4513" stroke-width="1.2" stroke-dasharray="6,4"/>
+    <text x="446" y="96" font-size="10" fill="#8b4513">wᵀx+b=1</text>
+    <line x1="10" y1="242" x2="370" y2="30" stroke="#8b4513" stroke-width="1.2" stroke-dasharray="6,4"/>
+    <text x="346" y="22" font-size="10" fill="#8b4513">wᵀx+b=−1</text>
+
+    <!-- Positive class (green circles) -->
+    <circle cx="320" cy="120" r="12" fill="#5b8c5a" opacity="0.7"/>
+    <circle cx="360" cy="90" r="12" fill="#5b8c5a" opacity="0.7"/>
+    <circle cx="380" cy="150" r="12" fill="#5b8c5a" opacity="0.7"/>
+    <circle cx="300" cy="170" r="12" fill="#5b8c5a" opacity="0.7"/>
+    <circle cx="340" cy="200" r="12" fill="#5b8c5a" opacity="0.7"/>
+    <circle cx="280" cy="140" r="12" fill="#5b8c5a" opacity="0.7"/>
+
+    <!-- Negative class (red triangles) -->
+    <polygon points="140,220 152,246 128,246" fill="#c44d4d" opacity="0.7"/>
+    <polygon points="100,260 112,286 88,286" fill="#c44d4d" opacity="0.7"/>
+    <polygon points="180,180 192,206 168,206" fill="#c44d4d" opacity="0.7"/>
+    <polygon points="120,200 132,226 108,226" fill="#c44d4d" opacity="0.7"/>
+    <polygon points="200,150 212,176 188,176" fill="#c44d4d" opacity="0.7"/>
+    <polygon points="160,160 172,186 148,186" fill="#c44d4d" opacity="0.7"/>
+
+    <!-- Support vectors (highlighted) -->
+    <circle cx="320" cy="120" r="16" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+    <polygon points="140,220 152,246 128,246" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+    <circle cx="380" cy="150" r="16" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+
+    <!-- Margin arrow -->
+    <line x1="330" y1="112" x2="338" y2="66" stroke="#8b4513" stroke-width="1" marker-end="url(#arr)"/>
+    <text x="318" y="56" font-size="10" fill="#8b4513">间隔 2/‖w‖</text>
+
+    <defs>
+      <marker id="arr" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><polygon points="0 0, 6 2, 0 4" fill="#555"/></marker>
+    </defs>
+  </svg>
+  <div class="viz-caption">最大间隔分类器。实线 = 决策边界，虚线 = 间隔边界。圈出来的点 = 支持向量（决定边界位置）。</div>
+</div>
+
+
+<p>
+  线性可分的二分类数据 $\{(\mathbf{x}_n,y_n)\}_{n=1}^N$，$y_n\in\{-1,+1\}$。决策边界是超平面 $\mathbf{w}^\top\mathbf{x}+b=0$。
+  <strong>间隔</strong>（margin）定义为<strong>所有样本到决策边界的最小距离</strong>：
+</p>
+
+<div class="formula-block">
+  $$\text{margin} = \min_n \frac{y_n(\mathbf{w}^\top\mathbf{x}_n+b)}{\|\mathbf{w}\|}$$
+</div>
+
+<p>
+  这里用 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)$ 而非 $|\mathbf{w}^\top\mathbf{x}_n+b|$ 是因为正确分类时 $y_n$ 与 $\mathbf{w}^\top\mathbf{x}_n+b$ 同号，乘积为正，正好给出带符号的距离。SVM 的目标：在所有正确分类的超平面里，选间隔最大的那个。
+</p>
+
+<div class="formula-block">
+  $$\max_{\mathbf{w},b}\;\min_n \frac{y_n(\mathbf{w}^\top\mathbf{x}_n+b)}{\|\mathbf{w}\|} \qquad\text{s.t.}\quad y_n(\mathbf{w}^\top\mathbf{x}_n+b)>0,\;\forall n$$
+</div>
+
+<div class="insight">
+  <strong>为什么最大化间隔？</strong> 几何上，间隔越大，决策边界对样本位置的扰动越不敏感——泛化越好。
+  这是一种<strong>结构风险最小化</strong>：不直接最小化训练误差（线性可分时本来就是 0），而是最小化一个与容量相关的量（间隔的倒数）。
+  这与 基石 0001 的正则化视角 的"正则化 = 罚复杂度"是同一哲学的不同面孔——下一课（0008）会把这点讲透：硬间隔 SVM 等价于 hinge 损失 + $\ell_2$ 正则。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 标准化约束：把间隔固定为 1，问题变干净</h2>
+
+
+<p>
+  上面的 $\max\min$ 形式不好处理。关键观察：<strong>$(\mathbf{w},b)$ 可以整体放缩而不改变超平面</strong>——
+  $\mathbf{w}^\top\mathbf{x}+b=0$ 与 $(c\mathbf{w})^\top\mathbf{x}+cb=0$ 是同一个超平面。利用这个自由度，<strong>把最近点的函数间隔固定为 1</strong>：
+</p>
+
+<div class="formula-block">
+  $$y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq 1,\quad\forall n \qquad\text{（最近的点取等号）}$$
+</div>
+
+<p>
+  在这个归一化下，间隔 $=\min_n \frac{y_n(\mathbf{w}^\top\mathbf{x}_n+b)}{\|\mathbf{w}\|}=\frac{1}{\|\mathbf{w}\|}$。
+  最大化间隔 $\frac{1}{\|\mathbf{w}\|}$ 等价于最小化 $\|\mathbf{w}\|$，等价于最小化 $\frac12\|\mathbf{w}\|^2$（平方是为了求导干净，且凸）。
+</p>
+
+<div class="formula-block">
+  $$\boxed{\;\min_{\mathbf{w},b}\;\frac12\|\mathbf{w}\|^2 \qquad\text{s.t.}\quad y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq 1,\;\forall n\;}$$
+</div>
+
+<p>
+  这是 SVM 的<strong>原始问题</strong>（primal）。目标 $\frac12\|\mathbf{w}\|^2$ 是凸二次，约束是线性的——所以这是一个<strong>凸二次规划</strong>（convex QP），有唯一全局解。
+</p>
+
+<div class="warning">
+  <strong>归一化的合法性</strong>：设最优超平面最近点函数间隔为 $m>0$。令 $\tilde{\mathbf{w}}=\mathbf{w}/m,\tilde b=b/m$，则最近点函数间隔变 1，超平面不变，$\|\tilde{\mathbf{w}}\|=\|\mathbf{w}\|/m$。所以"固定间隔为 1 再最小化 $\|\mathbf{w}\|^2$"与"直接最大化 $1/\|\mathbf{w}\|$"给出同一个超平面。这不是近似，是精确等价。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 拉格朗日法：把约束吸进目标函数</h2>
+<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#c44d4d;">优化范式</span>
+	    <h3>拉格朗日对偶 · Lagrange Duality</h3>
+	    <span class="cc-aliases">约束优化 → 无约束鞍点问题</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>约束优化 $\min f(\mathbf{w})$ s.t. $g_i(\mathbf{w})\leq 0$ → 无约束极小极大：$\min_{\mathbf{w}}\max_{\boldsymbol{\alpha}\geq 0} \mathcal{L}(\mathbf{w},\boldsymbol{\alpha})$。乘子 $\alpha_i$ 是约束的"价格"。
+	  </div>
+	  <div class="cc-section">
+	    <h4>拉格朗日函数</h4>
+	    <div class="cc-formula">$$\mathcal{L}(\mathbf{w},\boldsymbol{\alpha}) = f(\mathbf{w}) + \sum_i \alpha_i g_i(\mathbf{w}), \quad \alpha_i \geq 0$$</div>
+	    <p>KKT 条件在最优点成立：$\alpha_i g_i(\mathbf{w}^*) = 0$（互补松弛——要么约束活跃，要么乘子为零）。</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0007: SVM 对偶推导</span>
+	    <span class="conn-badge">→ 0008: 软间隔加松弛变量</span>
+	    <span class="conn-badge">→ 0015: VI 约束优化视角</span>
+	  </div>
+	</div>
+
+<p>
+  原始问题有 $N$ 个不等式约束 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1\geq 0$。引入拉格朗日乘子 $\alpha_n\geq 0$（每个约束一个），构造拉格朗日函数：
+</p>
+
+<div class="formula-block">
+  $$\mathcal{L}(\mathbf{w},b,\boldsymbol{\alpha}) = \frac12\|\mathbf{w}\|^2 - \sum_{n=1}^N \alpha_n\big[y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1\big]$$
+</div>
+
+<p>
+  减号是约定：约束写成 $g_n\geq0$，乘子 $\alpha_n\geq0$，$\mathcal{L}=f-\sum\alpha_n g_n$。这样对偶函数 $\theta(\boldsymbol{\alpha})=\inf_{\mathbf{w},b}\mathcal{L}$ 始终是原始最优值的下界（弱对偶）。
+</p>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #8 · 拉格朗日对偶——"约束变乘子，原始变量求导消去"</h4>
+  任何 $\min f$ s.t. $g_n\geq0$ 的凸问题都能走这套：(1) $\mathcal{L}=f-\sum\alpha_n g_n$，$\alpha_n\geq0$；(2) 对原始变量求驻点（偏导令零），解出原始变量关于 $\boldsymbol\alpha$ 的表达式；(3) 代回 $\mathcal{L}$ 消去原始变量，得对偶 $\max_\boldsymbol\alpha\theta(\boldsymbol\alpha)$；(4) KKT 补充互补松弛定解。
+  <strong>本课 SVM、0008 软间隔、0010 EM（EM 是对偶的远亲：下界最大化）、0015 变分推断——全是"造下界再最大化"这一招。</strong>
+  对偶的价值：变量数从 $D$（特征维）变 $N$（样本数），且只出现内积——为核化铺路。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 求对偶：先对 $\mathbf{w},b$ 求偏导令零</h2>
+
+<p>对偶函数 $\theta(\boldsymbol{\alpha})=\inf_{\mathbf{w},b}\mathcal{L}(\mathbf{w},b,\boldsymbol{\alpha})$。对 $\mathbf{w}$ 和 $b$ 求偏导令零：</p>
+
+<div class="derivation">
+  <h4>对 $\mathbf{w}$ 求驻点</h4>
+  <div class="step">
+    $\displaystyle \nabla_{\mathbf{w}}\mathcal{L} = \mathbf{w} - \sum_{n=1}^N \alpha_n y_n \mathbf{x}_n = \mathbf{0}$
+    <span class="reason">$\frac{\partial}{\partial\mathbf{w}}\|\mathbf{w}\|^2=\mathbf{w}$（带 $\frac12$），$\frac{\partial}{\partial\mathbf{w}}\mathbf{w}^\top\mathbf{x}_n=\mathbf{x}_n$</span>
+  </div>
+  <div class="step">
+    $\displaystyle \Rightarrow\quad \mathbf{w} = \sum_{n=1}^N \alpha_n y_n \mathbf{x}_n$
+    <span class="reason">这是 SVM 的第一个关键等式——$\mathbf{w}$ 是数据的线性组合</span>
+  </div>
+</div>
+
+<div class="derivation">
+  <h4>对 $b$ 求驻点</h4>
+  <div class="step">
+    $\displaystyle \frac{\partial\mathcal{L}}{\partial b} = -\sum_{n=1}^N \alpha_n y_n = 0$
+    <span class="reason">$b$ 只在 $\alpha_n y_n b$ 里出现，求导得 $-\sum\alpha_n y_n$</span>
+  </div>
+  <div class="step">
+    $\displaystyle \Rightarrow\quad \sum_{n=1}^N \alpha_n y_n = 0$
+    <span class="reason">对偶问题的一个等式约束</span>
+  </div>
+</div>
+
+<div class="insight">
+  <strong>$\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$ 就是 0006 表示定理的 SVM 版本！</strong>
+  最优 $\mathbf{w}$ 落在数据张成的子空间里。这不是巧合——它是"目标含 $\|\mathbf{w}\|^2$ 正则 + 损失只通过 $\mathbf{w}^\top\mathbf{x}_n$ 依赖 $\mathbf{w}$"的必然结果。
+  SVM 的对偶推导其实是表示定理的"约束优化版证明"。
+</div>
+
+<p>现在把 $\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$ 和 $\sum\alpha_n y_n=0$ 代回 $\mathcal{L}$ 消去 $\mathbf{w},b$：</p>
+
+<div class="derivation">
+  <h4>代回化简</h4>
+  <div class="step">
+    $\displaystyle \mathcal{L} = \frac12\|\mathbf{w}\|^2 - \sum_n\alpha_n y_n\mathbf{w}^\top\mathbf{x}_n - b\sum_n\alpha_n y_n + \sum_n\alpha_n$
+  </div>
+  <div class="step">
+    $\displaystyle = \frac12\|\mathbf{w}\|^2 - \mathbf{w}^\top\!\sum_n\alpha_n y_n\mathbf{x}_n - b\cdot 0 + \sum_n\alpha_n$
+    <span class="reason">用 $\sum\alpha_n y_n=0$ 消去 $b$ 项</span>
+  </div>
+  <div class="step">
+    $\displaystyle = \frac12\|\mathbf{w}\|^2 - \mathbf{w}^\top\mathbf{w} + \sum_n\alpha_n = -\frac12\|\mathbf{w}\|^2 + \sum_n\alpha_n$
+    <span class="reason">用 $\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$，所以 $\sum\alpha_n y_n\mathbf{x}_n=\mathbf{w}$</span>
+  </div>
+  <div class="step">
+    $\displaystyle = \sum_{n=1}^N\alpha_n - \frac12\sum_{n=1}^N\sum_{m=1}^N \alpha_n\alpha_m y_n y_m\,\mathbf{x}_n^\top\mathbf{x}_m$
+    <span class="reason">把 $\|\mathbf{w}\|^2=\mathbf{w}^\top\mathbf{w}$ 用 $\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$ 展开</span>
+  </div>
+</div>
+
+<p>对偶问题是最大化这个（在 $\alpha_n\geq0$、$\sum\alpha_n y_n=0$ 约束下）：</p>
+
+<div class="formula-block">
+  $$\boxed{\;\max_{\boldsymbol{\alpha}}\;\sum_{n=1}^N\alpha_n - \frac12\sum_{n,m}\alpha_n\alpha_m y_n y_m\,\mathbf{x}_n^\top\mathbf{x}_m \qquad\text{s.t.}\quad \alpha_n\geq0,\;\sum_n\alpha_n y_n=0\;}$$
+</div>
+
+<p>
+  注意三件事：(1) 变量是 $\boldsymbol\alpha\in\mathbb{R}^N$，与特征维 $D$ 无关——这是高维核化的关键；(2) 数据<strong>只通过内积 $\mathbf{x}_n^\top\mathbf{x}_m$ 出现</strong>——这是核技巧的入口；(3) 仍是凸 QP（目标关于 $\boldsymbol\alpha$ 是凹二次，最大化凹 = 凸优化）。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. KKT 条件：互补松弛推出"支持向量"</h2>
+
+<p>原始问题凸、约束仿射，所以 KKT 条件是<strong>充要</strong>的。四个条件：</p>
+
+<div class="formula-block">
+  $$\begin{aligned}
+  &\text{(1) 稳定性:}\quad \nabla_{\mathbf{w}}\mathcal{L}=\mathbf{0},\;\partial_b\mathcal{L}=0 \;\Rightarrow\; \mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n,\;\sum\alpha_n y_n=0\\
+  &\text{(2) 原始可行:}\quad y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq 1\\
+  &\text{(3) 对偶可行:}\quad \alpha_n\geq 0\\
+  &\text{(4) 互补松弛:}\quad \alpha_n\big[y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1\big]=0
+  \end{aligned}$$
+</div>
+
+<p>互补松弛是 SVM 全部直觉的来源。它说：每个样本 $n$，要么 $\alpha_n=0$，要么 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)=1$（恰好在间隔边界上）。</p>
+
+<ul>
+  <li><strong>$\alpha_n=0$ 的样本</strong>：对 $\mathbf{w}=\sum\alpha_m y_m\mathbf{x}_m$ 无贡献——它不在边界上，挪动它不影响解。</li>
+  <li><strong>$\alpha_n>0$ 的样本</strong>：必须 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)=1$，即恰好在间隔边界（函数间隔恰为 1）。这些点叫<strong>支持向量</strong>（support vectors）。</li>
+</ul>
+
+<div class="insight">
+  <strong>支持向量是"刚好卡住间隔"的点。</strong> 解 $\mathbf{w}=\sum_{n\in SV}\alpha_n y_n\mathbf{x}_n$ 只由支持向量决定——其余样本就算删掉，解不变。
+  这就是 SVM 的稀疏性：决策函数 $f(\mathbf{x})=\mathbf{w}^\top\mathbf{x}+b=\sum_{n\in SV}\alpha_n y_n\mathbf{x}_n^\top\mathbf{x}+b$ 只需对支持向量求和。
+  对比逻辑回归：那里每个样本都进梯度，没有稀疏性。这是 SVM 的结构性优势。
+</div>
+
+<p>
+  求出 $\boldsymbol\alpha$ 后，$\mathbf{w}$ 由 $\sum\alpha_n y_n\mathbf{x}_n$ 给出。偏置 $b$ 用任一支持向量（其 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)=1$）解出：
+  $b=y_n-\mathbf{w}^\top\mathbf{x}_n$（对任意 $n$ 满足 $\alpha_n>0$）。实践中对所有支持向量取平均以稳定数值。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 强对偶成立：Slater 条件与凸性</h2>
+
+<p>
+  弱对偶说对偶最优 $\leq$ 原始最优。强对偶（等号成立）需要条件。这里：<strong>目标 $\frac12\|\mathbf{w}\|^2$ 凸，约束仿射（线性）</strong>，且线性可分时 Slater 条件成立（存在严格可行点 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)>1$）。
+  所以强对偶成立，对偶解 $\boldsymbol\alpha^\star$ 代回 KKT 给出原始解 $(\mathbf{w}^\star,b^\star)$。
+</p>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #9 · 凸 + Slater → 强对偶 → KKT 充要</h4>
+  对凸优化 $\min f$ s.t. $g_n\leq0$（$f,g_n$ 凸），只要存在严格可行点（Slater），强对偶成立且 KKT 是充要条件。
+  这意味着：解对偶 = 解原始，且对偶通常更好算（变量少、结构好）。
+  <strong>SVM、0008 软间隔、凸优化里的内点法、0015 平均场变分的强对偶——都靠这一条。</strong>
+  反例：非凸问题（如带 sigmoid 的某些神经网络训练）强对偶可能不成立，对偶只是下界——这是变分推断（0015）只能给 ELBO 下界、不保证紧的根本原因。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 核化：对偶里只有内积，换核即升维</h2>
+
+<p>
+  对偶问题里数据只以 $\mathbf{x}_n^\top\mathbf{x}_m$ 出现，决策函数也只以 $\mathbf{x}_n^\top\mathbf{x}$ 出现。把内积换成核 $k(\mathbf{x}_n,\mathbf{x}_m)=\boldsymbol\phi(\mathbf{x}_n)^\top\boldsymbol\phi(\mathbf{x}_m)$（0006），就把线性 SVM 升到特征空间 $\boldsymbol\phi$ 里的非线性 SVM，<strong>而推导一行不改</strong>：
+</p>
+
+<div class="formula-block">
+  $$\max_{\boldsymbol{\alpha}}\;\sum_n\alpha_n - \frac12\sum_{n,m}\alpha_n\alpha_m y_n y_m\,k(\mathbf{x}_n,\mathbf{x}_m),\quad \alpha_n\geq0,\;\sum_n\alpha_n y_n=0$$
+  $$f(\mathbf{x})=\sum_{n\in SV}\alpha_n y_n\,k(\mathbf{x}_n,\mathbf{x})+b$$
+</div>
+
+<p>
+  这是 0006 表示定理的回报：解在数据张成的子空间，所以只需 $N\times N$ 核矩阵，无穷维特征空间永不显式出现。RBF 核 $k(\mathbf{x},\mathbf{z})=\exp(-\gamma\|\mathbf{x}-\mathbf{z}\|^2)$ 对应无穷维特征空间——SVM + RBF 能拟合任意复杂的边界，却仍受间隔正则控制，不易过拟合。
+</p>
+
+<div class="warning">
+  <strong>硬间隔的局限</strong>：要求线性可分（在特征空间里）。真实数据常有噪声或重叠，硬间隔要么无解要么被 outlier 拉歪。下一课 0008 引入松弛变量 $\xi_n$ 允许违反间隔，把"必须分对"换成"违反要罚"，得到软间隔 SVM——并揭示它就是 hinge 损失 + $\ell_2$ 正则，回接基石 0001 §2 损失视角。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与演算</h2>
+
+<p>下面 6 道题，难度递增。<strong>先自己做，做不出再看提示，做完再对解答</strong>。SVM 的推导就这些，全走通就真懂了。</p>
+
+<div class="problem">
+  <div class="ptitle">题 1 · 从间隔最大化到标准原始问题 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    从 $\max_{\mathbf{w},b}\min_n\frac{y_n(\mathbf{w}^\top\mathbf{x}_n+b)}{\|\mathbf{w}\|}$ 出发，利用 $(\mathbf{w},b)$ 的放缩自由度，推出标准原始问题 $\min\frac12\|\mathbf{w}\|^2$ s.t. $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1$。说清"固定间隔为 1"为什么不失一般性。
+  </div>
+  <details><summary>提示</summary><div class="hint">设最优解最近点函数间隔为 $m$。令 $\tilde{\mathbf{w}}=\mathbf{w}/m,\tilde b=b/m$。验证约束变 $y_n(\tilde{\mathbf{w}}^\top\mathbf{x}_n+\tilde b)\geq1$，目标变 $\frac{1}{2}\|\tilde{\mathbf{w}}\|^2=\frac{1}{2m^2}\|\mathbf{w}\|^2$。最大化 $1/\|\mathbf{w}\|$ 等价于最小化 $\|\mathbf{w}\|^2$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">设某超平面正确分类所有点，最近点函数间隔 $m=\min_n y_n(\mathbf{w}^\top\mathbf{x}_n+b)>0$。几何间隔 $=m/\|\mathbf{w}\|$。</div>
+    <div class="step">放缩 $\tilde{\mathbf{w}}=\mathbf{w}/m,\tilde b=b/m$：超平面方程 $\tilde{\mathbf{w}}^\top\mathbf{x}+\tilde b=0$ 与原相同（同乘 $m$），所以分类不变。新函数间隔 $\min_n y_n(\tilde{\mathbf{w}}^\top\mathbf{x}_n+\tilde b)=m/m=1$。</div>
+    <div class="step">新几何间隔 $=1/\|\tilde{\mathbf{w}}\|=m/\|\mathbf{w}\|$——与放缩前相同（放缩不改几何间隔，本应如此）。</div>
+    <div class="step">所以"在所有正确分类的超平面里最大化几何间隔"等价于"在满足 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1$ 的超平面里最大化 $1/\|\mathbf{w}\|$"，即最小化 $\|\mathbf{w}\|$，即最小化 $\frac12\|\mathbf{w}\|^2$（平方为了凸 + 求导干净）。$\square$</div>
+    <div class="step"><strong>不失一般性</strong>：放缩自由度意味着函数间隔的绝对值无意义（可任意调），只有几何间隔（除以 $\|\mathbf{w}\|$ 后）有意义。固定函数间隔为 1 只是选了一个方便的归一化代表。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 2 · 对 $\mathbf{w},b$ 求驻点 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    对拉格朗日 $\mathcal{L}=\frac12\|\mathbf{w}\|^2-\sum_n\alpha_n[y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1]$，求 $\nabla_{\mathbf{w}}\mathcal{L}=0$ 和 $\partial\mathcal{L}/\partial b=0$，推出 $\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$ 和 $\sum\alpha_n y_n=0$。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\nabla_{\mathbf{w}}\frac12\|\mathbf{w}\|^2=\mathbf{w}$，$\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{x}_n)=\mathbf{x}_n$。$b$ 是标量，$\partial(\alpha_n y_n b)/\partial b=\alpha_n y_n$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\nabla_{\mathbf{w}}\mathcal{L}=\mathbf{w}-\sum_n\alpha_n y_n\mathbf{x}_n=0\Rightarrow\mathbf{w}=\sum_n\alpha_n y_n\mathbf{x}_n$。</div>
+    <div class="step">$\frac{\partial\mathcal{L}}{\partial b}=-\sum_n\alpha_n y_n=0\Rightarrow\sum_n\alpha_n y_n=0$。$\square$</div>
+    <div class="step">第一条是表示定理的 SVM 实例；第二条是对偶的等式约束，代回时消去 $b$ 项。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 3 · 代回化简得到对偶目标 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    把题 2 的两个结果代回 $\mathcal{L}$，证明 $\mathcal{L}$ 化为 $\sum_n\alpha_n-\frac12\sum_{n,m}\alpha_n\alpha_m y_n y_m\mathbf{x}_n^\top\mathbf{x}_m$。说清 $b$ 项为什么消失。
+  </div>
+  <details><summary>提示</summary><div class="hint">展开 $\mathcal{L}=\frac12\|\mathbf{w}\|^2-\sum\alpha_n y_n\mathbf{w}^\top\mathbf{x}_n-b\sum\alpha_n y_n+\sum\alpha_n$。$b$ 项系数是 $-\sum\alpha_n y_n=0$。再用 $\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$ 把 $\sum\alpha_n y_n\mathbf{w}^\top\mathbf{x}_n=\mathbf{w}^\top\mathbf{w}=\|\mathbf{w}\|^2$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\mathcal{L}=\frac12\|\mathbf{w}\|^2-\sum_n\alpha_n y_n\mathbf{w}^\top\mathbf{x}_n-b\sum_n\alpha_n y_n+\sum_n\alpha_n$。</div>
+    <div class="step">$b$ 项：$-b\sum_n\alpha_n y_n=-b\cdot0=0$（用题 2 第二条）。这就是 $b$ 消失的原因——对 $b$ 求驻点产生的等式约束正好消掉 $b$。</div>
+    <div class="step">中间项：$\sum_n\alpha_n y_n\mathbf{w}^\top\mathbf{x}_n=\mathbf{w}^\top\sum_n\alpha_n y_n\mathbf{x}_n=\mathbf{w}^\top\mathbf{w}=\|\mathbf{w}\|^2$（用题 2 第一条 $\sum\alpha_n y_n\mathbf{x}_n=\mathbf{w}$）。</div>
+    <div class="step">所以 $\mathcal{L}=\frac12\|\mathbf{w}\|^2-\|\mathbf{w}\|^2+\sum\alpha_n=-\frac12\|\mathbf{w}\|^2+\sum\alpha_n$。</div>
+    <div class="step">展开 $\|\mathbf{w}\|^2=\mathbf{w}^\top\mathbf{w}=\big(\sum_n\alpha_n y_n\mathbf{x}_n\big)^\top\big(\sum_m\alpha_m y_m\mathbf{x}_m\big)=\sum_{n,m}\alpha_n\alpha_m y_n y_m\mathbf{x}_n^\top\mathbf{x}_m$。</div>
+    <div class="step">得 $\mathcal{L}=\sum_n\alpha_n-\frac12\sum_{n,m}\alpha_n\alpha_m y_n y_m\mathbf{x}_n^\top\mathbf{x}_m$。$\square$</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 4 · 互补松弛与支持向量的稀疏性 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    (a) 写出 SVM 的四个 KKT 条件。<br>
+    (b) 用互补松弛 $\alpha_n[y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1]=0$ 证明：$\alpha_n>0$ 当且仅当 $\mathbf{x}_n$ 在间隔边界上（$y_n(\mathbf{w}^\top\mathbf{x}_n+b)=1$）。<br>
+    (c) 证明决策函数 $f(\mathbf{x})=\sum_n\alpha_n y_n\mathbf{x}_n^\top\mathbf{x}+b$ 只需对 $\alpha_n>0$ 的样本求和。
+  </div>
+  <details><summary>提示</summary><div class="hint">(b) 互补松弛说乘积为 0，所以 $\alpha_n>0$ 时另一个因子必为 0。反之若 $\alpha_n=0$，另一个因子可任意（只要 $\geq0$，即原始可行）。(c) $\alpha_n=0$ 的项对 $\mathbf{w}$ 和 $f$ 都无贡献。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">(a) (1) $\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$，$\sum\alpha_n y_n=0$；(2) $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1$；(3) $\alpha_n\geq0$；(4) $\alpha_n[y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1]=0$。</div>
+    <div class="step">(b) ($\Rightarrow$) $\alpha_n>0$ 时由 (4) $y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1=0$，即在间隔边界。($\Leftarrow$) 在间隔边界 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)=1$ 时 (4) 自动满足，$\alpha_n$ 可 $>0$（具体值由对偶解定）。严格在间隔外（$>1$）时 (4) 强制 $\alpha_n=0$。</div>
+    <div class="step">(c) $f(\mathbf{x})=\mathbf{w}^\top\mathbf{x}+b=\big(\sum_n\alpha_n y_n\mathbf{x}_n\big)^\top\mathbf{x}+b=\sum_n\alpha_n y_n\mathbf{x}_n^\top\mathbf{x}+b$。$\alpha_n=0$ 的项贡献 0，所以 $f(\mathbf{x})=\sum_{n\in SV}\alpha_n y_n\mathbf{x}_n^\top\mathbf{x}+b$，$SV=\{n:\alpha_n>0\}$。$\square$</div>
+    <div class="step">这就是 SVM 的稀疏性：非支持向量对预测无贡献。删掉它们，解不变。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 5 · 对偶是凹二次规划 <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    把对偶目标写成矩阵形式 $\mathbf{1}^\top\boldsymbol\alpha-\frac12\boldsymbol\alpha^\top\mathbf{Q}\boldsymbol\alpha$，其中 $Q_{nm}=y_n y_m\mathbf{x}_n^\top\mathbf{x}_m$。证明 $\mathbf{Q}$ 半正定，从而对偶是凹二次规划（最大化凹函数 = 凸优化），有唯一解（若 $\mathbf{Q}$ 正定）。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\mathbf{Q}=(\mathbf{Y}\mathbf{X})(\mathbf{Y}\mathbf{X})^\top$ 形式，其中 $\mathbf{Y}=\operatorname{diag}(y_n)$。对任意 $\mathbf{v}$，$\mathbf{v}^\top\mathbf{Q}\mathbf{v}=\|(\mathbf{Y}\mathbf{X})^\top\mathbf{v}\|^2\geq0$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">令 $\mathbf{Y}=\operatorname{diag}(y_1,\dots,y_N)$，$\mathbf{X}\in\mathbb{R}^{N\times D}$ 行为 $\mathbf{x}_n^\top$。则 $Q_{nm}=y_n y_m\mathbf{x}_n^\top\mathbf{x}_m=(\mathbf{Y}\mathbf{X}\mathbf{X}^\top\mathbf{Y})_{nm}$，即 $\mathbf{Q}=\mathbf{Y}\mathbf{X}\mathbf{X}^\top\mathbf{Y}$。</div>
+    <div class="step">$\mathbf{Q}=(\mathbf{Y}\mathbf{X})(\mathbf{Y}\mathbf{X})^\top$，形如 $\mathbf{A}\mathbf{A}^\top$，必半正定。</div>
+    <div class="step">验证：$\mathbf{v}^\top\mathbf{Q}\mathbf{v}=\mathbf{v}^\top(\mathbf{Y}\mathbf{X})(\mathbf{Y}\mathbf{X})^\top\mathbf{v}=\|(\mathbf{Y}\mathbf{X})^\top\mathbf{v}\|^2\geq0$。</div>
+    <div class="step">所以 $-\frac12\boldsymbol\alpha^\top\mathbf{Q}\boldsymbol\alpha$ 是凹函数（$\mathbf{Q}$ 半正定 $\Rightarrow$ $-\mathbf{Q}$ 半负定），加线性项 $\mathbf{1}^\top\boldsymbol\alpha$ 仍凹。最大化凹函数在凸约束（$\alpha_n\geq0$ 线性，$\sum\alpha_n y_n=0$ 线性）下是凸优化问题。</div>
+    <div class="step">$\mathbf{Q}$ 正定（$\mathbf{Y}\mathbf{X}$ 行满秩，需 $N\leq D$ 且 $\mathbf{x}_n$ 线性无关）时目标严格凹，解唯一。否则解集是凸的，但 $\mathbf{w}^\star=\sum\alpha_n^\star y_n\mathbf{x}_n$ 仍唯一（不依赖具体 $\boldsymbol\alpha^\star$ 选择）。$\square$</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 6 · 把硬间隔 SVM 推到 1 维几何例子（范式迁移） <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    1 维输入：正类点 $x=+2,+3$，负类点 $x=-2,-3$。用 SVM 原始问题 $\min\frac12 w^2$ s.t. $y_n(wx_n+b)\geq1$ 求最优 $w,b$，并验证对偶解 $\boldsymbol\alpha$、支持向量、间隔。这题训练你把抽象推导用到具体数字上。
+  </div>
+  <details><summary>提示</summary><div class="hint">对称性提示 $b=0$，决策边界 $x=0$。最近点是 $\pm2$，它们应是支持向量（$|wx|=\!1$ 在 $x=\pm2$ 给 $w=1/2$）。验证外层点 $\pm3$ 满足约束 $|w\cdot3|=1.5\geq1$。对偶：$\alpha_{+2}=\alpha_{-2}=?$，外层 $\alpha=0$，验 $\sum\alpha_n y_n=0$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">数据对称 $\Rightarrow$ 解对称 $\Rightarrow b=0$，边界 $wx=0$ 即 $x=0$。约束 $y_n w x_n\geq1$：正类 $wx\geq1$（$x=2,3$），负类 $wx\leq-1$ 即 $w(-x)\geq1$（$-x=2,3$）。</div>
+    <div class="step">最紧约束来自最近点 $|x|=2$：$w\cdot2\geq1\Rightarrow w\geq1/2$。目标 $\min\frac12 w^2$ 单调增（$w>0$），取最小 $w=1/2$。</div>
+    <div class="step">验证外层 $|x|=3$：$w\cdot3=1.5\geq1$ ✓。所以 $w^\star=1/2,b^\star=0$，间隔 $=1/|w|=2$。</div>
+    <div class="step">支持向量：$|x|=2$ 的点（$\pm2$），它们约束取等。$|x|=3$ 的点约束严格 $>1$，$\alpha=0$。</div>
+    <div class="step">对偶：$\mathbf{w}=\sum\alpha_n y_n x_n=\alpha_{+2}\cdot1\cdot2+\alpha_{-2}\cdot(-1)\cdot(-2)=2(\alpha_{+2}+\alpha_{-2})=1/2$，所以 $\alpha_{+2}+\alpha_{-2}=1/4$。等式约束 $\sum\alpha_n y_n=\alpha_{+2}-\alpha_{-2}=0$（对称）$\Rightarrow\alpha_{+2}=\alpha_{-2}=1/8$。</div>
+    <div class="step">验证对偶目标：$\sum\alpha_n-\frac12\sum_{n,m}\alpha_n\alpha_m y_n y_m x_n x_m$。只有 $\pm2$ 贡献：$\sum\alpha=1/4$，$\frac12[2\cdot(1/8)^2\cdot1\cdot4+2\cdot(1/8)(1/8)\cdot(-1)\cdot(-4)]=\frac12[1/8+1/8]=1/8$（对角 + 交叉）。目标 $=1/4-1/8=1/8$。</div>
+    <div class="step">原始目标 $\frac12 w^2=\frac12\cdot1/4=1/8$。对偶 = 原始 ✓ 强对偶验证通过。$\square$</div>
+    <div class="step"><strong>范式迁移</strong>：这个"对称 → $b=0$ → 最紧约束定 $w$ → 验证其余"的套路，在 0008 软间隔里会再加一步"找违反约束的 outlier 定 $\xi_n$"。把抽象 KKT 落到具体数字，是检验真懂的标准。</div>
+  </div></details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 自测</h2>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q1 · 为什么 SVM 用 $y\in\{-1,+1\}$ 而逻辑回归用 $y\in\{0,1\}$？</div>
+  <details><summary>答案</summary><div class="sol">$y\in\{-1,+1\}$ 让约束 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1$ 用一个不等式统一两类：正类 $y=+1$ 时 $\mathbf{w}^\top\mathbf{x}+b\geq1$，负类 $y=-1$ 时 $-(\mathbf{w}^\top\mathbf{x}+b)\geq1$。乘 $y_n$ 把两类约束写成一个形式。逻辑回归用 $\{0,1\}$ 是因为 Bernoulli 似然 $\phi^y(1-\phi)^{1-y}$ 用 0/1 标签自然。标签选择服务于各自推导的简洁性。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q2 · $\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$ 与 0006 表示定理是什么关系？</div>
+  <details><summary>答案</summary><div class="sol">它是表示定理的 SVM 实例。表示定理说：目标含 $\|\mathbf{w}\|^2$ 正则 + 损失只通过 $\mathbf{w}^\top\mathbf{x}_n$ 依赖 $\mathbf{w}$，则最优 $\mathbf{w}=\sum\alpha_n\mathbf{x}_n$。SVM 的 $\frac12\|\mathbf{w}\|^2$ 目标 + 约束只通过 $\mathbf{w}^\top\mathbf{x}_n$ 依赖 $\mathbf{w}$，正好满足条件。SVM 对偶推导里对 $\mathbf{w}$ 求驻点得到 $\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$，本质就是表示定理的证明。$y_n$ 只是乘进系数里。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q3 · 强对偶为什么成立？如果数据线性不可分（硬间隔无解）会怎样？</div>
+  <details><summary>答案</summary><div class="sol">强对偶成立因为：目标 $\frac12\|\mathbf{w}\|^2$ 凸，约束 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1\geq0$ 仿射（线性），线性可分时存在严格可行点（Slater 条件：取一个间隔 $>1$ 的超平面）。凸 + Slater → 强对偶 + KKT 充要。线性不可分时原始问题无可行点（约束 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1$ 无解），Slater 不成立，硬间隔 SVM 无解。这时需软间隔（0008）引入松弛 $\xi_n$ 允许违反，或用核升维到可分。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q4 · 为什么对偶问题比原始问题更适合核化？</div>
+  <details><summary>答案</summary><div class="sol">对偶问题里数据只通过内积 $\mathbf{x}_n^\top\mathbf{x}_m$ 出现，决策函数也只通过 $\mathbf{x}_n^\top\mathbf{x}$。换成核 $k(\mathbf{x}_n,\mathbf{x}_m)=\boldsymbol\phi(\mathbf{x}_n)^\top\boldsymbol\phi(\mathbf{x}_m)$ 就升维，推导不改。原始问题里 $\mathbf{w}$ 在特征空间 $\boldsymbol\phi$ 里是无穷维向量（如 RBF），无法显式表示。对偶变量是 $\boldsymbol\alpha\in\mathbb{R}^N$，与特征维无关，只依赖样本数。这就是"对偶为核化铺路"——表示定理保证解在 $N$ 维子空间，所以 $N\times N$ 核矩阵够用。</div></details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;">
+    <strong>PRML §7.1（最大间隔与拉格朗日对偶）</strong>——§7.1.1 间隔与原始问题、§7.1.2 对偶与支持向量、KKT 互补松弛。本课第 3–5 节的母本。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>CS229 Notes 3 §1–§3（SVM）</strong>——从间隔到拉格朗日对偶推导最干净，KKT 和支持向量的直觉讲得最清楚。本课对偶推导的骨架跟随它。
+  </p>
+  <p style="margin-bottom:0; font-size:0.9rem;">
+    <strong>ESL §12.2（支持向量机）</strong>——§12.2.1 硬间隔、§12.2.2 软间隔、§12.2.3 对偶与计算。统计视角，对 SVM 与其他分类器的对比有独到之处。
+  </p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">
+    这课的关键逻辑链：几何间隔最大化 → 归一化约束为 1 → 拉格朗日吸约束 → 对 $\mathbf{w},b$ 求驻点消去（得 $\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n$）→ 代回得对偶 → KKT 互补松弛定支持向量 → 凸+Slater 保强对偶 → 内积结构允许核化。
+    题 3（代回化简）和题 6（1 维具体例子）是检验真懂的钥匙——题 6 把抽象 KKT 落到数字，能算出 $\alpha=1/8$、验证对偶=原始 $=1/8$，就说明推导全通了。
+    卡住直接问。<strong>下一课 0008 把硬间隔推广到软间隔，并揭示 SVM = hinge 损失 + $\ell_2$ 正则，回接基石 0001 §2 损失视角。</strong>
+  </p>
+</div>
+
+<div class="lesson-footer">
+  <a href="../reference/math-primer.html">📐 数学手册</a> ·
+  <a href="0006-kernel-methods.html">← 0006 核方法</a> ·
+  <a href="0009-logistic-regression.html">← 0009 逻辑回归</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0008-svm-soft-margin.html">0008 SVM（下）软间隔与 hinge 损失</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<template id="card-data-kkt">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">优化</span><h3>KKT 条件</h3><span class="cc-aliases">Karush-Kuhn-Tucker</span></div>
+  <div class="cc-essence">约束优化问题 $\min f(\mathbf{w})$ s.t. $g_i(\mathbf{w})\leq 0$ 在最优解处必须满足四个条件。最关键的是<strong>互补松弛</strong>：$\alpha_i g_i(\mathbf{w}^*)=0$——约束要么活跃（$g_i=0$），要么乘子为零（约束无关）。</div>
+  <div class="cc-section"><h4>在 SVM 里</h4><p>$\alpha_n > 0$ 当且仅当点恰在间隔边界上 → 这些点就是<strong>支持向量</strong>。所有其他点 $\alpha_n=0$——它们不参与决策边界的定义。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0007 §5</span><span class="conn-badge">→ 0008: 软间隔 KKT</span></div>
+</div>
+</template>
+
+
+<template id="card-data-weak-duality">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">优化</span><h3>弱对偶</h3><span class="cc-aliases">Weak Duality</span></div>
+  <div class="cc-essence">对偶最优值 ≤ 原始最优值。恒成立，不需要凸性或 Slater 条件。证明：$\inf_{\mathbf{w}}\sup_{\boldsymbol{\alpha}\geq 0}\mathcal{L} \geq \sup_{\boldsymbol{\alpha}\geq 0}\inf_{\mathbf{w}}\mathcal{L}$（"先 min 后 max ≥ 先 max 后 min"）。</div>
+  <div class="cc-section"><h4>强对偶</h4><p>对偶最优值 = 原始最优值。需要凸性 + Slater 条件（存在严格可行点）。SVM 满足 → 解对偶等价于解原始。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0007 §3-§6</span><span class="conn-badge">→ 0008: 软间隔对偶</span></div>
+</div>
+</template>
+
+</body>
+</html>

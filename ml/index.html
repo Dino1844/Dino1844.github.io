@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 数学 · 从模型到地貌到算法前沿</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #8b4513;
+    --light-accent: #f5efe6;
+    --muted: #6b6b6b;
+    --border: #e0d8cc;
+    --code-bg: #f7f4ef;
+
+    --c-prob: #5b8c5a;
+    --c-opt: #c44d4d;
+    --c-geom: #4a7bab;
+    --c-info: #e07b39;
+    --c-dyn: #8b5aa6;
+    --c-func: #2d6a4f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Palatino', 'Noto Serif SC', 'Source Han Serif SC', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+  }
+
+  h1 { font-size: 2rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.25rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1rem; color: var(--muted); font-style: italic; margin-bottom: 2rem; }
+
+  h2 {
+    font-size: 1.3rem; margin: 2.2rem 0 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border);
+    color: #1a1a1a;
+  }
+  h3 { font-size: 1.05rem; margin: 1.3rem 0 0.5rem; color: #333; }
+
+  p { margin-bottom: 0.9rem; font-size: 0.97rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; font-size: 0.97rem; }
+  li { margin-bottom: 0.3rem; }
+
+  .insight {
+    background: var(--light-accent);
+    border-left: 4px solid var(--accent);
+    padding: 0.7rem 1.1rem;
+    margin: 1.3rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.93rem;
+  }
+
+  /* ====== Landscape Map (SVG) ====== */
+  .map-container {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+  .map-container svg { display: block; width: 100%; min-width: 700px; height: auto; }
+
+  .map-legend {
+    display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem;
+    justify-content: center; margin-top: 0.6rem; font-size: 0.82rem; color: var(--muted);
+  }
+  .map-legend span { display: flex; align-items: center; gap: 0.3rem; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  /* ====== Domain cards ====== */
+  .domain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  @media (max-width: 650px) { .domain-grid { grid-template-columns: 1fr; } }
+
+  .domain-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+    border-top: 4px solid var(--border);
+    transition: box-shadow 0.2s;
+  }
+  .domain-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .domain-card h3 { margin: 0 0 0.3rem; font-size: 1rem; }
+  .domain-card .domain-tag {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: white; padding: 0.15em 0.5em; border-radius: 3px;
+    display: inline-block; margin-bottom: 0.5rem;
+  }
+  .domain-card p { font-size: 0.88rem; margin-bottom: 0.5rem; }
+  .domain-card .links { font-size: 0.82rem; }
+  .domain-card .links a { color: var(--accent); text-decoration: none; margin-right: 0.8rem; }
+  .domain-card .links a:hover { text-decoration: underline; }
+
+  .domain-prob   { border-top-color: var(--c-prob); }
+  .domain-opt    { border-top-color: var(--c-opt); }
+  .domain-geom   { border-top-color: var(--c-geom); }
+  .domain-info   { border-top-color: var(--c-info); }
+  .domain-dyn    { border-top-color: var(--c-dyn); }
+  .domain-func   { border-top-color: var(--c-func); }
+
+  .tag-prob  { background: var(--c-prob); }
+  .tag-opt   { background: var(--c-opt); }
+  .tag-geom  { background: var(--c-geom); }
+  .tag-info  { background: var(--c-info); }
+  .tag-dyn   { background: var(--c-dyn); }
+  .tag-func  { background: var(--c-func); }
+
+  /* ====== Bridge callout ====== */
+  .bridge {
+    background: linear-gradient(135deg, #faf8f5, #f5efe6);
+    border: 1px dashed var(--accent);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: 1.5rem 0;
+    text-align: center;
+  }
+  .bridge .big-idea { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+
+  /* ====== Navigation ====== */
+  footer {
+    margin-top: 3rem; padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem; color: var(--muted);
+  }
+  footer a { color: var(--accent); }
+
+  .lesson-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin: 1rem 0; font-size: 0.9rem;
+  }
+  .lesson-nav a { color: var(--accent); text-decoration: none; }
+  .lesson-nav a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+
+<h1>AI 数学 · 从模型到地貌到算法前沿</h1>
+<div class="subtitle">三段递进：先用 ML 建立直觉 → 再用六领域数学理解结构 → 最后看数学在最前沿如何施展</div>
+
+<div class="lesson-nav">
+  <a href="../">← 学习笔记首页</a>
+  <a href="lessons/0001-probabilistic-linear-regression.html">Lesson 0001 → 概率视角下的线性回归</a>
+</div>
+
+
+<h2 id="ml">1. ML 主干：三条路径，一个公理集</h2>
+
+<p>
+  0001 建立了<strong>一个公理集</strong>：从高斯噪声假设出发，推出损失→解→几何→代价→意义。
+  后续 16 课在<strong>三条路径</strong>上各自展开这个公理集的不同侧面。三条路不是互斥的——它们频繁交叉，
+  但每条路有自己的核心问题和核心数学工具。
+</p>
+
+<div class="map-container">
+  <svg viewBox="0 0 820 480" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr-a" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 7 2.5, 0 5" fill="#5b8c5a"/></marker>
+      <marker id="arr-b" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 7 2.5, 0 5" fill="#c44d4d"/></marker>
+      <marker id="arr-c" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 7 2.5, 0 5" fill="#4a7bab"/></marker>
+    </defs>
+
+    <!-- Central: 0001 -->
+    <circle cx="410" cy="70" r="38" fill="#f5efe6" stroke="#8b4513" stroke-width="2.5"/>
+    <text x="410" y="62" text-anchor="middle" font-size="0.75rem" font-weight="700" fill="#1a1a1a">0001</text>
+    <text x="410" y="78" text-anchor="middle" font-size="0.58rem" fill="#6b6b6b">公理集</text>
+    <text x="410" y="92" text-anchor="middle" font-size="0.55rem" fill="#8b4513">高斯噪声→损失→解→几何</text>
+
+    <!-- PATH A: 概率建模 (left) -->
+    <line x1="372" y1="70" x2="160" y2="140" stroke="#5b8c5a" stroke-width="2.5" marker-end="url(#arr-a)"/>
+    <rect x="18" y="145" width="280" height="155" rx="10" fill="#5b8c5a" fill-opacity="0.05" stroke="#5b8c5a" stroke-width="1.8"/>
+    <text x="158" y="170" text-anchor="middle" font-size="0.88rem" font-weight="700" fill="#3a6b39">路径 A · 概率建模</text>
+    <text x="158" y="190" text-anchor="middle" font-size="0.68rem" fill="#6b6b6b">核心问题：参数是一个值还是一个分布？</text>
+    <text x="158" y="210" text-anchor="middle" font-size="0.68rem" fill="#6b6b6b">核心工具：贝叶斯定理 · 共轭 · 边缘化 · ELBO</text>
+    <line x1="158" y1="220" x2="158" y2="220" stroke="#5b8c5a" stroke-width="0.5" opacity="0.3"/>
+    <text x="158" y="240" text-anchor="middle" font-size="0.7rem" fill="#3a6b39">
+      0002 贝叶斯回归 → 0003 边缘似然 →
+    </text>
+    <text x="158" y="258" text-anchor="middle" font-size="0.7rem" fill="#3a6b39">
+      0004 指数族 → 0010 EM → 0015 变分推断
+    </text>
+    <text x="158" y="280" text-anchor="middle" font-size="0.62rem" fill="#888">生成模型 · 潜变量 · 近似推断</text>
+
+    <!-- PATH B: 优化与泛化 (right) -->
+    <line x1="448" y1="70" x2="640" y2="140" stroke="#c44d4d" stroke-width="2.5" marker-end="url(#arr-b)"/>
+    <rect x="522" y="145" width="280" height="155" rx="10" fill="#c44d4d" fill-opacity="0.05" stroke="#c44d4d" stroke-width="1.8"/>
+    <text x="662" y="170" text-anchor="middle" font-size="0.88rem" font-weight="700" fill="#a33">路径 B · 优化与泛化</text>
+    <text x="662" y="190" text-anchor="middle" font-size="0.68rem" fill="#6b6b6b">核心问题：解有多可靠？什么条件下失效？</text>
+    <text x="662" y="210" text-anchor="middle" font-size="0.68rem" fill="#6b6b6b">核心工具：偏差–方差 · 正则化 · 梯度下降 · 集成</text>
+    <line x1="662" y1="220" x2="662" y2="220" stroke="#c44d4d" stroke-width="0.5" opacity="0.3"/>
+    <text x="662" y="240" text-anchor="middle" font-size="0.7rem" fill="#a33">
+      0012 偏差–方差 → 0013 集成
+    </text>
+    <text x="662" y="258" text-anchor="middle" font-size="0.7rem" fill="#a33">
+      0007 SVM（上）→ 0008 SVM（下）
+    </text>
+    <text x="662" y="280" text-anchor="middle" font-size="0.62rem" fill="#888">过拟合 · 正则化统一视角 · 对偶理论</text>
+
+    <!-- PATH C: 架构与表示 (center-bottom) -->
+    <line x1="410" y1="108" x2="410" y2="340" stroke="#4a7bab" stroke-width="2.5" marker-end="url(#arr-c)"/>
+    <rect x="200" y="345" width="420" height="115" rx="10" fill="#4a7bab" fill-opacity="0.05" stroke="#4a7bab" stroke-width="1.8"/>
+    <text x="410" y="370" text-anchor="middle" font-size="0.88rem" font-weight="700" fill="#2d5f8a">路径 C · 架构与表示</text>
+    <text x="410" y="390" text-anchor="middle" font-size="0.68rem" fill="#6b6b6b">核心问题：线性怎么推广到非线性？有限维怎么到无限维？</text>
+    <text x="410" y="410" text-anchor="middle" font-size="0.68rem" fill="#6b6b6b">核心工具：核技巧 · 表示定理 · 链式法则 · 梯度下降变体</text>
+    <line x1="410" y1="420" x2="410" y2="420" stroke="#4a7bab" stroke-width="0.5" opacity="0.3"/>
+    <text x="410" y="440" text-anchor="middle" font-size="0.7rem" fill="#2d5f8a">
+      0009 逻辑回归 → 0005 生成 vs 判别 → 0006 核方法 → 0014 神经网络
+    </text>
+
+  </svg>
+</div>
+
+<!-- ============================================================ -->
+<h3>课程清单（按路径分组）</h3>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:0.9rem; margin:1.2rem 0;">
+
+  <!-- Path A column -->
+  <div style="grid-column:1; background:white; border:1px solid var(--border); border-radius:10px; padding:1rem 1.2rem; border-top:4px solid #5b8c5a;">
+    <div style="font-weight:700;font-size:0.9rem;color:#3a6b39;margin-bottom:0.8rem;">路径 A · 概率建模</div>
+
+    <div style="margin-bottom:0.7rem;">
+      <div style="font-weight:600;font-size:0.82rem;color:#1a1a1a;">贝叶斯子路径</div>
+      <a href="lessons/0002-bayesian-linear-regression.html" style="font-size:0.8rem;color:var(--accent);">0002 贝叶斯线性回归</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· 共轭→配平方→边缘化</span><br>
+      <a href="lessons/0003-marginal-likelihood.html" style="font-size:0.8rem;color:var(--accent);">0003 边缘似然与模型比较</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· 奥卡姆因子</span>
+    </div>
+
+    <div style="margin-bottom:0.7rem;">
+      <div style="font-weight:600;font-size:0.82rem;color:#1a1a1a;">潜变量与推断</div>
+      <a href="lessons/0004-exponential-family.html" style="font-size:0.8rem;color:var(--accent);">0004 指数族与共轭先验</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· 统一分布语言</span><br>
+      <a href="lessons/0010-mixture-models-em.html" style="font-size:0.8rem;color:var(--accent);">0010 混合模型与 EM</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· ELBO 雏形</span><br>
+      <a href="lessons/0015-variational-inference.html" style="font-size:0.8rem;color:var(--accent);">0015 变分推断 + 采样</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· ELBO·MCMC</span>
+    </div>
+  </div>
+
+  <!-- Path B column -->
+  <div style="grid-column:2; background:white; border:1px solid var(--border); border-radius:10px; padding:1rem 1.2rem; border-top:4px solid #c44d4d;">
+    <div style="font-weight:700;font-size:0.9rem;color:#a33;margin-bottom:0.8rem;">路径 B · 优化与泛化</div>
+
+    <div style="margin-bottom:0.7rem;">
+      <div style="font-weight:600;font-size:0.82rem;color:#1a1a1a;">泛化理论</div>
+      <a href="lessons/0012-bias-variance.html" style="font-size:0.8rem;color:var(--accent);">0012 偏差–方差分解</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· 频率派+贝叶斯版</span><br>
+      <a href="lessons/0013-ensembles.html" style="font-size:0.8rem;color:var(--accent);">0013 集成方法</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· bagging·boosting</span>
+    </div>
+
+    <div style="margin-bottom:0.7rem;">
+      <div style="font-weight:600;font-size:0.82rem;color:#1a1a1a;">对偶与间隔</div>
+      <a href="lessons/0007-svm-hard-margin.html" style="font-size:0.8rem;color:var(--accent);">0007 SVM（上）</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· 最大间隔·对偶·KKT</span><br>
+      <a href="lessons/0008-svm-soft-margin.html" style="font-size:0.8rem;color:var(--accent);">0008 SVM（下）</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· 软间隔·hinge·正则统一</span>
+    </div>
+
+    <div style="margin-bottom:0.3rem;">
+      <div style="font-weight:600;font-size:0.82rem;color:#1a1a1a;">量化专题（横切）</div>
+      <a href="lessons/0016-ml-in-quant.html" style="font-size:0.8rem;color:var(--accent);">0016 ML 在量化中的角色</a>
+      <span style="font-size:0.75rem;color:var(--muted);">· 前视偏差·时序 CV</span>
+    </div>
+  </div>
+
+  <!-- Path C spans both columns -->
+  <div style="grid-column:1 / -1; background:white; border:1px solid var(--border); border-radius:10px; padding:1rem 1.2rem; border-top:4px solid #4a7bab;">
+    <div style="font-weight:700;font-size:0.9rem;color:#2d5f8a;margin-bottom:0.8rem;">路径 C · 架构与表示</div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
+      <div>
+        <div style="font-weight:600;font-size:0.82rem;color:#1a1a1a;">从线性到非线性</div>
+        <a href="lessons/0009-logistic-regression.html" style="font-size:0.8rem;color:var(--accent);">0009 逻辑回归</a>
+        <span style="font-size:0.75rem;color:var(--muted);">· GLM·IRLS</span><br>
+        <a href="lessons/0005-generative-vs-discriminative.html" style="font-size:0.8rem;color:var(--accent);">0005 生成 vs 判别</a>
+        <span style="font-size:0.75rem;color:var(--muted);">· LDA/朴素贝叶斯</span><br>
+        <a href="lessons/0006-kernel-methods.html" style="font-size:0.8rem;color:var(--accent);">0006 核方法</a>
+        <span style="font-size:0.75rem;color:var(--muted);">· 特征映射·表示定理</span>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:0.82rem;color:#1a1a1a;">深度学习与降维</div>
+        <a href="lessons/0014-neural-networks.html" style="font-size:0.8rem;color:var(--accent);">0014 神经网络</a>
+        <span style="font-size:0.75rem;color:var(--muted);">· 反传·梯度下降</span><br>
+        <a href="lessons/0011-pca.html" style="font-size:0.8rem;color:var(--accent);">0011 PCA</a>
+        <span style="font-size:0.75rem;color:var(--muted);">· 经典·概率·贝叶斯</span><br>
+        <a href="lessons/0017-factor-models-and-ml.html" style="font-size:0.8rem;color:var(--accent);">0017 因子模型与 ML</a>
+        <span style="font-size:0.75rem;color:var(--muted);">· Fama–French→GBDT</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="insight">
+  <strong>每条路径都是独立的，但会交叉。</strong>
+  比如路径 C 的 0014（神经网络）训练时要用路径 B 的优化工具；
+  路径 A 的 0015（变分推断）是路径 B 的 ELBO 在贝叶斯框架下的完整形式。
+  编号不是阅读顺序——<strong>选一条路径走到底，再横穿到其他路径</strong>，是最高效的学法。
+  推荐起点：<strong>路径 C 前半（0004→0005→0006）→ 路径 A（0002→0003）→ 路径 B → 路径 C 后半（0014）</strong>。
+</div>
+
+<div class="insight" style="margin-top:1.8rem;">
+  <strong>上面三条路径都在调用数学，但你看不到完整的数学地图。</strong>
+  贝叶斯更新在调用概率论，配平方在调用二次优化，核技巧在调用泛函分析，交叉熵在调用信息论。
+  下面这张地图把这些数学领域完整展开——它们是三条路径的<strong>"为什么"</strong>。
+</div>
+
+<h2 id="math">2. 数学地貌：理解模型背后的结构</h2>
+
+<p>六个数学领域构成了 AI 算法工程师的「工具箱」。它们不是孤立的——交叉处往往是最深的洞察所在。</p>
+
+<div class="map-container">
+  <svg viewBox="0 0 760 600" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- ========== Central hub ========== -->
+    <circle cx="380" cy="300" r="55" fill="none" stroke="#8b4513" stroke-width="1" stroke-dasharray="6,3" opacity="0.4"/>
+
+    <!-- 1. Probability & Statistics — top center -->
+    <ellipse cx="380" cy="60" rx="130" ry="50" fill="#5b8c5a" fill-opacity="0.08" stroke="#5b8c5a" stroke-width="1.8"/>
+    <text x="380" y="52" text-anchor="middle" font-size="0.9rem" font-weight="700" fill="#3a6b39">概率与统计</text>
+    <text x="380" y="70" text-anchor="middle" font-size="0.7rem" fill="#6b6b6b">Probability &amp; Statistics</text>
+    <text x="380" y="86" text-anchor="middle" font-size="0.72rem" fill="#5b8c5a">$p(x), p(y|x), \mathbb{E}, \text{Var}$, 贝叶斯</text>
+
+    <!-- 2. Optimization — top right -->
+    <ellipse cx="620" cy="160" rx="110" ry="48" fill="#c44d4d" fill-opacity="0.07" stroke="#c44d4d" stroke-width="1.8"/>
+    <text x="620" y="152" text-anchor="middle" font-size="0.9rem" font-weight="700" fill="#a33">优化理论</text>
+    <text x="620" y="170" text-anchor="middle" font-size="0.7rem" fill="#6b6b6b">Optimization</text>
+    <text x="620" y="185" text-anchor="middle" font-size="0.72rem" fill="#c44d4d">梯度下降 · 牛顿法 · 对偶 · SGD</text>
+
+    <!-- 3. Information Theory — right -->
+    <ellipse cx="660" cy="360" rx="95" ry="48" fill="#e07b39" fill-opacity="0.07" stroke="#e07b39" stroke-width="1.8"/>
+    <text x="660" y="352" text-anchor="middle" font-size="0.9rem" font-weight="700" fill="#c06a25">信息论</text>
+    <text x="660" y="370" text-anchor="middle" font-size="0.7rem" fill="#6b6b6b">Information Theory</text>
+    <text x="660" y="385" text-anchor="middle" font-size="0.72rem" fill="#e07b39">熵 · KL · 互信息 · 率失真</text>
+
+    <!-- 4. Geometry — bottom right -->
+    <ellipse cx="500" cy="530" rx="110" ry="48" fill="#4a7bab" fill-opacity="0.07" stroke="#4a7bab" stroke-width="1.8"/>
+    <text x="500" y="522" text-anchor="middle" font-size="0.9rem" font-weight="700" fill="#2d5f8a">几何与流形</text>
+    <text x="500" y="540" text-anchor="middle" font-size="0.7rem" fill="#6b6b6b">Geometry &amp; Manifolds</text>
+    <text x="500" y="556" text-anchor="middle" font-size="0.72rem" fill="#4a7bab">信息几何 · 自然梯度 · 李群</text>
+
+    <!-- 5. Dynamical Systems — bottom left -->
+    <ellipse cx="200" cy="500" rx="120" ry="48" fill="#8b5aa6" fill-opacity="0.07" stroke="#8b5aa6" stroke-width="1.8"/>
+    <text x="200" y="492" text-anchor="middle" font-size="0.9rem" font-weight="700" fill="#6f3d8a">动力系统</text>
+    <text x="200" y="510" text-anchor="middle" font-size="0.7rem" fill="#6b6b6b">Dynamical Systems</text>
+    <text x="200" y="526" text-anchor="middle" font-size="0.72rem" fill="#8b5aa6">ODE · SDE · Langevin · Flow</text>
+
+    <!-- 6. Functional Analysis — left -->
+    <ellipse cx="100" cy="320" rx="95" ry="48" fill="#2d6a4f" fill-opacity="0.07" stroke="#2d6a4f" stroke-width="1.8"/>
+    <text x="100" y="312" text-anchor="middle" font-size="0.9rem" font-weight="700" fill="#1f5c40">泛函分析</text>
+    <text x="100" y="330" text-anchor="middle" font-size="0.7rem" fill="#6b6b6b">Functional Analysis</text>
+    <text x="100" y="346" text-anchor="middle" font-size="0.72rem" fill="#2d6a4f">核方法 · RKHS · 变分法</text>
+
+    <!-- ========== Connection lines with labels ========== -->
+    <!-- Prob ↔ Opt: Loss function = expected risk -->
+    <line x1="470" y1="100" x2="540" y2="130" stroke="#bbb" stroke-width="1.2"/>
+    <text x="520" y="110" font-size="0.62rem" fill="#888" transform="rotate(25,520,110)">损失 = 期望风险</text>
+
+    <!-- Prob ↔ Info: KL divergence bridges them -->
+    <line x1="470" y1="100" x2="600" y2="320" stroke="#bbb" stroke-width="1.2" stroke-dasharray="5,4"/>
+    <text x="560" y="200" font-size="0.62rem" fill="#888" transform="rotate(55,560,200)">散度 &amp; 熵</text>
+
+    <!-- Opt ↔ Info: natural gradient -->
+    <line x1="680" y1="205" x2="700" y2="315" stroke="#bbb" stroke-width="1.2"/>
+    <text x="705" y="270" font-size="0.62rem" fill="#888">自然梯度</text>
+
+    <!-- Info ↔ Geometry: Fisher matrix = metric -->
+    <line x1="600" y1="400" x2="500" y2="490" stroke="#bbb" stroke-width="1.5"/>
+    <text x="530" y="455" font-size="0.65rem" fill="#555" font-weight="700">Fisher = 黎曼度量</text>
+
+    <!-- Geometry ↔ Dyn: flows on manifolds -->
+    <line x1="400" y1="550" x2="300" y2="530" stroke="#bbb" stroke-width="1.2" stroke-dasharray="5,4"/>
+    <text x="330" y="555" font-size="0.62rem" fill="#888">流形上的动力学</text>
+
+    <!-- Dyn ↔ Func: PDE/operator theory -->
+    <line x1="130" y1="460" x2="100" y2="365" stroke="#bbb" stroke-width="1.2" stroke-dasharray="5,4"/>
+    <text x="90" y="420" font-size="0.62rem" fill="#888">算子半群</text>
+
+    <!-- Opt ↔ Dyn: gradient flow = ODE -->
+    <line x1="550" y1="190" x2="310" y2="460" stroke="#c44d4d" stroke-width="1.5" stroke-dasharray="2,2" opacity="0.5"/>
+    <text x="380" y="340" font-size="0.65rem" fill="#c44d4d">梯度流 = 常微分方程</text>
+
+    <!-- Prob ↔ Dyn: SDE, Fokker-Planck -->
+    <line x1="300" y1="80" x2="230" y2="455" stroke="#5b8c5a" stroke-width="1.2" stroke-dasharray="5,4" opacity="0.5"/>
+    <text x="240" y="270" font-size="0.62rem" fill="#5b8c5a">Fokker-Planck 方程</text>
+
+    <!-- Legend for the central dashed circle -->
+    <text x="380" y="295" text-anchor="middle" font-size="0.68rem" fill="#8b4513" font-style="italic">交叉处 =</text>
+    <text x="380" y="312" text-anchor="middle" font-size="0.68rem" fill="#8b4513" font-style="italic">最深洞察</text>
+
+  </svg>
+  <div class="map-legend">
+    <span><span class="legend-dot" style="background:var(--c-prob)"></span> 概率与统计</span>
+    <span><span class="legend-dot" style="background:var(--c-opt)"></span> 优化理论</span>
+    <span><span class="legend-dot" style="background:var(--c-info)"></span> 信息论</span>
+    <span><span class="legend-dot" style="background:var(--c-geom)"></span> 几何与流形</span>
+    <span><span class="legend-dot" style="background:var(--c-dyn)"></span> 动力系统</span>
+    <span><span class="legend-dot" style="background:var(--c-func)"></span> 泛函分析</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+
+<h3>六个领域：各自在 AI 中扮演什么角色</h3>
+
+<div class="domain-grid">
+
+  <div class="domain-card domain-prob">
+    <span class="domain-tag tag-prob">核心</span>
+    <h3>概率与统计</h3>
+    <p>一切的基础语言。随机变量、条件概率、期望、方差、贝叶斯定理、指数族分布。这是描述「不确定性」的语法——而 AI 的本质就是管理不确定性。</p>
+    <p style="font-size:0.82rem; color:var(--muted);">
+      关键概念：指数族 · 共轭先验 · 充分统计量 · 概率图模型
+    </p>
+    <div class="links">
+      <a href="lessons/0001-probabilistic-linear-regression.html">📖 0001 线性回归</a>
+      <a href="lessons/0004-exponential-family.html">📖 0004 指数族</a>
+      <a href="lessons/0010-mixture-models-em.html">📖 0010 EM</a>
+      <a href="reference/algorithm-cards.html">📇 参考手册</a>
+    </div>
+  </div>
+
+  <div class="domain-card domain-opt">
+    <span class="domain-tag tag-opt">核心</span>
+    <h3>优化理论</h3>
+    <p>把「学习」变成「最小化某个函数」。梯度下降、随机优化、对偶理论、拉格朗日乘子法。几乎所有训练算法最终都是某个优化问题的求解。</p>
+    <p style="font-size:0.82rem; color:var(--muted);">
+      关键概念：凸优化 · KKT 条件 · 对偶性 · 收敛率 · 鞍点
+    </p>
+    <div class="links">
+      <a href="lessons/0007-svm-hard-margin.html">📖 0007 SVM 对偶</a>
+      <a href="lessons/0008-svm-soft-margin.html">📖 0008 软间隔</a>
+      <a href="lessons/0014-neural-networks.html">📖 0014 神经网络</a>
+    </div>
+  </div>
+
+  <div class="domain-card domain-info">
+    <span class="domain-tag tag-info">桥梁</span>
+    <h3>信息论</h3>
+    <p>连接概率与几何的桥梁。熵、KL 散度、互信息——这些量不仅衡量不确定性，还定义了概率分布空间中的「距离」和「结构」。</p>
+    <p style="font-size:0.82rem; color:var(--muted);">
+      关键概念：熵 · KL · JS · Wasserstein · 率失真理论
+    </p>
+    <div class="links">
+      <a href="lessons/0001-probabilistic-linear-regression.html#s6">📖 0001§6 MLE=KL</a>
+      <a href="lessons/0015-variational-inference.html">📖 0015 ELBO</a>
+    </div>
+  </div>
+
+  <div class="domain-card domain-geom">
+    <span class="domain-tag tag-geom">深度</span>
+    <h3>几何与流形</h3>
+    <p>概率分布不是生活在欧氏空间里——它们形成一个统计流形。Fisher 信息矩阵是这个流形的黎曼度量，自然梯度下降是沿测地线走。</p>
+    <p style="font-size:0.82rem; color:var(--muted);">
+      关键概念：信息几何 · Fisher 度量 · 自然梯度 · 流形上的优化
+    </p>
+    <div class="links">
+      <a href="lessons/0019-information-geometry.html">📖 0019 信息几何 ✓</a>
+    </div>
+  </div>
+
+  <div class="domain-card domain-dyn">
+    <span class="domain-tag tag-dyn">深度</span>
+    <h3>动力系统</h3>
+    <p>迭代优化 = 离散动力系统。Neural ODE = 连续动力系统。扩散模型 = 随机微分方程 + 逆向时间。这里连接了优化、采样和生成。</p>
+    <p style="font-size:0.82rem; color:var(--muted);">
+      关键概念：ODE · SDE · Langevin · Fokker-Planck · 平稳分布
+    </p>
+    <div class="links">
+      <a href="lessons/0018-score-function.html">📖 0018 Score Function</a>
+      <a href="lessons/0015-variational-inference.html">📖 0015 MCMC</a>
+    </div>
+  </div>
+
+  <div class="domain-card domain-func">
+    <span class="domain-tag tag-func">上层</span>
+    <h3>泛函分析</h3>
+    <p>当参数空间变成函数空间时——核方法、高斯过程、正则化理论、变分推断的泛函视角。理解「无穷维优化」的数学。</p>
+    <p style="font-size:0.82rem; color:var(--muted);">
+      关键概念：RKHS · 表示定理 · 泛函梯度 · 变分法
+    </p>
+    <div class="links">
+      <a href="lessons/0006-kernel-methods.html">📖 0006 核方法</a>
+      <a href="lessons/0011-pca.html">📖 0011 PCA</a>
+      <a href="lessons/0015-variational-inference.html">📖 0015 变分</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+
+<h3>交叉处：最深洞察所在</h3>
+
+<p>
+  六个领域虽然各有领地，但<strong>最本质的洞察几乎都出现在交叉处</strong>。
+  以下是一些例子——这些也是未来课程的可能方向：
+</p>
+
+<table style="width:100%; border-collapse:collapse; margin:1.2rem 0; font-size:0.9rem;">
+  <thead>
+    <tr style="border-bottom:2px solid var(--border);">
+      <th style="text-align:left; padding:0.45rem 0.7rem;">交叉点</th>
+      <th style="text-align:left; padding:0.45rem 0.7rem;">产生的洞察</th>
+      <th style="text-align:left; padding:0.45rem 0.7rem;">相关算法</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:0.45rem 0.7rem;">概率 × 动力系统</td>
+      <td style="padding:0.45rem 0.7rem;">Score function + Langevin 动力学 → 绕过配分函数的采样方法</td>
+      <td style="padding:0.45rem 0.7rem; font-size:0.82rem;">Score-Based, Diffusion <a href="lessons/0018-score-function.html" style="color:var(--accent);">→ L0018</a></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:0.45rem 0.7rem;">信息论 × 几何</td>
+      <td style="padding:0.45rem 0.7rem;">KL 散度的二阶近似给出 Fisher 度量 → 概率空间是弯曲的</td>
+      <td style="padding:0.45rem 0.7rem; font-size:0.82rem;">自然梯度下降, 信息几何</td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:0.45rem 0.7rem;">优化 × 动力系统</td>
+      <td style="padding:0.45rem 0.7rem;">梯度下降 = Euler 离散化梯度流 → 优化器设计 = ODE 数值方法</td>
+      <td style="padding:0.45rem 0.7rem; font-size:0.82rem;">SGD, Adam, Neural ODE</td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:0.45rem 0.7rem;">优化 × 信息论</td>
+      <td style="padding:0.45rem 0.7rem;">最小化 KL ↔ 最大似然 ↔ 最小化交叉熵 → 它们是同一件事</td>
+      <td style="padding:0.45rem 0.7rem; font-size:0.82rem;">MLE, 交叉熵损失, 变分推断</td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:0.45rem 0.7rem;">概率 × 泛函分析</td>
+      <td style="padding:0.45rem 0.7rem;">从函数空间视角看变分推断 → ELBO 是泛函下界</td>
+      <td style="padding:0.45rem 0.7rem; font-size:0.82rem;">VI, 高斯过程, 核方法</td>
+    </tr>
+    <tr>
+      <td style="padding:0.45rem 0.7rem;">概率 × 几何 × 动力系统</td>
+      <td style="padding:0.45rem 0.7rem;">扩散模型 = 概率流 (SDE) + 流形上的 score 估计</td>
+      <td style="padding:0.45rem 0.7rem; font-size:0.82rem;">Diffusion, Flow Matching</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ -->
+
+
+<div class="insight" style="margin-top:2rem;">
+  <strong>数学地貌不只是"背景知识"。</strong>
+  当你在交叉处那张表里看到"概率 × 动力系统 → Score + Langevin"、"信息论 × 几何 → 自然梯度"——
+  这些不是抽象的理论游戏，而是<strong>实际构造算法的方法</strong>。
+  下面两课是三条路径共同的数学深处——当你走完任何一条路径后回来看，数学不再是背景，而是算法本身。
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="frontier">3. 算法前沿：数学不再是背景，它是算法本身</h2>
+
+<p>
+  走到这里，数学从"解释模型的工具"变成了<strong>构造算法的引擎</strong>。
+  Score function 让生成模型绕开了困扰学界二十年的配分函数；
+  信息几何告诉你在概率空间里梯度下降该往哪走——因为概率空间是弯曲的，欧氏距离没有意义。
+</p>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin:1.2rem 0;">
+
+  <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;border-top:4px solid #2d6a4f;">
+    <div style="font-weight:700;font-size:0.92rem;color:#1f5c40;margin-bottom:0.4rem;">0018 · Score Function</div>
+    <p style="font-size:0.84rem;color:var(--muted);margin-bottom:0.5rem;">
+      $Z$ 不可算 → 不碰密度，学 score → Langevin 动力学采样 → DDPM 的数学本质。这是生成模型统一的"数学之眼"。
+    </p>
+    <a href="lessons/0018-score-function.html" style="font-size:0.84rem;color:var(--accent);">进入课程 →</a>
+  </div>
+
+  <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;border-top:4px solid #4a7bab;">
+    <div style="font-weight:700;font-size:0.92rem;color:#2d5f8a;margin-bottom:0.4rem;">0019 · 信息几何与自然梯度</div>
+    <p style="font-size:0.84rem;color:var(--muted);margin-bottom:0.5rem;">
+      Fisher 信息 = 黎曼度量，KL 的二阶近似给出概率空间的曲率。自然梯度 = $\mathbf{F}^{-1}abla\mathcal{L}$——沿测地线走。
+    </p>
+    <a href="lessons/0019-information-geometry.html" style="font-size:0.84rem;color:var(--accent);">进入课程 →</a>
+  </div>
+
+</div>
+
+<div class="bridge" style="margin-top:1.5rem;">
+  <div class="big-idea">
+    📇 <a href="reference/algorithm-cards.html" style="color:var(--accent);">参考手册 · 算法卡片与术语</a>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);margin-top:0.4rem;">
+    GAN / VAE / EBM / Normalizing Flow / Diffusion / Score-Based — 每张卡片回答一个"这个算法在数学上到底在做什么"
+  </p>
+</div>
+
+<div class="bridge">
+  <div class="big-idea">
+    📐 <a href="reference/math-primer.html" style="color:var(--accent);">数学手册</a> &emsp; 🔬 <a href="reference/empirical-evidence.html" style="color:var(--accent);">实证证据</a>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);margin-top:0.4rem;">
+    梯度·Hessian·散度·Fisher 的快速查阅 · 理论预测与实验数据的对照验证
+  </p>
+</div>
+
+<div style="background:linear-gradient(135deg,#faf8f5,#f5efe6);border:1px dashed var(--accent);border-radius:8px;padding:1rem 1.2rem;margin-top:1.5rem;text-align:center;">
+  
+<div style="background:linear-gradient(135deg,#faf8f5,#f5efe6);border:1px dashed var(--accent);border-radius:8px;padding:1rem 1.2rem;margin-top:1rem;text-align:center;">
+  <div style="font-weight:700;font-size:0.95rem;color:var(--accent);margin-bottom:0.3rem;">强化学习 · RL 三课</div>
+  <div style="font-size:0.85rem;color:var(--muted);">
+    <a href="lessons/0020-mdp-bellman.html" style="color:var(--accent);">0020 MDP → Bellman → DP</a> &emsp;
+    <a href="lessons/0021-model-free-rl.html" style="color:var(--accent);">0021 Model-Free：MC → TD → Q-learning</a> &emsp;
+    <a href="lessons/0022-deep-rl.html" style="color:var(--accent);">0022 Deep RL：DQN → PPO</a>
+  </div>
+</div>
+
+<div style="background:linear-gradient(135deg,#faf8f5,#f5efe6);border:1px dashed var(--accent);border-radius:8px;padding:1rem 1.2rem;margin-top:1rem;text-align:center;">
+  <div style="font-weight:700;font-size:0.95rem;color:var(--accent);margin-bottom:0.3rem;">待探索</div>
+  <div style="font-size:0.85rem;color:var(--muted);">
+    最优传输（Wasserstein 距离的几何）· SDE 统一框架（Song et al. 2021）· 散度家族（$f$-divergence / JS / Wasserstein）· Flow Matching
+  </div>
+</div>
+
+<div class="insight" style="margin-top:1.5rem;">
+  <strong>三段旅程到这里并没有结束。</strong>
+  当你回到第一层的任何一个模型，用第二层的数学重新审视它，再用第三层的视角问"这个模型还能怎么改进"——
+  那个来回往复的过程，才是真正学会 AI 数学的时候。
+</div>
+
+<!-- ============================================================ -->
+<footer>
+  <p>
+    <strong>推荐：</strong>如果你不熟悉判别式 vs 生成式的基本区分，
+    <a href="https://probml.github.io/pml-book/" target="_blank">Murphy — Probabilistic Machine Learning</a> 第 1 章是最清晰的参考。
+  </p>
+  <p style="margin-top: 0.6rem;">
+    <strong>有问题？</strong>直接问。课程方向由你的问题和好奇心驱动——不是由我预设的提纲。
+  </p>
+  <p style="margin-top: 0.8rem; font-size: 0.82rem;">
+    <a href="../">← 学习笔记首页</a> &emsp;
+    <a href="lessons/0001-probabilistic-linear-regression.html">Lesson 0001 →</a> &emsp;
+    <a href="lessons/0018-score-function.html">Lesson 0018 → Score</a> &emsp;
+    <a href="reference/algorithm-cards.html">📇 参考手册</a> &emsp;
+    <a href="reference/math-primer.html">📐 数学手册</a> &emsp;
+    <a href="MISSION.md">🎯 Mission</a>
+  </p>
+</footer>
+
+
+</body>
+</html>

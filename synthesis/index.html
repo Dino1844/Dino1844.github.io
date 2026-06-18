@@ -44,7 +44,6 @@
   .breadcrumb a { color: var(--accent); text-decoration: none; }
   .breadcrumb a:hover { text-decoration: underline; }
 
-  /* Mission highlight */
   .mission-banner {
     background: var(--card-bg); border-radius: 8px; padding: 1.2rem 1.5rem;
     margin: 1.5rem 0; border-left: 3px solid var(--accent);
@@ -56,7 +55,6 @@
     margin-bottom: 0.3rem;
   }
 
-  /* Links row */
   .quick-links {
     display: flex; gap: 1.2rem; flex-wrap: wrap; margin: 1.5rem 0;
     font-family: 'Inter', sans-serif; font-size: 0.84rem;
@@ -68,21 +66,15 @@
   }
   .quick-links a:hover { border-color: var(--accent); }
 
-  /* Phase & Topic */
-  .phase {
-    margin: 1.8rem 0;
-  }
+  .phase { margin: 1.8rem 0; }
   .phase-header {
-    display: flex; align-items: baseline; gap: 0.6rem;
-    margin-bottom: 0.6rem;
+    display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.6rem; flex-wrap: wrap;
   }
   .phase-num {
     font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600;
     color: var(--text-light); letter-spacing: 0.05em;
   }
-  .phase-label {
-    font-weight: 600; font-size: 1.02rem;
-  }
+  .phase-label { font-weight: 600; font-size: 1.02rem; }
 
   .topic-list {
     display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1.2rem;
@@ -93,12 +85,8 @@
     border-bottom: 1px dotted var(--border);
     color: var(--text-light);
   }
-  .topic.done {
-    color: var(--text);
-  }
-  .topic.done a {
-    color: var(--economics); text-decoration: none; font-weight: 600;
-  }
+  .topic.done { color: var(--text); }
+  .topic.done a { color: var(--economics); text-decoration: none; font-weight: 600; }
   .topic.done a:hover { text-decoration: underline; }
   .topic .status {
     font-family: 'Inter', sans-serif; font-size: 0.68rem; font-weight: 500;
@@ -106,6 +94,10 @@
   }
   .status-done { background: #e8f5e9; color: #2d6a4f; }
   .status-next { background: #fff3e0; color: #e65100; }
+  .lesson-num {
+    font-family: 'Inter', sans-serif; font-size: 0.74rem; font-weight: 600;
+    color: var(--accent); margin-right: 0.4rem; min-width: 2.2em; display: inline-block;
+  }
   .topic .tag {
     font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 600;
     letter-spacing: 0.04em; padding: 0.05em 0.35em; border-radius: 2px;
@@ -145,37 +137,25 @@
 <h1>综汇</h1>
 <p class="subtitle">历史 · 经济 · 政治 · 哲学 — 构建跨学科思想体系</p>
 
-<!-- Mission -->
 <div class="mission-banner">
   <div class="label">Mission</div>
   <p>构建一套整合四个学科的跨学科理解框架——将碎片化的知识编织成有机的思想体系，在面对任何复杂现象时，能够本能地从多个维度展开分析，形成独立、有穿透力的判断。</p>
   <p style="font-size:0.82rem;color:var(--text-light);margin-top:0.4rem;"><a href="./MISSION.md">完整 Mission →</a></p>
 </div>
 
-<!-- Quick links -->
 <div class="quick-links">
-  <a href="./lessons/0001-why-states-emerge.html">📖 第一课</a>
+  <a href="./lessons/0004-three-dimensions-of-power.html">📖 最新课 L4</a>
   <a href="./reference/glossary.html">📚 术语表</a>
   <a href="./RESOURCES.md">📋 资源清单</a>
+  <a href="./CURRICULUM.md">🗂 课程设计</a>
   <a href="./NOTES.md">🗒 教学笔记</a>
 </div>
 
-<!-- ====== COMPLETED LESSONS ====== -->
-<h2>已完成</h2>
-
-<div class="topic-list">
-  <div class="topic done">
-    <a href="./lessons/0001-why-states-emerge.html">0001 · 为什么有些文明发展出了复杂国家？</a>
-    <span class="status status-done">已完成</span>
-    <br><span style="font-size:0.78rem;color:var(--text-light);">韦伯 | 柴尔德 | 蒂利 | 卡内罗 | 奥尔森 | 霍布斯 | 洛克 | 休谟</span>
-  </div>
-</div>
-
-<!-- ====== THEMATIC MENU ====== -->
-<h2>可选主题</h2>
+<!-- ====== CURRICULUM PATH ====== -->
+<h2>课程路径</h2>
 <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:1rem;">
-  以下是按六个阶段组织的<strong>可选主题</strong>——这不是固定的课表，而是一张思想地图。
-  每个主题都是一个四个学科交汇的节点。我们可以灵活选择顺序、跳过某些、深入另一些。
+  一条贯穿六阶段的核心序列（25 节），每节建立在前节之上，螺旋深化。
+  弹性节奏下约一年的进程。可选扩展与贯穿性主题列于路径之后，可随时插入。
 </p>
 
 <!-- Phase 1 -->
@@ -183,27 +163,24 @@
   <div class="phase-header">
     <span class="phase-num">PHASE 1</span>
     <span class="phase-label">思维脚手架</span>
-    <span style="font-size:0.78rem;color:var(--text-light);">建立分析工具</span>
+    <span style="font-size:0.78rem;color:var(--text-light);">建立分析工具 · L1–L4</span>
   </div>
   <div class="topic-list">
     <div class="topic done">
-      <a href="./lessons/0001-why-states-emerge.html">0001 · 国家起源：四个视角第一次交汇</a>
+      <span class="lesson-num">L1</span><a href="./lessons/0001-why-states-emerge.html">国家起源：四视角第一次交汇</a>
+      <span class="status status-done">已完成</span>
     </div>
-    <div class="topic">
-      合法性的面孔：韦伯的三种权威及其当代应用
-      <span class="tag tag-ph">哲</span><span class="tag tag-p">政</span>
+    <div class="topic done">
+      <span class="lesson-num">L2</span><a href="./lessons/0002-faces-of-legitimacy.html">合法性的面孔：韦伯三种权威 + 当代应用</a>
+      <span class="status status-done">已完成</span>
     </div>
-    <div class="topic">
-      制度如何变迁？路径依赖、关键节点与制度锁定
-      <span class="tag tag-p">政</span><span class="tag tag-e">经</span>
+    <div class="topic done">
+      <span class="lesson-num">L3</span><a href="./lessons/0003-institutional-change.html">制度如何变迁：路径依赖、关键节点、制度锁定</a>
+      <span class="status status-done">已完成</span>
     </div>
-    <div class="topic">
-      权力是什么？强制、交易与说服——三维权力观
-      <span class="tag tag-p">政</span><span class="tag tag-ph">哲</span>
-    </div>
-    <div class="topic">
-      方法论：怎样才算一个好的跨学科解释？
-      <span class="tag tag-ph">哲</span>
+    <div class="topic done">
+      <span class="lesson-num">L4</span><a href="./lessons/0004-three-dimensions-of-power.html">权力的三维：强制、交易、说服 <em>（综合：重审 L1）</em></a>
+      <span class="status status-done">已完成</span>
     </div>
   </div>
 </div>
@@ -213,27 +190,24 @@
   <div class="phase-header">
     <span class="phase-num">PHASE 2</span>
     <span class="phase-label">轴心时代</span>
-    <span style="font-size:0.78rem;color:var(--text-light);">公元前 800–200 年 · 思想与制度的共同起源</span>
+    <span style="font-size:0.78rem;color:var(--text-light);">公元前 800–200 · 思想与制度共同起源 · L5–L8</span>
   </div>
   <div class="topic-list">
     <div class="topic">
-      轴心时代的谜题：为什么全球同时出现了哲学突破？
+      <span class="lesson-num">L5</span>轴心时代谜题：为什么全球同时哲学突破？
+      <span class="status status-next">下一节</span>
       <span class="tag tag-h">史</span><span class="tag tag-ph">哲</span>
     </div>
     <div class="topic">
-      古希腊：城邦民主的实验、成就与局限
+      <span class="lesson-num">L6</span>古希腊城邦：民主实验的成就与局限
       <span class="tag tag-p">政</span><span class="tag tag-h">史</span><span class="tag tag-ph">哲</span>
     </div>
     <div class="topic">
-      战国百家：法家、儒家、道家的政治哲学分歧
+      <span class="lesson-num">L7</span>战国百家：法家/儒家/道家的政治哲学分歧
       <span class="tag tag-ph">哲</span><span class="tag tag-p">政</span><span class="tag tag-h">史</span>
     </div>
     <div class="topic">
-      比较视野：希腊城邦 vs 战国诸侯 vs 印度十六国
-      <span class="tag tag-h">史</span><span class="tag tag-p">政</span><span class="tag tag-e">经</span>
-    </div>
-    <div class="topic">
-      柏拉图《理想国》vs 韩非子：两种对「好国家」的回答
+      <span class="lesson-num">L8</span>柏拉图《理想国》vs 韩非子 <em>（综合：两种「好国家」）</em>
       <span class="tag tag-ph">哲</span><span class="tag tag-p">政</span>
     </div>
   </div>
@@ -244,32 +218,28 @@
   <div class="phase-header">
     <span class="phase-num">PHASE 3</span>
     <span class="phase-label">前现代系统</span>
-    <span style="font-size:0.78rem;color:var(--text-light);">帝国 · 宗教 · 贸易网络</span>
+    <span style="font-size:0.78rem;color:var(--text-light);">帝国 · 审教 · 贸易 · L9–L13</span>
   </div>
   <div class="topic-list">
     <div class="topic">
-      罗马的兴衰：共和国的帝国化及其多因崩溃
+      <span class="lesson-num">L9</span>罗马兴衰：共和国的帝国化与多因崩溃
       <span class="tag tag-h">史</span><span class="tag tag-p">政</span><span class="tag tag-e">经</span>
     </div>
     <div class="topic">
-      中华帝国的政治逻辑：郡县制、科举与王朝周期律
+      <span class="lesson-num">L10</span>中华帝国政治逻辑：郡县、科举、王朝周期律
       <span class="tag tag-h">史</span><span class="tag tag-p">政</span><span class="tag tag-ph">哲</span>
     </div>
     <div class="topic">
-      封建制的政治经济学：欧洲中世纪的特殊路径
+      <span class="lesson-num">L11</span>封建制政治经济学：欧洲中世纪的特殊路径
       <span class="tag tag-h">史</span><span class="tag tag-e">经</span><span class="tag tag-p">政</span>
     </div>
     <div class="topic">
-      伊斯兰世界的政治哲学：政教关系的一个不同答案
-      <span class="tag tag-ph">哲</span><span class="tag tag-p">政</span><span class="tag tag-h">史</span>
-    </div>
-    <div class="topic">
-      蒙古帝国：一个没有官僚制的世界帝国如何运转？
-      <span class="tag tag-h">史</span><span class="tag tag-p">政</span><span class="tag tag-e">经</span>
-    </div>
-    <div class="topic">
-      宗教改革的经济后果：韦伯「新教伦理」论及其批评
+      <span class="lesson-num">L12</span>审教改革的经济后果：韦伯论及其批评
       <span class="tag tag-ph">哲</span><span class="tag tag-e">经</span><span class="tag tag-h">史</span>
+    </div>
+    <div class="topic">
+      <span class="lesson-num">L13</span>帝国比较：罗马 vs 中华 vs 蒙古 <em>（综合）</em>
+      <span class="tag tag-h">史</span><span class="tag tag-p">政</span><span class="tag tag-e">经</span>
     </div>
   </div>
 </div>
@@ -279,36 +249,28 @@
   <div class="phase-header">
     <span class="phase-num">PHASE 4</span>
     <span class="phase-label">大转型</span>
-    <span style="font-size:0.78rem;color:var(--text-light);">现代性从何而来 · 1500–1850</span>
+    <span style="font-size:0.78rem;color:var(--text-light);">现代性从何而来 · 1500–1850 · L14–L18</span>
   </div>
   <div class="topic-list">
     <div class="topic">
-      为什么是欧洲？大分流问题的多维分析
+      <span class="lesson-num">L14</span>大分流：为什么是欧洲？
       <span class="tag tag-h">史</span><span class="tag tag-e">经</span><span class="tag tag-p">政</span>
     </div>
     <div class="topic">
-      启蒙运动：理性、权利与革命的思想准备
+      <span class="lesson-num">L15</span>启蒙运动：理性、权利与革命的思想准备
       <span class="tag tag-ph">哲</span><span class="tag tag-h">史</span>
     </div>
     <div class="topic">
-      法国大革命：启蒙哲学的实验室
+      <span class="lesson-num">L16</span>法国大革命：启蒙哲学的实验室
       <span class="tag tag-h">史</span><span class="tag tag-p">政</span><span class="tag tag-ph">哲</span>
     </div>
     <div class="topic">
-      工业革命：技术、资本与劳动——一场经济地震
+      <span class="lesson-num">L17</span>工业革命：技术、资本、劳动的经济地震
       <span class="tag tag-e">经</span><span class="tag tag-h">史</span><span class="tag tag-p">政</span>
     </div>
     <div class="topic">
-      资本主义的精神：马克思 vs 韦伯 vs 波兰尼
+      <span class="lesson-num">L18</span>资本主义的精神：马克思 vs 韦伯 vs 波兰尼 <em>（综合）</em>
       <span class="tag tag-e">经</span><span class="tag tag-ph">哲</span><span class="tag tag-h">史</span>
-    </div>
-    <div class="topic">
-      从重商主义到自由贸易：经济思想如何塑造国家政策
-      <span class="tag tag-e">经</span><span class="tag tag-p">政</span><span class="tag tag-h">史</span>
-    </div>
-    <div class="topic">
-      美国建国：洛克理论的第一个大规模实验
-      <span class="tag tag-p">政</span><span class="tag tag-ph">哲</span><span class="tag tag-h">史</span>
     </div>
   </div>
 </div>
@@ -318,36 +280,24 @@
   <div class="phase-header">
     <span class="phase-num">PHASE 5</span>
     <span class="phase-label">20 世纪 · 意识形态实验室</span>
-    <span style="font-size:0.78rem;color:var(--text-light);">三种现代性方案 · 1900–1991</span>
+    <span style="font-size:0.78rem;color:var(--text-light);">三种现代性方案 · 1900–1991 · L19–L22</span>
   </div>
   <div class="topic-list">
     <div class="topic">
-      自由民主 vs 共产主义 vs 法西斯：三种现代性方案
+      <span class="lesson-num">L19</span>三种现代性方案：自由民主 vs 共产主义 vs 法西斯
       <span class="tag tag-p">政</span><span class="tag tag-ph">哲</span><span class="tag tag-e">经</span>
     </div>
     <div class="topic">
-      大萧条与罗斯福新政：资本主义的第一次自我修正
+      <span class="lesson-num">L20</span>大萧条与新政：资本主义的第一次自我修正
       <span class="tag tag-e">经</span><span class="tag tag-p">政</span><span class="tag tag-h">史</span>
     </div>
     <div class="topic">
-      福利国家的政治经济学：从俾斯麦到北欧模式
+      <span class="lesson-num">L21</span>福利国家政治经济学：从俾斯麦到北欧
       <span class="tag tag-p">政</span><span class="tag tag-e">经</span><span class="tag tag-ph">哲</span>
     </div>
     <div class="topic">
-      苏联实验：计划经济的可能性与失败
-      <span class="tag tag-e">经</span><span class="tag tag-p">政</span><span class="tag tag-h">史</span>
-    </div>
-    <div class="topic">
-      去殖民化：民族自决的梦想与现实
-      <span class="tag tag-h">史</span><span class="tag tag-p">政</span><span class="tag tag-e">经</span>
-    </div>
-    <div class="topic">
-      中国的革命与改革：从计划经济到国家资本主义
+      <span class="lesson-num">L22</span>中国的革命与改革：从计划经济到国家资本主义 <em>（综合）</em>
       <span class="tag tag-h">史</span><span class="tag tag-e">经</span><span class="tag tag-p">政</span>
-    </div>
-    <div class="topic">
-      1978–2008：新自由主义的兴起、全球化和危机
-      <span class="tag tag-e">经</span><span class="tag tag-p">政</span><span class="tag tag-ph">哲</span>
     </div>
   </div>
 </div>
@@ -357,52 +307,58 @@
   <div class="phase-header">
     <span class="phase-num">PHASE 6</span>
     <span class="phase-label">当代综合</span>
-    <span style="font-size:0.78rem;color:var(--text-light);">用框架理解今天</span>
+    <span style="font-size:0.78rem;color:var(--text-light);">用框架理解今天 · L23–L25</span>
   </div>
   <div class="topic-list">
     <div class="topic">
-      全球化及其不满：贸易、移民与文化冲突
+      <span class="lesson-num">L23</span>全球化及其不满：贸易、移民、文化冲突
       <span class="tag tag-e">经</span><span class="tag tag-p">政</span><span class="tag tag-h">史</span><span class="tag tag-ph">哲</span>
     </div>
     <div class="topic">
-      中国的崛起：国家资本主义的政治经济学
-      <span class="tag tag-e">经</span><span class="tag tag-p">政</span><span class="tag tag-h">史</span>
-    </div>
-    <div class="topic">
-      民主在衰落吗？民粹主义、极化与技术变革
+      <span class="lesson-num">L24</span>民主在衰落吗？民粹主义、极化、技术变革
       <span class="tag tag-p">政</span><span class="tag tag-ph">哲</span><span class="tag tag-h">史</span>
     </div>
     <div class="topic">
-      不平等的道德与政治：从皮凯蒂到社群主义
-      <span class="tag tag-e">经</span><span class="tag tag-ph">哲</span><span class="tag tag-p">政</span>
-    </div>
-    <div class="topic">
-      气候危机：一个必须同时动用四个学科的问题
+      <span class="lesson-num">L25</span>气候危机 + AI 与权力：用整个框架理解今天 <em>（终章综合）</em>
       <span class="tag tag-e">经</span><span class="tag tag-p">政</span><span class="tag tag-ph">哲</span><span class="tag tag-h">史</span>
     </div>
-    <div class="topic">
-      AI 与权力的重塑：技术如何改变治理、市场和自由
-      <span class="tag tag-p">政</span><span class="tag tag-ph">哲</span><span class="tag tag-e">经</span>
-    </div>
   </div>
+</div>
+
+<!-- Optional extensions -->
+<h2>可选扩展</h2>
+<p style="font-size:0.88rem;color:var(--text-light);margin-bottom:1rem;">
+  随时可插入主干——根据兴趣或讨论中产生的问题灵活调用。
+</p>
+<div class="topic-list">
+  <div class="topic">比较视野：希腊城邦 vs 战国诸侯 vs 印度十六国 <span class="tag tag-h">史</span><span class="tag tag-p">政</span></div>
+  <div class="topic">伊斯兰世界的政治哲学 <span class="tag tag-ph">哲</span><span class="tag tag-p">政</span></div>
+  <div class="topic">蒙古帝国：没有官僚制的世界帝国 <span class="tag tag-h">史</span><span class="tag tag-p">政</span></div>
+  <div class="topic">美国建国：洛克理论的第一个大规模实验 <span class="tag tag-p">政</span><span class="tag tag-ph">哲</span></div>
+  <div class="topic">苏联实验：计划经济的可能性与失败 <span class="tag tag-e">经</span><span class="tag tag-p">政</span></div>
+  <div class="topic">去殖民化：民族自决的梦想与现实 <span class="tag tag-h">史</span><span class="tag tag-p">政</span></div>
+  <div class="topic">1978–2008：新自由主义的兴起与危机 <span class="tag tag-e">经</span><span class="tag tag-p">政</span></div>
+  <div class="topic">中国的崛起：国家资本主义的政治经济学 <span class="tag tag-e">经</span><span class="tag tag-p">政</span></div>
+  <div class="topic">不平等的道德与政治：皮凯蒂到社群主义 <span class="tag tag-e">经</span><span class="tag tag-ph">哲</span></div>
 </div>
 
 <!-- Cross-cutting -->
 <h2>贯穿性主题</h2>
 <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:1rem;">
-  这些问题跨越多个时期，可以在任何阶段插入讨论。
+  跨越多个时期，可在任何阶段插入讨论。
 </p>
 <div class="topic-list">
   <div class="topic">「自由」在不同文明中的含义：从雅典到长安到魏玛</div>
   <div class="topic">革命比较：英国 1688 · 法国 1789 · 俄国 1917 · 中国 1949</div>
-  <div class="topic">帝国的逻辑：为什么它们在大多数时间里是政治组织的「默认形态」？</div>
-  <div class="topic">货币与主权：从铸币税到数字货币，货币如何同时是经济工具和政治武器</div>
+  <div class="topic">帝国的逻辑：为什么帝国在大多数时间里是政治组织的「默认形态」</div>
+  <div class="topic">货币与主权：从铸币税到数字货币</div>
   <div class="topic">战争与技术：军事革命如何一次次重塑国家</div>
 </div>
 
 <div class="note">
-  💡 <strong>这张地图是活的。</strong>这不是一份固定课表——每个主题都可以被调整、拆分、合并，
-  或根据讨论中产生的兴趣而替换。你对哪些主题最感兴趣？想从哪里开始？直接告诉 Claude。
+  💡 <strong>这张课表是活的。</strong>核心路径是建议顺序，不是硬性规定——
+  你对某阶段特别感兴趣可以跳过去，某节觉得不够可以加深，讨论中冒出新问题可以临时插入扩展课。
+  想调整节奏或顺序，直接告诉 Claude。
 </div>
 
 <div class="footer">

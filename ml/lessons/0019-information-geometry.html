@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0019 · 信息几何与自然梯度</title>
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg:#fdfcf9; --text:#2c2c2c; --accent:#8b4513; --light-accent:#f5efe6; --muted:#6b6b6b; --border:#e0d8cc; --code-bg:#f7f4ef; --highlight:#fff3cd; --insight-border:#d4a574; --correct:#2d6a4f; --incorrect:#c1121f; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Palatino','Noto Serif SC','Source Han Serif SC',Georgia,serif;background:var(--bg);color:var(--text);line-height:1.75;max-width:800px;margin:0 auto;padding:3rem 1.5rem 6rem}
+  h1{font-size:2.2rem;font-weight:700;line-height:1.25;margin-bottom:.35rem;color:#1a1a1a;letter-spacing:-.02em}
+  .subtitle{font-size:1.05rem;color:var(--muted);margin-bottom:2.5rem;font-style:italic}
+  h2{font-size:1.4rem;margin:2.8rem 0 1rem;padding-bottom:.35rem;border-bottom:1.5px solid var(--border);color:#1a1a1a}
+  h3{font-size:1.15rem;margin:1.8rem 0 .7rem;color:#333}
+  p{margin-bottom:1rem}
+  ul,ol{margin-left:1.5rem;margin-bottom:1rem}
+  li{margin-bottom:.4rem}
+  .insight{background:var(--light-accent);border-left:4px solid var(--insight-border);padding:1rem 1.2rem;margin:1.5rem 0;border-radius:0 6px 6px 0;font-size:.95rem}
+  .insight::before{content:"💡 ";font-style:normal}
+  .warning{background:#fff8f0;border-left:4px solid #e09f3e;padding:.9rem 1.2rem;margin:1.5rem 0;border-radius:0 6px 6px 0;font-size:.93rem}
+  .checkpoint{background:#f0f7ff;border:1px solid #b8d4f0;border-radius:8px;padding:.8rem 1.1rem;margin:1.2rem 0;font-size:.92rem}
+  .checkpoint strong{color:#2d5f8a}
+  .example-box{background:#fafaf7;border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .example-box h4{font-size:.9rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+  .formula-block{text-align:center;margin:1.4rem 0;font-size:1.05rem}
+  .derivation{font-size:.93rem}
+  .derivation .step{margin:.3rem 0;padding-left:1.5rem}
+  .derivation .step .reason{color:var(--muted);font-size:.82rem;font-style:italic;margin-left:.8rem}
+  code{background:var(--code-bg);padding:.15em .4em;border-radius:3px;font-family:'SF Mono','Fira Code',Consolas,monospace;font-size:.9em}
+  .toc{font-size:.92rem;line-height:1.8;margin:1rem 0 2rem}
+  .toc a{color:var(--accent);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  table{border-collapse:collapse;width:100%;margin:1.3rem 0;font-size:.92rem}
+  th{text-align:left;padding:.5rem .7rem;border-bottom:2px solid var(--border)}
+  td{padding:.5rem .7rem;border-bottom:1px solid var(--border);vertical-align:top}
+  .viz-container{background:white;border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.8rem 0}
+  .viz-container canvas{display:block;width:100%;height:auto;cursor:crosshair}
+  .viz-caption{font-size:.85rem;color:var(--muted);text-align:center;margin-top:.5rem}
+  .viz-controls{display:flex;gap:.5rem;justify-content:center;margin-top:.8rem;flex-wrap:wrap;align-items:center}
+  .viz-controls button{padding:.4em 1em;font-family:inherit;font-size:.85rem;border:1px solid var(--border);background:white;border-radius:5px;cursor:pointer;transition:background .15s}
+  .viz-controls button:hover{background:var(--light-accent)}
+  .viz-controls button.active{background:var(--accent);color:white;border-color:var(--accent)}
+  .viz-controls label{font-size:.82rem;color:var(--muted)}
+  .viz-controls input[type=range]{width:80px}
+  .quiz{margin:2rem 0}
+  .quiz-question{background:white;border:1px solid var(--border);border-radius:10px;padding:1.3rem 1.5rem;margin-bottom:1rem;transition:border-color .2s}
+  .quiz-question.correct{border-color:var(--correct);background:#f0faf5}
+  .quiz-question.incorrect{border-color:var(--incorrect);background:#fff5f5}
+  .quiz-question h4{font-size:1rem;margin-bottom:.8rem;color:#1a1a1a}
+  .quiz-options{display:flex;flex-direction:column;gap:.45rem}
+  .quiz-option{display:flex;align-items:flex-start;gap:.5rem;padding:.5rem .7rem;border-radius:6px;cursor:pointer;border:1px solid transparent;transition:background .12s}
+  .quiz-option:hover{background:var(--light-accent)}
+  .quiz-option input{margin-top:.25rem}
+  .quiz-option label{cursor:pointer;flex:1}
+  .quiz-feedback{font-size:.9rem;margin-top:.7rem;padding:.5rem .7rem;border-radius:5px;display:none}
+  .quiz-feedback.show{display:block}
+  .quiz-feedback.correct-fb{background:#d8f3dc;color:var(--correct)}
+  .quiz-feedback.incorrect-fb{background:#ffd7d7;color:var(--incorrect)}
+  .lesson-footer{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  .lesson-footer a{color:var(--accent)}
+  .next-hint{background:var(--highlight);padding:.8rem 1.1rem;border-radius:8px;margin:1.5rem 0;font-size:.93rem}
+  .citation{font-size:.85rem;color:var(--muted);float:right;clear:right;width:180px;margin-right:-210px;margin-top:.3rem;line-height:1.4;font-style:italic}
+  @media(max-width:1050px){.citation{float:none;width:auto;margin:.5rem 0;display:block}body{max-width:100%}}
+  .logic-chain{background:white;border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.5rem;margin:1.5rem 0}
+  .logic-chain ol{margin-bottom:0}
+  .analogy-box{background:linear-gradient(135deg,#faf8f5,#f5efe6);border:1px dashed var(--accent);border-radius:8px;padding:1rem 1.2rem;margin:1.5rem 0;text-align:center}
+  .analogy-box .big{font-size:1.05rem;font-weight:700;color:var(--accent)}
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0019 · 信息几何与自然梯度</h1>
+<div class="subtitle">概率分布空间不是平的——你需要一把弯曲的尺子 · 阅读时间 ~40 分钟</div>
+
+<div class="toc">
+  <a href="#s1">1. 一个让人不安的事实：梯度方向取决于你怎么写参数</a><br>
+  <a href="#s2">2. Fisher 信息矩阵：概率空间的自带度量</a><br>
+  <a href="#s3">3. KL 散度和 Fisher：几何的由来（度规矩阵 = 域翻译器）</a><br>
+  <a href="#s4">4. 自然梯度：沿着真正的「最陡方向」走</a><br>
+  <a href="#s5">5. 可视化：为什么自然梯度好</a><br>
+  <a href="#s6">6. 实战：回到深度学习</a><br>
+  <a href="#s7">7. 自测：检索练习</a>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 梯度方向取决于你怎么写参数</h2>
+
+<h3>1.1 回顾：L0018 的终点是这节课的起点</h3>
+
+<p>
+  在 L0018 中，score matching 损失里出现了 $\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta)$——score 网络对<strong>数据 $\mathbf{x}$</strong> 的 Jacobian 的迹。那是数据空间的信息。
+</p>
+<p>
+  这节课把镜头转向<strong>参数空间</strong>。当我们用梯度下降优化一个概率模型时，我们在参数空间中移动——但参数空间的「几何」是什么？它是一个平直欧氏空间，还是一个弯曲的流形？
+</p>
+
+<div class="insight">
+  <strong>核心问题：</strong>如果我们改变了模型的参数化方式（比如把 $\sigma$ 换成 $\log\sigma$），梯度下降的方向会改变吗？如果会——哪个才是「正确」的？还是说「最陡方向」本身只是一个依赖于写法的人为概念？
+</div>
+
+<h3>1.2 一个简单的实验：Bernoulli 分布的两种写法</h3>
+
+<div class="example-box">
+  <h4>🌰 让我不舒服的第一步</h4>
+  <p>硬币正面概率 $\theta\in(0,1)$。Bernoulli 分布：$p(x|\theta)=\theta^x(1-\theta)^{1-x}$，$x\in\{0,1\}$。</p>
+  <p>观测一次正面 ($x=1$)，负对数似然损失：$\mathcal{L}(\theta)=-\log p(x=1|\theta)=-\log\theta$。</p>
+  <p>梯度：$\frac{d\mathcal{L}}{d\theta}=-\frac{1}{\theta}$。在 $\theta=0.5$ 处，梯度 = $-2$。学习率 $\eta=0.1$：$\theta\leftarrow 0.5-0.1\times(-2)=0.7$。</p>
+
+  <p style="margin-top:1rem;"><strong>现在换 logit 参数化：</strong>$\phi=\log\frac{\theta}{1-\theta}$，$\theta=\sigma(\phi)=\frac{1}{1+e^{-\phi}}$。</p>
+  <p>同样数据、同样损失：$\mathcal{L}(\phi)=-\log\sigma(\phi)=\log(1+e^{-\phi})$。</p>
+  <p>梯度：$\frac{d\mathcal{L}}{d\phi}=\sigma(\phi)-1=\theta-1$。在 $\theta=0.5$（$\phi=0$）处，梯度 = $-0.5$。$\eta=0.1$：$\phi\leftarrow 0-0.1\times(-0.5)=0.05$，对应 $\theta=\sigma(0.05)\approx 0.512$。</p>
+
+  <table style="margin-top:1rem;">
+    <tr><th>参数化</th><th>$\theta=0.5$ 处的梯度</th><th>一步后的 $\theta$</th></tr>
+    <tr><td>$\theta$（直接概率）</td><td>$-2$</td><td>$0.7$</td></tr>
+    <tr><td>$\phi$（logit）</td><td>$-0.5$</td><td>$\approx 0.512$</td></tr>
+  </table>
+</div>
+
+<div class="warning">
+  <strong>同一个模型、同一个数据、同一个学习率——走到了不同的地方。</strong>
+  在 $\theta$ 参数化下走了一步到 0.7；在 $\phi$ 参数化下只到了 0.512。这不是 bug——这是欧氏梯度下降的<strong>属性</strong>：它对参数化的选择<strong>不不变</strong>。「最陡下降方向」中的「最陡」是相对于参数坐标的欧氏距离定义的——而欧氏距离本身取决于你怎么写参数。
+</div>
+
+<h3>1.3 我们需要什么</h3>
+
+<p>
+  需要一个<strong>不依赖于参数化方式</strong>的「最陡方向」定义。这个定义只应该依赖于<strong>概率分布本身</strong>的结构——
+  两个参数 $\theta_1$ 和 $\theta_2$ 之间的「距离」不应该由它们在参数坐标中的欧氏距离来定义，
+  而应该由它们代表的<strong>概率分布 $p_{\theta_1}$ 和 $p_{\theta_2}$ 之间的差异</strong>来定义。
+</p>
+
+<div class="checkpoint">
+  <strong>📍 停下来想一想：</strong>如果你说「$\theta=0.5$ 和 $\theta=0.7$ 差了 0.2」——这个 0.2 意味着什么？
+  在概率意义上，$\theta=0.5$ 的硬币和 $\theta=0.7$ 的硬币「有多不一样」？
+  我们需要用这个<strong>概率意义上的距离</strong>来定义梯度，而不是坐标意义上的。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. Fisher 信息矩阵</h2>
+<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#4a7bab;">核心概念</span>
+	    <h3>Fisher 信息矩阵 · Fisher Information Matrix</h3>
+	    <span class="cc-aliases">概率空间的黎曼度量</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>$\mathbf{F}(\theta) = \mathbb{E}_{p_\theta}[\nabla_\theta\log p \cdot \nabla_\theta\log p^\top] = -\mathbb{E}_{p_\theta}[\nabla_\theta^2\log p]$。它衡量"参数的一个微小变化对概率分布的影响有多大"——<strong>信息越大 = 分布越尖锐 = 参数越确定</strong>。
+	  </div>
+	  <div class="cc-section">
+	    <h4>为什么 Fisher 是"度量"</h4>
+	    <p>KL 散度的二阶展开：$\mathrm{KL}(p_\theta\|p_{\theta+d\theta}) \approx \frac{1}{2}d\theta^\top\mathbf{F}(\theta)d\theta$</p>
+	    <p>Fisher 定义了参数空间中"真正"的距离——不是欧氏距离，是<strong>分布之间的差异</strong>。这就是为什么梯度下降需要在 Fisher 度量下做。</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0004(指数族): $a''(\eta)$ = Fisher</span>
+	    <span class="conn-badge">→ 0009(逻辑回归): Hessian = $\Phi^\top S\Phi$ = Fisher</span>
+	    <span class="conn-badge">→ 0018: 参数 score $\nabla_\theta\log p$</span>
+	  </div>
+	</div>
+
+<h3>2.1 参数 Score——L0018 的镜像</h3>
+
+<p>在 L0018 中定义了对<strong>数据</strong>的 score：$\nabla_{\mathbf{x}}\log p(\mathbf{x})$。现在定义对<strong>参数</strong>的 score：</p>
+
+<div class="formula-block">
+  $$\boxed{\nabla_{\boldsymbol{\theta}}\log p(\mathbf{x}|\boldsymbol{\theta})}$$
+</div>
+
+<p>
+  这是一个向量，长度等于参数个数。衡量：<strong>参数 $\boldsymbol{\theta}$ 的微小变化会让观测到 $\mathbf{x}$ 的对数概率变化多少？</strong>
+  如果某个参数方向的 score 很大，说明数据对这个参数「很敏感」——参数的一点点变化就会让观测概率大幅改变。
+</p>
+
+<div class="example-box">
+  <h4>🌰 Bernoulli 的参数 score</h4>
+  <p>$p(x|\theta)=\theta^x(1-\theta)^{1-x}$。取对数：$\log p(x|\theta)=x\log\theta+(1-x)\log(1-\theta)$。</p>
+  <div class="derivation">
+    <div class="step">$\frac{d}{d\theta}\log p(x|\theta)=\frac{x}{\theta}-\frac{1-x}{1-\theta}$</div>
+  </div>
+  <p>$x=1$：score = $1/\theta$。在 $\theta\approx 0$ 时 → 巨大。</p>
+  <p>$x=0$：score = $-1/(1-\theta)$。在 $\theta\approx 1$ 时 → 巨大。</p>
+  <p><strong>score = 「这个观测有多意外」。</strong>几乎确定的硬币（$\theta\approx 1$）出现反面 —— score 极大。</p>
+</div>
+
+<h3>2.2 Fisher 信息矩阵的定义</h3>
+
+<div class="formula-block">
+  $$\boxed{\mathbf{F}(\boldsymbol{\theta}) = \mathbb{E}_{p(\mathbf{x}|\boldsymbol{\theta})}\big[\nabla_{\boldsymbol{\theta}}\log p \cdot \nabla_{\boldsymbol{\theta}}\log p^\top\big]}$$
+</div>
+
+<p>逐条拆解：</p>
+<ol>
+  <li>$\nabla_{\boldsymbol{\theta}}\log p$ 是参数 score 列向量（$P$ 维）</li>
+  <li>$\nabla\log p \cdot \nabla\log p^\top$ 是外积——$P\times P$ 矩阵，第 $(i,j)$ 元 = $\frac{\partial\log p}{\partial\theta_i}\cdot\frac{\partial\log p}{\partial\theta_j}$</li>
+  <li>$\mathbb{E}_{p(\mathbf{x}|\boldsymbol{\theta})}$ 是<strong>在模型自己的分布下</strong>取期望——用当前参数下的「预期数据」来评估这些参数对数据的影响力敏感度</li>
+  <li>结果 $\mathbf{F}$ 是 $P\times P$ <strong>半正定</strong>矩阵</li>
+</ol>
+
+<div class="insight">
+  <strong>直觉：</strong>$\mathbf{F}_{ij}$ 衡量 $\theta_i$ 和 $\theta_j$ 在影响数据分布时的「重叠程度」。
+  如果它很大，改变 $\theta_i$ 和改变 $\theta_j$ 对数据分布的影响高度相似——在概率空间里，这两个参数方向是「几乎平行」的。
+  <strong>Fisher 矩阵是参数 score 的协方差矩阵</strong>——它告诉你每个参数方向上的「信息量」有多大。
+</div>
+
+<div class="citation">
+  Fisher 来自 Ronald Fisher (1890–1962)。他最初用它给出最大似然估计的渐近方差下界（Cramér-Rao bound）：任何无偏估计量方差 ≥ $\mathbf{F}^{-1}$。这里用的是它的几何含义——Amari (1980s) 发现它是概率分布空间的黎曼度量。
+</div>
+
+<h3>2.3 手算：$\mathcal{N}(\mu,\sigma)$ 的 Fisher 矩阵</h3>
+
+<div class="example-box">
+  <h4>🌰 一维高斯，$\boldsymbol{\theta}=(\mu,\sigma)$</h4>
+
+  <div class="derivation">
+    <div class="step"><strong>Step 1：对数密度</strong></div>
+    <div class="step">$\log p(x|\mu,\sigma)=-\frac12\log(2\pi)-\log\sigma-\frac{(x-\mu)^2}{2\sigma^2}$</div>
+
+    <div class="step"><strong>Step 2：参数 score</strong></div>
+    <div class="step">$\frac{\partial\log p}{\partial\mu}=\frac{x-\mu}{\sigma^2}$<span class="reason">// 对 $\mu$ 求导</span></div>
+    <div class="step">$\frac{\partial\log p}{\partial\sigma}=-\frac{1}{\sigma}+\frac{(x-\mu)^2}{\sigma^3}$<span class="reason">// 对 $\sigma$ 求导</span></div>
+
+    <div class="step"><strong>Step 3：取 $p$ 下的期望（记住 $\mathbb{E}[(x-\mu)^2]=\sigma^2$，$\mathbb{E}[(x-\mu)^4]=3\sigma^4$）</strong></div>
+    <div class="step">$\mathbf{F}_{\mu\mu}=\mathbb{E}[(\frac{x-\mu}{\sigma^2})^2]=\frac{\sigma^2}{\sigma^4}=\frac{1}{\sigma^2}$</div>
+    <div class="step">$\mathbf{F}_{\mu\sigma}=\mathbb{E}[\frac{x-\mu}{\sigma^2}\cdot(-\frac1\sigma+\frac{(x-\mu)^2}{\sigma^3})]=0$<span class="reason">// 奇函数期望为零（高斯对称）</span></div>
+    <div class="step">$\mathbf{F}_{\sigma\sigma}=\mathbb{E}[(-\frac1\sigma+\frac{(x-\mu)^2}{\sigma^3})^2]=\frac{2}{\sigma^2}$<span class="reason">// 利用峰度 $\mathbb{E}[(x-\mu)^4]=3\sigma^4$</span></div>
+  </div>
+
+  <div class="formula-block">
+    $$\mathbf{F}(\mu,\sigma)=\begin{pmatrix}1/\sigma^2 & 0 \\ 0 & 2/\sigma^2\end{pmatrix}$$
+  </div>
+
+  <p><strong>观察：</strong></p>
+  <ul>
+    <li>$\mu$ 方向的信息量 = $1/\sigma^2$。$\sigma$ 大时，单个数据点关于 $\mu$ 的信息很少（分布宽，数据含混）</li>
+    <li>$\sigma$ 方向的信息量 = $2/\sigma^2$，是 $\mu$ 方向的<strong>两倍</strong>——改变 $\sigma$ 比改变 $\mu$ 对分布影响大得多</li>
+    <li>非对角元为零——$\mu$ 和 $\sigma$ 在「影响数据分布」方面是<strong>正交</strong>的</li>
+  </ul>
+</div>
+
+<h3>2.4 Fisher 的三个关键性质</h3>
+
+<ol>
+  <li><strong>半正定：</strong>$\mathbf{v}^\top\mathbf{F}\mathbf{v}=\mathbb{E}[(\mathbf{v}^\top\nabla\log p)^2]\ge 0$——任何参数方向上的「信息量」都是非负的。</li>
+  <li><strong>等于负期望 Hessian：</strong>$\mathbf{F}(\boldsymbol{\theta})=-\mathbb{E}_p[\nabla_{\boldsymbol{\theta}}^2\log p]$——Fisher 是 log 似然曲面在期望意义上的曲率。</li>
+  <li><strong>重参数化不变性：</strong>如果换一套参数 $\boldsymbol{\phi}=g(\boldsymbol{\theta})$，Fisher 矩阵按 Jacobian 变换：$\mathbf{F}(\boldsymbol{\phi})=\mathbf{J}^{-\top}\mathbf{F}(\boldsymbol{\theta})\mathbf{J}^{-1}$——几何结构<strong>独立于参数表达</strong>。</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. KL 散度和 Fisher：几何的由来（度规矩阵 = 域翻译器）</h2>
+
+<h3>3.1 先看地球：为什么度规矩阵是「域翻译器」</h3>
+
+<p>北京飞纽约。在地球表面，最短路径是大圆航线（穿过北极圈）。</p>
+
+<p>但把这条最短路径画在<strong>墨卡托投影</strong>地图上（经线平行、纬线平行）——它是一条<strong>弯弯曲曲</strong>的弧线。而地图上的「直线」（等纬线）反而是绕远的。</p>
+
+<div class="analogy-box">
+  <div class="big">地图坐标 ≠ 真实距离。度规矩阵 = 把「坐标差」翻译成「真实距离」的转换函数。</div>
+</div>
+
+<p>地球表面，用经纬度 $(\theta,\phi)$ 坐标：</p>
+
+<div class="formula-block">
+  $$ds^2 = \underbrace{R^2}_{\text{纬度系数恒定}} d\theta^2 + \underbrace{R^2\sin^2\theta}_{\text{经度系数随 } \theta \text{ 变化！}} d\phi^2$$
+</div>
+
+<ul>
+  <li>纬度差 $1^\circ$ ≈ 111 km（全球一样）</li>
+  <li>经度差 $1^\circ$：赤道 ≈ 111 km；北京（40°N）≈ 85 km；北极 ≈ <strong>0 km</strong></li>
+</ul>
+
+<p>这就是 $R^2\sin^2\theta$ 的作用：同一个坐标变化 $d\phi$，在赤道和北极对应的实际地面距离完全不同。</p>
+
+<div class="formula-block">
+  $$\underbrace{d\boldsymbol{\theta}}_{\text{坐标域}} \;\xrightarrow{\;ds^2 = d\boldsymbol{\theta}^\top\mathbf{G}\,d\boldsymbol{\theta}\;}\; \underbrace{ds^2}_{\text{实际距离域}}$$
+</div>
+
+<h3>3.2 KL 散度的二阶展开 = Fisher 度量</h3>
+
+<p>现在把这个逻辑搬到概率分布空间。KL 散度是「两个分布之间的真实差异」：</p>
+
+<div class="derivation">
+  <div class="step">$D_{\text{KL}}(p_{\boldsymbol{\theta}}\|p_{\boldsymbol{\theta}+d\boldsymbol{\theta}}) = \mathbb{E}_{p_{\boldsymbol{\theta}}}\big[\log\frac{p_{\boldsymbol{\theta}}}{p_{\boldsymbol{\theta}+d\boldsymbol{\theta}}}\big]$</div>
+  <div class="step">$= -\mathbb{E}_{p_{\boldsymbol{\theta}}}\big[\log p_{\boldsymbol{\theta}+d\boldsymbol{\theta}} - \log p_{\boldsymbol{\theta}}\big]$</div>
+  <div class="step"><strong>泰勒展开 $\log p_{\boldsymbol{\theta}+d\boldsymbol{\theta}}$：</strong></div>
+  <div class="step">$\log p_{\boldsymbol{\theta}+d\boldsymbol{\theta}} \approx \log p_{\boldsymbol{\theta}} + \nabla_{\boldsymbol{\theta}}\log p_{\boldsymbol{\theta}}^\top d\boldsymbol{\theta} + \frac12 d\boldsymbol{\theta}^\top(\nabla_{\boldsymbol{\theta}}^2\log p_{\boldsymbol{\theta}})d\boldsymbol{\theta}$</div>
+  <div class="step"><strong>代入取期望：</strong></div>
+  <div class="step">$D_{\text{KL}} \approx -\underbrace{\mathbb{E}[\nabla\log p]^\top d\boldsymbol{\theta}}_{=\mathbf{0}} - \frac12 d\boldsymbol{\theta}^\top\underbrace{\mathbb{E}[\nabla^2\log p]}_{=-\mathbf{F}}d\boldsymbol{\theta}$</div>
+  <div class="step"><strong>一阶项消失：</strong>score 在自身分布下的期望恒为零——$\mathbb{E}_p[\nabla\log p]=\int p\cdot\frac{\nabla p}{p}=\nabla\int p=\nabla 1=\mathbf{0}$。<span class="reason">// 概率质量守恒——总概率永远是 1</span></div>
+</div>
+
+<div class="formula-block">
+  $$\boxed{D_{\text{KL}}(p_{\boldsymbol{\theta}}\|p_{\boldsymbol{\theta}+d\boldsymbol{\theta}}) \approx \frac12\,d\boldsymbol{\theta}^\top\mathbf{F}(\boldsymbol{\theta})\,d\boldsymbol{\theta}}$$
+</div>
+
+<div class="insight">
+  <strong>核心几何事实：</strong>Fisher 矩阵是 KL 散度诱导的黎曼度量。
+  参数空间中的坐标差 $d\boldsymbol{\theta}$ 是「地图坐标」，$d\boldsymbol{\theta}^\top\mathbf{F} d\boldsymbol{\theta}$ 是这些坐标差对应的「真实概率距离」（= 2×KL 的二阶近似）。<br><br>
+  <strong>一阶项消失</strong>是最关键的一步——它保证了距离的 leading order 是二次型，这正是黎曼度量需要的性质（距离应该是二次型，不是线性的）。Score 期望为零不是巧合——是概率密度归一化条件的必然推论。
+</div>
+
+<div class="checkpoint">
+  <strong>📍 停下来想一想：</strong>参数空间中的 $d\boldsymbol{\theta}$ 是地图坐标。$\mathbf{F}$ 把地图坐标翻译成真实概率距离。
+  $\mathbf{F}$ 的各分量依赖于你在参数空间的<strong>位置</strong>——就像 $R^2\sin^2\theta$ 依赖于纬度。
+  在 $\sigma=3$ 处调 $\mu$，和在 $\sigma=0.5$ 处调 $\mu$，「同样的一步坐标变化」引起的分布变化完全不同。
+</div>
+
+<div class="analogy-box">
+  <table>
+    <tr><th>地球</th><th>概率分布空间</th></tr>
+    <tr><td>经纬度 $(\theta,\phi)$</td><td>模型参数 $\boldsymbol{\theta}$</td></tr>
+    <tr><td>地面实际距离 $ds^2$</td><td>KL 散度（分布之间的真实差异）</td></tr>
+    <tr><td>度规矩阵 $\mathbf{G}(\theta,\phi)$</td><td>Fisher 信息矩阵 $\mathbf{F}(\boldsymbol{\theta})$</td></tr>
+    <tr><td>$ds^2 = d\boldsymbol{\theta}^\top\mathbf{G}\,d\boldsymbol{\theta}$</td><td>$D_{\text{KL}} \approx \frac12 d\boldsymbol{\theta}^\top\mathbf{F}\,d\boldsymbol{\theta}$</td></tr>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 自然梯度</h2>
+<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#c44d4d;">优化范式</span>
+	    <h3>自然梯度 · Natural Gradient</h3>
+	    <span class="cc-aliases">参数化不变的梯度下降</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>$\Delta\theta = -\eta\mathbf{F}^{-1}\nabla_\theta\mathcal{L}$。普通梯度下降在<strong>欧氏空间</strong>找最陡方向——但这个方向取决于你怎么写参数。自然梯度在<strong>Fisher 度量</strong>下找最陡方向——<strong>不依赖参数化方式</strong>。
+	  </div>
+	  <div class="cc-section">
+	    <h4>一句话直觉</h4>
+	    <p>$\mathbf{F}^{-1}$ 做了两件事：(1) 在分布变化剧烈的方向缩小步长（因为一步就改变很多）；(2) 在分布变化平缓的方向放大步长。结果是<strong>每一步在概率意义上走相同的距离</strong>。</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0001 §3: 正规方程 = 线性回归的自然梯度</span>
+	    <span class="conn-badge">→ 0014: Adam ≈ 对角 Fisher 近似</span>
+	    <span class="conn-badge">→ KFAC: 分块 Fisher 近似</span>
+	  </div>
+	</div>
+
+<h3>4.1 重新定义「最陡」</h3>
+
+<p>普通 GD 等价于解带<strong>欧氏范数约束</strong>的优化问题：</p>
+<div class="formula-block">
+  $$\min_{d\boldsymbol{\theta}}\mathcal{L}(\boldsymbol{\theta}+d\boldsymbol{\theta})\ \text{s.t.}\ \|d\boldsymbol{\theta}\|_{\mathbf{I}}^2 \le \varepsilon^2$$
+</div>
+<p>约束 $\|d\boldsymbol{\theta}\|^2 = d\boldsymbol{\theta}^\top\mathbf{I}\,d\boldsymbol{\theta}$ 假设所有参数坐标的刻度相同——但这不是真的。</p>
+
+<p><strong>自然梯度</strong>把约束换成 Fisher 范数：</p>
+<div class="formula-block">
+  $$\boxed{\min_{d\boldsymbol{\theta}}\mathcal{L}(\boldsymbol{\theta}+d\boldsymbol{\theta})\ \text{s.t.}\ d\boldsymbol{\theta}^\top\mathbf{F}(\boldsymbol{\theta})\,d\boldsymbol{\theta} \le \varepsilon^2}$$
+</div>
+<p>约束含义：每一步最多改变分布一个「KL 距离」$\varepsilon^2/2$——<strong>不依赖于参数化方式</strong>。</p>
+
+<h3>4.2 拉格朗日乘子法推导</h3>
+
+<div class="derivation">
+  <p>一阶近似 $\mathcal{L}(\boldsymbol{\theta}+d\boldsymbol{\theta})\approx\mathcal{L}(\boldsymbol{\theta})+\nabla\mathcal{L}^\top d\boldsymbol{\theta}$：</p>
+  <div class="step">$\mathcal{L}(d\boldsymbol{\theta},\lambda)=\nabla\mathcal{L}^\top d\boldsymbol{\theta}+\lambda(d\boldsymbol{\theta}^\top\mathbf{F}d\boldsymbol{\theta}-\varepsilon^2)$</div>
+  <div class="step">对 $d\boldsymbol{\theta}$ 求导为零：</div>
+  <div class="step">$\nabla\mathcal{L}+2\lambda\mathbf{F}d\boldsymbol{\theta}=\mathbf{0}$<span class="reason">// $\frac{\partial}{\partial d\boldsymbol{\theta}}(a^\top d\boldsymbol{\theta})=a$；$\frac{\partial}{\partial d\boldsymbol{\theta}}(d\boldsymbol{\theta}^\top\mathbf{F}d\boldsymbol{\theta})=2\mathbf{F}d\boldsymbol{\theta}$</span></div>
+  <div class="step">$d\boldsymbol{\theta}=-\frac{1}{2\lambda}\mathbf{F}^{-1}\nabla\mathcal{L}$<span class="reason">// 吸收 $\frac{1}{2\lambda}$ 到 $\eta$ 中</span></div>
+</div>
+
+<div class="formula-block">
+  $$\boxed{\boldsymbol{\theta}_{t+1} = \boldsymbol{\theta}_t - \eta\,\mathbf{F}(\boldsymbol{\theta}_t)^{-1}\,\nabla_{\boldsymbol{\theta}}\mathcal{L}(\boldsymbol{\theta}_t)}$$
+</div>
+
+<div class="insight">
+  <strong>自然梯度 = 普通梯度 × Fisher 逆矩阵。</strong>$\mathbf{F}^{-1}$ 的作用是「除以每个方向的 sensitivity」。如果某方向的 Fisher 值大（参数对分布影响大），$\mathbf{F}^{-1}$ 在这个方向就小——走一小步就够了。影响小的方向被放大。
+  <br><br>
+  <strong>本质：</strong>先把弯曲的统计流形拉平（乘以 $\mathbf{F}^{-1}$），在这个平直空间里走普通梯度步，再把坐标映射回去。
+</div>
+
+<h3>4.3 手算验证：Bernoulli 的自然梯度</h3>
+
+<div class="example-box">
+  <h4>🌰 回到 1.2 节的例子</h4>
+  <p>Fisher 信息（一维标量）：$\mathbf{F}(\theta)=\mathbb{E}[(\frac{d}{d\theta}\log p)^2]=\frac{1}{\theta(1-\theta)}$。</p>
+  <p>自然梯度：$\tilde{\nabla}\mathcal{L}=\mathbf{F}^{-1}\cdot\nabla\mathcal{L}=\theta(1-\theta)\cdot(-\frac1\theta)=\theta-1$。</p>
+  <p>在 $\theta=0.5$ 处：$\tilde{\nabla}\mathcal{L}=-0.5$。更新 $\theta\leftarrow 0.5-\eta(-0.5)=0.5+0.5\eta$。</p>
+
+  <p style="margin-top:.8rem;"><strong>用 logit 参数化 $\phi$ 再算：</strong></p>
+  <p>$\mathbf{F}(\phi)=\mathbf{F}(\theta)\cdot(\frac{d\theta}{d\phi})^2=\frac{1}{\theta(1-\theta)}\cdot[\theta(1-\theta)]^2=\theta(1-\theta)$。</p>
+  <p>自然梯度：$\tilde{\nabla}_\phi\mathcal{L}=(\theta-1)/(\theta(1-\theta))$。更新 $\phi\leftarrow 0-\eta\cdot\frac{-0.5}{0.25}=2\eta$，对应 $\theta=\frac{1}{1+e^{-2\eta}}\approx 0.5+0.5\eta$（$\eta$ 小时）。</p>
+</div>
+
+<div class="insight">
+  <strong>两套参数化给出相同的分布更新路径。</strong>$\theta(0.5+0.5\eta)$ 不管用 $\theta$ 还是 $\phi$ 都一样。
+  这就是<strong>重参数化不变性</strong>——换一套参数，概率分布的变化轨迹不变。
+</div>
+
+<h3>4.4 高斯分布的自然梯度——一个漂亮的解耦</h3>
+
+<div class="example-box">
+  <h4>🌰 $\mathcal{N}(\mu,\sigma)$ 拟合目标 $\mathcal{N}(0,1)$，KL 损失</h4>
+  <p>KL 的梯度：$\frac{\partial\text{KL}}{\partial\mu}=\frac{\mu}{\sigma^2}$，$\frac{\partial\text{KL}}{\partial\sigma}=\frac{\sigma^2-1-\mu^2}{\sigma^3}$。</p>
+  <p>Fisher 逆矩阵：$\mathbf{F}^{-1}=\operatorname{diag}(\sigma^2,\sigma^2/2)$。</p>
+  <p><strong>自然梯度更新：</strong></p>
+  <div class="formula-block">
+    $$\mu_{t+1} = \mu_t - \eta\cdot\sigma^2\cdot\frac{\mu_t}{\sigma^2} = \mu_t(1-\eta)$$
+  </div>
+  <p>$\mu$ 的更新<strong>和 $\sigma$ 完全解耦</strong>——简单的指数衰减，不管 $\sigma$ 多大！</p>
+  <p>而普通 GD 的 $\mu$ 更新是 $\mu_{t+1}=\mu_t(1-\eta/\sigma^2)$——当 $\sigma$ 很大时 $\mu$ 几乎不动。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 可视化：为什么自然梯度好</h2>
+
+<p>高斯 $\mathcal{N}(\mu,\sigma)$ 拟合目标 $\mathcal{N}(0,1)$。损失函数是 KL 散度 $D_{\text{KL}}(p_{\text{target}}\|p_{\text{model}})$。</p>
+
+<ul>
+  <li><strong>左图 · 参数空间 $(\mu,\sigma)$：</strong>KL 等值线显示损失地形。Fisher 椭圆（虚线）是「单位圆」
+  $\{d\boldsymbol{\theta}:d\boldsymbol{\theta}^\top\mathbf{F}d\boldsymbol{\theta}=\varepsilon^2\}$——
+  椭圆越扁的方向，坐标变化引起的分布变化越大。自然梯度考虑了这种不均匀性，普通 GD 没有。</li>
+  <li><strong>右图 · KL 下降曲线：</strong>这是最诚实的对比——KL 散度随步数的变化。自然梯度每一步方向更正确，
+  因此<strong>每单位 Fisher 路程换来更多的 KL 下降</strong>。状态栏显示最终的 KL 值和总 Fisher 路程，直接比较效率。</li>
+</ul>
+
+<div class="viz-container">
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+    <div style="flex:1;min-width:300px;">
+      <div style="text-align:center;font-size:.85rem;color:var(--muted);margin-bottom:.3rem;">📐 参数空间 $(\mu,\sigma)$</div>
+      <canvas id="paramCanvas" width="340" height="340" style="width:100%;"></canvas>
+    </div>
+    <div style="flex:1;min-width:300px;">
+      <div style="text-align:center;font-size:.85rem;color:var(--muted);margin-bottom:.3rem;">📉 KL 散度下降曲线（越陡越高效）</div>
+      <canvas id="stepCanvas" width="340" height="340" style="width:100%;"></canvas>
+    </div>
+  </div>
+  <div class="viz-caption">
+    🔴 <strong>普通 GD</strong> &emsp; 🟢 <strong>自然梯度 NGD</strong> &emsp; ⬜ Fisher 椭圆（NGD 路径上）<br>
+    等值线：KL 散度 · 点击左图画布设置起点
+  </div>
+  <div class="viz-controls">
+    <button id="btnReset">⟳ 重置</button>
+    <button id="btnRun">▶ 运行</button>
+    <label>η: <input type="range" id="lrSlider" min="0.01" max="0.3" step="0.01" value="0.06"></label>
+    <label>步数: <input type="range" id="stepsSlider" min="15" max="120" step="5" value="50"></label>
+    <span style="font-size:.82rem;color:var(--muted);" id="vizInfo">点击画布设置起点</span>
+  </div>
+</div>
+
+<p><strong>操作建议：</strong></p>
+<ul>
+  <li>点击 $\sigma$ 很大的区域（如 $\sigma=3$）作为起点——此时 GD 的 $\mu$ 更新被 $1/\sigma^2$ 严重压制，几乎不动。NGD 则不受影响</li>
+  <li>观察右图两条曲线的分离程度——起点离目标越远，差距越大</li>
+  <li>状态栏比较最终 KL 值：NGD 总是更优</li>
+</ul>
+
+<div class="insight">
+  <strong>自然梯度的优越性来自方向，不是步长。</strong>两种方法都会随靠近目标而自然减速（梯度→0）。
+  但自然梯度每一步的<strong>方向</strong>是 Fisher 度量下的真正最陡方向——单位分布变化换来最大 KL 下降。
+  普通 GD 的方向被坐标扭曲——「同一单位坐标变化」在 $\sigma$ 不同时意味着完全不同的分布变化。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 实战：回到深度学习</h2>
+
+<h3>6.1 和牛顿法的关系</h3>
+
+<p>牛顿法：$\Delta\boldsymbol{\theta}=-\eta\mathbf{H}^{-1}\nabla\mathcal{L}$，$\mathbf{H}=\nabla_{\boldsymbol{\theta}}^2\mathcal{L}$ 是即时 Hessian。</p>
+<p>当 $\mathcal{L}=-\log p$（对数似然损失）：$\mathbf{F}=-\mathbb{E}_p[\nabla^2\log p]$ 是<strong>期望</strong> Hessian。</p>
+
+<table>
+  <tr><th></th><th>牛顿法</th><th>自然梯度</th></tr>
+  <tr><td>用的矩阵</td><td>即时 Hessian $\mathbf{H}$</td><td>期望 Hessian（= Fisher）</td></tr>
+  <tr><td>正定性</td><td>可以不半正定（某点曲率为负 → 牛顿步可能走错方向）</td><td>总是半正定</td></tr>
+  <tr><td>计算</td><td>需要二阶导数</td><td>只需一阶导数的外积期望</td></tr>
+</table>
+
+<p>对于对数似然损失，自然梯度 ≈ 对 Hessian 做了平滑——数值上更稳定。</p>
+
+<h3>6.2 维数灾难</h3>
+
+<p>$\mathbf{F}$ 是 $P\times P$ 矩阵。$P$= 百万到千亿 → 存储和求逆需要 $O(P^2)\sim O(P^3)$ —— 不现实。</p>
+<p>实际近似：</p>
+<ul>
+  <li><strong>KFAC (Martens & Grosse, 2015)：</strong>将 Fisher 近似为 Kronecker 积——逐块对角 + 每块可逆。$O(P)$ 复杂度。中等规模网络有效。</li>
+  <li><strong>Adam：</strong>逐坐标的梯度平方移动平均——相当于对 Fisher <strong>对角线</strong>的粗略近似（假设参数间无耦合）。解释了为什么 Adam 通常比 SGD 快——它至少考虑到了不同参数的敏感度差异。</li>
+</ul>
+
+<h3>6.3 和 L0018 的连接</h3>
+
+<table>
+  <tr><th></th><th>L0018 · Score Function</th><th>L0019 · 信息几何</th></tr>
+  <tr><td><strong>对什么求导</strong></td><td>数据 $\mathbf{x}$</td><td>参数 $\boldsymbol{\theta}$</td></tr>
+  <tr><td><strong>得到什么</strong></td><td>Score：数据空间中概率变化的方向和强度</td><td>Fisher：参数空间中分布变化的信息量</td></tr>
+  <tr><td><strong>做什么</strong></td><td>Langevin 动力学沿 score 采样</td><td>自然梯度沿 $\mathbf{F}^{-1}\nabla\mathcal{L}$ 优化</td></tr>
+  <tr><td><strong>绕开什么</strong></td><td>配分函数 $Z$</td><td>参数化选择的任意性</td></tr>
+  <tr><td><strong>域翻译</strong></td><td>数据空间 → 概率变化</td><td>参数空间 → 分布距离</td></tr>
+</table>
+
+<div class="insight">
+  <strong>数据和参数是两面镜子。</strong>L0018 的 score 告诉你「数据空间中概率如何变化」；
+  本节的 Fisher 告诉你「参数空间中分布如何变化」。它们是同一个数学结构在不同域上的投影——
+  都是概率分布空间的局部几何信息，一个在数据域，一个在参数域。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 自测：检索练习</h2>
+
+<p style="color:var(--muted);font-size:.9rem;">建议过几小时或第二天回来做（间隔效应）。共 5 题。</p>
+
+<div class="quiz">
+  <div class="quiz-question" id="q1">
+    <h4>Q1 · Bernoulli 分布在 $\theta=0.5$ 处 Fisher 信息 = 4。$\theta=0.99$ 处 ≈ 101。这意味着？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="check(1,1)"><input type="radio" name="q1"><label>A. 极端 $\theta$ 处每个观测携带更多信息——一两个观测就能极大缩小不确定性</label></div>
+      <div class="quiz-option" onclick="check(1,2)"><input type="radio" name="q1"><label>B. 极端 $\theta$ 处数据方差更大，所以需要更多样本来估计参数</label></div>
+      <div class="quiz-option" onclick="check(1,3)"><input type="radio" name="q1"><label>C. 极端 $\theta$ 处参数不可识别——模型无法确定 $\theta$ 的值</label></div>
+    </div>
+    <div class="quiz-feedback" id="fb1"></div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <h4>Q2 · 自然梯度中乘 $\mathbf{F}^{-1}$ 的作用是什么？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="check(2,1)"><input type="radio" name="q2"><label>A. 让更新方向在参数坐标中更平滑、减少噪声</label></div>
+      <div class="quiz-option" onclick="check(2,2)"><input type="radio" name="q2"><label>B. 将欧氏度量替换为 Fisher 度量，使「最陡方向」的定义独立于参数化的选择</label></div>
+      <div class="quiz-option" onclick="check(2,3)"><input type="radio" name="q2"><label>C. 加速矩阵运算——$\mathbf{F}^{-1}$ 让计算更快</label></div>
+    </div>
+    <div class="quiz-feedback" id="fb2"></div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <h4>Q3 · KL 散度的二阶泰勒展开中，一阶项为什么消失了？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="check(3,1)"><input type="radio" name="q3"><label>A. KL 散度本身就是二阶量，不存在一阶项</label></div>
+      <div class="quiz-option" onclick="check(3,2)"><input type="radio" name="q3"><label>B. $\mathbb{E}_p[\nabla_{\boldsymbol{\theta}}\log p] = \nabla_{\boldsymbol{\theta}}\int p = \nabla_{\boldsymbol{\theta}}1 = \mathbf{0}$——概率密度归一化条件的必然推论</label></div>
+      <div class="quiz-option" onclick="check(3,3)"><input type="radio" name="q3"><label>C. 是泰勒展开的普遍性质——一阶项总是零</label></div>
+    </div>
+    <div class="quiz-feedback" id="fb3"></div>
+  </div>
+
+  <div class="quiz-question" id="q4">
+    <h4>Q4 · 高斯 Fisher 中 $\mathbf{F}_{\mu\mu}=1/\sigma^2$。$\sigma\to\infty$ 时趋于零的含义是？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="check(4,1)"><input type="radio" name="q4"><label>A. 方差极大时分布摊平，每个数据点关于 $\mu$ 携带的信息极少——需要大量样本才能精确估计</label></div>
+      <div class="quiz-option" onclick="check(4,2)"><input type="radio" name="q4"><label>B. 大方差会导致梯度下降发散</label></div>
+    </div>
+    <div class="quiz-feedback" id="fb4"></div>
+  </div>
+
+  <div class="quiz-question" id="q5">
+    <h4>Q5 · 以下那个是自然梯度和牛顿法的正确比较？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="check(5,1)"><input type="radio" name="q5"><label>A. 两者完全相同——Fisher 就是 Hessian</label></div>
+      <div class="quiz-option" onclick="check(5,2)"><input type="radio" name="q5"><label>B. 对数似然损失下 Fisher 是期望 Hessian——总是半正定；牛顿法的即时 Hessian 可以不半正定</label></div>
+      <div class="quiz-option" onclick="check(5,3)"><input type="radio" name="q5"><label>C. 牛顿法完全不使用 Fisher 矩阵</label></div>
+    </div>
+    <div class="quiz-feedback" id="fb5"></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2>8. 核心 takeaway</h2>
+
+<div class="logic-chain">
+  <ol>
+    <li>普通梯度下降的「最陡」<strong>依赖于参数化方式——换一个写法就走到了不同的地方</strong>。</li>
+    <li>我们需要一个只依赖<strong>概率分布本身</strong>的距离定义。KL 散度就是这个「概率意义上的距离」。</li>
+    <li>KL 的二阶泰勒展开给出 $\frac12 d\boldsymbol{\theta}^\top\mathbf{F}d\boldsymbol{\theta}$——<strong>Fisher 矩阵 = KL 诱导的黎曼度量 = 参数空间中的「域翻译器」</strong>。</li>
+    <li>把梯度下降的约束从欧氏范数换成 Fisher 范数 → <strong>自然梯度 = $\mathbf{F}^{-1}\nabla\mathcal{L}$</strong>。</li>
+    <li>自然梯度有<strong>重参数化不变性</strong>——$\theta$ 或 logit，分布的变化路径一样。</li>
+    <li>高维中 $\mathbf{F}^{-1}$ 不可算 → KFAC、Adam 的对角近似是实用的折衷。</li>
+  </ol>
+</div>
+
+<div class="next-hint">
+  <strong>📌 下节课方向：</strong>KL 散度只是众多「分布间距离」的一种。
+  GAN 用 JS 散度 → 梯度消失。WGAN 用 Wasserstein 距离 → 就稳定了。
+  Score matching 用 Fisher divergence。下节课：<strong>散度家族与最优传输</strong>——理解为什么不同的散度导致不同的算法行为和几何。
+</div>
+
+<div class="primary-source">
+  <h3>主要参考</h3>
+  <strong>Amari (2016) — Information Geometry and Its Applications</strong>（信息几何的标准教材）。<br>
+  <strong>Martens (2014) — New Insights and Perspectives on the Natural Gradient Method</strong>（自然梯度在深度学习中的应用分析）。
+</div>
+
+<div class="lesson-footer">
+  <p><strong>推荐阅读：</strong>
+    <a href="https://link.springer.com/book/10.1007/978-4-431-55978-8" target="_blank">Amari — Information Geometry and Its Applications</a> ·
+    <a href="https://arxiv.org/abs/1412.1193" target="_blank">Martens (2014) — Natural Gradient Method</a> ·
+    <a href="https://arxiv.org/abs/1503.05671" target="_blank">Martens & Grosse (2015) — KFAC</a>
+  </p>
+  <p style="margin-top:.6rem">
+    <strong>有问题？</strong>度规矩阵的域翻译直觉、KL 展开的一阶项为什么消失、为什么 $\mathbf{F}^{-1}$ 能解耦 $\mu$ 和 $\sigma$——随便问。
+  </p>
+  <p style="margin-top:.8rem;font-size:.82rem">
+    <a href="0018-score-function.html">← Lesson 0018 · Score Function</a> &emsp;
+    <a href="../index.html">→ 地貌 / 待探索</a> &emsp;
+    <a href="../reference/algorithm-cards.html">📇 算法卡片</a> &emsp;
+    <a href="../reference/math-primer.html">📐 数学手册</a> &emsp;
+    <a href="../reference/empirical-evidence.html">🔬 实证证据</a> &emsp;
+    <a href="../MISSION.md">🎯 Mission</a>
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<script>
+function check(qid,chosen){
+ let ans={1:1,2:2,3:2,4:1,5:2};
+ let fb={1:{c:'✓ $1/[\theta(1-\theta)]$ 在极端处爆炸——每个观测包含极多信息。想想看：如果硬币几乎总是正面，一次反面观测就是巨大「惊讶」。',w:'✗ A正确。极端θ处Fisher大 = 每个观测的信息量大。这不是方差的问题。'},
+  2:{c:'✓ $\\mathbf{F}^{-1}$ 做的是度量替换——从欧氏距离换成Fisher距离（KL的二阶近似）。这是自然梯度的本质。',w:'✗ B正确。核心是坐标变换使「最陡」独立于参数化，而非降噪或加速。'},
+  3:{c:'✓ $\\mathbb{E}[\\nabla\\log p]=\\nabla\\int p=\\nabla 1=\\mathbf{0}$——score期望为零是概率归一化的必然推论。',w:'✗ B正确。一阶项消失不是巧合——是概率密度积分恒为1的直接后果。'},
+  4:{c:'✓ 大方差→低Fisher→每个样本信息少→需要大量样本才能精确估计μ。',w:'✗ A正确。'},
+  5:{c:'✓ 对数似然下Fisher=期望Hessian，总半正定；牛顿法的即时Hessian可以不半正定，导致可能走错方向。',w:'✗ B正确。两者的关键区别在期望vs即时。'}};
+ let c=document.getElementById('q'+qid),f=document.getElementById('fb'+qid);
+ c.classList.remove('correct','incorrect');f.classList.remove('show','correct-fb','incorrect-fb');
+ if(chosen===ans[qid]){c.classList.add('correct');f.classList.add('show','correct-fb');f.innerHTML=fb[qid].c}
+ else{c.classList.add('incorrect');f.classList.add('show','incorrect-fb');f.innerHTML=fb[qid].w}
+}
+
+// ================================================================
+// === VISUALIZATION ==============================================
+// ================================================================
+(function(){
+ let pC=document.getElementById('paramCanvas'),sC=document.getElementById('stepCanvas');
+ let pX=pC.getContext('2d'),sX=sC.getContext('2d');
+ let PW=pC.width,PH=pC.height,SW=sC.width,SH=sC.height;
+
+ function loss(m,s){return s<=0?Infinity:(1+m*m)/(2*s*s)+Math.log(s)-0.5}
+ function grad(m,s){return{mu:m/(s*s),sigma:(s*s-1-m*m)/(s*s*s)}}
+ function fdist(m,s,dm,ds){return Math.sqrt(dm*dm/(s*s)+2*ds*ds/(s*s))}
+
+ let PAD=42,pW=PW-2*PAD,pH=PH-2*PAD;
+ let muM=-3,muX=3,siM=0.05,siX=4.5;
+ function to_(m,s){return{x:PAD+(m-muM)/(muX-muM)*pW,y:PAD+pH-(s-siM)/(siX-siM)*pH}}
+ function fr_(x,y){return{mu:muM+(x-PAD)/pW*(muX-muM),sigma:siM+(pH-(y-PAD))/pH*(siX-siM)}}
+
+ let lr=0.06,st=50,gd=[],ng=[],gdF=[],ngF=[],sMu=1.5,sSi=3.0,run=false,rid=null;
+
+ document.getElementById('lrSlider').addEventListener('input',function(e){lr=+e.target.value});
+ document.getElementById('stepsSlider').addEventListener('input',function(e){st=+e.target.value});
+
+ function compute(){
+  gd=[{mu:sMu,sigma:sSi}];ng=[{mu:sMu,sigma:sSi}];gdF=[0];ngF=[0];
+  for(let i=1;i<=st;i++){
+   let gp=gd[i-1],gg=grad(gp.mu,gp.sigma),gdm=-lr*gg.mu,gds=-lr*gg.sigma;
+   let gnm=gp.mu+gdm,gns=Math.max(.02,gp.sigma+gds);
+   gd.push({mu:gnm,sigma:gns});gdF.push(gdF[i-1]+fdist(gp.mu,gp.sigma,gdm,gds));
+   let np=ng[i-1],nG=grad(np.mu,np.sigma),ndm=-lr*np.sigma*np.sigma*nG.mu,nds=-lr*np.sigma*np.sigma/2*nG.sigma;
+   let nnm=np.mu+ndm,nns=Math.max(.02,np.sigma+nds);
+   ng.push({mu:nnm,sigma:nns});ngF.push(ngF[i-1]+fdist(np.mu,np.sigma,ndm,nds));
+  }
+ }
+
+ function drawParam(cur){
+  let c=pX;c.clearRect(0,0,PW,PH);c.fillStyle='#fdfcf9';c.fillRect(0,0,PW,PH);
+  for(let k=0;k<12;k++){let lv=0.02+k*0.06;c.strokeStyle=`rgba(180,170,155,${0.2+k*0.025})`;c.lineWidth=0.7;c.beginPath();let st_=false;
+   for(let i=0;i<=160;i++){let sg=siM+(siX-siM)*i/160,rh=2*sg*sg*(lv+.5-Math.log(sg))-1;
+    if(rh>=0){let mu=Math.sqrt(rh);if(mu>=muM&&mu<=muX){let p=to_(mu,sg);st_?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y);st_=true}
+    if(mu>.01&&-mu>=muM&&-mu<=muX){let p=to_(-mu,sg);st_?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y)}}else st_=false}c.stroke()}
+  let t=to_(0,1);c.fillStyle='#1a1a1a';c.beginPath();c.arc(t.x,t.y,6,0,2*Math.PI);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(t.x,t.y,2.5,0,2*Math.PI);c.fill();
+  [0,Math.floor(st/5),Math.floor(2*st/5),Math.floor(3*st/5),Math.floor(4*st/5)].forEach(function(idx){if(idx>=ng.length)return;let p=ng[idx];if(p.sigma<=.05)return;let ct=to_(p.mu,p.sigma),am=p.sigma*.35/(muX-muM)*pW,as_=p.sigma*.35/Math.SQRT2/(siX-siM)*pH;c.save();c.strokeStyle='rgba(139,69,19,0.25)';c.lineWidth=0.8;c.setLineDash([3,4]);c.beginPath();c.ellipse(ct.x,ct.y,am,as_,0,0,2*Math.PI);c.stroke();c.setLineDash([]);c.restore()});
+  function dr(arr,clr,lim){if(lim<1||arr.length<2)return;c.strokeStyle=clr;c.lineWidth=2.2;c.beginPath();let s=to_(arr[0].mu,arr[0].sigma);c.moveTo(s.x,s.y);for(let i=1;i<=lim&&i<arr.length;i++){let p=to_(arr[i].mu,arr[i].sigma);c.lineTo(p.x,p.y)}c.stroke();c.fillStyle=clr;c.beginPath();c.arc(s.x,s.y,4.5,0,2*Math.PI);c.fill()}
+  dr(gd,'#c1121f',cur);dr(ng,'#2d6a4f',cur);
+  c.fillStyle='#6b6b6b';c.font='10px sans-serif';for(let m=-3;m<=3;m++){let p=to_(m,siM);c.fillText(m,p.x-4,PAD+pH+12)}[0,1,2,3,4].forEach(function(s_){let p=to_(muM,s_);c.fillText(s_,PAD-22,p.y+4)});c.fillStyle='#2c2c2c';c.font='11px Palatino,serif';c.fillText('μ',PW-PAD+6,PAD+pH/2);c.fillText('σ',PAD+pW/2-8,PAD-10)
+ }
+
+ function drawKL(cur){
+  let c=sX;c.clearRect(0,0,SW,SH);c.fillStyle='#fdfcf9';c.fillRect(0,0,SW,SH);
+  let pL=56,pR=14,pT=26,pB=36,sW_=SW-pL-pR,sH_=SH-pT-pB;
+  let gK=gd.map(function(p){return loss(p.mu,p.sigma)}),nK=ng.map(function(p){return loss(p.mu,p.sigma)});
+  let k0=gK[0],yM=k0*1.1;
+  c.strokeStyle='#e8e4dc';c.lineWidth=0.5;for(let i=1;i<=4;i++){let y=pT+i/5*sH_;c.beginPath();c.moveTo(pL,y);c.lineTo(pL+sW_,y);c.stroke()}
+  c.strokeStyle='#bbb';c.lineWidth=0.8;c.beginPath();c.moveTo(pL,pT);c.lineTo(pL,pT+sH_);c.lineTo(pL+sW_,pT+sH_);c.stroke();
+  function crv(kls,clr,dash){if(cur<0)return;c.strokeStyle=clr;c.lineWidth=2.2;if(dash)c.setLineDash([5,3]);else c.setLineDash([]);c.beginPath();for(let i=0;i<=cur&&i<kls.length;i++){let x=pL+i/st*sW_,y=pT+(1-kls[i]/yM)*sH_;i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();c.setLineDash([])}
+  crv(gK,'#c1121f',true);crv(nK,'#2d6a4f',false);
+  c.fillStyle='#6b6b6b';c.font='9px sans-serif';c.fillText('0',pL-12,pT+sH_+12);c.fillText(yM.toFixed(2),pL-33,pT+6);c.fillText((yM/2).toFixed(2),pL-33,pT+sH_/2+3);c.fillText('0',pL-4,pT+sH_+14);c.fillText(st,pL+sW_-8,pT+sH_+14);
+  c.fillStyle='#2c2c2c';c.font='10px Palatino,serif';c.fillText('步数 →',pL+sW_/2-18,SH-5);c.save();c.translate(8,pT+sH_/2);c.rotate(-Math.PI/2);c.fillText('KL ↓',0,0);c.restore();
+  let lx=pL+6,ly=pT+4;c.strokeStyle='#c1121f';c.lineWidth=2;c.setLineDash([5,3]);c.beginPath();c.moveTo(lx,ly+6);c.lineTo(lx+26,ly+6);c.stroke();c.setLineDash([]);c.fillText('GD',lx+30,ly+10);c.strokeStyle='#2d6a4f';c.beginPath();c.moveTo(lx+52,ly+6);c.lineTo(lx+78,ly+6);c.stroke();c.fillText('NGD',lx+82,ly+10)
+ }
+
+ function drawAll(cur){drawParam(cur);drawKL(cur)}
+
+ function animate(){
+  run=true;document.getElementById('btnRun').textContent='⏸ 停止';document.getElementById('btnRun').classList.add('active');
+  let f=0,tot=70;
+  function loop(){if(!run)return;if(f>tot){stop();return}drawAll(Math.floor(f/tot*st));f++;rid=requestAnimationFrame(loop)}
+  rid=requestAnimationFrame(loop)
+ }
+ function stop(){run=false;if(rid)cancelAnimationFrame(rid);document.getElementById('btnRun').textContent='▶ 运行';document.getElementById('btnRun').classList.remove('active')}
+
+ function setStart(m,s){
+  sMu=m;sSi=Math.max(.05,s);compute();
+  let gK=loss(gd[gd.length-1].mu,gd[gd.length-1].sigma),nK=loss(ng[ng.length-1].mu,ng[ng.length-1].sigma);
+  document.getElementById('vizInfo').innerHTML='(μ='+sMu.toFixed(2)+', σ='+sSi.toFixed(2)+') | 起点KL='+loss(sMu,sSi).toFixed(3)+' | 🔴GD KL<sub>'+st+'</sub>='+gK.toFixed(3)+' | 🟢NGD KL<sub>'+st+'</sub>='+nK.toFixed(3)+' | GD总Fisher='+gdF[gdF.length-1].toFixed(3)+' | NGD总Fisher='+ngF[ngF.length-1].toFixed(3);
+  drawAll(st)
+ }
+
+ pC.addEventListener('click',function(e){
+  if(run)return;let r=pC.getBoundingClientRect(),sx=PW/r.width,cx=(e.clientX-r.left)*sx,cy=(e.clientY-r.top)*sx;
+  if(cx>=PAD&&cx<=PW-PAD&&cy>=PAD&&cy<=PH-PAD){let{mu,sigma}=fr_(cx,cy);setStart(mu,sigma)}
+ });
+
+ document.getElementById('btnReset').addEventListener('click',function(){stop();setStart(1.5,3)});
+ document.getElementById('btnRun').addEventListener('click',function(){run?stop():animate()});
+
+ compute();setStart(1.5,3);
+})();
+</script>
+
+<script src="../reference/popup-cards.js"></script>
+</body>
+</html>

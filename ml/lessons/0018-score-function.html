@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lesson 0001 · Score Function：统一生成模型的数学之眼</title>
+<title>Lesson 0018 · Score Function：统一生成模型的数学之眼</title>
 <script>
 window.MathJax = {
   tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
@@ -171,11 +171,91 @@ window.MathJax = {
   table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
   th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
   td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
 </style>
 </head>
 <body>
 
-<h1>Lesson 0001 · Score Function</h1>
+<h1>Lesson 0018 · Score Function</h1>
 <div class="subtitle">统一生成模型的数学之眼 · 阅读时间 ~35 分钟</div>
 
 <div class="toc">
@@ -191,6 +271,28 @@ window.MathJax = {
 
 <!-- ============================================================ -->
 <h2 id="s1">1. 概率密度与配分函数：为什么生成模型这么难</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#2d6a4f;">核心概念</span>
+	    <h3>Score Function · $\nabla_{\mathbf{x}}\log p(\mathbf{x})$</h3>
+	    <span class="cc-aliases">生成模型的数学之眼</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>Score = 对数概率密度对<strong>数据</strong>的梯度。它指向"概率增长最快的方向"。关键性质：<strong>score 不依赖配分函数 $Z$</strong>——因为 $\nabla\log p = \nabla\log\tilde{p} - \cancel{\nabla\log Z}$。
+	  </div>
+	  <div class="cc-section">
+	    <h4>为什么是"统一"概念</h4>
+	    <p>EBM：score = $-\nabla E(\mathbf{x})$（负能量梯度）</p>
+	    <p>DDPM：噪声预测 $\hat{\boldsymbol{\epsilon}}$ = $-\sqrt{1-\bar{\alpha}_t}\,\mathbf{s}_\theta(\mathbf{x}_t)$</p>
+	    <p>Langevin 采样：$\mathbf{x}_{t+1} = \mathbf{x}_t + \frac{\eta}{2}\mathbf{s}(\mathbf{x}_t) + \sqrt{\eta}\,\boldsymbol{\epsilon}$</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ Score Matching: 学 score 不碰密度</span>
+	    <span class="conn-badge">→ Langevin: score 驱动采样</span>
+	    <span class="conn-badge">→ DDPM: 噪声预测 = score 估计</span>
+	  </div>
+	</div>
+
 
 <h3>1.1 什么是概率密度函数？</h3>
 
@@ -844,13 +946,20 @@ window.MathJax = {
 
 <!-- ============================================================ -->
 <div class="next-hint">
-  <strong>📌 下节课：</strong><a href="0002-information-geometry.html" style="color:var(--accent);">Lesson 0002 · 信息几何与自然梯度</a> ——
+  <strong>📌 下节课：</strong><a href="0019-information-geometry.html" style="color:var(--accent);">Lesson 0019 · 信息几何与自然梯度</a> ——
   Score matching 中出现了 $\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta)$。
   如果我们看<strong>参数</strong>空间而非数据空间，score 的协方差矩阵就是 <strong>Fisher 信息矩阵</strong>——
   它定义了概率分布空间的「自然几何」。已发布 ✓
 </div>
 
 <!-- ============================================================ -->
+<div class="primary-source">
+  <h3>主要参考</h3>
+  <strong>Hyvärinen (2005) — Estimation of Non-Normalized Statistical Models by Score Matching</strong>（Score Matching 原始论文）。<br>
+  <strong>Song & Ermon (2019) — Generative Modeling by Estimating Gradients of the Data Distribution</strong>（Score-Based 模型的里程碑）。<br>
+  <strong>Song et al. (2021) — Score-Based Generative Modeling through Stochastic Differential Equations</strong>（SDE 统一框架）。
+</div>
+
 <div class="lesson-footer">
   <p>
     <strong>推荐阅读：</strong>
@@ -865,7 +974,9 @@ window.MathJax = {
     第三节的 Fokker-Planck 为什么能保证稳态分布——问。知识卡片里任何一个算法不懂——问。
   </p>
   <p style="margin-top: 0.8rem; font-size: 0.82rem;">
-    <a href="0000-the-mathematical-landscape.html">← Lesson 0000 · 地貌</a> &emsp;
+    <a href="0017-factor-models-and-ml.html">← Lesson 0017 · 因子模型与 ML</a> &emsp;
+	    <a href="0019-information-geometry.html">Lesson 0019 · 信息几何 →</a> &emsp;
+    <a href="../index.html">← 地貌</a> &emsp;
     <a href="../reference/algorithm-cards.html">📇 算法卡片</a> &emsp;
     <a href="../reference/math-primer.html">📐 数学手册</a> &emsp;
     <a href="../reference/empirical-evidence.html">🔬 实证证据</a> &emsp;
@@ -1119,5 +1230,7 @@ function checkAnswer(qid, chosen) {
 })();
 </script>
 
+
+<script src="../reference/popup-cards.js"></script>
 </body>
 </html>

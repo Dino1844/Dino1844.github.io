@@ -4,294 +4,199 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lesson 0005 · 概率与分布</title>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.7; color: #1a1a1a; background: #fdfdfb; max-width: 720px; margin: 0 auto; padding: 4rem 2rem 6rem; }
-  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
-  h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; }
-  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
-  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
-  p { margin-bottom: 1rem; }
-  strong { font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
-  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
-  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
-  tr:last-child td { border-bottom: none; }
-  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
-  .card h3 { margin-top: 0; }
-  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
-  .insight h3 { margin-top: 0; color: #8b5a20; }
-  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
-  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
-  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
-  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
-  .formula { text-align: center; font-size: 1.1rem; margin: 1.2rem 0; font-family: 'Inter', sans-serif; color: #333; }
-  .quiz { margin: 2rem 0; }
-  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
-  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
-  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
-  .quiz .opt:hover { background: #f0f0e8; }
-  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
-  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
-  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
-  .quiz .feedback.show { display: block; }
-  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
-  .primary-source h3 { margin-top: 0; }
-  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
-  .nav a { color: #5577aa; text-decoration: none; }
-  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
-  .en { color: #888; font-size: 0.85em; }
-  .phase-summary { background: #f0f8f0; border: 1px solid #c0d8c0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 2rem 0; }
-  .phase-summary h3 { margin-top: 0; color: #3a6a3a; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Serif 4',Georgia,serif;font-size:18px;line-height:1.75;color:#1a1a1a;background:#fdfdfb;max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+  h1{font-size:2.2rem;font-weight:700;margin-bottom:.3rem;letter-spacing:-.02em}
+  h2{font-size:1.45rem;font-weight:600;margin:3rem 0 .8rem;color:#2c2c2c}
+  h3{font-size:1.1rem;font-weight:600;margin:1.8rem 0 .5rem;color:#333}
+  .meta{color:#888;font-size:.9rem;margin-bottom:2rem;font-family:'Inter',sans-serif}
+  p{margin-bottom:1rem} strong{font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.95rem}
+  th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid #e0e0d8}
+  th{font-weight:600;font-family:'Inter',sans-serif;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:#666}
+  tr:last-child td{border-bottom:none}
+  .card{background:#fafaf8;border:1px solid #e8e8e0;border-radius:6px;padding:1.5rem 1.8rem;margin:1.5rem 0}
+  .card h3{margin-top:0}
+  .insight{background:#fff8f0;border-left:3px solid #e08830;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .insight h3{margin-top:0;color:#8b5a20}
+  .retrieval{background:#f8f4ff;border:1px solid #d8d0e8;border-radius:6px;padding:1.2rem 1.5rem;margin:2rem 0}
+  .retrieval h3{margin-top:0;color:#5b4a8a}
+  .crypto-note{background:#f5f9ff;border-left:3px solid #4a90d9;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .crypto-note h3{margin-top:0;color:#2a5a9a}
+  .formula{text-align:center;font-size:1.05rem;margin:1.4rem 0}
+  .danger{background:#fff0f0;border-left:3px solid #c44;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .danger h3{margin-top:0;color:#a33}
+  .connection{background:#f0f8f8;border-left:3px solid #4a9a9a;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#345}
+  .connection h3{margin-top:0;color:#2a6a6a}
+  .open-q{background:#fafafa;border:1px dashed #bbb;border-radius:6px;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#555}
+  .open-q h3{margin-top:0;color:#666}
+  .quiz{margin:2rem 0} .quiz .q{font-weight:600;margin-bottom:.6rem}
+  .quiz .options{display:flex;flex-direction:column;gap:.4rem}
+  .quiz .opt{padding:.6rem 1rem;border:1px solid #d8d8d0;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;transition:background .15s}
+  .quiz .opt:hover{background:#f0f0e8}
+  .quiz .opt.correct{background:#e6f4ea;border-color:#4a9}
+  .quiz .opt.wrong{background:#fce8e8;border-color:#c44}
+  .quiz .feedback{margin-top:.8rem;font-size:.9rem;color:#555;display:none} .quiz .feedback.show{display:block}
+  .primary-source{background:#fffdf5;border-left:3px solid #e6c030;padding:1rem 1.5rem;margin:2.5rem 0 1.5rem;font-size:.95rem}
+  .primary-source h3{margin-top:0}
+  .nav{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #e0e0d8;font-family:'Inter',sans-serif;font-size:.85rem;color:#999}
+  .nav a{color:#5577aa;text-decoration:none}
+  .reminder{background:#f5f7fa;border:1px solid #dde;border-radius:6px;padding:1.2rem 1.5rem;margin:2.5rem 0;font-size:.9rem;color:#445}
+  .en{color:#888;font-size:.85em}
 </style>
 </head>
 <body>
 
-<h1>概率与分布——从正态到极值</h1>
-<p class="meta">Lesson 0005 · 第一阶段收官 · 预计 15 分钟</p>
+<h1>概率与分布</h1>
+<p class="meta">Lesson 0005（重写·深度版）· 第一阶段收官 · 预计 45-55 分钟</p>
 
-<p>
-  前四课我们反复提到「正态分布假设不对」「肥尾」「极端事件被低估」——这节课来正面回答：<strong>如果不用正态分布，我们该用什么？</strong> 以及：分布的选择如何影响策略设计和风险管理。
-</p>
-
-<!-- ============================================================ -->
-<div class="retrieval">
-  <h3>🔁 回顾·已学内容</h3>
-  <ol style="padding-left:1.2rem; margin-bottom:0;">
-    <li>为什么量化中从收益率出发？（价格非平稳，收益率平稳）</li>
-    <li>趋势跟踪利用什么时间序列性质？（正自相关）</li>
-    <li>肥尾对夏普比率意味着什么？（极端回撤比正态预测频繁得多）</li>
-  </ol>
-</div>
+<div class="retrieval"><h3>🔁 衔接</h3>
+<p>0003 讲了金融数据肥尾、0004 讲了时间序列。这节把"肥尾"正式化：<strong>用什么分布建模金融收益</strong>。从正态出发，一步步放松假设——对数正态、Student-t、极值理论——每步说清"为什么要换、新分布解决什么、还剩什么问题"。这是风险度量（VaR、ES）和期权定价（BS 假设对数正态）的数学基础。</p></div>
 
 <!-- ============================================================ -->
-<h2>一、正态分布：为什么它无处不在（却不适用于金融）</h2>
+<h2>一、正态分布 <span class="en">Normal</span>——起点和它为什么不够</h2>
 
-<p>
-  正态分布是统计学中最常见的分布，在量化金融中也到处被假定。但需要知道它在什么条件下成立——以及在什么条件下崩溃。
-</p>
+<div class="formula">$$f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$</div>
+<p>正态是起点因为<strong>CLT</strong>：大量独立小冲击的和趋向正态。如果收益是很多独立信息冲击的累加，正态合理。它只有两个参数（$\mu, \sigma$），完全由均值方差决定，数学上极方便。</p>
 
-<div class="card">
-  <h3>正态分布成立的数学条件</h3>
-  <p style="margin-bottom:0;"><strong>中心极限定理</strong>：大量独立、同分布的随机变量之和，趋向于正态分布。</p>
-</div>
+<div class="danger"><h3>⚠️ 正态在金融里的三宗罪</h3>
+<ul>
+  <li><strong>无肥尾</strong>：尾部 $e^{-x^2}$ 衰减太快，4σ 事件概率 0.003%，实际金融几年一次。低估尾部风险。</li>
+  <li><strong>对称</strong>：左右尾相同。金融收益<strong>负偏</strong>——崩盘比暴涨剧烈（左尾更肥）。</li>
+  <li><strong>无界</strong>：支持整个实数轴。简单收益有下界 -100%（价格非负），正态给正概率于 < -100%。</li>
+</ul></div>
 
-<p>关键假设：<strong>独立、同分布、加和。</strong> 金融收益率三个都不满足：</p>
+<!-- ============================================================ -->
+<h2>二、对数正态 <span class="en">Log-normal</span>——解决下界</h2>
+
+<p>如果 $r = \ln(P_t/P_{t-1})$ 正态，则价格比 $P_t/P_{t-1} = e^r$ 对数正态。价格自动 ≥ 0，解决下界问题。这是 Black-Scholes 的假设（第十三课）。</p>
+<div class="formula">$$P_T = P_0 \cdot e^{(\mu - \sigma^2/2)T + \sigma\sqrt{T} Z}, \quad Z \sim N(0,1)$$</div>
+<p>注意 $-\sigma^2/2$ 修正项：$E[P_T] = P_0 e^{\mu T}$，但中位数 $= P_0 e^{(\mu-\sigma^2/2)T}$——对数正态<strong>右偏</strong>，均值被少数大涨拉高，中位数低于均值。</p>
+
+<div class="danger"><h3>⚠️ 对数正态仍无肥尾</h3>
+<p style="margin-bottom:0;">对数正态只解决了下界，<strong>没解决肥尾</strong>——它的尾部仍是 $e^{-(\ln x)^2}$，比正态稍肥但远不够。BS 用对数正态假设，所以定价低估尾部——市场用波动率微笑修正（第十三课）。</p></div>
+
+<!-- ============================================================ -->
+<h2>三、Student-t 分布——正式引入肥尾</h2>
+
+<div class="formula">$$f(x) \propto \left(1 + \frac{x^2}{\nu}\right)^{-(\nu+1)/2}$$</div>
+<p>$\nu$ 是自由度（尾指数相关）。$\nu$ 越小尾越肥：</p>
+<ul>
+  <li>$\nu \to \infty$：退化为正态</li>
+  <li>$\nu = 1$：柯西分布，连均值都不存在</li>
+  <li>金融收益 $\nu$ 实测约 3-7</li>
+</ul>
+<p>关键：$\nu < 4$ 时<strong>四阶矩不存在</strong>（峰度无穷），$\nu < 2$ 时方差都不存在。这解释了为什么金融数据的样本峰度极不稳定——真实峰度可能无穷，你用有限样本估永远在变。</p>
+
+<div class="card"><h3>为什么 t 分布拟合金融收益好</h3>
+<p>t 分布可理解为"正态 + 随机方差"——方差本身随机的正态混合。这正好对应波动率聚集：每个时点条件正态，但方差随时间变（随机），无条件分布就肥尾。<strong>t 分布是波动率聚集在分布层面的表现</strong>。</p></div>
+
+<!-- ============================================================ -->
+<h2>四、偏态 <span class="en">Skewness</span>——左右不对称</h2>
+
+<div class="formula">$$\text{Skew} = \frac{E[(r-\mu)^3]}{\sigma^3}$$</div>
+<p>股票收益<strong>负偏</strong>（左尾更肥）——崩盘比暴涨多。典型值 -0.5 到 -1。原因：去杠杆/恐慌是正反馈（跌→强平→更跌），上涨相对渐进。</p>
+
+<div class="crypto-note"><h3>🔗 币圈的偏态</h3>
+<p>币圈偏态更复杂：<strong>整体负偏</strong>（崩盘如 2020-03、2022-06），但<strong>牛市单币正偏极强</strong>——山寨币暴涨 10x、100x，右尾也肥。所以币圈是<strong>双尾肥</strong>，比股票的"左肥右瘦"更对称。这解释了为什么币圈期权波动率微笑比股票对称（第十三课）。做空山寨币（赌右尾不出现）极其危险——右尾肥意味着"涨 10x"概率不可忽略。</p></div>
+
+<!-- ============================================================ -->
+<h2>五、极值理论 <span class="en">Extreme Value Theory, EVT</span>——专门建模尾部</h2>
+
+<p>前面分布拟合整个分布，但风险管理只关心<strong>尾部</strong>。EVT 直接建模极端值的分布。广义极值分布 GEV：</p>
+<div class="formula">$$P(X \leq x) \approx \exp\left[-\left(1 + \xi \frac{x-u}{\sigma}\right)^{-1/\xi}\right]$$</div>
+<p>$\xi$ 是形状参数：<strong>$\xi > 0$ 就是肥尾</strong>（Fréchet，幂律尾部），$\xi = 0$ 正态尾部（Gumbel），$\xi < 0$ 有上界（Weibull）。</p>
+
+<div class="card"><h3>EVT 的实务价值</h3>
+<p>用 EVT 估尾部不需要假设整个分布——只拟合最极端的样本（如最大 5% 损失），外推到 99.9% VaR。比"假设正态算 VaR"靠谱得多，因为不假设全分布形状。BitMEX、币安等清算引擎的风险模型用 EVT 估极端损失概率。<strong>VaR 和 Expected Shortfall</strong>：</p>
+<div class="formula">$$\text{VaR}_\alpha = -\inf\{x : P(r \leq x) > 1-\alpha\}, \quad \text{ES}_\alpha = -E[r \mid r \leq -\text{VaR}_\alpha]$$</div>
+<p>VaR 是 α 分位点损失，ES 是超过 VaR 之后的平均损失。ES 比 VaR 好——VaR 只告诉你"99% 不会亏超过 X"，但那 1% 里亏多少不管；ES 给条件期望，是<strong>一致性风险度量</strong>（coherent risk measure），数学性质更好。Basel III 已从 VaR 转向 ES。</p></div>
+
+<!-- ============================================================ -->
+<h2>六、分布选择对照</h2>
 
 <table>
-  <tr><th>正态假设</th><th>金融现实</th></tr>
-  <tr><td>收益率相互独立</td><td>有自相关（趋势）+ 波动率聚集</td></tr>
-  <tr><td>分布相同</td><td>牛市和熊市的分布完全不同</td></tr>
-  <tr><td>变量来自加和</td><td>价格是乘积过程（涨 5% 是基于当前价格，不是加固定金额）</td></tr>
+<tr><th>分布</th><th>尾部</th><th>偏态</th><th>用在哪</th><th>缺陷</th></tr>
+<tr><td>正态</td><td>瘦</td><td>无</td><td>Sharpe、初学、CLT 近似</td><td>低估尾部、对称、无下界</td></tr>
+<tr><td>对数正态</td><td>稍肥</td><td>正偏</td><td>BS 期权定价</td><td>仍不够肥、固定偏态方向</td></tr>
+<tr><td>Student-t</td><td>肥（幂律）</td><td>无（对称版）</td><td>收益建模、VaR</td><td>对称（要 skewed-t 补偏态）</td></tr>
+<tr><td>skewed-t / Johnson SU</td><td>肥</td><td>任意</td><td>币圈收益、风险管理</td><td>参数多、估计难</td></tr>
+<tr><td>EVT (GEV/GPD)</td><td>专门尾部</td><td>含</td><td>极端风险、清算引擎</td><td>只管尾部，不管中心</td></tr>
 </table>
 
-<p>所以不是正态分布「错了」——是它的前提条件在金融数据上不成立。用正态分布近似日常波动可以接受（±2σ 以内），但用它估算极端风险（±5σ 以外）会差出几个数量级。</p>
-
 <!-- ============================================================ -->
-<h2>二、对数正态：价格的基本模型</h2>
+<div class="connection"><h3>🔗 与其他课的连接</h3>
+<p><strong>前置</strong>：0002 收益（正态假设定义 Sharpe）、0003 肥尾（本节正式化）、0004 平稳性（分布建模的前提）。</p>
+<p><strong>后续</strong>：0006 回归（残差分布、t 检验在肥尾下失效）、0007 Markowitz（用方差=用正态，肥尾下失效）、0008 回测（VaR/ES 算风险）、0013 期权（BS 对数正态 vs 波动率微笑=市场修正肥尾）。本节是所有风险度量的数学根基。</p></div>
 
-<p>
-  上节课说过价格通常是非平稳的，对数收益率通常是平稳的。这两件事结合起来推出一条重要结论：<strong>价格近似服从对数正态分布。</strong>
-</p>
-
-<div class="formula">
-  如果 r ~ Normal(μ, σ²)，则 P<sub>t</sub> = P<sub>0</sub> × e<sup>r</sup> ~ LogNormal
-</div>
-
-<div class="card">
-  <h3>对数正态的重要特征</h3>
-  <ul style="padding-left:1.2rem;">
-    <li style="margin-bottom:0.4rem;">价格 <strong>永远不为负</strong>——对数正态的下界是 0，这和现实一致（BTC 不会跌到负数）</li>
-    <li style="margin-bottom:0.4rem;">上涨和下跌不对称：涨 100%（翻倍）和跌 50%（腰斩）在 log 空间对称，但从 $100 跌到 $0 需要跌无限多个 50%——永远到不了</li>
-    <li>这就是 Black-Scholes 期权定价模型的底层假设</li>
-  </ul>
-</div>
-
-<div class="insight">
-  <h3>⚡ 但这个模型也错了</h3>
-  <p style="margin-bottom:0;">对数正态仍然假设收益率本身是正态的——它让价格分布更合理，但没有解决肥尾问题。真实数据的尾部比对数正态更肥。所以需要继续往下走。</p>
-</div>
-
-<!-- ============================================================ -->
-<h2>三、学生 t 分布：处理肥尾的第一步</h2>
-
-<p>
-  正态分布太瘦、对数正态也不够肥——实践中最常用的替代是<strong>学生 t 分布</strong>。
-</p>
-
-<div class="card">
-  <h3>学生 t 分布 vs 正态分布</h3>
-  <table>
-    <tr><th>性质</th><th>正态分布</th><th>学生 t 分布</th></tr>
-    <tr><td>尾部</td><td>指数衰减（极快）</td><td>多项式衰减（慢，尾部更肥）</td></tr>
-    <tr><td>参数</td><td>μ, σ</td><td>μ, σ, <strong>ν（自由度）</strong></td></tr>
-    <tr><td>自由度 ν 的作用</td><td>—</td><td>ν 越小 → 尾部越肥；ν → ∞ → 趋近正态</td></tr>
-  </table>
-</div>
-
-<p><strong>自由度 ν 是控制尾部肥度的旋钮。</strong> 用金融数据拟合 t 分布，ν 通常在 3-6 之间（越小越肥）。这意味着什么？</p>
-
-<div class="card">
-  <p><strong>正态分布说</strong>：5σ 事件概率 ≈ 1/3,500,000（千年一遇）</p>
-  <p><strong>t(ν=4) 说</strong>：5σ 事件概率 ≈ 1/500（可能每年发生）</p>
-  <p style="margin-bottom:0;">差距是 7000 倍。</p>
-</div>
-
-<div class="crypto-note">
-  <h3>🔗 币圈：ν 可以低到 2-3</h3>
-  <p style="margin-bottom:0;">对 BTC 日收益率拟合 t 分布，ν 通常在 2.5-4 之间。当 ν ≤ 2 时，方差甚至不存在（理论值为无穷）——这意味着用历史标准差来估计 BTC 的风险在数学上就是有问题的。这个事实本身就应该让你对任何「年化波动率 XX%」的数字保持足够的怀疑。</p>
-</div>
-
-<!-- ============================================================ -->
-<h2>四、极值理论：直接关注尾部</h2>
-
-<p>
-  正态、对数正态、t 分布——它们都是在对<strong>整个分布</strong>建模（包括你不关心的中间部分），然后用模型推算尾部。
-</p>
-
-<p><strong>极值理论</strong>换了一个思路：不关心分布的中间 99%，只对尾部的极端值建模。</p>
-
-<div class="card">
-  <h3>两种思路的对比</h3>
-  <table>
-    <tr><th></th><th>传统方法</th><th>极值理论</th></tr>
-    <tr><td>关心什么</td><td>整个收益率分布</td><td>只关心最极端的 1%（或 0.1%）</td></tr>
-    <tr><td>典型问题</td><td>「明天的平均收益是多少？」</td><td>「下个月最惨的那天可能会跌多少？」</td></tr>
-    <tr><td>数学工具</td><td>正态/t 分布拟合</td><td>广义极值分布（GEV）</td></tr>
-  </table>
-</div>
-
-<p><strong>极值理论告诉你</strong>：给定历史数据，下一次「最大回撤」的分布是什么——而不是用标准差去推。这在设置止损、计算保证金需求、评估杠杆上限时远比波动率有用。</p>
-
-<div class="insight">
-  <h3>⚡ 实操意义</h3>
-  <p style="margin-bottom:0;">如果你的策略在回测中有 30% 的最大回撤，极值理论可以帮你回答：「基于这个策略的尾部特性，未来出现 50% 回撤的概率是多少？」这不是从正态推出来的假数字，而是从历史极端值的实际分布推出来的。</p>
-</div>
-
-<!-- ============================================================ -->
-<h2>五、对量化策略的三个实操影响</h2>
-
-<table>
-  <tr><th>决策</th><th>正态假设的做法</th><th>肥尾意识的做法</th></tr>
-  <tr><td>设止损</td><td>按 2σ 设（理论上覆盖 95%）</td><td>按历史最大不利偏移 + 缓冲</td></tr>
-  <tr><td>杠杆</td><td>按波动率倒数线性缩放</td><td>保守估算，留足爆仓安全垫</td></tr>
-  <tr><td>评估策略</td><td>只看夏普比率</td><td>夏普 + 最大回撤 + 偏度 + 极端 VaR</td></tr>
-</table>
-
-<p>一个高夏普但偏度极负（经常小赚、偶尔暴亏）的策略，在正态里评价很好，在肥尾世界里是炸弹。</p>
-
-<!-- ============================================================ -->
-<div class="phase-summary">
-  <h3>📚 第一阶段总结：地基五课</h3>
-  <table>
-    <tr><td>0001</td><td>金融市场基础</td><td>交易什么、在哪交易、怎么交易</td></tr>
-    <tr><td>0002</td><td>收益与风险</td><td>log return、波动率、夏普、最大回撤</td></tr>
-    <tr><td>0003</td><td>金融数据的本性</td><td>肥尾、波动率聚集、相关性崩溃</td></tr>
-    <tr><td>0004</td><td>时间序列基础</td><td>自相关、趋势、平稳性、均值回归</td></tr>
-    <tr><td>0005</td><td>概率与分布</td><td>正态 → 对数正态 → t → 极值理论</td></tr>
-  </table>
-  <p style="margin-bottom:0;">第二阶段预告：<strong>线性回归 → 组合理论 → 回测方法论</strong></p>
-</div>
+<div class="open-q"><h3>❓ 开放问题</h3>
+<ul>
+<li>币圈收益尾指数 $\nu$ 稳定吗？牛熊市不同？学术测量分散。</li>
+<li>跳跃扩散 vs Student-t，哪个更适合币圈？跳跃能捕捉 Luna/FTX 式归零，t 不行。</li>
+<li>ES 在币圈实务怎么估——样本量够吗？极端事件太少，EVT 外推靠谱吗？</li>
+</ul></div>
 
 <!-- ============================================================ -->
 <h2>测验</h2>
+<div class="quiz" id="q1"><p class="q">1. 正态分布建模金融收益的主要问题？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">计算太复杂</span>
+<span class="opt" data-answer="correct">无肥尾（低估极端事件）、对称（金融负偏）、无下界（给 < -100% 正概率）</span>
+<span class="opt" data-answer="wrong">参数太多</span>
+<span class="opt" data-answer="wrong">不支持负数</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q1">
-  <p class="q">1. 学生 t 分布的自由度 ν 越小意味着什么？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">分布越来越接近正态</span>
-    <span class="opt" data-answer="correct">尾部越来越肥，极端事件概率越大</span>
-    <span class="opt" data-answer="wrong">均值为零</span>
-    <span class="opt" data-answer="wrong">方差减小</span>
-  </div>
-  <p class="feedback" id="f1"></p>
-</div>
+<div class="quiz" id="q2"><p class="q">2. Student-t 分布比正态好在哪？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">更简单</span>
+<span class="opt" data-answer="correct">有肥尾（幂律衰减，$\nu$ 控制尾肥程度），可理解为"方差随机的正态"=波动率聚集在分布层面的表现</span>
+<span class="opt" data-answer="wrong">永远对称</span>
+<span class="opt" data-answer="wrong">无尾部</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q2">
-  <p class="q">2. 对数正态分布相比正态分布最重要的改进是什么？</p>
-  <div class="options">
-    <span class="opt" data-answer="correct">价格不能为负，且涨跌在百分比上对称而非金额上对称</span>
-    <span class="opt" data-answer="wrong">计算更简单</span>
-    <span class="opt" data-answer="wrong">解决了肥尾问题</span>
-    <span class="opt" data-answer="wrong">使收益率变得独立</span>
-  </div>
-  <p class="feedback" id="f2"></p>
-</div>
+<div class="quiz" id="q3"><p class="q">3. 为什么 Expected Shortfall 比 VaR 好？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">算起来简单</span>
+<span class="opt" data-answer="correct">VaR 只给分位点不管那 1% 里亏多少，ES 给超过 VaR 后的平均损失，是一致性风险度量</span>
+<span class="opt" data-answer="wrong">VaR 是错的</span>
+<span class="opt" data-answer="wrong">数值更小</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q3">
-  <p class="q">3. 极值理论和传统分布建模的根本区别是什么？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">极值理论用更多参数</span>
-    <span class="opt" data-answer="correct">极值理论只对尾部建模，不关心分布的中间部分</span>
-    <span class="opt" data-answer="wrong">极值理论假设正态分布</span>
-    <span class="opt" data-answer="wrong">极值理论不需要数据</span>
-  </div>
-  <p class="feedback" id="f3"></p>
-</div>
+<div class="quiz" id="q4"><p class="q">4. 币圈收益偏态的特点？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">强负偏，和股票一样</span>
+<span class="opt" data-answer="correct">整体负偏（崩盘），但牛市山寨币右尾极肥（暴涨 10x+）——双尾肥，比股票对称</span>
+<span class="opt" data-answer="wrong">完全对称</span>
+<span class="opt" data-answer="wrong">强正偏</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q4">
-  <p class="q">4. （综合·回顾）一个策略夏普 2.0、最大回撤 65%。用前五课的知识，最合理的怀疑是什么？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">数据是编的</span>
-    <span class="opt" data-answer="correct">收益率有极度肥尾——大量小赚掩盖了极少但巨大的亏损，夏普被尾部风险拉高了</span>
-    <span class="opt" data-answer="wrong">波动率算错了</span>
-    <span class="opt" data-answer="wrong">无风险利率太高</span>
-  </div>
-  <p class="feedback" id="f4"></p>
-</div>
+<div class="quiz" id="q5"><p class="q">5. EVT（极值理论）为什么适合风险管理？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">拟合整个分布最准</span>
+<span class="opt" data-answer="correct">只拟合极端样本外推尾部，不假设全分布形状——风险只关心尾部，避免全分布误设</span>
+<span class="opt" data-answer="wrong">计算最快</span>
+<span class="opt" data-answer="wrong">监管要求</span>
+</div><p class="feedback"></p></div>
 
 <!-- ============================================================ -->
 <h2>主要参考资料</h2>
-<div class="primary-source">
-  <h3>📖 推荐阅读</h3>
-  <p><strong>Ruppert & Matteson —《金融统计与数据分析》(Statistics and Data Analysis for Financial Engineering)</strong>，第 2 章（收益率）、第 15 章（极值理论）。</p>
-  <p>这本书是量化金融统计学最实用的教材。第 2 章用真实数据对比了正态、t 分布和实际收益率分布，第 15 章给了极值理论的可操作实现。放在第二阶段开始前翻阅正合适。</p>
-</div>
+<div class="primary-source"><h3>📖 教材</h3>
+<p><strong>McNeil, Frey & Embrechts —《定量风险管理》</strong>。EVT、copula、ES 的权威。<br>
+<strong>Ruppert —《统计与金融》</strong>。分布拟合、t 分布、偏态的入门。</p></div>
+<div class="primary-source" style="margin-top:.5rem;"><h3>📖 论文</h3>
+<p><strong>Artzner et al. — "Coherent Measures of Risk" (1999)</strong>。一致性风险度量，为什么 ES 优于 VaR。<br>
+<strong>Pickands — "Statistical Inference Using Extreme Order Statistics" (1975)</strong>。EVT 基础。</p></div>
 
-<div class="primary-source" style="margin-top:0.5rem;">
-  <h3>📖 延伸</h3>
-  <p><strong>Nassim Taleb —《随机漫步的傻瓜》(Fooled by Randomness)</strong>。</p>
-  <p>比《黑天鹅》更个人化，直接讲「为什么聪明人总是低估随机性」。读完它你对任何「夏普 2.0」「年化收益 50%」的数字都会有条件反射式的怀疑。</p>
-</div>
+<div class="reminder"><strong>💬 有问题随时问。</strong> t 分布怎么拟合、EVT 怎么实操、VaR/ES 在你策略上怎么算——任何一点都可以深挖。第一阶段（地基 5 课）结束，你有了金融数据建模的完整概念基础。第二阶段进入工具：回归、组合、回测。</div>
 
-<!-- ============================================================ -->
-<div class="reminder">
-  <strong>💬 有问题随时问。</strong> 五节课下来你应该已经建立了一个审视量化策略的批判性框架。第二阶段会更偏「动手前的准备」——回归分析怎么在金融数据上做、组合理论怎么理解、回测的坑有哪些。有任何一节课不够清楚的地方，现在是最好的追问时机。
-</div>
-
-<div class="nav">
-  前四课：<a href="0001-financial-markets-basics.html">0001</a> ·
-  <a href="0002-returns-and-risk.html">0002</a> ·
-  <a href="0003-nature-of-financial-data.html">0003</a> ·
-  <a href="0004-time-series-basics.html">0004</a><br>
-  下一阶段：<a href="#">0006 · 线性回归——金融应用与陷阱</a>
-</div>
+<div class="nav">上一课：<a href="0004-time-series-basics.html">0004 · 时间序列基础</a> &nbsp;|&nbsp; <a href="../index.html">↑ 返回目录</a><br>下一课：<a href="0006-linear-regression.html">0006 · 线性回归</a></div>
 
 <script>
-document.querySelectorAll('.quiz').forEach(quiz => {
-  quiz.querySelectorAll('.opt').forEach(opt => {
-    opt.addEventListener('click', function() {
-      const feedback = this.parentElement.nextElementSibling;
-      this.parentElement.querySelectorAll('.opt').forEach(o => {
-        o.classList.remove('correct', 'wrong');
-        o.style.pointerEvents = 'none';
-      });
-      if (this.dataset.answer === 'correct') {
-        this.classList.add('correct');
-        feedback.textContent = '✓ 正确。';
-        feedback.className = 'feedback show';
-      } else {
-        this.classList.add('wrong');
-        const correct = this.parentElement.querySelector('[data-answer="correct"]');
-        correct.classList.add('correct');
-        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
-        feedback.className = 'feedback show';
-      }
-    });
-  });
-});
+document.querySelectorAll('.quiz').forEach(q=>{q.querySelectorAll('.opt').forEach(o=>{o.addEventListener('click',function(){const f=this.parentElement.nextElementSibling;this.parentElement.querySelectorAll('.opt').forEach(x=>{x.classList.remove('correct','wrong');x.style.pointerEvents='none'});if(this.dataset.answer==='correct'){this.classList.add('correct');f.textContent='✓ 正确。';f.className='feedback show'}else{this.classList.add('wrong');this.parentElement.querySelector('[data-answer="correct"]').classList.add('correct');f.textContent='✗ 不对。绿色高亮的是正确答案。';f.className='feedback show'}})})});
 </script>
-
 </body>
 </html>

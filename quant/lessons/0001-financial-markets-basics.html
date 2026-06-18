@@ -4,334 +4,208 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lesson 0001 · 金融市场基础</title>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: 18px;
-    line-height: 1.7;
-    color: #1a1a1a;
-    background: #fdfdfb;
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 4rem 2rem 6rem;
-  }
-
-  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
-  h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; }
-  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
-
-  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
-
-  p { margin-bottom: 1rem; }
-  strong { font-weight: 600; }
-
-  .sidenote {
-    float: right; clear: right; width: 200px; margin-right: -230px;
-    font-size: 0.8rem; color: #666; line-height: 1.5; font-family: 'Inter', sans-serif;
-    margin-top: 0.3rem;
-  }
-  @media (max-width: 1000px) {
-    .sidenote { float: none; width: auto; margin: 0.5rem 0; display: block; color: #888; font-style: italic; }
-  }
-
-  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
-  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
-  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
-  tr:last-child td { border-bottom: none; }
-
-  .card {
-    background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px;
-    padding: 1.5rem 1.8rem; margin: 1.5rem 0;
-  }
-
-  .quiz { margin: 2rem 0; }
-  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
-  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
-  .quiz .opt {
-    padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px;
-    cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem;
-    transition: background 0.15s;
-  }
-  .quiz .opt:hover { background: #f0f0e8; }
-  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
-  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
-  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
-  .quiz .feedback.show { display: block; }
-
-  .primary-source {
-    background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem;
-    margin: 2.5rem 0 1.5rem; font-size: 0.95rem;
-  }
-  .primary-source h3 { margin-top: 0; }
-
-  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
-  .nav a { color: #5577aa; text-decoration: none; }
-  .nav a:hover { text-decoration: underline; }
-
-  .reminder {
-    background: #f5f7fa; border: 1px solid #dde; border-radius: 6px;
-    padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445;
-  }
-
-  .definition { font-style: italic; color: #445; }
-  .en { color: #888; font-size: 0.85em; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Serif 4',Georgia,serif;font-size:18px;line-height:1.75;color:#1a1a1a;background:#fdfdfb;max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+  h1{font-size:2.2rem;font-weight:700;margin-bottom:.3rem;letter-spacing:-.02em}
+  h2{font-size:1.45rem;font-weight:600;margin:3rem 0 .8rem;color:#2c2c2c}
+  h3{font-size:1.1rem;font-weight:600;margin:1.8rem 0 .5rem;color:#333}
+  .meta{color:#888;font-size:.9rem;margin-bottom:2rem;font-family:'Inter',sans-serif}
+  p{margin-bottom:1rem}
+  strong{font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.95rem}
+  th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid #e0e0d8}
+  th{font-weight:600;font-family:'Inter',sans-serif;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:#666}
+  .card{background:#fafaf8;border:1px solid #e8e8e0;border-radius:6px;padding:1.5rem 1.8rem;margin:1.5rem 0}
+  .card h3{margin-top:0}
+  .insight{background:#fff8f0;border-left:3px solid #e08830;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .insight h3{margin-top:0;color:#8b5a20}
+  .crypto-note{background:#f5f9ff;border-left:3px solid #4a90d9;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .crypto-note h3{margin-top:0;color:#2a5a9a}
+  .connection{background:#f0f8f8;border-left:3px solid #4a9a9a;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#345}
+  .connection h3{margin-top:0;color:#2a6a6a}
+  .open-q{background:#fafafa;border:1px dashed #bbb;border-radius:6px;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#555}
+  .open-q h3{margin-top:0;color:#666}
+  .quiz{margin:2rem 0}
+  .quiz .q{font-weight:600;margin-bottom:.6rem}
+  .quiz .options{display:flex;flex-direction:column;gap:.4rem}
+  .quiz .opt{padding:.6rem 1rem;border:1px solid #d8d8d0;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;transition:background .15s}
+  .quiz .opt:hover{background:#f0f0e8}
+  .quiz .opt.correct{background:#e6f4ea;border-color:#4a9}
+  .quiz .opt.wrong{background:#fce8e8;border-color:#c44}
+  .quiz .feedback{margin-top:.8rem;font-size:.9rem;color:#555;display:none}
+  .quiz .feedback.show{display:block}
+  .primary-source{background:#fffdf5;border-left:3px solid #e6c030;padding:1rem 1.5rem;margin:2.5rem 0 1.5rem;font-size:.95rem}
+  .primary-source h3{margin-top:0}
+  .nav{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #e0e0d8;font-family:'Inter',sans-serif;font-size:.85rem;color:#999}
+  .nav a{color:#5577aa;text-decoration:none}
+  .reminder{background:#f5f7fa;border:1px solid #dde;border-radius:6px;padding:1.2rem 1.5rem;margin:2.5rem 0;font-size:.9rem;color:#445}
+  .en{color:#888;font-size:.85em}
 </style>
 </head>
 <body>
 
 <h1>金融市场基础</h1>
-<p class="meta">Lesson 0001 · 2026-06-15 · 预计 15 分钟</p>
+<p class="meta">Lesson 0001（深度版）· 第一阶段开始 · ~35分钟</p>
 
-<p>
-  在接触任何量化策略之前，需要先回答三个基础问题：
-  <strong>市场上交易的是什么？</strong>
-  <strong>在哪里交易？</strong>
-  <strong>交易如何发生？</strong>
-  这节课就是为这三个问题建立清晰的心智模型。
-</p>
+<p>量化策略的一切运算都建立在三个基础问题上：<strong>市场上交易的是什么、在哪里交易、交易如何发生</strong>。本节讲清每一个机制背后的<em>为什么</em>。理解这些，后续所有课才有根基。</p>
 
-<!-- ============================================================ -->
-<h2>一、金融市场的结构</h2>
+<h2>一、金融市场为什么存在</h2>
+<p>金融市场的根本功能：<strong>撮合资金盈余方和资金需求方</strong>。有钱的人（投资者）需要出路，需要钱的人（融资者：公司、政府）愿意出让未来的回报换现在的资金。这本账催生了市场所有的结构：</p>
+<ul><li>要有<strong>一级市场</strong>让资金初次从投资者流向发行人</li><li>要有<strong>二级市场</strong>让投资者之间能转让——否则没人敢把钱锁死</li><li>要有<strong>价格发现</strong>机制——大量买卖博弈出"公允价"</li></ul>
 
-<p>
-  金融市场最基本的功能是<strong>撮合资金盈余方和资金需求方</strong>。
-  钱多的人（投资者）把钱给需要钱的人（融资者），换取未来的回报。
-</p>
-
-<div class="card">
-  <h3 style="margin-top:0;">一级市场 vs 二级市场</h3>
-  <table>
-    <tr><th></th><th>一级市场 <span class="en">Primary Market</span></th><th>二级市场 <span class="en">Secondary Market</span></th></tr>
-    <tr><td>交易对象</td><td>新发行的证券</td><td>已有的证券</td></tr>
-    <tr><td>参与方</td><td>发行人 + 承销商 + 初始买家</td><td>投资者之间</td></tr>
-    <tr><td>价格</td><td>发行价（IPO 定价）</td><td>市场价（供需决定）</td></tr>
-    <tr><td>资金流向</td><td>投资者 → 公司</td><td>投资者 → 投资者</td></tr>
-    <tr><td>例子</td><td>公司上市（IPO）、政府发债</td><td>你在券商 App 上买卖股票</td></tr>
-  </table>
+<div class="card"><h3>一级 vs 二级市场</h3>
+<table>
+<tr><th></th><th>一级 <span class="en">Primary</span></th><th>二级 <span class="en">Secondary</span></th></tr>
+<tr><td>交易对象</td><td>新发行证券</td><td>已有证券</td></tr>
+<tr><td>参与方</td><td>发行人 + 承销商 + 初始买家</td><td>投资者之间</td></tr>
+<tr><td>价格</td><td>发行价（投行与公司协商）</td><td>市场价（供需实时博弈）</td></tr>
+<tr><td>资金流向</td><td>投资者 → 公司</td><td>投资者 → 投资者</td></tr>
+<tr><td>例子</td><td>IPO、增发</td><td>你在 App 上买卖股票</td></tr>
+</table>
 </div>
 
-<p>
-  量化交易几乎全部发生在<strong>二级市场</strong>。
-  我们研究的不是"这个公司值多少钱"（那是投行做的事），而是"当前价格是否偏离了它的合理水平，以及我们能否从中获利"。
-</p>
+<div class="insight"><h3>⚡ 量化交易几乎全在二级市场</h3>
+<p style="margin-bottom:0">一级市场是"公司融资"——投行做的事。二级市场是"投资者之间转让"——量化做的事。我们研究的是"当前价格是否偏离其合理水平、能否从中获利"，不是"这公司值多少钱"。这决定了量化用价格/成交量数据而不是财报/尽调。</p></div>
 
-<!-- ============================================================ -->
-<h2>二、交易的标的物：资产类别</h2>
+<h3>IPO 定价与一二级价差</h3>
+<p>IPO 发行价由投行（承销商）与公司协商，往往<strong>有意留出首日上涨空间</strong>（IPO underpricing）：制造新闻效应、锁定长期股东、为后续融资铺路。SpaceX 2026年6月IPO：发行价 \$135，首日收盘 ~\$161（+19%）。这 19% 不是"市场涨了"——是<strong>一级市场和二级市场的定价差</strong>。拿到IPO份额的机构赚走了这笔钱，公司"少收了"这部分。这就是打新的全部收益来源。散户在热门IPO中几乎拿不到份额——承销商把股票分给核心机构客户。承销商本身不赚这 19%，他们赚的是承销费（~5-7%募资总额）和将热门IPO份额分配给机构客户换来的未来交易佣金。</p>
 
-<p>二级市场上交易的东西可以分为几大类。量化策略可以在任意一种资产上运行，但每一类有它自己的数据特征和交易规则。</p>
+<div class="crypto-note"><h3>🔗 币圈的"一级市场"</h3>
+<p>币圈一级是<strong>代币发行</strong>：ICO（2017热潮）、IEO（交易所发行）、IDO（DEX发行）、空投。没有承销商把关，散户能直接参与，但鱼龙混杂远甚股票IPO。本质相同：一级是代币初次分发（资金流向项目方/团队），二级是代币在交易所流通。量化在CEX/DEX的二级市场交易已流通的代币。</p></div>
 
+<h2>二、交易什么东西——资产类别</h2>
 <table>
-  <tr>
-    <th>资产类别</th><th>本质</th><th>收益来源</th><th>量化中的角色</th>
-  </tr>
-  <tr>
-    <td><strong>股票</strong> <span class="en">Equities</span></td>
-    <td>公司所有权的一部分</td>
-    <td>股价上涨 + 股息</td>
-    <td>最常见的量化标的；数据丰富、流动性好</td>
-  </tr>
-  <tr>
-    <td><strong>债券</strong> <span class="en">Fixed Income</span></td>
-    <td>借条——到期还本付息</td>
-    <td>利息 + 价格变动</td>
-    <td>利率建模是量化的核心领域之一</td>
-  </tr>
-  <tr>
-    <td><strong>ETF</strong> <span class="en">Exchange-Traded Fund</span></td>
-    <td>一篮子资产的"打包"</td>
-    <td>跟踪指数或策略</td>
-    <td>便宜、分散风险；适合做资产配置层面的量化</td>
-  </tr>
-  <tr>
-    <td><strong>期货</strong> <span class="en">Futures</span></td>
-    <td>未来以约定价格买卖某物的合约</td>
-    <td>价格变动差额</td>
-    <td>杠杆高、可做空方便；CTA 策略的核心标的</td>
-  </tr>
-  <tr>
-    <td><strong>期权</strong> <span class="en">Options</span></td>
-    <td>在未来以约定价格买卖某物的<em>权利</em></td>
-    <td>非线性——波动率也值钱</td>
-    <td>最复杂的量化领域；需要随机微积分</td>
-  </tr>
+<tr><th>类别</th><th>本质</th><th>收益来源</th><th>量化中的角色</th></tr>
+<tr><td><strong>股票</strong></td><td>公司所有权的一小份</td><td>股价上涨 + 股息</td><td>最常见标的，数据最丰富</td></tr>
+<tr><td><strong>债券</strong></td><td>借条——到期还本付息</td><td>利息 + 价格变动</td><td>利率建模是量化核心之一</td></tr>
+<tr><td><strong>ETF</strong></td><td>一篮子资产的打包</td><td>跟踪指数或策略</td><td>便宜、分散；资产配置层量化</td></tr>
+<tr><td><strong>期货</strong></td><td>未来以约定价买卖某物的合约</td><td>价格变动差额</td><td>杠杆高、做空方便；CTA策略核心</td></tr>
+<tr><td><strong>期权</strong></td><td>未来以约定价买卖某物的<em>权利</em></td><td>非线性——波动率也值钱</td><td>最复杂领域；需要随机微积分</td></tr>
+<tr><td><strong>加密货币</strong></td><td>链上原生资产</td><td>价格变动 + 链上收益</td><td>本课程主战场</td></tr>
+</table>
+<p>对于初学量化，<strong>股票/ETF/加密货币是最好的起点</strong>——数据易得、规则简单、策略直观。衍生品需要额外的定价知识。</p>
+
+<h2>三、在哪交易——交易所 vs OTC</h2>
+<div class="card"><h3>交易所 <span class="en">Exchange</span></h3>
+<p>集中化撮合平台，所有买卖订单汇集于此按规则匹配成交。上交所、纽交所、币安、Coinbase。特点：<strong>透明、标准化、受监管、数据公开可得</strong>。量化策略几乎只用交易所数据。</p></div>
+<div class="card"><h3>场外市场 <span class="en">OTC</span></h3>
+<p>买卖双方直接交易，不经中央交易所。银行间债券、外汇大部分、某些衍生品。特点：<strong>不透明、定制化</strong>。普通人和量化策略很少接触。</p></div>
+
+<div class="crypto-note"><h3>🔗 CEX vs DEX——币圈独有的二分</h3>
+<p><strong>CEX（中心化交易所）</strong>：币安、Coinbase、OKX。机制和传统交易所几乎一样——订单簿撮合、KYC、平台托管资产。本课程主要用CEX数据。</p>
+<p><strong>DEX（去中心化交易所）</strong>：Uniswap、Curve。完全不同的机制——没有订单簿，用<strong>AMM（自动做市商）</strong>，恒定乘积公式 $x \cdot y = k$ 定价。流动性由LP注入池子而非做市商挂单。DEX非托管、链上透明，但滑点大、速度慢、有MEV风险。微观结构和CEX完全不同。</p></div>
+
+<h2>四、交易怎么发生——订单簿</h2>
+<p>交易所的核心是一个叫<strong>订单簿</strong>的数据结构。它维护两张表：</p>
+<ul><li><strong>买单</strong>（Bid，出价）——愿意以什么价格<em>买入</em>，从高到低排列</li><li><strong>卖单</strong>（Ask/Offer，要价）——愿意以什么价格<em>卖出</em>，从低到高排列</li></ul>
+<p>当最高买单价 ≥ 最低卖单价时，交易发生（成交）。</p>
+
+<div class="card"><h3>核心术语</h3>
+<table>
+<tr><td><strong>Bid</strong></td><td>最高买入价——你现在<em>能卖出的</em>最高价</td></tr>
+<tr><td><strong>Ask</strong></td><td>最低卖出价——你现在<em>能买入的</em>最低价</td></tr>
+<tr><td><strong>Spread</strong></td><td>$\text{Ask} - \text{Bid}$；越小说明流动性越好</td></tr>
+<tr><td><strong>Mid</strong></td><td>$(\text{Ask} + \text{Bid})/2$；公允价的一阶近似</td></tr>
+<tr><td><strong>Last</strong></td><td>最近一笔成交价</td></tr>
+<tr><td><strong>Volume</strong></td><td>成交量——某段时间内成交了多少</td></tr>
+<tr><td><strong>Depth</strong></td><td>离mid一定距离的累计挂单量</td></tr>
+</table>
+</div>
+
+<div class="insight"><h3>⚡ Bid-Ask是理解一切市场数据的起点</h3>
+<p style="margin-bottom:0">你看到的任何K线，背后都是无数买卖订单在订单簿上碰撞的结果。买方和卖方永远差一个spread。这个spread是流动性提供者（做市商）的收益，也是流动性消耗者（你下单成交）的成本。每次你市价买入，按ask成交，比mid高半个spread——这就是<strong>交易成本的第一个来源</strong>。</p></div>
+
+<h3>订单类型</h3>
+<table>
+<tr><th>类型</th><th>行为</th><th>使用场景</th></tr>
+<tr><td><strong>市价单</strong></td><td>立即按对手价成交</td><td>保成交，但付spread + 大单有冲击</td></tr>
+<tr><td><strong>限价单</strong></td><td>挂指定价等对手来吃</td><td>控价，有不成交风险</td></tr>
+<tr><td><strong>止损单</strong></td><td>触发价后转市价</td><td>止损，触发后可能滑点</td></tr>
+<tr><td><strong>Post-only</strong></td><td>只挂maker不吃taker</td><td>赚maker rebate，避免taker费</td></tr>
 </table>
 
-<p>
-  对于初学量化，<strong>股票和 ETF 是最好的起点</strong>——数据最容易获取，规则最简单，策略思路也最直观。
-</p>
-
-<!-- ============================================================ -->
-<h2>三、交易在哪里发生</h2>
-
-<p>二级市场有两大类交易场所：</p>
-
-<div class="card">
-  <h3 style="margin-top:0;">交易所 <span class="en">Exchange</span></h3>
-  <p>集中化的撮合平台。所有买卖订单汇集到这里，按规则匹配成交。</p>
-  <p>例子：上交所（SSE）、深交所（SZSE）、纽交所（NYSE）、纳斯达克（NASDAQ）</p>
-  <p>特点：<strong>透明、标准化、有监管</strong>。交易数据公开可得。</p>
-</div>
-
-<div class="card">
-  <h3 style="margin-top:0;">场外市场 <span class="en">OTC / Over-the-Counter</span></h3>
-  <p>买卖双方直接交易，不经过中央交易所。</p>
-  <p>例子：银行间债券市场、外汇市场的大部分交易、某些衍生品</p>
-  <p>特点：<strong>不透明、定制化</strong>。普通人（和普通量化策略）很少直接接触。</p>
-</div>
-
-<p>
-  量化策略通常<strong>只关注交易所交易的产品</strong>，因为数据可得。
-</p>
-
-<!-- ============================================================ -->
-<h2>四、交易怎么发生：订单簿</h2>
-
-<p>交易所的核心是一个叫<strong>订单簿</strong>（Order Book）的数据结构，它维护着两张表：</p>
-
-<ul>
-  <li><strong>买单列表</strong>（Bid，出价）——人们愿意以什么价格<em>买入</em>，从高到低排列</li>
-  <li><strong>卖单列表</strong>（Ask/Offer，要价）——人们愿意以什么价格<em>卖出</em>，从低到高排列</li>
-</ul>
-
-<p>当最贵的买单价格 ≥ 最便宜的卖单价格时，交易发生（成交）。</p>
-
-<div class="card">
-  <h3 style="margin-top:0;">关键术语</h3>
-  <table>
-    <tr><td><strong>Bid</strong></td><td>最高买入价——你现在<em>能卖出的</em>最高价格</td></tr>
-    <tr><td><strong>Ask / Offer</strong></td><td>最低卖出价——你现在<em>能买入的</em>最低价格</td></tr>
-    <tr><td><strong>Spread</strong></td><td>Ask − Bid 的差值；越小说明流动性越好</td></tr>
-    <tr><td><strong>Last Price</strong></td><td>最近一笔成交的价格</td></tr>
-    <tr><td><strong>Volume</strong></td><td>成交量——一段时间内成交了多少</td></tr>
-  </table>
-</div>
-
-<p>
-  <strong>这个 Bid-Ask 机制是你理解一切市场数据的起点。</strong>
-  你看到的任何 K 线图，背后都是无数买卖订单在订单簿上碰撞的结果。
-</p>
-
-<!-- ============================================================ -->
-<h2>五、我们看到的行情数据：OHLCV</h2>
-
-<p>订单簿的每一次变化是海量的（高频数据），日常使用中通常被聚合为时间窗口内的摘要——即 <strong>OHLCV</strong>，也称 K 线（Candlestick）数据：</p>
-
+<h2>五、行情数据——OHLCV</h2>
+<p>订单簿每次变化是海量的。日常使用中通常被聚合为时间窗口的摘要——<strong>OHLCV</strong>，即K线数据：</p>
 <table>
-  <tr><th>字段</th><th>含义</th></tr>
-  <tr><td><strong>Open</strong></td><td>这段时间的第一笔成交价</td></tr>
-  <tr><td><strong>High</strong></td><td>这段时间的最高成交价</td></tr>
-  <tr><td><strong>Low</strong></td><td>这段时间的最低成交价</td></tr>
-  <tr><td><strong>Close</strong></td><td>这段时间的最后一笔成交价（<strong>最重要</strong>）</td></tr>
-  <tr><td><strong>Volume</strong></td><td>这段时间的总成交量</td></tr>
+<tr><th>字段</th><th>含义</th></tr>
+<tr><td><strong>Open</strong></td><td>该时段第一笔成交价</td></tr>
+<tr><td><strong>High</strong></td><td>该时段最高成交价</td></tr>
+<tr><td><strong>Low</strong></td><td>该时段最低成交价</td></tr>
+<tr><td><strong>Close</strong></td><td>该时段最后一笔成交价（<strong>最重要</strong>）</td></tr>
+<tr><td><strong>Volume</strong></td><td>该时段总成交量</td></tr>
 </table>
 
-<p>
-  几乎所有的量化策略都是用 OHLCV 数据（或从中衍生出的指标）来构建信号的。<strong>Close 是其中最重要的值</strong>——大多数金融理论和回测都基于收盘价。为什么？因为收盘价最接近"市场最终达成共识的价格"。
-</p>
+<div class="insight"><h3>⚡ 为什么Close最重要</h3>
+<p style="margin-bottom:0">收盘价最接近"市场最终达成共识的价格"——日内价格受瞬时订单流扰动，收盘是当天所有信息博弈后的均衡。金融理论（期权定价、波动率估计）和回测都默认用收盘价。但对小流动性标的，收盘价也可被操纵（收盘前砸单）。</p></div>
 
-<!-- ============================================================ -->
+<div class="crypto-note"><h3>🔗 币圈24/7——没有"收盘"</h3>
+<p>传统市场有明确的交易时段（美股9:30-16:00），日K线自然按开盘/收盘定义。币圈24/7交易，"日K线"需人为定边界——通常用<strong>UTC 00:00</strong>切分。不同交易所时区设定不同会导致日K线不同，跨所数据对齐时要注意。币圈交易所设有<strong>每日结算价</strong>，用于资金费率结算和强平价计算。</p></div>
+
+<h3>其他数据频率</h3>
+<ul><li><strong>Tick</strong>：每笔成交，最高频，HFT用</li><li><strong>Level 2/订单簿快照</strong>：完整挂单状态，做市用</li><li><strong>分钟/小时K线</strong>：中频策略用</li><li><strong>日K线</strong>：低频策略和因子研究用</li></ul>
+
 <h2>六、量化在这个框架中的位置</h2>
+<div class="card"><ol>
+<li><strong>获取数据</strong>——从交易所拉OHLCV、订单簿、链上数据</li>
+<li><strong>构建信号</strong>——用数学/统计模型从数据中提取预测</li>
+<li><strong>生成订单</strong>——将信号转化为具体的买卖指令</li>
+<li><strong>执行</strong>——通过券商/交易所API送单</li>
+<li><strong>评估</strong>——回测历史表现，分析风险收益特征</li>
+</ol></div>
+<p>这五个环节每个都有大量陷阱和学问，后续课程逐一深入。</p>
 
-<p>现在有了基本框架，量化的角色就清晰了：</p>
+<div class="connection"><h3>🔗 与其他课的连接</h3>
+<p><strong>后续</strong>：0002用OHLCV算收益和风险；0004用价格序列讲时间序列；0011用订单簿数据展开币圈因子；0013用订单簿讲永续合约费率机制；0014讲订单簿动态和做市。本课的Bid-Ask-Spread是贯穿全课程的最底层概念。</p></div>
 
-<div class="card">
-  <ol style="padding-left:1.2rem;">
-    <li style="margin-bottom:0.6rem;"><strong>获取数据</strong>——从交易所或数据商获取 OHLCV、订单簿、基本面等数据</li>
-    <li style="margin-bottom:0.6rem;"><strong>构建信号</strong>——用数学/统计模型从数据中提取预测（"这个股票接下来会涨"）</li>
-    <li style="margin-bottom:0.6rem;"><strong>生成订单</strong>——把信号转化为具体的买卖指令（买什么、买多少、什么价格）</li>
-    <li style="margin-bottom:0.6rem;"><strong>执行</strong>——通过券商把订单送到交易所</li>
-    <li style="margin-bottom:0.6rem;"><strong>评估</strong>——回测历史表现，分析风险收益特征</li>
-  </ol>
-</div>
+<div class="open-q"><h3>❓ 开放问题</h3>
+<ul><li>价格发现到底怎么发生——订单簿的微观博弈如何产生"公允价"？</li><li>DEX的AMM vs CEX的订单簿，哪个定价更"有效"？</li><li>24/7市场对波动率结构和因子有什么影响？</li></ul></div>
 
-<p>这五个环节，每个环节都有大量的陷阱和学问。我们会逐一深入。</p>
-
-<!-- ============================================================ -->
 <h2>测验</h2>
+<div class="quiz" id="q1"><p class="q">1. 你看到某交易对"买一 60000，卖一 60005"。想立即买入和立即卖出的成交价分别是？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">买入 60000，卖出 60005</span>
+<span class="opt" data-answer="correct">买入 60005（按ask），卖出 60000（按bid）——你总是吃亏的那方</span>
+<span class="opt" data-answer="wrong">都是 60002.5（mid）</span>
+<span class="opt" data-answer="wrong">取决于成交量</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q1">
-  <p class="q">1. 你在手机上看到某股票"买一 10.00 元，卖一 10.05 元"。如果你想<strong>立即买入</strong>，成交价最可能是？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">10.00 元</span>
-    <span class="opt" data-answer="correct">10.05 元</span>
-    <span class="opt" data-answer="wrong">10.025 元</span>
-    <span class="opt" data-answer="wrong">取决于成交量</span>
-  </div>
-  <p class="feedback" id="f1"></p>
-</div>
+<div class="quiz" id="q2"><p class="q">2. 量化交易主要在哪个市场？为什么？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">一级市场，能拿到便宜筹码</span>
+<span class="opt" data-answer="correct">二级市场——数据公开可得，研究价格偏离而非公司估值</span>
+<span class="opt" data-answer="wrong">OTC，灵活</span>
+<span class="opt" data-answer="wrong">都一样</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q2">
-  <p class="q">2. 一次 IPO 中，你作为散户在券商 App 上"打新"中签了。这笔交易发生在？</p>
-  <div class="options">
-    <span class="opt" data-answer="correct">一级市场</span>
-    <span class="opt" data-answer="wrong">二级市场</span>
-    <span class="opt" data-answer="wrong">既有一级也有二级</span>
-    <span class="opt" data-answer="wrong">场外市场（OTC）</span>
-  </div>
-  <p class="feedback" id="f2"></p>
-</div>
+<div class="quiz" id="q3"><p class="q">3. 量化中最常用收盘价（Close）的主要原因是？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">交易所只提供收盘价</span>
+<span class="opt" data-answer="correct">收盘价最接近当天所有信息博弈后的市场共识价，瞬时扰动最小</span>
+<span class="opt" data-answer="wrong">计算最简单</span>
+<span class="opt" data-answer="wrong">开盘价噪声太大</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q3">
-  <p class="q">3. 量化策略中最常用的价格数据是收盘价（Close），主要原因是？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">交易所只提供收盘价</span>
-    <span class="opt" data-answer="wrong">计算最简单</span>
-    <span class="opt" data-answer="correct">收盘价最接近市场当日达成的共识价格</span>
-    <span class="opt" data-answer="wrong">开盘价噪声太大</span>
-  </div>
-  <p class="feedback" id="f3"></p>
-</div>
+<div class="quiz" id="q4"><p class="q">4. CEX和DEX的核心机制区别是什么？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">CEX 24/7，DEX不是</span>
+<span class="opt" data-answer="correct">CEX用订单簿撮合，DEX用AMM（恒定乘积公式）定价——微观结构完全不同</span>
+<span class="opt" data-answer="wrong">CEX有手续费，DEX没有</span>
+<span class="opt" data-answer="wrong">没有区别</span>
+</div><p class="feedback"></p></div>
 
-<!-- ============================================================ -->
 <h2>主要参考资料</h2>
+<div class="primary-source"><h3>📖 推荐阅读</h3>
+<p><strong>Bodie, Kane & Marcus —《投资学》(Investments)</strong>第1-3章。金融学科最权威的入门教材，覆盖市场结构、资产类别和交易机制。中文版机械工业出版社出版。如果你只买一本金融书，就买这本。</p></div>
 
-<div class="primary-source">
-  <h3>📖 推荐阅读</h3>
-  <p><strong>Bodie, Kane & Marcus —《投资学》(Investments)</strong>，第 1–3 章。</p>
-  <p>这是金融学科最权威的入门教材。前三章覆盖了金融市场结构、资产类别和交易机制，比这节课更深入。<br>
-  中文版由机械工业出版社出版。如果你只买一本金融书，就买这本。</p>
-</div>
+<div class="reminder"><strong>💬 有问题随时问。</strong> 订单簿机制、CEX vs DEX的差异、24/7市场对数据的影响——任何一点不清晰都可以追问。概念理解扎实是后面一切的基础。</div>
 
-<!-- ============================================================ -->
-
-<div class="reminder">
-  <strong>💬 有问题随时问。</strong> 我是你的量化金融老师。这节课中的任何概念如果不够清楚——订单簿的机制、一级/二级市场的区别、OHLCV 的用法——直接追问即可。概念理解扎实是后面一切的基础。
-</div>
-
-<div class="nav">
-  下一课预告：<a href="#">0002 · 收益与风险——量化策略的「语言」</a><br>
-  参考资料：<a href="../reference/glossary.html">金融术语表（即将创建）</a>
-</div>
-
+<div class="nav">下一课：<a href="0002-returns-and-risk.html">0002 · 收益与风险</a> &nbsp;|&nbsp;<a href="../index.html">↑ 返回目录</a></div>
 <script>
-document.querySelectorAll('.quiz').forEach(quiz => {
-  quiz.querySelectorAll('.opt').forEach(opt => {
-    opt.addEventListener('click', function() {
-      const feedback = this.parentElement.nextElementSibling;
-      // Reset all opts in this quiz
-      this.parentElement.querySelectorAll('.opt').forEach(o => {
-        o.classList.remove('correct', 'wrong');
-        o.style.pointerEvents = 'none';
-      });
-      if (this.dataset.answer === 'correct') {
-        this.classList.add('correct');
-        feedback.textContent = '✓ 正确。';
-        feedback.className = 'feedback show';
-      } else {
-        this.classList.add('wrong');
-        const correct = this.parentElement.querySelector('[data-answer="correct"]');
-        correct.classList.add('correct');
-        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
-        feedback.className = 'feedback show';
-      }
-    });
-  });
-});
+document.querySelectorAll('.quiz').forEach(q=>{q.querySelectorAll('.opt').forEach(o=>{o.addEventListener('click',function(){const f=this.parentElement.nextElementSibling;this.parentElement.querySelectorAll('.opt').forEach(x=>{x.classList.remove('correct','wrong');x.style.pointerEvents='none'});if(this.dataset.answer==='correct'){this.classList.add('correct');f.textContent='✓ 正确。';f.className='feedback show'}else{this.classList.add('wrong');this.parentElement.querySelector('[data-answer="correct"]').classList.add('correct');f.textContent='✗ 不对。绿色高亮的是正确答案。';f.className='feedback show'}})})});
 </script>
-
 </body>
 </html>

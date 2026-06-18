@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0009 · 因子基础</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.75; color: #1a1a1a; background: #fdfdfb; max-width: 760px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .insight h3 { margin-top: 0; color: #8b5a20; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .formula { text-align: center; font-size: 1.1rem; margin: 1.2rem 0; font-family: 'Inter', sans-serif; color: #333; }
+  .danger { background: #fff0f0; border-left: 3px solid #c44; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .danger h3 { margin-top: 0; color: #a33; }
+  .connection { background: #f0f8f8; border-left: 3px solid #4a9a9a; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #345; }
+  .connection h3 { margin-top: 0; color: #2a6a6a; }
+  .open-q { background: #fafafa; border: 1px dashed #bbb; border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #555; }
+  .open-q h3 { margin-top: 0; color: #666; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+  .math { font-family: 'Inter', sans-serif; background: #f4f4f0; padding: 0.1em 0.4em; border-radius: 3px; font-size: 0.92em; }
+</style>
+</head>
+<body>
+
+<h1>因子基础——从 CAPM 到 Fama-French</h1>
+<p class="meta">Lesson 0009（重写·深度版）· 第三阶段开始 · 预计 40-50 分钟</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 衔接：为什么现在讲因子</h3>
+  <p>前八课你拿到了一套<strong>审视工具</strong>——收益率、波动率、夏普、肥尾、自相关、回归、组合、回测。但这些工具回答的都是「这个策略好不好」，没回答「<strong>策略赚的钱到底从哪来</strong>」。因子模型就是回答这个问题的框架：把收益拆成「承担已知风险的补偿」和「真正的超额收益」。这是你最初想深入的方向，也是从「会评估策略」到「会设计策略」的跨越。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、问题：收益从哪来</h2>
+
+<p>你跑一个币圈策略，年化 +40%。这个 40% 是什么？是你的技能？是承担了某种风险？还是运气？这个问题不解决，你无法判断：</p>
+<ul>
+  <li>这个策略<strong>还能不能持续</strong>——如果是承担某因子的风险，只要该因子溢价存在就持续；如果是运气，会消失</li>
+  <li>它和别的策略<strong>是不是真分散</strong>——两个策略可能都在赚同一个因子的钱，看似分散实则同源</li>
+  <li>该<strong>投多少钱</strong>——真 alpha 可以重仓，承担已知 beta 的部分要谨慎（beta 会回撤）</li>
+</ul>
+
+<p>因子模型就是把这些拆开的会计系统。</p>
+
+<!-- ============================================================ -->
+<h2>二、因子是什么——精确定义</h2>
+
+<p>「因子」在量化里有三个层次，常被混为一谈，要先分清：</p>
+
+<table>
+  <tr><th>层次</th><th>定义</th><th>例子</th></tr>
+  <tr><td><strong>因子值</strong> <span class="en">factor exposure / loading</span></td><td>某资产在某时刻对某属性的取值</td><td>BTC 过去 12 个月收益 = +60%</td></tr>
+  <tr><td><strong>因子收益</strong> <span class="en">factor return</span></td><td>按该因子排序做多高组做空低组，得到的组合收益</td><td>动量因子本月收益 = +2.3%</td></tr>
+  <tr><td><strong>因子溢价</strong> <span class="en">factor premium</span></td><td>因子收益的长期均值</td><td>动量长期年化溢价 ~8-12%（美股）</td></tr>
+</table>
+
+<div class="card">
+  <h3>关键区分</h3>
+  <p>「BTC 的动量暴露是 0.8」是因子值；「动量因子这个月赚了 2%」是因子收益；「动量因子长期平均年化 10%」是因子溢价。策略赚钱 = 你的因子暴露 × 因子收益。你控制暴露，市场给你收益。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、alpha vs beta——最重要的区分</h2>
+
+<p>任何资产/策略的收益可以写成：</p>
+<div class="formula">
+  $$R_{\text{策略}} = \sum_i \beta_i \cdot R_{\text{因子}_i} + \alpha + \varepsilon$$
+</div>
+
+<p>β 是对因子的暴露，R<sub>因子</sub> 是因子收益，α 是所有因子都解释不了的剩余，ε 是纯噪声。</p>
+
+<table>
+  <tr><th></th><th>β 部分</th><th>α 部分</th></tr>
+  <tr><td>来源</td><td>承担已知因子风险</td><td>因子模型解释不了的真超额收益</td></tr>
+  <tr><td>能否持续</td><td>能——只要因子溢价存在</td><td>难——套利者会涌入，α 衰减</td></tr>
+  <tr><td>风险</td><td>有——因子会回撤（动量崩溃等）</td><td>有——α 也可能变负</td></tr>
+  <tr><td>你想要</td><td>有意识地选哪些承担</td><td>越多越好，但别高估</td></tr>
+</table>
+
+<div class="insight">
+  <h3>⚡ 大部分 α 是未识别的 β</h3>
+  <p>这是因子研究最重要的认知。你以为的"纯 alpha"，往往只是承担了某个<strong>你还没命名的因子</strong>。历史上有大量"alpha"被后来识别为新因子而降级为 beta：</p>
+  <ul>
+    <li>90 年代"小市值 alpha" → 识别为 SMB 因子 → 变成 beta</li>
+    <li>2000 年代"低波动 alpha" → 识别为 BAB 因子 → 变成 beta</li>
+    <li>很多"币圈 alpha"现在还在被识别中</li>
+  </ul>
+  <p style="margin-bottom:0;">所以量化的目标不是消灭 β，而是<strong>有意识地选择承担哪些 β（哪些因子溢价稳定、可承受其回撤），并寻找真正的 α</strong>。识别新因子 = 把别人的 α 降级为 β = 你比市场更早理解了某个风险来源。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、CAPM——单因子模型与它的推导逻辑</h2>
+
+<p>1964 年 Sharpe/Lintner。所有因子研究的起点。先讲它<strong>怎么来的</strong>，再讲它<strong>错在哪</strong>。</p>
+
+<h3>4.1 CAPM 的推导逻辑（随意版）</h3>
+
+<p>从两个假设出发：</p>
+<ol>
+  <li>所有投资者<strong>均值-方差优化</strong>（只关心期望收益和方差，第七课的 Markowitz）</li>
+  <li>所有投资者<strong>有相同预期</strong>（homogeneous expectations）</li>
+</ol>
+
+<p>推导链条：</p>
+<div class="card">
+  <ol>
+    <li>所有人都做均值-方差优化 → 所有人都持有<strong>切点组合</strong>（有效前沿上与无风险利率相切那点）</li>
+    <li>所有人持相同切点组合 → 市场组合（所有资产按市值加权）<strong>就是</strong>切点组合（市场出清要求）</li>
+    <li>每个资产 i 的期望收益必须满足：<strong>它对市场组合的协方差决定其超额收益</strong>，否则有人会偏离切点组合套利</li>
+    <li>把协方差标准化成 β：$\beta_i = \mathrm{Cov}(R_i, R_m) / \mathrm{Var}(R_m)$</li>
+  </ol>
+  <p style="margin-bottom:0;">得到 CAPM：</p>
+</div>
+
+<div class="formula">
+  $$\mathbb{E}[R_i] - R_f = \beta_i \cdot (\mathbb{E}[R_m] - R_f)$$
+</div>
+
+<p>一句话：<strong>唯一值得付费的风险是对市场整体的暴露</strong>。资产 i 的预期超额收益 = 它对市场的 β × 市场风险溢价。能被分散掉的风险（特质风险）不补偿，只有不可分散的市场风险才补偿。</p>
+
+<h3>4.2 CAPM 的实证失败</h3>
+
+<p>CAPM 说：控制 β 后，没有其他变量能预测收益。但实证发现一堆反例：</p>
+
+<table>
+  <tr><th>现象</th><th>发现者</th><th>违反 CAPM 之处</th></tr>
+  <tr><td>小市值股表现优于大市值</td><td>Banz (1981)</td><td>size 能预测收益，独立于 β</td></tr>
+  <tr><td>低 P/B 股表现优于高 P/B</td><td>Fama-French (1992)</td><td>价值效应独立于 β</td></tr>
+  <tr><td>低 β 股风险调整后更优</td><td>Black, Frazzini-Pedersen</td><td>直接违反 CAPM 的 β-收益线性关系</td></tr>
+  <tr><td>过去赢家继续赢</td><td>Jegadeesh-Titman (1993)</td><td>动量独立于 β</td></tr>
+</table>
+
+<div class="danger">
+  <h3>⚠️ CAPM 不是"错了"，是"不够"</h3>
+  <p style="margin-bottom:0;">CAPM 的逻辑（系统性风险才补偿）是对的，它错在<strong>把"系统性风险"等同于"市场 β"这一个维度</strong>。系统性风险其实有多个来源（规模、价值、动量、低波动……），每个都不可分散、都该有溢价。Fama-French 就是把这些维度加回来。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>五、Fama-French——多因子模型</h2>
+
+<h3>5.1 三因子模型</h3>
+<div class="formula">
+  $$R_i - R_f = \alpha + \beta_m \cdot \text{Mkt} + \beta_s \cdot \text{SMB} + \beta_v \cdot \text{HML} + \varepsilon$$
+</div>
+
+<p>三个因子怎么构造（这是关键，不是黑箱）：</p>
+
+<div class="card">
+  <h3>SMB（Small Minus Big）的构造</h3>
+  <p>每年 6 月底，按市值把所有股票分两组：小（bottom 50%）和大（top 50%）。SMB = 小市值组收益 − 大市值组收益。如果小市值长期跑赢，SMB 均值为正——这就是 size 溢价。</p>
+  <h3>HML（High Minus Low）的构造</h3>
+  <p>同时按账面市值比（B/M）分三组：高（top 30%）、中、低（bottom 30%）。HML = 高 B/M 组收益 − 低 B/M 组收益。高 B/M = 便宜（账面价值相对市价高），低 B/M = 贵。HML 正 = 便宜股跑赢贵股 = 价值溢价。</p>
+  <p style="margin-bottom:0;">注意 SMB 和 HML 还做了<strong>2×3 交叉排序</strong>——把小/大各再按 B/M 分三组，构造 6 个组合。这样能确保 HML 是<strong>纯价值效应</strong>，不被规模效应污染。这种"正交化构造"是因子设计的核心技巧。</p>
+</div>
+
+<h3>5.2 Carhart 四因子（加动量）</h3>
+<p>Carhart (1997) 加了 <strong>UMD</strong>（Up Minus Down）：按过去 12 个月收益（剔除最近 1 个月）排序，做多赢家做空输家。剔除最近 1 个月是因为<strong>短期反转</strong>——过去 1 个月涨的接下来 1 个月反而更可能跌（1 个月反转因子），和 12 个月动量方向相反，混在一起会互相抵消。</p>
+
+<h3>5.3 Fama-French 五因子（2015）</h3>
+<p>再加两个：</p>
+<ul>
+  <li><strong>RMW</strong>（Robust Minus Weak）：盈利强 − 盈利弱。盈利能力溢价。</li>
+  <li><strong>CMA</strong>（Conservative Minus Aggressive）：投资保守 − 投资激进。投资少的 公司表现更好（q-factor theory 的体现）。</li>
+</ul>
+<p>五因子模型背后是 Hou-Xue-Zhang 的 q 理论：预期收益与投资回报率挂钩，公司投资越多，预期收益越低。</p>
+
+<!-- ============================================================ -->
+<h2>六、因子模型的两种用法</h2>
+
+<table>
+  <tr><th>用法</th><th>做什么</th><th>输出</th></tr>
+  <tr><td><strong>归因</strong> <span class="en">attribution</span></td><td>已知因子，回归你的策略收益</td><td>每个 β + α——策略赚的钱分摊到各因子</td></tr>
+  <tr><td><strong>构建</strong> <span class="en">construction</span></td><td>按因子值排序分组，做多高做空低</td><td>一个因子策略组合</td></tr>
+</table>
+
+<div class="card">
+  <h3>归因的具体例子</h3>
+  <p>你的币圈策略年化 +40%。把它月收益对 [市场, 动量, 费率] 三个因子回归：</p>
+  <div class="formula" style="font-size:0.95rem;">
+    $$R_{\text{策略}} = 0.4\% + 1.2 \cdot \text{市场} + 0.5 \cdot \text{动量} + 0.3 \cdot \text{费率} + \varepsilon$$
+  </div>
+  <p>解读：$\beta_{\text{市场}}=1.2$（承担 1.2 倍市场风险）、$\beta_{\text{动量}}=0.5$（半个单位的动量暴露）、$\beta_{\text{费率}}=0.3$、$\alpha=$ 月化 0.4%（年化 ~5%）。</p>
+  <p>40% 里，约 35% 是承担三个已知因子的补偿，只有 5% 是真 α。<strong>下次市场崩盘，那 1.2 倍市场暴露会让你亏很多</strong>——这是归因告诉你而单纯看收益看不出的。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>七、时间序列 vs 横截面因子</h2>
+
+<p>这是因子研究最重要的二分法，决定策略的对冲性质和容量。</p>
+
+<table>
+  <tr><th></th><th>时间序列因子</th><th>横截面因子</th></tr>
+  <tr><td>问什么</td><td>这个资产接下来涨不涨</td><td>哪些资产相对会涨</td></tr>
+  <tr><td>信号</td><td>资产自己的因子值（如自己过去 12 个月收益）</td><td>资产因子值在横截面的排名</td></tr>
+  <tr><td>操作</td><td>因子值正就做多，负就做空</td><td>做多排名最高组，做空最低组</td></tr>
+  <tr><td>市场暴露</td><td>有方向 β（不对冲）</td><td>多空平衡，市场中性</td></tr>
+  <tr><td>典型代表</td><td>趋势跟踪（CTA）、时间序列动量</td><td>股票多空、统计套利、Fama-French</td></tr>
+  <tr><td>容量</td><td>大（可单资产大仓位）</td><td>受限于做空难易和标的数量</td></tr>
+</table>
+
+<div class="insight">
+  <h3>⚡ 为什么横截面天然对冲</h3>
+  <p style="margin-bottom:0;">横截面策略多空金额相等——市场整体涨 10%，多头 +10%、空头 −10%，抵消。所以横截面策略的收益<strong>不依赖市场方向</strong>，只依赖"哪些比哪些好"。这也是为什么 Fama-French 因子（SMB、HML）是市场中性组合。时间序列动量则相反——牛市大赚、熊市大赚（做空）、震荡市亏，方向暴露是它的特征不是缺陷。</p>
+</div>
+
+<div class="crypto-note">
+  <h3>🔗 币圈：两类都重要，但侧重不同</h3>
+  <p><strong>时间序列动量是币圈主流</strong>——因为：</p>
+  <ul>
+    <li>标的数量少（不像股票几千只），横截面排序难做厚</li>
+    <li>做空成本高（费率、借币难），横截面多空成本重</li>
+    <li>趋势强（散户多、叙事传播慢、杠杆正反馈），时间序列动量 alpha 厚</li>
+  </ul>
+  <p><strong>横截面在山寨币轮动里有用</strong>：牛市资金从一个币轮到下一个，按相对强弱排序能捕捉轮动。但要注意——山寨币横截面动量在熊市失效（一起跌，没有相对强弱），且幸存者偏差严重（第八课）。</p>
+  <p style="margin-bottom:0;">实务：BTC/ETH 用时间序列动量；山寨币用横截面动量但严格过滤流动性和幸存者。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>八、因子的两个关键性质</h2>
+
+<h3>8.1 因子溢价的方向与稳定性</h3>
+<p>因子长期多空收益的符号和大小。没溢价的因子没用。但"长期"是多久？动量溢价在 2009 年崩溃那年是负的，但长期仍正。<strong>因子的稳定性比平均值更重要</strong>——一个平均 8% 但年年波动的因子，比平均 5% 但年年稳定的因子难用得多（仓位难定）。</p>
+
+<h3>8.2 因子衰减 <span class="en">factor decay / half-life</span></h3>
+<p>因子信号发出后，超额收益多久消失一半。</p>
+<table>
+  <tr><th>因子</th><th>典型半衰期</th><th>对执行的要求</th></tr>
+  <tr><td>微观结构（OFI 等）</td><td>秒-分</td><td>极低延迟</td></tr>
+  <tr><td>短期反转</td><td>天</td><td>日内</td></tr>
+  <tr><td>资金费率反转</td><td>小时-天</td><td>日内</td></tr>
+  <tr><td>动量（12-1）</td><td>周-月</td><td>低频即可</td></tr>
+  <tr><td>价值</td><td>月-年</td><td>低频</td></tr>
+</table>
+<p>衰减越快 → 越需要低延迟执行 + 越受交易成本侵蚀。衰减越慢 → 容量大但容易被套利者慢慢吃掉。</p>
+
+<!-- ============================================================ -->
+<h2>九、陷阱与失败模式</h2>
+
+<div class="danger">
+  <h3>⚠️ 1. 因子衰减 / 拥挤</h3>
+  <p style="margin-bottom:0;">因子发表后资金涌入，溢价衰减。Hou-Xue-Zhang (2020) 研究显示：发表后 5 年内，因子溢价平均衰减 30-50%。动量因子 1998 年 Jegadeesh-Titman 发表时夏普 ~1.8，现在 ~0.7。<strong>你回测的因子溢价可能已是历史</strong>——必须用最近数据重估。</p>
+</div>
+
+<div class="danger">
+  <h3>⚠️ 2. 多重检验危机</h3>
+  <p style="margin-bottom:0;">Harvey-Liu-Zhu (2016) 统计：过去 30 年发表了 400+ 个"显著因子"。如果每个 p<0.05，纯靠运气也会有 20 个"显著"。经多重检验校正后，大多数因子不显著。<strong>看任何因子论文先问：它试了多少个才挑出这个？</strong></p>
+</div>
+
+<div class="danger">
+  <h3>⚠️ 3. 因子定义不唯一</h3>
+  <p style="margin-bottom:0;">"价值因子"有 P/B、P/E、EV/EBITDA 等多种定义，结果差异很大。回测时挑表现最好的那个 = 过拟合。应<strong>先定定义再测</strong>，不要测完挑。</p>
+</div>
+
+<div class="danger">
+  <h3>⚠️ 4. α 的错觉</h3>
+  <p style="margin-bottom:0;">你跑归因得到 α=5%，以为有真 alpha。但如果你的因子模型<strong>漏了某个因子</strong>，那个因子的暴露会被算进 α。α 的大小强依赖你用了哪些因子——模型不完整，α 就是垃圾。这是为什么因子模型越完整越好（五因子比三因子更能识别真 α）。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="connection">
+  <h3>🔗 与其他课的连接</h3>
+  <p><strong>前置</strong>：第六课回归（因子模型就是回归）、第七课 Markowitz（CAPM 从均值-方差优化推出）、第四课自相关（动量 = 正自相关的横截面版本）。</p>
+  <p><strong>后续</strong>：0010-0011 展开每个具体因子的构造和实证；0012 讲怎么组合它们。因子衰减（本课 9.1）会在 0012 的因子监控里用到。多重检验（本课 9.2）直接接第八课回测陷阱。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="open-q">
+  <h3>❓ 本课没解决的开放问题</h3>
+  <ul>
+    <li>因子溢价<strong>为什么存在</strong>——是风险补偿还是行为偏差还是结构性摩擦？每个因子答案不同，下两课会逐个讨论</li>
+    <li>币圈有没有自己的"Fama-French"——系统性识别币圈因子模型？目前学术界还在做，没有定论</li>
+    <li>因子之间为什么相关（如动量和价值负相关）——是共同风险来源还是统计巧合？</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 你跑归因发现策略 α=年化 8%，但只用了 CAPM 单因子。这个 8% 可信吗？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">可信，α 就是真超额收益</span>
+    <span class="opt" data-answer="correct">不可信——模型漏了 size/value/动量等因子，它们的暴露会被算进 α，8% 大部分是未识别的 β</span>
+    <span class="opt" data-answer="wrong">不可信，因为 CAPM 错了</span>
+    <span class="opt" data-answer="wrong">可信，单因子足够</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. SMB 构造时为什么用 2×3 交叉排序（先按 size 分，再按 B/M 分）？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">为了增加样本量</span>
+    <span class="opt" data-answer="correct">让 HML 是纯价值效应，不被规模效应污染——正交化构造</span>
+    <span class="opt" data-answer="wrong">为了简化计算</span>
+    <span class="opt" data-answer="wrong">没有特别原因</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. 横截面动量策略为什么天然市场中性？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">因为它不交易</span>
+    <span class="opt" data-answer="correct">多空金额相等，市场整体涨跌对多头和空头的影响抵消</span>
+    <span class="opt" data-answer="wrong">因为它用对冲基金</span>
+    <span class="opt" data-answer="wrong">因为它只做空</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. Carhart 动量因子（UMD）为什么用过去 12 个月收益但剔除最近 1 个月？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">数据不够</span>
+    <span class="opt" data-answer="correct">最近 1 个月有短期反转效应（涨的更可能跌），和 12 个月动量方向相反，混入会互相抵消</span>
+    <span class="opt" data-answer="wrong">避免前视</span>
+    <span class="opt" data-answer="wrong">监管要求</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="q">5. （综合）一个因子论文报告 p&lt;0.05 的显著因子。你应该？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">p&lt;0.05 就可信</span>
+    <span class="opt" data-answer="correct">问它试了多少个因子才挑出这个——多重检验下纯靠运气也会有大量"显著"因子</span>
+    <span class="opt" data-answer="wrong">立刻实盘</span>
+    <span class="opt" data-answer="wrong">看 t 值即可</span>
+  </div>
+  <p class="feedback" id="f5"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 核心论文</h3>
+  <p><strong>Fama & French — "Common risk factors in the returns on stocks and bonds" (1993, Journal of Financial Economics)</strong>。三因子模型奠基论文。读这篇能看清楚 SMB/HML 的完整构造（包括 2×3 排序的细节）和为什么 CAPM 不够。</p>
+</div>
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 批判性视角</h3>
+  <p><strong>Harvey, Liu & Zhu — "... and the Cross-Section of Expected Returns" (2016, Review of Financial Studies)</strong>。多重检验危机的系统分析。读完会对任何"新发现因子"保持健康怀疑。</p>
+</div>
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 教材</h3>
+  <p><strong>Bodie, Kane & Marcus《投资学》</strong>第 7 章（CAPM 推导）、第 9 章（因子模型）。CAPM 推导的完整版。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="reminder">
+  <strong>💬 有问题随时问。</strong> 这节是因子阶段的地基。CAPM 推导的细节、2×3 排序的实现、α 依赖因子模型这件事的更多例子——任何一点都可以深挖。接下来 0010 展开动量、价值、Carry 三个最稳健因子的构造、实证和为什么有效。
+</div>
+
+<div class="nav">
+  上一课：<a href="0008-backtesting.html">0008 · 回测方法论</a> &nbsp;|&nbsp;
+  <a href="../index.html">↑ 返回目录</a><br>
+  下一课：<a href="0010-factors-momentum-value-carry.html">0010 · 常见因子（上）：动量、价值、Carry</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0006 · 线性回归</title>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Serif 4',Georgia,serif;font-size:18px;line-height:1.75;color:#1a1a1a;background:#fdfdfb;max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+  h1{font-size:2.2rem;font-weight:700;margin-bottom:.3rem;letter-spacing:-.02em}
+  h2{font-size:1.45rem;font-weight:600;margin:3rem 0 .8rem;color:#2c2c2c}
+  h3{font-size:1.1rem;font-weight:600;margin:1.8rem 0 .5rem;color:#333}
+  .meta{color:#888;font-size:.9rem;margin-bottom:2rem;font-family:'Inter',sans-serif}
+  p{margin-bottom:1rem} strong{font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.95rem}
+  th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid #e0e0d8}
+  th{font-weight:600;font-family:'Inter',sans-serif;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:#666}
+  tr:last-child td{border-bottom:none}
+  .card{background:#fafaf8;border:1px solid #e8e8e0;border-radius:6px;padding:1.5rem 1.8rem;margin:1.5rem 0}
+  .card h3{margin-top:0}
+  .insight{background:#fff8f0;border-left:3px solid #e08830;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .insight h3{margin-top:0;color:#8b5a20}
+  .retrieval{background:#f8f4ff;border:1px solid #d8d0e8;border-radius:6px;padding:1.2rem 1.5rem;margin:2rem 0}
+  .retrieval h3{margin-top:0;color:#5b4a8a}
+  .crypto-note{background:#f5f9ff;border-left:3px solid #4a90d9;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .crypto-note h3{margin-top:0;color:#2a5a9a}
+  .formula{text-align:center;font-size:1.05rem;margin:1.4rem 0}
+  .danger{background:#fff0f0;border-left:3px solid #c44;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .danger h3{margin-top:0;color:#a33}
+  .connection{background:#f0f8f8;border-left:3px solid #4a9a9a;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#345}
+  .connection h3{margin-top:0;color:#2a6a6a}
+  .open-q{background:#fafafa;border:1px dashed #bbb;border-radius:6px;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#555}
+  .open-q h3{margin-top:0;color:#666}
+  .quiz{margin:2rem 0} .quiz .q{font-weight:600;margin-bottom:.6rem}
+  .quiz .options{display:flex;flex-direction:column;gap:.4rem}
+  .quiz .opt{padding:.6rem 1rem;border:1px solid #d8d8d0;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;transition:background .15s}
+  .quiz .opt:hover{background:#f0f0e8}
+  .quiz .opt.correct{background:#e6f4ea;border-color:#4a9}
+  .quiz .opt.wrong{background:#fce8e8;border-color:#c44}
+  .quiz .feedback{margin-top:.8rem;font-size:.9rem;color:#555;display:none} .quiz .feedback.show{display:block}
+  .primary-source{background:#fffdf5;border-left:3px solid #e6c030;padding:1rem 1.5rem;margin:2.5rem 0 1.5rem;font-size:.95rem}
+  .primary-source h3{margin-top:0}
+  .nav{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #e0e0d8;font-family:'Inter',sans-serif;font-size:.85rem;color:#999}
+  .nav a{color:#5577aa;text-decoration:none}
+  .reminder{background:#f5f7fa;border:1px solid #dde;border-radius:6px;padding:1.2rem 1.5rem;margin:2.5rem 0;font-size:.9rem;color:#445}
+  .en{color:#888;font-size:.85em}
+</style>
+</head>
+<body>
+
+<h1>线性回归</h1>
+<p class="meta">Lesson 0006（重写·深度版）· 第二阶段开始 · 预计 40-50 分钟</p>
+
+<div class="retrieval"><h3>🔁 衔接</h3>
+<p>回归是量化最常用的统计工具——因子检验、收益归因、预测都用它。但金融数据违反回归几乎所有经典假设。这节讲清：OLS 的假设是什么、金融数据怎么违反每一个、违反后标准误差和 t 检验怎么失效、怎么修（Newey-West HAC、Fama-MacBeth）。<strong>不搞清这些，你的因子检验 p 值全是错的</strong>。</p></div>
+
+<!-- ============================================================ -->
+<h2>一、OLS 回顾与它的假设</h2>
+
+<p>线性回归模型：</p>
+<div class="formula">$$y_t = \alpha + \beta_1 x_{1,t} + \cdots + \beta_k x_{k,t} + \varepsilon_t$$</div>
+<p>OLS 找 $\beta$ 最小化残差平方和。在经典假设下（残差独立同分布、同方差、与 x 无关、正态），OLS 系数是最优线性无偏估计（BLUE），t 检验、F 检验、置信区间都有效。</p>
+
+<div class="danger"><h3>⚠️ 金融数据违反几乎每一条</h3>
+<ul>
+  <li><strong>残差自相关</strong>：金融残差有时间序列相关（0004），不独立</li>
+  <li><strong>异方差</strong>：残差方差随时间变（波动率聚集，0003），不同方差</li>
+  <li><strong>肥尾</strong>：残差非正态（0003、0005），t 检验基于正态</li>
+  <li><strong>多重共线性</strong>：因子之间高度相关（动量和短期反转、价值和质量）</li>
+  <li><strong>伪回归</strong>：非平稳序列回归（对价格回归）</li>
+  <li><strong>内生性</strong>：x 和 ε 相关（遗漏变量、测量误差、反向因果）</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2>二、违反的后果——为什么你的 p 值是错的</h2>
+
+<div class="card"><h3>2.1 残差自相关 + 异方差 → 标准误差错</h3>
+<p>OLS 标准误差公式假设残差独立同方差。违反时，<strong>标准误差有偏</strong>，t 检验和置信区间都错。典型后果：你算出某因子 t=3（"显著"），实际修正后 t=1（不显著）。<strong>大量"发现"的因子是标准误差算错导致的幻觉</strong>。</p></div>
+
+<div class="card"><h3>2.2 多重共线性 → 系数不稳定</h3>
+<p>两个因子高度相关时，回归分不清谁的贡献是谁的——系数方差爆炸，对样本微小变化极敏感。例：把"6 月动量"和"12 月动量"同时放回归，两者相关 0.9+，系数可能一个正一个负且都不显著，但合起来显著。<strong>解决</strong>：正交化（0012）、PCA、或干脆只放一个。</p></div>
+
+<div class="card"><h3>2.3 伪回归 <span class="en">Spurious Regression</span></h3>
+<p>两个独立非平稳序列回归，会得到<strong>显著系数和高 R²</strong>——纯假象。Granger-Newbold 1974 经典：两个独立随机游走回归，R² 常达 0.7+，t 检验"显著"。<strong>对价格回归价格就是伪回归</strong>。解决：对平稳序列回归（收益、差分、或协整组合）。</p></div>
+
+<div class="card"><h3>2.4 肥尾 → t 检验失效</h3>
+<p>t 检验基于正态残差。肥尾下，极端样本主导系数估计，t 统计量分布不再是 t——你算的 p 值偏小（过度拒绝原假设）。<strong>解决</strong>：稳健标准误差（heteroskedasticity-robust）、bootstrap、或直接用 t 分布残差。</p></div>
+
+<!-- ============================================================ -->
+<h2>三、修正方法</h2>
+
+<div class="card"><h3>Newey-West HAC 标准误差</h3>
+<p>同时修正<strong>异方差和自相关</strong>的稳健标准误差（Heteroskedasticity and Autocorrelation Consistent）：</p>
+<div class="formula">$$\hat{\Sigma}_{NW} = \hat{\Sigma}_0 + \sum_{l=1}^{L} w_l (\hat{\Sigma}_l + \hat{\Sigma}_l')$$</div>
+<p>对滞后协方差加权求和（权重 $w_l$ 如 Bartlett 核衰减）。$L$ 是最大滞后——选太大方差大、选太小修正不足。实务用 $L \approx T^{1/3}$。<strong>金融回归几乎必用 Newey-West</strong>，否则 t 检验不可信。</p></div>
+
+<div class="card"><h3>Fama-MacBeth 回归——横截面因子检验的标准</h3>
+<p>检验因子横截面定价的两步法：</p>
+<ol>
+  <li>每个时点 $t$，横截面回归 $r_{i,t} = \alpha_t + \beta_t \cdot f_{i,t} + \varepsilon_{i,t}$，得 $\hat\beta_t$</li>
+  <li>对时间序列 $\{\hat\beta_t\}$ 算均值和 t 统计量（用 Newey-West 修自相关）</li>
+</ol>
+<p>这处理了"横截面相关 + 时间序列相关"的双重问题，是因子检验（0009-0012）的标准工具。</p></div>
+
+<div class="card"><h3>正交化与 PCA</h3>
+<p>多重共线性的解决：把相关因子正交化（0012 详讲）——保留信息、消除共线性、系数可解释。PCA 更彻底但失去经济含义。</p></div>
+
+<!-- ============================================================ -->
+<h2>四、回归在量化里的三种用法</h2>
+
+<table>
+<tr><th>用法</th><th>做什么</th><th>关键陷阱</th></tr>
+<tr><td>因子检验</td><td>回归未来收益对因子值，看系数显著</td><td>标准误差必须 Newey-West；多重检验（0008）</td></tr>
+<tr><td>收益归因</td><td>把策略收益回归到因子，分解 alpha 和 beta</td><td>遗漏因子→ alpha 虚高（"alpha 是没识别的 beta"）</td></tr>
+<tr><td>预测</td><td>用因子预测未来收益</td><td>R² 极低（金融可预测性弱）；过拟合</td></tr>
+</table>
+
+<div class="insight"><h3>⚡ 金融回归的 R² 通常极低</h3>
+<p style="margin-bottom:0;">横截面因子回归 R² 典型 0.01-0.05（解释 1-5% 收益变异）。这不是模型烂——是<strong>金融本来就难预测</strong>。低 R² + 显著系数 = 好因子（信号弱但真）。新手误区：追求高 R² → 加一堆因子过拟合 → 样本外崩。因子检验看的是<strong>系数显著性和经济逻辑</strong>，不是 R²。</p></div>
+
+<!-- ============================================================ -->
+<div class="crypto-note"><h3>🔗 币圈回归的特殊问题</h3>
+<ul>
+  <li><strong>样本短</strong>：BTC 2009 至今，多数币更短。回归样本量小，标准误差大，更难显著。</li>
+  <li><strong>结构性断裂</strong>：每周期市场结构变，一个全样本回归可能平均掉不同体制的相反关系。用滚动回归或体制切换。</li>
+  <li><strong>幸存者偏差</strong>：只对还活着的币回归，死币（归零的）被排除 → 因子表现虚高（0008）。</li>
+  <li><strong>横截面小且变</strong>：每时期可交易的币数量变化大（2017 几十、2024 几千），横截面回归规模不一致。</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<div class="connection"><h3>🔗 与其他课的连接</h3>
+<p><strong>前置</strong>：0003 肥尾（残差非正态）、0004 时间序列（残差自相关、伪回归）、0005 分布（t 检验基础）。</p>
+<p><strong>后续</strong>：0007 Markowitz（本质是回归估协方差）、0008 回测（多重检验 = 回归跑太多次）、0009 CAPM/Fama-French（全是回归）、0012 正交化（回归残差法）。回归是因子阶段的计算骨架。</p></div>
+
+<div class="open-q"><h3>❓ 开放问题</h3>
+<ul>
+<li>Newey-West 滞后阶数 $L$ 怎么选最优？数据驱动方法（如 Newey-West automatic lag selection）。</li>
+<li>机器学习（Lasso、Ridge）替代 OLS 在因子回归——能自动处理共线性，但解释性和过拟合？</li>
+<li>币圈结构性断裂怎么在回归里建模——时变系数模型？</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+<div class="quiz" id="q1"><p class="q">1. 金融数据为什么让 OLS 假设失效？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">数据量不够</span>
+<span class="opt" data-answer="correct">残差自相关（时间序列）、异方差（波动率聚集）、肥尾（非正态）、共线性（因子相关）、非平稳（伪回归）</span>
+<span class="opt" data-answer="wrong">数据不准</span>
+<span class="opt" data-answer="wrong">市场无效</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q2"><p class="q">2. 不修正直接用 OLS 标准 t 检验，后果？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">没影响</span>
+<span class="opt" data-answer="correct">标准误差有偏，p 值错——大量"显著"因子是标准误差算错的幻觉</span>
+<span class="opt" data-answer="wrong">系数错</span>
+<span class="opt" data-answer="wrong">只影响 R²</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q3"><p class="q">3. Newey-West HAC 标准误差解决什么？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">多重共线性</span>
+<span class="opt" data-answer="correct">同时修正异方差和残差自相关——金融回归几乎必用</span>
+<span class="opt" data-answer="wrong">伪回归</span>
+<span class="opt" data-answer="wrong">肥尾</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q4"><p class="q">4. 两个独立随机游走回归得到高 R² 显著系数，这是？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">真有关系</span>
+<span class="opt" data-answer="correct">伪回归——非平稳序列回归的假象，应对平稳序列（收益/差分/协整组合）回归</span>
+<span class="opt" data-answer="wrong">数据巧合</span>
+<span class="opt" data-answer="wrong">模型太好</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q5"><p class="q">5. 横截面因子回归 R² 只有 0.03，说明？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">因子没用，删掉</span>
+<span class="opt" data-answer="correct">正常——金融本来就难预测；看系数显著性（Newey-West）和经济逻辑，不是 R²</span>
+<span class="opt" data-answer="wrong">模型错了</span>
+<span class="opt" data-answer="wrong">要加更多因子提 R²</span>
+</div><p class="feedback"></p></div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source"><h3>📖 教材</h3>
+<p><strong>Wooldridge —《计量经济学导论》</strong>。回归假设、违反后果、修正的标准入门。<br>
+<strong>Greene —《计量经济分析》</strong>。Newey-West、Fama-MacBeth、稳健标准误差的严格处理。</p></div>
+<div class="primary-source" style="margin-top:.5rem;"><h3>📖 经典</h3>
+<p><strong>Fama & MacBeth — "Risk, Return, and Equilibrium" (1973)</strong>。Fama-MacBeth 回归的来源。<br>
+<strong>Newey & West — "A Simple, Positive Semi-Definite Heteroskedasticity and Autocorrelation Consistent Covariance Matrix" (1987)</strong>。</p></div>
+
+<div class="reminder"><strong>💬 有问题随时问。</strong> Newey-West 怎么选滞后、Fama-MacBeth 怎么实操、共线性因子怎么正交——任何一点都可以深挖。下一课讲 Markowitz 组合理论，它本质上是用回归估的协方差矩阵做优化。</div>
+
+<div class="nav">上一课：<a href="0005-probability-and-distributions.html">0005 · 概率与分布</a> &nbsp;|&nbsp; <a href="../index.html">↑ 返回目录</a><br>下一课：<a href="0007-portfolio-theory.html">0007 · 组合理论</a></div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(q=>{q.querySelectorAll('.opt').forEach(o=>{o.addEventListener('click',function(){const f=this.parentElement.nextElementSibling;this.parentElement.querySelectorAll('.opt').forEach(x=>{x.classList.remove('correct','wrong');x.style.pointerEvents='none'});if(this.dataset.answer==='correct'){this.classList.add('correct');f.textContent='✓ 正确。';f.className='feedback show'}else{this.classList.add('wrong');this.parentElement.querySelector('[data-answer="correct"]').classList.add('correct');f.textContent='✗ 不对。绿色高亮的是正确答案。';f.className='feedback show'}})})});
+</script>
+</body>
+</html>

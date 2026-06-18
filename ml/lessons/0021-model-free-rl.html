@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0021 · Model-Free 强化学习</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd; --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "\01f4a1 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "\026a0\fe0f "; font-style: normal; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .cr { color: var(--accent); border-bottom: 1px dashed var(--accent); cursor: pointer; transition: background 0.12s; }
+  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+  .card-popup { position: fixed; z-index: 9999; width: 400px; max-height: 480px; overflow-y: auto; background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); padding: 0; display: none; font-size: 0.88rem; line-height: 1.55; }
+  .card-popup.show { display: block; }
+  .card-popup .concept-card { margin: 0; border: none; border-radius: 0; box-shadow: none; padding: 1rem 1.2rem; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0021 · Model-Free 强化学习</h1>
+<div class="subtitle">不知道 $\mathcal{P}$ 和 $\mathcal{R}$ 时怎么办——从 MC 到 TD，从 Q-learning 到 SARSA · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 问题：DP 的两个致命假设</a><br>
+  <a href="#s2">2. 蒙特卡洛（MC）：采样完整轨迹，平均回报</a><br>
+  <a href="#s3">3. 时序差分（TD）：一步采样 + 自举</a><br>
+  <a href="#s4">4. MC vs TD：偏差-方差权衡</a><br>
+  <a href="#s5">5. On-policy 控制：SARSA</a><br>
+  <a href="#s6">6. Off-policy 控制：Q-learning</a><br>
+  <a href="#s7">7. 探索：$\varepsilon$-greedy 与 softmax</a><br>
+  <a href="#s8">8. 推导与自测</a>
+</div>
+
+<p>
+  0020 的 DP 可以精确求解已知模型的 MDP。但在现实里，智能体不知道 $\mathcal{P}$ 和 $\mathcal{R}$——
+  它只能通过<strong>与环境交互</strong>获得采样数据 $(s,a,r,s')$。本课把整条链推广到未知模型：
+  <strong>用采样期望替代精确期望，用自举（bootstrapping）替代全扫描</strong>。
+</p>
+
+<div class="retrieval">
+  <h3>激活已有知识</h3>
+  <ol><li>Bellman 期望方程：$V^\pi(s) = \sum_a\pi\sum_{s'}\mathcal{P}[\mathcal{R}+\gamma V^\pi(s')]$</li>
+  <li>Bellman 最优方程：$V^*(s)=\max_a\sum_{s'}\mathcal{P}[\mathcal{R}+\gamma V^*(s')]$</li>
+  <li>0020 的 GPI 范式：策略评估 + 策略改进交替</li>
+  <li>0012 的偏差-方差分解：$\mathbb{E}[(y-\hat{f})^2]=\text{Bias}^2+\text{Var}+\sigma^2$</li></ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 问题：DP 的两个致命假设</h2>
+
+<p>DP（策略迭代 + 值迭代）有效但有两个前提——现实中常不成立：</p>
+<ol>
+  <li><strong>需要已知 $\mathcal{P}$ 和 $\mathcal{R}$。</strong>DP 的 Bellman 更新里直接用了转移概率和奖励函数。如果不知道——你就没法算期望。</li>
+  <li><strong>需要全扫描。</strong>DP 每次更新遍历所有 $s\in\mathcal{S}$。状态空间大时不可行。</li>
+</ol>
+<p>Model-free RL 的回答：(1) 用<strong>环境交互采样</strong>替代已知模型——从 $(s,a,r,s')$ 元组里学；(2) 用<strong>函数逼近</strong>替代全扫描（0022）。本课聚焦在表格型 model-free 方法——状态和动作有限，但 $\mathcal{P},\mathcal{R}$ 未知。</p>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 蒙特卡洛（MC）：采样完整轨迹，平均回报</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">RL 范式</span><h3>蒙特卡洛方法 · Monte Carlo</h3></div>
+  <div class="cc-essence"><strong>数学本质：</strong>用<strong>完整轨迹的采样回报</strong>来估计价值函数。$V^\pi(s) = \mathbb{E}_\pi[G_t|S_t=s]$ → 实际走完一条轨迹，记录从 $s$ 出发的实际回报 $G_t$，多做几次取平均。</div>
+  <div class="cc-section"><h4>核心公式（增量更新）</h4>
+  <div class="cc-formula">$$V(s) \leftarrow V(s) + \alpha\big[G_t - V(s)\big]$$</div>
+  <p>$\alpha$ = 学习率。$G_t$ = 真实回报（从 $s$ 出发走到终点拿到的全部奖励）。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 需要完整轨迹（episodic）</span><span class="conn-badge">→ 无偏但高方差</span></div>
+</div>
+
+<p>MC 不依赖 $\mathcal{P}$ 也不自举（bootstrapping）——它等轨迹结束，用<strong>实际拿到的回报</strong>当目标。优点：<strong>无偏估计</strong>（$\mathbb{E}[G_t]=V^\pi(s)$）。缺点：<strong>方差大</strong>——每条轨迹的回报受后续所有随机转移和动作影响，波动剧烈。</p>
+
+<div class="derivation">
+  <h4>MC 策略评估（First-Visit）</h4>
+  <div class="step">对每个状态 $s$，维护 $V(s)$ 和计数 $N(s)$</div>
+  <div class="step">走一轨迹 $s_0,a_0,r_1,s_1,a_1,r_2,\ldots,s_T$。对轨迹中<strong>第一次出现</strong>的每个状态 $s$，算 $G_t$。<span class="reason">First-visit MC 保证每个状态 $s$ 的回报独立——消除轨迹内的相关。</span></div>
+  <div class="step">$V(s) \leftarrow V(s) + \frac{1}{N(s)}(G_t - V(s))$<span class="reason">递增平均 = 向目标 $G_t$ 移一小步</span></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 时序差分（TD）：一步采样 + 自举</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">RL 范式 #23</span><h3>时序差分学习 · TD(0)</h3></div>
+  <div class="cc-essence"><strong>数学本质：</strong>不等轨迹结束——每走一步就用 Bellman 方程做<strong>一步自举</strong>：用当前的 $V(s')$ 做 $r+\gamma V(s')$ 作为"更好的估计"，更新 $V(s)$。</div>
+  <div class="cc-section"><h4>核心公式（TD 更新）</h4>
+  <div class="cc-formula">$$\boxed{\;V(s) \leftarrow V(s) + \alpha\big[\underbrace{r + \gamma V(s')}_{\text{TD 目标}} - V(s)\big]\;}$$</div>
+  <p>$\delta_t = r + \gamma V(s') - V(s)$ = <strong>TD 误差</strong>（TD error）——"我以为这个状态值 $V(s)$，但实际拿到 $r$ 后到了值 $V(s')$ 的状态，预测偏了多少"。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 不需要完整轨迹</span><span class="conn-badge">→ 有偏但低方差</span><span class="conn-badge">→ 在线学习</span></div>
+</div>
+
+<div class="insight">
+  <strong>TD 的"自举"是什么意思？</strong>TD 目标 $r+\gamma V(s')$ 里用到了<strong>当前的 $V(s')$</strong>——这是"用自己的估计去更新自己"。DP 也自举（用 $V_k$ 算 $V_{k+1}$）。MC 不自举——只用真实回报 $G_t$。自举 = 偏差的代价换方差的降低，这是 TD 与 MC 的核心 tradeoff。
+</div>
+
+<p>TD 学习不需要环境模型，也不需要完整轨迹——每走一步 $(s,a,r,s')$ 就能做一次更新。这使得 TD 可以<strong>在线学习</strong>，适用于 continuing（无限长）任务。</p>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. MC vs TD：偏差-方差权衡</h2>
+
+<table>
+  <tr><th></th><th>MC</th><th>TD(0)</th></tr>
+  <tr><td>更新目标</td><td>$G_t$（完整轨迹的真实回报）</td><td>$r+\gamma V(s')$（一步采样 + 自举）</td></tr>
+  <tr><td>偏差</td><td><strong>无偏</strong>（$\mathbb{E}[G_t]=V^\pi$）</td><td><strong>有偏</strong>（$V(s')$ 初始不准 → 目标不准）</td></tr>
+  <tr><td>方差</td><td><strong>高</strong>（$G_t$ 含后续所有随机性）</td><td><strong>低</strong>（只有一步的随机性）</td></tr>
+  <tr><td>需要 episodic?</td><td>是（等轨迹结束）</td><td>否（每步都能更新）</td></tr>
+  <tr><td>收敛</td><td>慢但稳</td><td>通常更快（尤其 $\alpha$ 合适时）</td></tr>
+</table>
+
+<div class="insight">
+  <strong>这和 ML 的偏差-方差分解是同构的。</strong>MC 像 KNN——用原始数据点（轨迹），无偏但高变。TD 像线性回归——用模型假设（Bellman 方程的结构）约束估计，引入偏差但压低方差。哪个更好取决于<strong>样本量</strong>：数据少时 TD 的结构优势更大，数据多时 MC 的无偏性更可靠。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. On-policy 控制：SARSA</h2>
+
+<p>预测（评估 $V^\pi$）只是第一步。RL 的终极目标是<strong>学最优策略</strong>。用 GPI 范式：TD 做策略评估 + $\varepsilon$-greedy 做策略改进 → SARSA。</p>
+
+<div class="derivation">
+  <h4>SARSA 更新</h4>
+  <div class="step">从状态 $s$，用<strong>当前策略</strong>（$\varepsilon$-greedy）选动作 $a$，环境返回 $r,s'$。</div>
+  <div class="step">在 $s'$，<strong>再次用同一策略选动作</strong> $a'$。<span class="reason">"SARSA" 的名字就是 $(s,a,r,s',a')$——五个字母对应五元组。</span></div>
+  <div class="step">$Q(s,a) \leftarrow Q(s,a) + \alpha\big[r + \gamma Q(s',a') - Q(s,a)\big]$<span class="reason">用实际执行的 $a'$ 做 TD 目标——on-policy</span></div>
+</div>
+
+<div class="formula-block">
+  $$\boxed{\;Q(s,a) \leftarrow Q(s,a) + \alpha\big[r + \gamma Q(s',a') - Q(s,a)\big]\;}$$
+</div>
+
+<p><strong>On-policy</strong>：SARSA 学习的是<strong>自己正在执行的策略</strong>的 $Q$ 值。行为策略（选 $a$ 和 $a'$ 的策略）= 目标策略（被优化的策略）。这有一个后果——为了探索，行为策略必须随机（$\varepsilon$-greedy），所以 SARSA 学的是"<strong>带探索的最优策略</strong>"——它在乎探索的代价，会更"保守"。</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. Off-policy 控制：Q-learning</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">RL 范式 #24</span><h3>Q-learning · Off-Policy TD Control</h3></div>
+  <div class="cc-essence"><strong>核心洞察：</strong>行为策略和目标策略<strong>可以不同</strong>——用任意策略（如随机探索）采样数据，但更新时假设最优策略（取 $\max$）。这是 Q-learning 和 SARSA 的本质区别。</div>
+  <div class="cc-section"><h4>核心公式</h4>
+  <div class="cc-formula">$$\boxed{\;Q(s,a) \leftarrow Q(s,a) + \alpha\big[r + \gamma \max_{a'} Q(s',a') - Q(s,a)\big]\;}$$</div>
+  <p>和 SARSA 的唯一区别：TD 目标用 $\max_{a'}Q(s',a')$（最优动作的 $Q$ 值）而不是实际执行的 $a'$ 的 $Q$ 值。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0022 DQN: Q-learning + 神经网络</span></div>
+</div>
+
+<table>
+  <tr><th></th><th>SARSA (on-policy)</th><th>Q-learning (off-policy)</th></tr>
+  <tr><td>TD 目标</td><td>$r + \gamma Q(s',a')$</td><td>$r + \gamma \max_{a'} Q(s',a')$</td></tr>
+  <tr><td>$a'$ 的选择</td><td>按行为策略（含探索）</td><td>取 $\arg\max Q$（纯贪心）</td></tr>
+  <tr><td>学到的是</td><td>"带探索的最优策略"</td><td>"纯最优策略"（独立于探索）</td></tr>
+  <tr><td>危险</td><td>对探索代价敏感（保守）</td><td>可能高估 $Q$ 值（max 偏差）</td></tr>
+</table>
+
+<div class="warning">
+  <strong>SARSA 在悬崖边更安全，Q-learning 更快但可能摔死。</strong>经典例子：Cliff Walking——SARSA 走远路绕过悬崖（因为探索步可能掉下去），Q-learning 走悬崖边（因为最优策略就是贴着走）。当场上的"探索步"有真实代价时（如交易亏损），SARSA 更安全。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 探索：$\varepsilon$-greedy 与 softmax</h2>
+
+<p>Model-free RL 的核心两难：<strong>探索</strong>（试没试过的动作，可能发现更好的）vs <strong>利用</strong>（用已知最好的，稳拿奖励）。</p>
+
+<p><strong>$\varepsilon$-greedy</strong>：以 $1-\varepsilon$ 概率选 $\arg\max_a Q(s,a)$（利用），以 $\varepsilon$ 概率随机选（探索）。简单有效，但探索时所有非最优动作等概率——有些明显差的动作也会被"浪费"探索。</p>
+
+<p><strong>Softmax/Boltzmann 探索</strong>：$\pi(a\mid s) = \frac{\exp(Q(s,a)/\tau)}{\sum_{a'}\exp(Q(s,a')/\tau)}$。温度 $\tau$ 控制随机程度：$\tau\to 0$ → 贪婪；$\tau\to\infty$ → 均匀随机。$Q$ 值高的动作被选的概率更高——"聪明地探索"。</p>
+
+<div class="meta-box">
+  <h4>范式 #25 · 探索-利用权衡</h4>
+  这是 RL 独有的困难——监督学习没有"选哪个数据点去标注"的问题。多臂老虎机（bandit）是纯探索-利用问题（没有状态转移），MDP 是 bandit + 状态转移。解决思路：(1) $\varepsilon$ 随时间衰减（先多探索，后多利用）；(2) 用置信区间（UCB）；(3) Thompson 采样（贝叶斯版）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与自测</h2>
+
+<div class="problem">
+  <div class="ptitle">L1 · MC vs TD 的偏差-方差 <span class="plevel l1">L1</span></div>
+  <div class="pbody">一个 MDP 有两个状态 A→B（奖励 0），B→终止（奖励 1）。$\gamma=1$。已有 8 条轨迹的数据：6 条 A→B→1，2 条 B→1。分别用 MC（first-visit，对 A 采样回报）和 TD(0) 估算 $V(A)$。TD 的 $V(B)$ 已收敛到 1。比较 MC 和 TD 的估计值，解释差异来源。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">MC 对 A：所有经过 A 的轨迹里 $G_t=1$（A→B→1），所以 $V_{\text{MC}}(A)=1$。<span class="reason">MC 只看实际拿到的回报——6 条 A→B→1 全是 1。</span></div>
+    <div class="step">TD 对 A：$V(A)=0+\gamma V(B)=1$。$V(B)$ 已收敛到 1。<span class="reason">在这个简单例子里 MC 和 TD 给出相同答案——因为转移是确定性的。</span></div>
+    <div class="step">但如果有随机转移——比如 A $\xrightarrow{0.5}$ B1（奖励 1），A $\xrightarrow{0.5}$ B2（奖励 0）——MC 每条轨迹的 $G_t$ 要么是 1 要么是 0，方差大。TD 用 $V(B)$ 的平均值做 bootstrapping，方差小。<span class="reason">TD 利用 Markov 结构压缩方差。</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L2 · Q-learning 的 max 偏差 <span class="plevel l2">L2</span></div>
+  <div class="pbody">Q-learning 用 $\max_{a'}Q(s',a')$ 做 TD 目标。假设某状态 $s'$ 有三个动作，真实 $Q^*(s',a)=1$ 对所有 $a$，但估计值 $Q(s',a)$ 因采样噪声分别在 1 附近波动：（0.8, 1.3, 0.9）。解释为什么 $\max$ 操作会导致系统性高估 $Q(s',\cdot)$，并说明 Double Q-learning 如何解决。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">$\max_a Q(s',a) = 1.3 > 1.0$（真实最大值）。$\max$ 选的是估计值里最高的——这个"最高"部分来自运气（正噪声）。<span class="reason">这是选择偏差（selection bias）：在噪声里挑最大的 → 高估。</span></div>
+    <div class="step">Double Q-learning：维护两套 $Q_1,Q_2$。用 $Q_1$ 选动作（$\arg\max$），用 $Q_2$ 评价值。更新 $Q_1$ 时：$Q_1(s,a) \leftarrow Q_1(s,a) + \alpha[r+\gamma Q_2(s',\arg\max_{a'}Q_1(s',a')) - Q_1(s,a)]$。<span class="reason">选和评用不同的 $Q$——去相关 → 消除正偏差。</span></div>
+    <div class="step">上例：$Q_1$ 选动作 2（值 1.3），$Q_2$ 对该动作的估值可能是 0.95（无正噪声偏置）→ TD 目标约 0.95，不偏高。<span class="reason">DQN 的 target network 也是同一思路——用延迟更新的网络做评估。</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L3 · SARSA vs Q-learning 的最优策略差异 <span class="plevel l3">L3</span></div>
+  <div class="pbody">证明：在有随机奖励和 $\varepsilon>0$ 的 MDP 中，SARSA 收敛到的策略可能<strong>不是</strong>纯最优策略 $\pi^*$，而是"最优带探索"策略。给出一个简单反例：探索步有代价时 SARSA 会绕路，而 Q-learning 抄近路。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">SARSA 评估的 $Q$ 是<strong>行为策略</strong>（含 $\varepsilon$-greedy 探索）的期望回报。$\varepsilon$-greedy 的行为策略有 $\varepsilon/|A|$ 的概率选非最优动作。<span class="reason">SARSA 的 TD 目标 $r+\gamma Q(s',a')$ 里 $a'$ 是实际执行的——如果实际执行了探索步，这个 $a'$ 对应的 $Q$ 值会被"拉低"。</span></div>
+    <div class="step">Cliff Walking 例子：最优策略贴悬崖走（路径短），但 $\varepsilon$-greedy 探索时可能掉下悬崖（大负奖励）。SARSA 学到：悬崖边的 $Q$ 值被"探索步掉下去"的负奖励压低 → 策略趋向于走安全远路。Q-learning 学到：$\max Q$ 假设不掉下去 → 贴悬崖。<span class="reason">SARSA 的 on-policy 性质让它对探索步的代价"负责"；Q-learning 的 off-policy 性质让它无视探索步的代价。</span></div>
+    <div class="step">结论：当探索步在<strong>真实部署</strong>中不存在时（训练完 $\varepsilon=0$），Q-learning 给的才是真正的最优策略。当探索/训练过程本身<strong>有代价</strong>时（如在线交易），SARSA 更安全。<span class="reason">没有哪个"更好"——取决于"训练时的代价"是否算在优化目标里。</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="reminder">
+  <strong>关键带回：</strong>MC = 完整采样 → 无偏高方差；TD = 一步自举 → 有偏低方差。MC 像 KNN，TD 像回归。SARSA = on-policy TD 控制（在乎探索代价）；Q-learning = off-policy TD 控制（只在乎最优策略）。Q-learning 的 $\max$ 导致高估，Double Q-learning 和 target network（0022 DQN）都是为解决这个。
+</div>
+
+<div class="primary-source">
+  <h3>主要参考</h3>
+  <strong>Sutton & Barto — Reinforcement Learning: An Introduction (2nd ed.)</strong> —
+  Chapter 5（MC）、Chapter 6（TD）、Chapter 6.4-6.5（SARSA 与 Q-learning）。Cliff Walking 例子出自 §6.5。
+</div>
+
+<div class="lesson-footer">
+  <a href="0020-mdp-bellman.html">← 0020 MDP 与 Bellman</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  <a href="../reference/math-primer.html">📐 数学手册</a> ·
+  下一课：<a href="0022-deep-rl.html">0022 Deep RL：DQN → PPO</a>
+</div>
+
+<script src="../reference/popup-cards.js"></script>
+
+<script>
+window.addEventListener('load', function() {
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    MathJax.typesetPromise();
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0003 · 边缘似然与模型比较</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0003 · 边缘似然与模型比较</h1>
+<div class="subtitle">奥卡姆剃刀的数学化身：把参数积分掉，复杂度惩罚自动出现 · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 困境：点估计选不了模型复杂度</a><br>
+  <a href="#s2">2. 边缘似然：把参数积分掉</a><br>
+  <a href="#s3">3. 算出贝叶斯线性回归的边缘似然</a><br>
+  <a href="#s4">4. 奥卡姆因子：最佳拟合 × 复杂度惩罚</a><br>
+  <a href="#s5">5. 证据最大化（Empirical Bayes）</a><br>
+  <a href="#s6">6. 与频率派模型选择（CV/AIC/BIC）的对比</a><br>
+  <a href="#s7">7. 回接与预告</a><br>
+  <a href="#s8">8. 推导与演算</a><br>
+  <a href="#s9">9. 自测</a>
+</div>
+
+<p>
+  上一课 0002 把 $\mathbf{w}$ 当分布处理，但先验精度 $\alpha$ 和噪声精度 $\beta$ 是<strong>给定</strong>的。
+  谁来定它们？频率派用交叉验证——浪费数据、算得贵。贝叶斯有更优雅的答案：
+  <strong>边缘似然</strong>（marginal likelihood，又叫 evidence）$p(\mathbf{t}\mid\alpha,\beta)=\int p(\mathbf{t}\mid\mathbf{w},\beta)p(\mathbf{w}\mid\alpha)\,d\mathbf{w}$——
+  把 $\mathbf{w}$ 积分掉，看哪个 $(\alpha,\beta)$ 让<strong>观测到的数据整体概率最大</strong>。
+  这个量会自动实现奥卡姆剃刀：太简单的模型拟不合数据，太复杂的模型把概率摊到太多数据集上反而给当前数据低概率——
+  <strong>复杂度惩罚从积分里自然掉出来，不需要任何额外技巧</strong>。本课把这个机制讲透，并接上 0002 的边缘化范式。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 上两课前置</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>0002 的后验 $\mathbf{S}_N^{-1}=\alpha\mathbf{I}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$、$\mathbf{m}_N=\beta\mathbf{S}_N\boldsymbol{\Phi}^\top\mathbf{t}$——本课算边缘似然要用。</li>
+    <li>0002 题 6：一维单点边缘似然 $p(t\mid x,\alpha)=\mathcal{N}(t\mid0,x^2/\alpha+1/\beta)$，$\alpha\to0$ 概率摊薄、$\alpha\to\infty$ 拟合能力丧失——本课是一般版。</li>
+    <li>高斯积分 $\int\exp(-\frac{1}{2}\mathbf{w}^\top\mathbf{A}\mathbf{w})\,d\mathbf{w}=(2\pi)^{M/2}|\mathbf{A}|^{-1/2}$——本课算证据的核心工具。</li>
+    <li>基石 0001 §6：KL 非负性。本课模型比较的正确性证明要用（§3）。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 困境：点估计选不了模型复杂度</h2>
+
+<p>
+  0001 课看到：多项式阶数 $M$ 太小欠拟合，太大过拟合。MLE 选 $M$ 永远选最大（训练误差单调降）——它没有能力自己罚复杂度。
+  频率派的办法是留一个验证集或交叉验证：在没见过的数据上比。代价是<strong>烧数据</strong>（小样本时奢侈）和<strong>算得贵</strong>（$K$ 折要训练 $K$ 次）。
+</p>
+
+<p>
+  贝叶斯的办法不一样。它不挑"拟合最好的参数"，而问"哪个模型（哪个 $\alpha$，或哪个 $M$）<strong>最可能产生我看到的这份数据</strong>"。
+  这个问题的答案就是边缘似然。关键差别：<strong>点估计只看拟合好坏，边缘似然还看模型能产生多少种不同的数据集</strong>——
+  后者就是复杂度惩罚的来源。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 边缘似然：把参数积分掉</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#5b8c5a;">范式 #3</span>
+	    <h3>边缘似然 · Marginal Likelihood</h3>
+	    <span class="cc-aliases">Model Evidence · 模型证据</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>把参数积分掉——$p(\mathcal{D}|\alpha,\beta) = \int p(\mathcal{D}|\mathbf{w},\beta)p(\mathbf{w}|\alpha)\,d\mathbf{w}$。不是挑一个"最好的 $\mathbf{w}$"，而是<strong>对所有可能的 $\mathbf{w}$ 加权平均</strong>。复杂模型的参数空间大、概率被摊薄——边缘似然自动罚复杂度。
+	  </div>
+	  <div class="cc-section">
+	    <h4>核心公式（线性回归）</h4>
+	    <div class="cc-formula">$$\log p(\mathbf{t}|\alpha,\beta) = \frac{M}{2}\log\alpha + \frac{N}{2}\log\beta - \frac{\beta}{2}\|\mathbf{t}-\boldsymbol{\Phi}\mathbf{m}_N\|^2 - \frac{\alpha}{2}\mathbf{m}_N^\top\mathbf{m}_N - \frac{1}{2}\log|\mathbf{S}_N^{-1}| - \frac{N}{2}\log 2\pi$$</div>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0001 §5: MLE低估 $\sigma^2$，边缘似然自动修正</span>
+	    <span class="conn-badge">→ 0012: 模型选择的贝叶斯版</span>
+	    <span class="conn-badge">→ 0015: VI 用 ELBO 近似 $\log p(\mathcal{D})$</span>
+	  </div>
+	</div>
+
+
+<p>边缘似然（evidence）的定义：</p>
+
+<div class="formula-block">
+  $$p(\mathbf{t}\mid\alpha,\beta) = \int p(\mathbf{t}\mid\mathbf{w},\beta)\,p(\mathbf{w}\mid\alpha)\,d\mathbf{w}$$
+</div>
+
+<p>
+  它是<strong>似然对先验的平均</strong>。注意和后验的区别：后验 $p(\mathbf{w}\mid\mathbf{t})$ 是参数的函数（数据固定），
+  边缘似然 $p(\mathbf{t}\mid\alpha,\beta)$ 是<strong>数据</strong>的函数（超参固定，参数被积分掉）。
+  它回答"在先验 $p(\mathbf{w}\mid\alpha)$ 下，模型整体（所有 $\mathbf{w}$ 加权）产生这份数据的概率"。
+</p>
+
+<div class="insight">
+  为什么积分能罚复杂度？先验 $p(\mathbf{w}\mid\alpha)$ 是归一化的——概率 1 摊在所有 $\mathbf{w}$ 上。
+  复杂模型（$\alpha$ 小，先验宽）把概率摊在很大一片 $\mathbf{w}$ 上，每个 $\mathbf{w}$ 分到的概率小，
+  能产生的数据集种类多但每种概率低；简单模型（$\alpha$ 大，先验窄）集中在小片 $\mathbf{w}$，能产生的数据集少但每种概率高。
+  <strong>对一份具体数据，太复杂的模型因为"分摊"反而给低边缘似然</strong>——这就是奥卡姆因子的来源，纯靠归一化，不需要外加惩罚项。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 算出贝叶斯线性回归的边缘似然</h2>
+
+<p>把 0002 的似然和先验代入（PRML 3.77–3.78）：</p>
+
+<div class="formula-block">
+  $$p(\mathbf{t}\mid\alpha,\beta) = \left(\frac{\beta}{2\pi}\right)^{N/2}\left(\frac{\alpha}{2\pi}\right)^{M/2}\int\exp\{-E(\mathbf{w})\}\,d\mathbf{w}$$
+</div>
+
+<p>其中 $E(\mathbf{w})=\frac{\beta}{2}\|\mathbf{t}-\boldsymbol{\Phi}\mathbf{w}\|^2+\frac{\alpha}{2}\mathbf{w}^\top\mathbf{w}$（正则化误差）。对 $\mathbf{w}$ 配平方（0002 范式 #2 再用一次）：</p>
+
+<div class="derivation">
+  <h4>推导 · 证据函数（PRML 3.80–3.86）</h4>
+  <div class="step">$E(\mathbf{w})=E(\mathbf{m}_N)+\frac{1}{2}(\mathbf{w}-\mathbf{m}_N)^\top\mathbf{A}(\mathbf{w}-\mathbf{m}_N)$，其中 $\mathbf{A}=\alpha\mathbf{I}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}=\mathbf{S}_N^{-1}$（Hessian），$\mathbf{m}_N=\beta\mathbf{A}^{-1}\boldsymbol{\Phi}^\top\mathbf{t}$（后验均值）。</div>
+  <div class="step">积分 $\int\exp\{-E(\mathbf{w})\}\,d\mathbf{w}=\exp\{-E(\mathbf{m}_N)\}\cdot(2\pi)^{M/2}|\mathbf{A}|^{-1/2}$（高斯积分，范式 #3）。</div>
+  <div class="step">代回，取对数：</div>
+  <div class="step">$\boxed{\;\log p(\mathbf{t}\mid\alpha,\beta) = \frac{M}{2}\log\alpha + \frac{N}{2}\log\beta - E(\mathbf{m}_N) - \frac{1}{2}\log|\mathbf{A}| - \frac{N}{2}\log(2\pi)\;}$</div>
+</div>
+
+<div class="meta-box">
+  <h4>🔗 推导范式复用 · 配平方 + 高斯积分</h4>
+  本课算证据 = 0002 算后验的同一招：把指数配成 $\mathbf{w}$ 的标准二次型，积分掉 $\mathbf{w}$，余项就是答案。
+  0002 题 5（两高斯相乘的归一化常数）就是本课的一维雏形——那个 $Z=\mathcal{N}(\mu_a\mid\mu_b,\Sigma_a+\Sigma_b)$ 就是边缘似然。
+  <strong>后验、预测、边缘似然，三个量同一套配平方，只是积分掉的变量不同。</strong>这就是为什么 0002 要把范式练到本能。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 奥卡姆因子：最佳拟合 × 复杂度惩罚</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#8b5aa6;">概念</span>
+	    <h3>奥卡姆因子 · Occam Factor</h3>
+	    <span class="cc-aliases">自动复杂度惩罚</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>边缘似然 = 最佳拟合 − 复杂度惩罚。惩罚项来自先验体积与后验体积之比——<strong>先验越宽（越不确定）且后验越窄（学到很多），惩罚越大</strong>。这是奥卡姆剃刀的数学形式。
+	  </div>
+	  <div class="cc-section">
+	    <h4>为什么"自动"</h4>
+	    <p>不需要人为加 $\lambda\|\mathbf{w}\|^2$——复杂模型参数多，概率质量被摊到更大的空间，每个参数组合得到的概率就小。这是<strong>积分本身的属性</strong>，不是外加的惩罚项。</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0003 §4: 完整推导</span>
+	    <span class="conn-badge">→ 0012: $C_p$/AIC/BIC 是频率派近似</span>
+	  </div>
+	</div>
+
+
+<p>把对数证据在 $\mathbf{m}_N$ 附近做拉普拉斯近似，能拆成两项（PRML 3.86 的几何读法）：</p>
+
+<div class="formula-block">
+  $$\underbrace{\log p(\mathbf{t}\mid\alpha,\beta)}_{\text{对数证据}} \approx \underbrace{\log p(\mathbf{t}\mid\mathbf{w}_{\text{MAP}},\beta) + \log p(\mathbf{w}_{\text{MAP}}\mid\alpha)}_{\text{最佳拟合似然}} \;-\; \underbrace{\frac{M}{2}\log(\text{后验宽度}^{-2})}_{\text{奥卡姆因子（复杂度惩罚）}}$$
+</div>
+
+<p>第一项是"参数取最值时数据有多可能"——模型越复杂这项越大（拟得越合）。第二项是<strong>奥卡姆因子</strong>：后验越宽（模型越没把 $\mathbf{w}$ 钉死，说明数据没提供足够信息）惩罚越大，且随参数个数 $M$ 线性增长。两项拉锯，最大值在中间复杂度。</p>
+
+<div class="insight">
+  PRML 图 3.13 是这个机制最清楚的图：三个模型 $M_1\prec M_2\prec M_3$（复杂度递增），各自能产生的数据集分布 $p(\mathbf{D}\mid M_i)$ 都归一化。
+  简单模型 $M_1$ 分布窄（只能产生相似数据集），复杂模型 $M_3$ 分布宽（能产生很多种）。
+  对一份具体数据 $\mathbf{D}_0$：$M_1$ 可能压根够不着（拟不合），$M_3$ 虽然够得着但概率被摊薄——<strong>中间的 $M_2$ 证据最大</strong>。
+  这就是"贝叶斯奥卡姆剃刀"：在能解释数据的模型里选最简单的，但"简单"由边缘似然自动判定，不靠人拍脑袋。
+</div>
+
+<p>一个深刻性质（PRML 3.73）：若真实模型在候选集里，<strong>平均来看贝叶斯因子会选对</strong>。证明用到 $\int p(\mathbf{D}\mid M_1)\log\frac{p(\mathbf{D}\mid M_1)}{p(\mathbf{D}\mid M_2)}\,d\mathbf{D}=\mathrm{KL}(p_{M_1}\|p_{M_2})\geq 0$——<strong>基石 0001 §6 的 KL 非负性</strong>，这里 KL 衡量的是两个模型产生数据分布的差异，等于零当且仅当两模型相同。所以贝叶斯模型比较的"正确性"由 KL 非负性保证。</p>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 证据最大化（Empirical Bayes）</h2>
+
+<p>有了证据函数，对超参 $(\alpha,\beta)$ 最大化它——这叫<strong>证据最大化</strong>（evidence maximization）/ Empirical Bayes / type-II MLE。注意层次：type-I MLE 估参数 $\mathbf{w}$，type-II MLE 估超参 $\alpha,\beta$（参数已被积分掉）。</p>
+
+<p>对 $\alpha$ 求驻点（PRML 3.87–3.92）：令 $\mathbf{A}=\alpha\mathbf{I}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 的特征值为 $\alpha+\lambda_i$（$\lambda_i$ 是 $\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 的特征值）。$\frac{d}{d\alpha}\log|\mathbf{A}|=\sum_i\frac{1}{\lambda_i+\alpha}$。令 $\frac{\partial\log p}{\partial\alpha}=0$ 得：</p>
+
+<div class="formula-block">
+  $$\alpha = \frac{\gamma}{\mathbf{m}_N^\top\mathbf{m}_N}, \qquad \gamma = \sum_{i=1}^M \frac{\lambda_i}{\lambda_i+\alpha}$$
+</div>
+
+<p>$\gamma$ 是"有效参数个数"：$\lambda_i$ 大的特征方向（数据信息多）贡献接近 1，$\lambda_i$ 小的方向（数据几乎没约束）贡献接近 0。<strong>边缘似然自动数出"数据真正用到的参数个数"</strong>，而不是数总参数 $M$。这是贝叶斯比频率派正则（数总参数）精细的地方——它知道哪些参数被数据支持、哪些是空转。</p>
+
+<p>$\beta$ 的更新类似：$\beta^{-1}=\frac{\|\mathbf{t}-\boldsymbol{\Phi}\mathbf{m}_N\|^2}{N-\gamma}$。注意分母是 $N-\gamma$ 而非 $N$——<strong>基石 0001 §5 的 $\sigma^2$ 偏差修正</strong>！那里 MLE 低估 $\sigma^2$ 因为用 $N$ 除，这里证据框架自动用 $N-\gamma$（减掉有效参数），给出无偏估计。同一现象，0001 是诊断，本课是治疗。</p>
+
+<div class="meta-box">
+  <h4>🔗 联系 · $\gamma$ 把三课串起来</h4>
+  有效参数 $\gamma$ 同时是：(i) 基石 0001 §5 自由度修正的来源（$N-\gamma$）；(ii) 本课奥卡姆因子的强度；(iii) 0011 贝叶斯 PCA 自动定维的同一机制（ARD 里 $\alpha_i\to\infty$ 让 $\gamma_i\to0$）。一个量，三个面孔——都是"数据真正支持多少参数"。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 与频率派模型选择（CV/AIC/BIC）的对比</h2>
+
+<table>
+  <tr><th>方法</th><th>复杂度惩罚</th><th>数据效率</th><th>假设</th></tr>
+  <tr><td><strong>交叉验证</strong></td><td>隐式（留出集误差）</td><td>低（烧 $1/K$ 数据）</td><td>无分布假设</td></tr>
+  <tr><td><strong>AIC</strong></td><td>$-M$（数总参数）</td><td>高（用全部数据）</td><td>大样本、模型良定</td></tr>
+  <tr><td><strong>BIC</strong></td><td>$-\frac{M}{2}\log N$</td><td>高</td><td>大样本，倾向选简单</td></tr>
+  <tr><td><strong>边缘似然</strong></td><td>$-\frac{1}{2}\log|\mathbf{A}|$（用有效参数 $\gamma$）</td><td>高（用全部数据）</td><td>需指定先验</td></tr>
+</table>
+
+<p>关键差别：AIC/BIC 数<strong>总</strong>参数 $M$，边缘似然数<strong>有效</strong>参数 $\gamma\leq M$。当很多参数是空转（数据没约束的方向），边缘似然不罚它们，AIC/BIC 照罚——所以贝叶斯在高维稀疏场景（很多参数空转）更准。BIC 的 $\frac{M}{2}\log N$ 其实是边缘似然在大样本极限下的近似，所以 BIC 是边缘似然的"穷人版"。</p>
+
+<div class="warning">
+  边缘似然对<strong>先验的尾部行为敏感</strong>。若先验 improper（不可归一化，如均匀先验），边缘似然无定义（归一化常数发散）。实践里要么用 proper 先验，要么对先验取极限时看<strong>模型间的证据比</strong>（比值里发散因子可能抵消）。这是贝叶斯模型比较的暗坑——PRML 图 3.12 的讨论。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 回接与预告</h2>
+
+<p><strong>基石 0001 §6。</strong> 0001 说 MLE = 最小化 $\mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}})$。本课的模型比较正确性证明用 $\mathrm{KL}(p_{M_1}\|p_{M_2})\geq0$——同一个 KL，0001 量"模型到经验分布的距离"，本课量"两个模型产生数据分布的距离"。KL 非负性一处证明，两处用。</p>
+
+<p><strong>回接 0002 边缘化范式。</strong> 本课算证据 = 0002 算预测分布的同一招（配平方 + 高斯积分），只是 0002 积分掉 $\mathbf{w}$ 得 $t_\ast$ 的分布，本课积分掉 $\mathbf{w}$ 得 $\mathbf{t}$ 的边缘概率。0002 题 5 的两高斯乘积归一化常数 $Z$ 就是本课的一维证据。</p>
+
+<p><strong>预告 0004 指数族。</strong> 本课的 $\alpha,\beta$ 用 Gamma 共轭先验可以再积分一次，得到 $\mathbf{w}$ 上的 Student-t 边缘——这是"全贝叶斯"路线（不点估超参，全积分）。Gamma-Gamma 共轭是 0004 指数族共轭对的一个实例。</p>
+
+<p><strong>预告 0010 EM。</strong> 证据最大化可以换用 EM 算法（把 $\alpha,\beta$ 当"参数"、$\mathbf{w}$ 当潜变量）——PRML §9.3.4 证明两种方法收敛到同一点。这是 EM 的早期实例。</p>
+
+<p><strong>预告 0011 贝叶斯 PCA / ARD。</strong> 本课的 $\gamma$ 机制在贝叶斯 PCA 里自动定主成分个数：给每个潜维一个 $\alpha_i$，证据最大化让无关维 $\alpha_i\to\infty$（该维被压零）。同一套奥卡姆，从多项式阶数到 PCA 维数。</p>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与演算</h2>
+
+<div class="problem">
+  <div class="ptitle">题 1 · 一维单点证据（接 0002 题 6） <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">一维单点 $(x,t)$，$y=wx+\varepsilon$，$w\sim\mathcal{N}(0,\alpha^{-1})$，$\varepsilon\sim\mathcal{N}(0,\beta^{-1})$。用配平方算 $p(t\mid x,\alpha)=\int p(t\mid x,w)p(w\mid\alpha)\,dw$，验证 $\alpha\to0$ 和 $\alpha\to\infty$ 的行为。</div>
+  <details><summary>提示</summary><div class="hint">$t=wx+\varepsilon$ 是独立零均值高斯线性组合，$t\sim\mathcal{N}(0,x^2/\alpha+1/\beta)$。或直接配平方积 $w$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$t=wx+\varepsilon$，$w,\varepsilon$ 独立零均值 → $t$ 零均值，$\operatorname{Var}(t)=x^2\operatorname{Var}(w)+\operatorname{Var}(\varepsilon)=x^2/\alpha+1/\beta$。</div>
+    <div class="step">$p(t\mid x,\alpha)=\mathcal{N}(t\mid0,x^2/\alpha+1/\beta)$。</div>
+    <div class="step">$\alpha\to\infty$：方差 $\to1/\beta$，模型钉 $w=0$，只能输出噪声水平。$\alpha\to0$：方差 $\to\infty$，$p\to0$ 对任何有限 $t$——太复杂摊太薄。</div>
+    <div class="step">最大证据在中间 $\alpha$：对 $t^2$ 给定，$\log p=-\frac{t^2}{2(x^2/\alpha+1/\beta)}-\frac{1}{2}\log(x^2/\alpha+1/\beta)+\text{const}$，两项拉锯。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 2 · 证据拆成拟合 × 奥卡姆 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">从 $\log p(\mathbf{t}\mid\alpha,\beta)=\frac{M}{2}\log\alpha+\frac{N}{2}\log\beta-E(\mathbf{m}_N)-\frac{1}{2}\log|\mathbf{A}|-\frac{N}{2}\log(2\pi)$ 出发，把 $E(\mathbf{m}_N)$ 拆成"最佳拟合似然 + 先验在 MAP 的值"，说明 $-\frac{1}{2}\log|\mathbf{A}|$ 是奥卡姆因子（后验越宽惩罚越大）。</div>
+  <details><summary>提示</summary><div class="hint">$E(\mathbf{m}_N)=\frac{\beta}{2}\|\mathbf{t}-\boldsymbol{\Phi}\mathbf{m}_N\|^2+\frac{\alpha}{2}\mathbf{m}_N^\top\mathbf{m}_N$，前项是 $-\log$ 似然在 MAP，后项是 $-\log$ 先验在 MAP。$\mathbf{A}=\mathbf{S}_N^{-1}$ 是后验精度，$|\mathbf{A}|$ 大 = 后验窄 = 数据信息多。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$-E(\mathbf{m}_N)=-\frac{\beta}{2}\|\mathbf{t}-\boldsymbol{\Phi}\mathbf{m}_N\|^2-\frac{\alpha}{2}\mathbf{m}_N^\top\mathbf{m}_N=\log p(\mathbf{t}\mid\mathbf{w}_{\text{MAP}},\beta)+\log p(\mathbf{w}_{\text{MAP}}\mid\alpha)+\text{const}$（最佳拟合似然 + 先验在 MAP）。</div>
+    <div class="step">$-\frac{1}{2}\log|\mathbf{A}|=-\frac{1}{2}\log|\mathbf{S}_N^{-1}|=\frac{1}{2}\log|\mathbf{S}_N|$。$\mathbf{S}_N$ 是后验协方差，$|\mathbf{S}_N|$ 大 = 后验宽 = 数据没把 $\mathbf{w}$ 钉死 = 模型用了太多没被约束的参数 → 惩罚大。</div>
+    <div class="step">所以 $\log\text{证据}=\log\text{最佳拟合}+\log\text{先验(MAP)}+\frac{1}{2}\log|\mathbf{S}_N|+\text{const}$。前两项奖拟合，$\frac{1}{2}\log|\mathbf{S}_N|$ 罚后验宽度（复杂度）。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 3 · 有效参数 γ <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">$\gamma=\sum_i\frac{\lambda_i}{\lambda_i+\alpha}$，$\lambda_i$ 是 $\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 的特征值。证明 $0\leq\gamma\leq M$，并解释：$\lambda_i\gg\alpha$ 时该方向贡献≈1（数据主导），$\lambda_i\ll\alpha$ 时≈0（先验主导）。为什么 $\gamma$ 比 $M$ 更适合做复杂度度量？</div>
+  <details><summary>提示</summary><div class="hint">$\frac{\lambda}{\lambda+\alpha}$ 是 $\lambda$ 的单调增函数，值域 $[0,1)$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\frac{\lambda_i}{\lambda_i+\alpha}\in[0,1)$（$\lambda_i\geq0,\alpha>0$），故 $\gamma\in[0,M)$。</div>
+    <div class="step">$\lambda_i\gg\alpha$：$\frac{\lambda_i}{\lambda_i+\alpha}\to1$——该特征方向数据信息远超先验，参数被数据钉死，算"有效用了一个参数"。</div>
+    <div class="step">$\lambda_i\ll\alpha$：$\to0$——该方向先验主导，数据没提供信息，参数基本停在先验均值，算"空转，不算有效参数"。</div>
+    <div class="step">$M$ 数总参数（含空转的），$\gamma$ 数被数据支持的参数。高维稀疏场景很多参数空转，$\gamma\ll M$，边缘似然只罚 $\gamma$ → 比 AIC/BIC（罚 $M$）更准。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 4 · 奥卡姆因子 ≤ 1 <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">证明 $p(\mathbf{t}\mid\alpha,\beta)\le\sup_{\mathbf{w}}p(\mathbf{t}\mid\mathbf{w},\beta)$，即"边缘似然不超过最佳单点似然"——平均不超过上确界。再说明为什么"峰高 × 峰宽"的奥卡姆因子通常 $<1$：取 MAP 只看峰高，积分还要乘峰宽（后验体积）再除归一化，净效果是复杂模型峰宽大但被归一化抵消，反而低。</div>
+  <details><summary>提示</summary><div class="hint">$p(\mathbf{t}\mid\alpha,\beta)=\mathbb{E}_{\mathbf{w}\sim p(\mathbf{w}\mid\alpha)}[p(\mathbf{t}\mid\mathbf{w})]$，期望 $\le$ 上确界。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$p(\mathbf{t}\mid\alpha,\beta)=\int p(\mathbf{t}\mid\mathbf{w})p(\mathbf{w}\mid\alpha)\,d\mathbf{w}=\mathbb{E}_{\mathbf{w}\sim p(\mathbf{w}\mid\alpha)}[p(\mathbf{t}\mid\mathbf{w})]$（先验当概率测度）。</div>
+    <div class="step">期望 $\le$ 上确界：$\mathbb{E}[f]\le\sup f$。故 $p(\mathbf{t}\mid\alpha,\beta)\le\sup_{\mathbf{w}}p(\mathbf{t}\mid\mathbf{w})$。✓</div>
+    <div class="step">"峰高×峰宽"：$p(\mathbf{t}\mid\alpha,\beta)\approx p(\mathbf{t}\mid\mathbf{w}_{\text{MAP}})\cdot p(\mathbf{w}_{\text{MAP}})\cdot\underbrace{(\text{后验体积})}_{\propto|\mathbf{S}_N|^{1/2}}$。</div>
+    <div class="step">复杂模型先验宽 → 后验也宽 → 体积大，但 $p(\mathbf{w}_{\text{MAP}})$ 小（先验密度低，因摊得薄）。两者乘积 = 奥卡姆因子，通常 $<1$ 且随 $M$ 增而降。取 MAP 只留峰高 $p(\mathbf{t}\mid\mathbf{w}_{\text{MAP}})$，看不到这个抵消——所以 MLE 总高估、不罚复杂度。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 5 · 模型选择正确性 = KL 非负（基石 0001 §6） <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">设真实数据分布来自模型 $M_1$。证明期望对数贝叶斯因子 $\int p(\mathbf{D}\mid M_1)\log\frac{p(\mathbf{D}\mid M_1)}{p(\mathbf{D}\mid M_2)}\,d\mathbf{D}=\mathrm{KL}(p_{M_1}\|p_{M_2})\geq0$，等号当且仅当两模型产生相同数据分布。解释：为什么这说明"平均来看贝叶斯选对真实模型"。</div>
+  <details><summary>提示</summary><div class="hint">直接对照 KL 定义 $\mathrm{KL}(p\|q)=\int p\log\frac{p}{q}$。KL 非负用 Jensen（$\log$ 凹）。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\int p(\mathbf{D}\mid M_1)\log\frac{p(\mathbf{D}\mid M_1)}{p(\mathbf{D}\mid M_2)}\,d\mathbf{D}$ 正是 $\mathrm{KL}(p(\cdot\mid M_1)\|p(\cdot\mid M_2))$ 的定义。</div>
+    <div class="step">$\mathrm{KL}\geq0$：$-\mathrm{KL}=\int p\log\frac{q}{p}\le\log\int p\frac{q}{p}=\log 1=0$（Jensen，$\log$ 凹）。等号 $\Leftrightarrow p=q$。</div>
+    <div class="step">读法：把 $\log\frac{p(\mathbf{D}\mid M_1)}{p(\mathbf{D}\mid M_2)}$ 当"数据 $\mathbf{D}$ 偏好 $M_1$ 的对数证据"。在真实分布 $M_1$ 下平均，这个偏好 $\geq0$——<strong>真实模型平均证据更大</strong>。单份数据可能选错（方差），但平均选对。这是贝叶斯模型比较的理论保证，根在 KL 非负——基石 0001 §6。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 6 · 多项式阶数选择（范式迁移） <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">PRML 图 3.14：多项式阶数 $M$ 的对数证据在 $M=3$ 取最大，而 MLE 训练误差在 $M\geq3$ 几乎为零。用本课机制解释：为什么证据在 $M=3$ 后下降？具体说 $\gamma$ 和 $\log|\mathbf{A}|$ 各怎么变。把这套"自动选阶"和基石 0001 §5 的过拟合诊断接起来。</div>
+  <details><summary>提示</summary><div class="hint">$M$ 增大：拟合项 $-E(\mathbf{m}_N)$ 增（拟得更合），但 $\frac{M}{2}\log\alpha-\frac{1}{2}\log|\mathbf{A}|$ 里 $\log|\mathbf{A}|=\sum\log(\lambda_i+\alpha)$，新增的高阶参数 $\lambda_i\approx0$（数据没约束高频），每个贡献 $\log\alpha<0$，拉低证据。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$M$ 从 3 增到 9：训练残差几乎不变（已拟尽），故 $-E(\mathbf{m}_N)$ 几乎不增。</div>
+    <div class="step">但新增的高阶参数对应 $\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 的小特征值 $\lambda_i\approx0$（数据在高频方向没信息）。</div>
+    <div class="step">$\log|\mathbf{A}|=\sum_i\log(\lambda_i+\alpha)$：新方向贡献 $\log(0+\alpha)=\log\alpha<0$（$\alpha$ 通常 $<1$）。每加一个空转参数，$-\frac{1}{2}\log|\mathbf{A}|$ 掉 $\frac{1}{2}|\log\alpha|$。</div>
+    <div class="step">同时 $\gamma=\sum\frac{\lambda_i}{\lambda_i+\alpha}$：新方向 $\lambda_i\approx0$ 贡献 $\approx0$，$\gamma$ 不增——<strong>证据知道这些参数是空转，照罚不误</strong>。</div>
+    <div class="step">净效果：拟合不增、惩罚线性增 → 证据在 $M=3$ 后下降。<strong>接基石 0001 §5：</strong>那里 MLE 把 $\sigma^2$ 低估因为用 $N$ 除；本课证据用 $N-\gamma$ 自动修正，且 $\gamma$ 识别出"只有 3 个参数真被数据用"。诊断（基石 0001 §5）和治疗（本课）同一现象。</div>
+  </div></details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 自测</h2>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q1 · 边缘似然为什么能自动罚复杂度？用"先验归一化"解释。</div>
+  <details><summary>答案</summary><div class="sol">先验归一化（概率 1 摊在所有参数上）。复杂模型先验宽、参数空间大、能产生数据集种类多但每种概率被摊薄；对一份具体数据，太复杂模型给的边缘概率反而低。纯靠归一化，不需外加惩罚项。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q2 · 有效参数 $\gamma$ 和总参数 $M$ 的差别？为什么高维稀疏时 $\gamma$ 更适合做复杂度度量？</div>
+  <details><summary>答案</summary><div class="sol">$\gamma=\sum\frac{\lambda_i}{\lambda_i+\alpha}$ 数被数据支持的参数（$\lambda_i$ 大的方向），$M$ 数总参数含空转的。高维稀疏很多 $\lambda_i\approx0$（空转），$\gamma\ll M$。边缘似然罚 $\gamma$，AIC/BIC 罚 $M$——前者不罚空转，更准。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q3 · 证据框架的 $\beta^{-1}=\|\mathbf{t}-\boldsymbol{\Phi}\mathbf{m}_N\|^2/(N-\gamma)$ 和基石 0001 §5 的 $\widehat{\sigma^2}_{\text{ML}}=\|\cdot\|^2/N$ 差在哪？为什么前者无偏？</div>
+  <details><summary>答案</summary><div class="sol">分母 $N-\gamma$ vs $N$。MLE 用 $N$ 低估 $\sigma^2$（没扣掉参数消耗的自由度）。证据框架自动扣 $\gamma$（有效参数），给无偏估计。同一偏差现象，基石 0001 §5 诊断、本课治疗。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q4 · 边缘似然对先验的什么性质敏感？improper 先验为什么让边缘似然无定义？</div>
+  <details><summary>答案</summary><div class="sol">对先验<strong>尾部行为</strong>敏感（低概率处）。improper 先验归一化常数发散，边缘似然 $=\int$ 似然×先验 也发散→无定义。实践用 proper 先验，或对先验取极限时看模型间证据比（发散因子可能抵消）。</div></details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;"><strong>PRML §3.4（贝叶斯模型比较）+ §3.5（证据近似）</strong>——§3.4 讲奥卡姆因子和图 3.13（必看），§3.5.1 算证据函数（3.77–3.86），§3.5.2 证据最大化（3.87–3.95 的 $\gamma$）。图 3.14（多项式阶数 vs 证据）是本课题 6 的原文。</p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;"><strong>MacKay《Information Theory, Inference, and Learning Algorithms》§28</strong>——奥卡姆因子讲得比 PRML 更直觉，有"硬币正反"的经典例子。</p>
+  <p style="margin-bottom:0; font-size:0.9rem;"><strong>MML §8.4</strong>——边缘似然的贝叶斯推断框架。</p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">硬核在题 4、5、6——奥卡姆因子≤上确界、KL 证明模型选择正确性、多项式自动选阶。题 5 把本课接回 0001 的 KL，题 6 接回 0001 的过拟合诊断。卡住直接问。</p>
+</div>
+
+<div class="lesson-footer">
+  <a href="0002-bayesian-linear-regression.html">← 0002 贝叶斯线性回归</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0004-exponential-family.html">0004 指数族与共轭先验</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<template id="card-data-laplace">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">工具</span><h3>拉普拉斯近似</h3><span class="cc-aliases">Laplace Approximation</span></div>
+  <div class="cc-essence">用高斯分布近似积分 $\int e^{N f(\theta)}d\theta$：在 $f$ 的最大值点做二阶 Taylor 展开 → 高斯积分有闭式。本质：用峰值处的曲率（Hessian）近似整个函数。</div>
+  <div class="cc-connections"><span class="conn-badge">→ 0003: 边缘似然的近似算法</span><span class="conn-badge">→ 0015: VI 的非共轭补救</span></div>
+</div>
+</template>
+
+</body>
+</html>

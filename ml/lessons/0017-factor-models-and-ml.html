@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0017 · 因子模型与 ML</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "\01f4a1 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "\026a0\0fe0f "; font-style: normal; }
+
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-section { margin-top: 0.7rem; }
+  .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; }
+  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0017 · 因子模型与 ML</h1>
+<div class="subtitle">PCA 在资产定价里的名字叫因子模型——从 APT 到 GBDT 选股 · 阅读时间 ~45 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 因子模型的数学起源：无套利 → 线性定价</a><br>
+  <a href="#s2">2. APT：多因子无套利定价</a><br>
+  <a href="#s3">3. 统计因子模型：PCA 在金融里的化身</a><br>
+  <a href="#s4">4. Fama–French 与基本面因子</a><br>
+  <a href="#s5">5. 因子中性化：正交投影的量化版</a><br>
+  <a href="#s6">6. GBDT 选股：函数空间梯度下降</a><br>
+  <a href="#s7">7. 范式总结</a><br>
+  <a href="#s8">8. 推导与演算</a><br>
+  <a href="#s9">9. 自测</a>
+</div>
+
+<p>
+  <strong>这是路径 C（架构与表示）在资产定价中的对应物。</strong>
+  0011 的 PCA 从协方差矩阵提取主成分——因子模型对资产收益做完全一样的事。
+  APT 套利定价理论是"线性因子模型 + 无套利条件"的必然推论；
+  统计因子就是 PCA 的主成分；GBDT 选股是函数空间梯度下降在因子组合上的应用。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>激活已有知识</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>0011 PCA：$\mathbf{X} = \mathbf{Z}\mathbf{W}^\top$，主成分 = 协方差矩阵的特征向量</li>
+    <li>0001 §4：正交投影 $\mathbf{P} = \boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top$</li>
+    <li>线性回归：$\mathbf{r} = \mathbf{X}\mathbf{b} + \boldsymbol{\varepsilon}$</li>
+    <li>0013：GBDT = 前向分步加性模型，每步拟合残差</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 因子模型的数学起源：无套利 → 线性定价</h2>
+
+<div class="meta-box">
+  <h4>范式 #19 · 无套利 → 线性定价</h4>
+  金融市场不允许"空手套白狼"——无套利条件强制资产的期望收益与其因子暴露之间必须存在<strong>线性关系</strong>。这不是经验规律，是数学定理。
+</div>
+
+<p>
+  考虑 $K$ 个因子的线性模型：$r_i = \alpha_i + \boldsymbol{\beta}_i^\top\mathbf{f} + \varepsilon_i$。
+  其中 $\boldsymbol{\beta}_i$ 是资产 $i$ 对 $K$ 个因子的暴露（loading）。
+</p>
+
+<p>
+  无套利条件要求：如果两个资产有完全相同的因子暴露 $\boldsymbol{\beta}$，它们必须有相同的期望收益。
+  否则买入高收益的 + 卖出低收益的 → 零净暴露 + 正收益 → 套利。
+</p>
+
+<div class="derivation">
+  <h4>推导 · APT 定价方程</h4>
+  <div class="step">
+    假设 $\mathbf{r} = \boldsymbol{\alpha} + \mathbf{B}\mathbf{f} + \boldsymbol{\varepsilon}$，$\mathbb{E}[\boldsymbol{\varepsilon}\mid\mathbf{f}] = 0$。
+    <span class="reason">线性因子模型的基本设定</span>
+  </div>
+  <div class="step">
+    无套利 ⇒ $\exists \boldsymbol{\lambda}\in\mathbb{R}^K$ 使得 $\mathbb{E}[\mathbf{r}] \approx \mathbf{r}_f + \mathbf{B}\boldsymbol{\lambda}$
+    <span class="reason">$\boldsymbol{\lambda}$ = 因子风险溢价向量——承担因子风险应得的补偿</span>
+  </div>
+  <div class="step">
+    $\boldsymbol{\alpha} = \mathbb{E}[\mathbf{r}] - \mathbf{r}_f - \mathbf{B}\boldsymbol{\lambda} = 0$（无 $\alpha$）
+    <span class="reason">任何非零 $\alpha$ 都是套利机会——买入正 $\alpha$，卖空负 $\alpha$</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. APT：多因子无套利定价</h2>
+
+<p>APT（Arbitrage Pricing Theory, Ross 1976）是 CAPM 的多因子推广：</p>
+
+<div class="formula-block">
+  $$\boxed{\;\mathbb{E}[r_i] = r_f + \beta_{i1}\lambda_1 + \beta_{i2}\lambda_2 + \cdots + \beta_{iK}\lambda_K\;}$$
+</div>
+
+<div class="insight">
+  <strong>CAPM vs APT：</strong>CAPM 说"市场因子就够了"（$K=1$）；APT 说"有几个系统性风险源就有几个因子"（$K$ 由数据定）。
+  APT 不告诉你因子是什么——这正是统计因子模型存在的理由：<strong>让数据自己找出因子</strong>。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 统计因子模型：PCA 在金融里的化身</h2>
+
+<p>
+  给定 $N$ 个资产在 $T$ 期的收益矩阵 $\mathbf{R}\in\mathbb{R}^{T\times N}$，PCA 对协方差矩阵 $\frac{1}{T}\mathbf{R}^\top\mathbf{R}$ 做特征分解。
+  前 $K$ 个特征向量就是<strong>统计因子</strong>——它们是数据中方差最大的 $K$ 个方向。
+</p>
+
+<div class="formula-block">
+  $$\mathbf{R}^\top\mathbf{R} = \mathbf{V}\mathbf{\Lambda}\mathbf{V}^\top, \quad \mathbf{F} = \mathbf{R}\mathbf{V}_{[:,:K]}$$
+</div>
+
+<p>$\mathbf{F}\in\mathbb{R}^{T\times K}$ 是 $K$ 个统计因子的时间序列。每个因子是各资产的线性组合，权重由特征向量给出。</p>
+
+<div class="warning">
+  <strong>统计因子 ≠ 可解释因子。</strong>PCA 找到的第一个主成分通常就是"市场因子"（各资产等权组合的近似），
+  但第二个、第三个可能没有简单的金融解释。它们捕获的是数据中的<strong>统计结构</strong>，不一定是"规模"或"价值"。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. Fama–French 与基本面因子</h2>
+
+<p>
+  Fama–French 三因子模型（1993）用<strong>基本面特征</strong>构造因子：
+</p>
+
+<table>
+  <tr><th>因子</th><th>构造方式</th><th>经济直觉</th></tr>
+  <tr><td>市场（MKT）</td><td>$r_m - r_f$</td><td>承担系统性风险应得的回报</td></tr>
+  <tr><td>规模（SMB）</td><td>小市值 − 大市值</td><td>小公司风险更高 → 期望收益更高</td></tr>
+  <tr><td>价值（HML）</td><td>高 B/M − 低 B/M</td><td>价值股（便宜）vs 成长股（贵）</td></tr>
+</table>
+
+<p>后续扩展：五因子（+ 盈利 RMW + 投资 CMA）、动量因子（Carhart 四因子）。</p>
+
+<div class="insight">
+  <strong>基本面因子 vs 统计因子：</strong>Fama–French 是"用经济直觉选因子"；PCA 是"让数据选因子"。
+  ML 时代的主流做法是把两者结合：用基本面特征 + ML 模型（GBDT/NN）预测收益，
+  然后用统计因子做中性化消除不想要的风险暴露。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 因子中性化：正交投影的量化版</h2>
+
+<div class="meta-box">
+  <h4>范式 #17（回接）· 中性化 = $\mathbf{I}-\mathbf{P}$</h4>
+  给定因子矩阵 $\mathbf{X}$，组合收益 $\mathbf{r}$ 中性化：$\mathbf{r}_\perp = (\mathbf{I} - \mathbf{X}(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top)\mathbf{r}$。
+  结果 $\mathbf{r}_\perp$ 与所有因子的协方差为零——<strong>纯 $\alpha$，因子免疫</strong>。
+</div>
+
+<p>
+  正交投影在 0001 §4 里是几何直观，在 0017 里是风控工具：
+  把策略收益投影到因子空间上，取残差——残差部分不承担因子风险，alpha 归因干净。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. GBDT 选股：函数空间梯度下降</h2>
+
+<div class="meta-box">
+  <h4>范式 #20 · Boosting = 函数空间梯度下降</h4>
+  0013 的 AdaBoost 在函数空间做梯度下降。GBDT 推广到任意可微损失：第 $m$ 步拟合负梯度 $-\partial L/\partial f$。
+  在选股里，$f(\mathbf{x})$ = 预期收益率，$L$ = MSE 或排序损失。
+</div>
+
+<div class="derivation">
+  <h4>GBDT 的数学本质</h4>
+  <div class="step">
+    设当前模型 $F_{m-1}(\mathbf{x})$。计算每个样本上的负梯度：
+    $g_{im} = -\left.\frac{\partial L(y_i, F(\mathbf{x}_i))}{\partial F(\mathbf{x}_i)}\right|_{F=F_{m-1}}$
+    <span class="reason">负梯度方向 = 损失下降最快的方向（在函数空间）</span>
+  </div>
+  <div class="step">
+    训练一棵回归树 $h_m(\mathbf{x})$ 拟合 $\{(\mathbf{x}_i, g_{im})\}$，更新 $F_m = F_{m-1} + \eta \cdot h_m$
+    <span class="reason">$\eta$ = 学习率/shrinkage，每步只走一小步避免过拟合</span>
+  </div>
+</div>
+
+<p>在量化选股里的典型用法：特征 = 基本面因子值（PE、PB、动量……）；预测目标 = 下期收益率或排序；模型 = LightGBM/XGBoost。</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 范式总结</h2>
+
+<table>
+  <tr><th>范式</th><th>名称</th><th>数学内容</th><th>来源</th></tr>
+  <tr><td>#19</td><td>无套利 → 线性定价</td><td>$\mathbb{E}[\mathbf{r}] = r_f + \mathbf{B}\boldsymbol{\lambda}$</td><td>Ross (1976) APT</td></tr>
+  <tr><td>#20</td><td>Boosting = 函数空间梯度下降</td><td>$F_m = F_{m-1} + \eta\cdot\arg\min_h\sum_i (g_{im}-h(\mathbf{x}_i))^2$</td><td>Friedman (2001)</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与演算</h2>
+
+<div class="problem">
+  <div class="ptitle">L1 · APT 定价验证 <span class="plevel l1">L1</span></div>
+  <div class="pbody">已知两个因子，无风险利率 $r_f=2\%$，因子风险溢价 $\lambda_1=5\%, \lambda_2=3\%$。资产 A 的因子暴露 $\boldsymbol{\beta}_A=(1.2, 0.8)$。用 APT 给出它的期望收益。如果市场上它的期望收益是 10%，有无套利机会？</div>
+  <details>
+    <summary>展开推导</summary>
+    <div class="sol">
+      <div class="step">APT 定价：$\mathbb{E}[r_A] = 2\% + 1.2\times 5\% + 0.8\times 3\% = 2\% + 6\% + 2.4\% = 10.4\%$<span class="reason">$\alpha_A = 10\% - 10.4\% = -0.4\%$（实际收益低于定价）→ 卖出 A</span></div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L2 · 中性化与纯 alpha 分解 <span class="plevel l2">L2</span></div>
+  <div class="pbody">一个选股策略的月收益 $\mathbf{r}$（$T\times 1$）对 Fama–French 三因子 $\mathbf{X}$（$T\times 3$）回归得到残差 $\mathbf{r}_\perp$。证明 $\operatorname{Cov}(\mathbf{r}_\perp, \mathbf{X}_k) = 0$ 对所有 $k$。</div>
+  <details>
+    <summary>展开推导</summary>
+    <div class="sol">
+      <div class="step">$\mathbf{r}_\perp = \mathbf{r} - \mathbf{X}\hat{\mathbf{b}} = \mathbf{r} - \mathbf{X}(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{r} = (\mathbf{I}-\mathbf{P})\mathbf{r}$<span class="reason">$\hat{\mathbf{b}}$ 是 OLS 系数</span></div>
+      <div class="step">$\mathbf{X}^\top\mathbf{r}_\perp = \mathbf{X}^\top(\mathbf{I}-\mathbf{P})\mathbf{r} = (\mathbf{X}^\top - \mathbf{X}^\top\mathbf{P})\mathbf{r}$<span class="reason">$\mathbf{P} = \mathbf{X}(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top$</span></div>
+      <div class="step">$\mathbf{X}^\top\mathbf{P} = \mathbf{X}^\top\mathbf{X}(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top = \mathbf{X}^\top$ ⇒ $\mathbf{X}^\top\mathbf{r}_\perp = 0$<span class="reason">回归残差与自变量正交——OLS 的固有性质</span></div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L3 · GBDT 与 Newton 步的关系 <span class="plevel l3">L3</span></div>
+  <div class="pbody">证明：GBDT 使用平方损失时，每一步等价于拟合残差。如果使用 Hessian（二阶信息），GBDT 的更新与 Newton 法有什么关系？</div>
+  <details>
+    <summary>展开推导</summary>
+    <div class="sol">
+      <div class="step">MSE 损失：$L = \frac{1}{2}(y-F)^2$，$-\partial L/\partial F = y-F$（残差）<span class="reason">GBDT 拟合残差 = 函数空间的梯度下降</span></div>
+      <div class="step">Newton 步：$\Delta F = -(\partial^2 L/\partial F^2)^{-1}(\partial L/\partial F) = 1^{-1}(y-F) = y-F$<span class="reason">平方损失的 Hessian = 1 → Newton = 梯度</span></div>
+      <div class="step">对一般损失，Newton 步 = $-g_i/h_i$。XGBoost 用 $h_i$（二阶梯度）做加权——这就是为什么它比普通 GBDT 快。<span class="reason">二阶信息 = 自适应步长</span></div>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 自测</h2>
+
+<div class="retrieval">
+  <h3>快速检索</h3>
+  <ol>
+    <li>APT 为什么强制因子暴露与期望收益之间是线性关系？</li>
+    <li>统计因子和基本面因子的本质区别是什么？各有什么优劣？</li>
+    <li>中性化在数学上等价于 0001 的什么操作？残差空间的经济含义是什么？</li>
+    <li>GBDT 为什么叫"函数空间梯度下降"？每步拟合的目标是什么？</li>
+    <li>Fama–French 三因子是哪三个？它们各自捕获了什么风险溢价？</li>
+  </ol>
+</div>
+
+<div class="reminder">
+  <strong>关键带回：</strong>因子模型 = 降维（PCA）+ 无套利定价（APT）+ 中性化（正交投影）+ 预测模型（GBDT/NN）。
+  这四个组件来自四节不同的课（0011、本课、0001、0013）——合在一起就是一个完整的量化选股系统。
+</div>
+
+<div class="primary-source">
+  <h3>主要参考</h3>
+  <strong>Ross (1976) — The Arbitrage Theory of Capital Asset Pricing</strong>（APT 的原始论文）。<br>
+  <strong>Fama & French (1993) — Common Risk Factors in the Returns on Stocks and Bonds</strong>（三因子的原始论文）。<br>
+  <strong>Friedman (2001) — Greedy Function Approximation: A Gradient Boosting Machine</strong>（GBDT 的数学基础）。
+</div>
+
+<div class="lesson-footer">
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> · <a href="../reference/math-primer.html">📐 数学手册</a> ·
+  <strong>上一课</strong>：<a href="0016-ml-in-quant.html">0016 ML 在量化中的角色</a>　|
+  <strong>课程结束</strong> · 0001–0017 全部完成 &#127881;<br>
+  <span style="font-size:0.82rem;">深入知识 → <a href="0018-score-function.html">0018 Score Function</a></span>
+</div>
+
+
+<script src="../reference/popup-cards.js"></script>
+</body>
+</html>

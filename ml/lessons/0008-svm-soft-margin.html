@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0008 · SVM（下）软间隔与 hinge 损失</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0008 · SVM（下）· 软间隔与 hinge 损失</h1>
+<div class="subtitle">松弛变量允许违反间隔 → hinge 损失 + $\ell_2$ 正则 → 回接基石 0001 §2 损失视角 → SMO 直觉 · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 硬间隔的失败：outlier 与不可分数据</a><br>
+  <a href="#s2">2. 松弛变量：把"必须分对"换成"违反要罚"</a><br>
+  <a href="#s3">3. 软间隔的拉格朗日对偶</a><br>
+  <a href="#s4">4. 消去 $\boldsymbol\xi$：对 $\alpha_n$ 加上界 $C$</a><br>
+  <a href="#s5">5. hinge 损失视角：SVM = 正则化 + 合页损失</a><br>
+  <a href="#s6">6. 三种样本：间隔内 / 边界 / 违反</a><br>
+  <a href="#s7">7. SMO 直觉：两个乘子一起优化</a><br>
+  <a href="#s8">8. 推导与演算</a><br>
+  <a href="#s9">9. 自测</a>
+</div>
+
+<p>
+  上一课 0007 把硬间隔 SVM 从几何推到对偶。但硬间隔要求线性可分——真实数据有噪声、有重叠、有 outlier，
+  硬间隔要么无解要么被一个错点拉歪。本课引入<strong>松弛变量</strong>（slack variables）$\xi_n\geq0$ 允许个别点违反间隔，
+  用参数 $C$ 控制"违反的总代价"。推出对偶后会发现：软间隔与硬间隔的对偶<strong>几乎一样</strong>，只多一个上界 $\alpha_n\leq C$。
+</p>
+
+<p>
+  更深的发现：把松弛变量消去，软间隔 SVM 的目标变成 $\frac12\|\mathbf{w}\|^2+C\sum_n\max(0,1-y_n f(\mathbf{x}_n))$——
+  这正是 <strong>$\ell_2$ 正则 + hinge 损失</strong>。于是 SVM 不再是孤立的"间隔最大化"几何方法，
+  它落进了 基石 0001 的正则化/损失视角 建立的"<strong>正则化经验风险最小化</strong>"统一框架：损失项罚训练误差，正则项罚复杂度，$C$ 调节两者权衡。
+  hinge 损失是 0/1 损失的凸上界——这是 SVM 能全局优化的根本原因。最后讲 SMO 算法的直觉。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>硬间隔 SVM 原始问题 $\min\frac12\|\mathbf{w}\|^2$ s.t. $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1$。对偶是什么？$\alpha_n$ 的约束是什么？</li>
+    <li>KKT 互补松弛 $\alpha_n[y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1]=0$ 推出支持向量。$\alpha_n>0$ 意味着什么？</li>
+    <li>基石 0001 的正则化/损失视角 的正则化框架：$\min\;\text{损失}(\mathbf{w})+\lambda\,\text{正则}(\mathbf{w})$。岭回归 = 平方损失 + $\ell_2$ 正则。</li>
+    <li>0/1 损失 $\mathbf{1}[yf(\mathbf{x})<0]$ 非凸，优化困难。需要凸代理（surrogate）。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 硬间隔的失败：outlier 与不可分数据</h2>
+
+<p>
+  硬间隔要求 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1$ 对所有 $n$ 成立。两种失败：
+</p>
+
+<ul>
+  <li><strong>线性不可分</strong>：无论怎么选 $\mathbf{w},b$，约束无解，原始问题不可行。</li>
+  <li><strong>线性可分但有 outlier</strong>：一个错点或边界附近的点会强迫超平面大幅倾斜来满足它的约束，间隔被压扁，泛化变差。硬间隔对 outlier 极其敏感。</li>
+</ul>
+
+<p>
+  两种失败的共同根源：约束<strong>硬性</strong>要求每个点都满足间隔。放松它——允许违反，但违反要付代价——就是软间隔。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 松弛变量：把"必须分对"换成"违反要罚"</h2>
+
+<p>
+  给每个样本引入松弛变量 $\xi_n\geq0$，把约束放松为 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1-\xi_n$。
+  $\xi_n$ 衡量样本 $n$ <strong>违反间隔的程度</strong>：
+</p>
+
+<ul>
+  <li>$\xi_n=0$：满足硬间隔约束（在间隔外或边界上）。</li>
+  <li>$0<\xi_n\leq1$：在间隔内但仍分对（边界正确一侧）。</li>
+  <li>$\xi_n>1$：分错（在边界错误一侧）。</li>
+</ul>
+
+<p>
+  在目标里加罚 $\sum\xi_n$，参数 $C>0$ 控制罚的强度。软间隔 SVM 原始问题：
+</p>
+
+<div class="formula-block">
+  $$\boxed{\;\min_{\mathbf{w},b,\boldsymbol\xi}\;\frac12\|\mathbf{w}\|^2 + C\sum_{n=1}^N\xi_n \qquad\text{s.t.}\quad y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1-\xi_n,\;\xi_n\geq0\;}$$
+</div>
+
+<div class="insight">
+  <strong>$C$ 是间隔宽度与违反程度的权衡旋钮。</strong>
+  $C\to\infty$：罚违反极重，退化为硬间隔（几乎不允许 $\xi_n>0$）。$C$ 小：容忍违反，间隔变宽，更平滑、更抗 outlier、更可能欠拟合。
+  这与 0002 贝叶斯回归里精度 $\alpha$（先验强度）、0003 边缘似然里 $\alpha/\beta$（正则/噪声比）是同一种旋钮——<strong>正则强度</strong>。下一节会看到 $C$ 就是 $1/\lambda$。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 软间隔的拉格朗日对偶</h2>
+
+<p>两个约束，两族乘子：$\alpha_n\geq0$（间隔约束）、$\mu_n\geq0$（$\xi_n\geq0$ 约束）。拉格朗日函数：</p>
+
+<div class="formula-block">
+  $$\mathcal{L}=\frac12\|\mathbf{w}\|^2+C\sum_n\xi_n-\sum_n\alpha_n[y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1+\xi_n]-\sum_n\mu_n\xi_n$$
+</div>
+
+<p>对 $\mathbf{w},b,\xi_n$ 求驻点：</p>
+
+<div class="derivation">
+  <h4>三个驻点条件</h4>
+  <div class="step">
+    $\nabla_{\mathbf{w}}\mathcal{L}=\mathbf{w}-\sum_n\alpha_n y_n\mathbf{x}_n=0\;\Rightarrow\;\mathbf{w}=\sum_n\alpha_n y_n\mathbf{x}_n$
+    <span class="reason">与硬间隔完全相同</span>
+  </div>
+  <div class="step">
+    $\frac{\partial\mathcal{L}}{\partial b}=-\sum_n\alpha_n y_n=0\;\Rightarrow\;\sum_n\alpha_n y_n=0$
+    <span class="reason">与硬间隔完全相同</span>
+  </div>
+  <div class="step">
+    $\frac{\partial\mathcal{L}}{\partial\xi_n}=C-\alpha_n-\mu_n=0\;\Rightarrow\;\alpha_n=C-\mu_n$
+    <span class="reason">新条件：$\xi_n$ 的驻点。因 $\mu_n\geq0$，得 $\alpha_n\leq C$</span>
+  </div>
+</div>
+
+<p>
+  第三个条件是软间隔独有的：$\alpha_n+\mu_n=C$，$\mu_n\geq0$ 给 $\alpha_n\leq C$。代回 $\mathcal{L}$（$\xi_n$ 项系数 $C-\alpha_n-\mu_n=0$ 全部消去），对偶问题：
+</p>
+
+<div class="formula-block">
+  $$\boxed{\;\max_{\boldsymbol{\alpha}}\;\sum_n\alpha_n-\frac12\sum_{n,m}\alpha_n\alpha_m y_n y_m\,\mathbf{x}_n^\top\mathbf{x}_m \qquad\text{s.t.}\quad 0\leq\alpha_n\leq C,\;\sum_n\alpha_n y_n=0\;}$$
+</div>
+
+<p>
+  与硬间隔对偶<strong>唯一区别</strong>：$\alpha_n$ 多了上界 $C$。这是软间隔的全部代价——推导骨架与 0007 完全相同。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 消去 $\boldsymbol\xi$：对 $\alpha_n$ 加上界 $C$</h2>
+
+<p>
+  $\alpha_n\leq C$ 的来源值得看清。从 $\alpha_n=C-\mu_n$ 和互补松弛 $\mu_n\xi_n=0$：
+</p>
+
+<ul>
+  <li>$\alpha_n<C$（即 $\mu_n>0$）：互补松弛强制 $\xi_n=0$——点在间隔外或边界，<strong>未违反</strong>。</li>
+  <li>$\alpha_n=C$（即 $\mu_n=0$）：$\xi_n$ 可 $>0$——点<strong>违反了间隔</strong>（在间隔内或分错）。</li>
+</ul>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #10 · "加松弛变量 → 对偶给乘子上界 → 互补松弛分类样本"</h4>
+  软化硬约束的通用招：把 $g_n\geq0$ 放成 $g_n+\xi_n\geq0,\xi_n\geq0$，目标加 $C\sum\xi_n$。对偶推导里 $\xi_n$ 的驻点给 $\alpha_n\leq C$，互补松弛 $\mu_n\xi_n=0$ 把样本分成"违反/不违反"两类。
+  <strong>本课软间隔 SVM、0012 偏差–方差里正则化路径、量化里带交易成本的约束松弛——同一招。</strong>
+  它把"硬性可行"换成"可行带罚"，让模型对噪声鲁棒，同时保持凸性（ hinge 是凸的）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. hinge 损失视角：SVM = 正则化 + 合页损失</h2>
+
+<p>
+  这是本课最深刻的联系。对固定 $\mathbf{w},b$，$\xi_n$ 的最优值是<strong>把约束违反量取正部</strong>：
+</p>
+
+<div class="derivation">
+  <h4>消去 $\xi_n$</h4>
+  <div class="step">
+    约束 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1-\xi_n$ 即 $\xi_n\geq1-y_n(\mathbf{w}^\top\mathbf{x}_n+b)$，加 $\xi_n\geq0$。
+  </div>
+  <div class="step">
+    目标对 $\xi_n$ 递增（$C>0$），所以取最小 $\xi_n=\max(0,\,1-y_n(\mathbf{w}^\top\mathbf{x}_n+b))$。
+    <span class="reason">$\xi_n$ 取下界即约束违反量的正部</span>
+  </div>
+  <div class="step">
+    代回：$\frac12\|\mathbf{w}\|^2+C\sum_n\max(0,\,1-y_n(\mathbf{w}^\top\mathbf{x}_n+b))$。
+  </div>
+</div>
+
+<div class="formula-block">
+  $$\boxed{\;\min_{\mathbf{w},b}\;\underbrace{\frac12\|\mathbf{w}\|^2}_{\text{$\ell_2$ 正则}} + C\sum_{n=1}^N\underbrace{\max(0,\,1-y_n(\mathbf{w}^\top\mathbf{x}_n+b))}_{\text{hinge 损失}}\;}$$
+</div>
+
+<p>
+  <strong>hinge 损失</strong>（合页损失）$L_{\text{hinge}}(y,f)=\max(0,1-yf)$。形状像合页：$yf\geq1$ 时为 0（分对且间隔够），$yf<1$ 时线性增长。
+  于是软间隔 SVM 就是 <strong>$\ell_2$ 正则 + hinge 损失</strong>——落进基石 0001 的正则化/损失视角 的统一框架。
+</p>
+
+<div class="insight">
+  <strong>基石 0001 §2 损失视角：</strong> 0001 说"换噪声分布就换损失"——高斯→平方，Laplace→L1，Bernoulli→交叉熵。
+  hinge 损失不直接对应某个似然（它是 0/1 损失的凸代理，不是 MLE 产物），但 SVM 仍写成"正则 + 损失"形式。
+  这说明<strong>正则化框架比 MLE 更广</strong>：MLE 推出的损失（平方、交叉熵）是其中一类，hinge 这类凸代理是另一类——共同点是"凸 + 正则"，保证全局可解。
+  SVM 的几何起源（间隔）和概率起源（MLE）不同路，但都汇入"正则化经验风险最小化"。
+</div>
+
+<p>
+  为什么用 hinge 而不直接用 0/1 损失？因为 0/1 损失 $\mathbf{1}[yf<0]$ 非凸、不连续，优化是 NP-hard。hinge 是它的<strong>凸上界</strong>：
+</p>
+
+<ul>
+  <li>$yf\geq1$：hinge = 0 = 0/1（都分对且确信）。</li>
+  <li>$0<yf<1$：hinge $=1-yf\in(0,1)$ > 0/1 = 0。hinge 罚"分对但确信不够"的点——鼓励大间隔。</li>
+  <li>$yf\leq0$：hinge $=1-yf\geq1$ > 0/1 = 1。hinge 罚分错的点，且罚得比 0/1 更重（线性增长）。</li>
+</ul>
+
+<div class="formula-block">
+  $$\mathbf{1}[yf<0]\;\leq\;\max(0,1-yf)\;\leq\;(1-yf)^2\;\text{（当 $yf\leq1$）}$$
+</div>
+
+<p>
+  hinge 夹在 0/1 和平方损失之间：比 0/1 凸（可优化），比平方对 outlier 鲁棒（线性增长 vs 二次增长）。这是 SVM 在统计上优于普通最小二乘分类的根源。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 三种样本：间隔内 / 边界 / 违反</h2>
+
+<p>软间隔 KKT 互补松弛把样本分成三类（记 $f_n=\mathbf{w}^\top\mathbf{x}_n+b$）：</p>
+
+<table>
+  <tr><th>条件</th><th>$\alpha_n$</th><th>几何</th><th>角色</th></tr>
+  <tr><td>$y_n f_n>1$</td><td>$0$</td><td>间隔外，分对</td><td>非支持向量，对解无贡献</td></tr>
+  <tr><td>$y_n f_n=1$</td><td>$0<\alpha_n<C$</td><td>恰在间隔边界</td><td>支持向量（间隔边界上）</td></tr>
+  <tr><td>$y_n f_n<1$</td><td>$\alpha_n=C$</td><td>间隔内或分错（$\xi_n>0$）</td><td>支持向量（违反者）</td></tr>
+</table>
+
+<p>
+  对比硬间隔：硬间隔只有"边界上 $\alpha>0$"和"间隔外 $\alpha=0$"两类。软间隔多了第三类——<strong>违反者也是支持向量，且 $\alpha_n$ 顶到上界 $C$</strong>。$C$ 越大，违反者被罚越重，越多点被迫顶到 $C$。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. SMO 直觉：两个乘子一起优化</h2>
+
+<p>
+  对偶是 $N$ 个变量的 QP。通用 QP 求解器 $O(N^3)$，样本多时不可行。<strong>SMO</strong>（Sequential Minimal Optimization）每次只优化<strong>两个</strong>乘子 $\alpha_i,\alpha_j$，其余固定。
+</p>
+
+<p>
+  为什么是两个而不是一个？因为等式约束 $\sum\alpha_n y_n=0$ 把 $\alpha_i$ 和 $\alpha_j$ 绑定：固定其余时 $\alpha_i y_i+\alpha_j y_j=\text{const}$，一个变量决定另一个。只动一个会破坏约束。两个是最少能保持约束可行的数量。
+</p>
+
+<p>
+  每步：选两个乘子 → 用约束把 $\alpha_j$ 表成 $\alpha_i$ 的函数 → 代入对偶目标，变成 $\alpha_i$ 的一元二次函数 → 解析求极值 → 裁剪到框 $[0,C]$ → 更新。重复直到 KKT 条件对所有点近似满足。
+</p>
+
+<div class="insight">
+  <strong>SMO 是"坐标下降"的约束版。</strong> 坐标下降每次优化一个变量；SMO 受等式约束所限每次优化两个。
+  它不需要存 $N\times N$ 核矩阵全在内存（可按需算核值），所以能扩到大数据。这是 SVM 工程上可用的关键。现代实现（libsvm）用缓存、工作集选择启发式、shrinking 加速。
+</div>
+
+<div class="meta-box">
+  <h4>🔗 联系 · SVM 在量化里的位置</h4>
+  SVM + RBF 在选股、分类信号上曾是强 baseline，但 GBDT（0013）和神经网络（0014）在表格数据上通常更强。
+  SVM 的价值在<strong>理论清晰</strong>：间隔正则给出泛化界，稀疏支持向量给出可解释性，凸性给出全局解。
+  量化里当样本少、要可解释、要稳健时（如小规模事件分类），SVM 仍有用。0017 会对比各模型在选股上的表现。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与演算</h2>
+
+<p>下面 6 道题，难度递增。把软间隔的推导走通，并看清它如何回接基石 0001。</p>
+
+<div class="problem">
+  <div class="ptitle">题 1 · 松弛变量的几何含义 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    给定约束 $y_n(\mathbf{w}^\top\mathbf{x}_n+b)\geq1-\xi_n$，$\xi_n\geq0$。证明：(a) $\xi_n=0$ 时点满足硬间隔；(b) $0<\xi_n\leq1$ 时点在间隔内但分对；(c) $\xi_n>1$ 时点分错。
+  </div>
+  <details><summary>提示</summary><div class="hint">分对即 $y_n f_n>0$。间隔内即 $0<y_n f_n<1$。从约束 $y_n f_n\geq1-\xi_n$ 反解 $\xi_n\geq1-y_n f_n$，按 $y_n f_n$ 的范围分类。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">记 $m_n=y_n f_n=y_n(\mathbf{w}^\top\mathbf{x}_n+b)$。约束 $m_n\geq1-\xi_n$ 即 $\xi_n\geq1-m_n$，加 $\xi_n\geq0$，最优 $\xi_n=\max(0,1-m_n)$。</div>
+    <div class="step">(a) $\xi_n=0$：$\max(0,1-m_n)=0\Rightarrow1-m_n\leq0\Rightarrow m_n\geq1$，硬间隔满足。</div>
+    <div class="step">(b) $0<\xi_n\leq1$：$\xi_n=1-m_n$（因 $m_n<1$），$0<1-m_n\leq1\Rightarrow0\leq m_n<1$。$m_n>0$ 即分对，$m_n<1$ 即在间隔内。</div>
+    <div class="step">(c) $\xi_n>1$：$1-m_n>1\Rightarrow m_n<0$，即 $y_n f_n<0$，分错。$\square$</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 2 · 软间隔对偶：$\alpha_n\leq C$ 的来源 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    从软间隔拉格朗日 $\mathcal{L}=\frac12\|\mathbf{w}\|^2+C\sum\xi_n-\sum\alpha_n[y_n(\mathbf{w}^\top\mathbf{x}_n+b)-1+\xi_n]-\sum\mu_n\xi_n$ 出发，对 $\xi_n$ 求驻点，推出 $\alpha_n=C-\mu_n$，结合 $\mu_n\geq0$ 得 $\alpha_n\leq C$。说明 $\xi_n$ 项如何在对偶目标中消去。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\partial\mathcal{L}/\partial\xi_n=C-\alpha_n-\mu_n=0$。$\mathcal{L}$ 里 $\xi_n$ 的系数是 $C-\alpha_n-\mu_n$，由驻点条件恰为 0，所以 $\sum(C-\alpha_n-\mu_n)\xi_n=0$ 整项消失。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\frac{\partial\mathcal{L}}{\partial\xi_n}=C-\alpha_n-\mu_n=0\Rightarrow\alpha_n=C-\mu_n$。$\mu_n\geq0\Rightarrow\alpha_n\leq C$。又 $\alpha_n\geq0$，合得 $0\leq\alpha_n\leq C$。</div>
+    <div class="step">$\mathcal{L}$ 中含 $\xi_n$ 的项：$C\sum\xi_n-\sum\alpha_n\xi_n-\sum\mu_n\xi_n=\sum_n(C-\alpha_n-\mu_n)\xi_n$。由驻点条件 $C-\alpha_n-\mu_n=0$，整项为 0，$\xi_n$ 从对偶目标消失。</div>
+    <div class="step">剩下的 $\mathbf{w},b$ 部分与硬间隔完全相同，代回得对偶 $\sum\alpha_n-\frac12\sum\alpha_n\alpha_m y_n y_m\mathbf{x}_n^\top\mathbf{x}_m$，约束 $0\leq\alpha_n\leq C$、$\sum\alpha_n y_n=0$。$\square$</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 3 · 消去 $\boldsymbol\xi$ 得 hinge 损失形式 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    对软间隔原始问题，先把 $\xi_n$ 解成 $\max(0,1-y_n f_n)$，代回目标，证明软间隔 SVM 等价于 $\min\frac12\|\mathbf{w}\|^2+C\sum\max(0,1-y_n f_n)$。说明为什么 $\xi_n$ 取下界。
+  </div>
+  <details><summary>提示</summary><div class="hint">对固定 $\mathbf{w},b$，目标关于 $\xi_n$ 递增（系数 $C>0$），所以 $\xi_n$ 取约束下界 $\max(0,1-y_n f_n)$ 最小化目标。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">固定 $\mathbf{w},b$。约束 $\xi_n\geq1-y_n f_n$ 且 $\xi_n\geq0$，即 $\xi_n\geq\max(0,1-y_n f_n)$。</div>
+    <div class="step">目标 $\frac12\|\mathbf{w}\|^2+C\sum\xi_n$ 关于每个 $\xi_n$ 严格递增（$C>0$），所以最优 $\xi_n^\star=\max(0,1-y_n f_n)$（取下界）。</div>
+    <div class="step">代回：$\min_{\mathbf{w},b}\frac12\|\mathbf{w}\|^2+C\sum_n\max(0,1-y_n(\mathbf{w}^\top\mathbf{x}_n+b))$。$\square$</div>
+    <div class="step">这就是 hinge 损失 + $\ell_2$ 正则形式。$\xi_n$ 取下界的物理意义：每个点只罚它"实际违反的量"，不多罚。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 4 · hinge 是 0/1 损失的凸上界 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    证明对所有 $y\in\{-1,+1\}$ 和 $f\in\mathbb{R}$：$\mathbf{1}[yf<0]\leq\max(0,1-yf)$。再证 hinge 损失关于 $f$ 是凸函数。说明这两个性质为什么重要。
+  </div>
+  <details><summary>提示</summary><div class="hint">分 $yf\geq1$、$0<yf<1$、$yf\leq0$ 三段证不等式。凸性：$\max$ of 仿射函数是凸的，$1-yf$ 仿射，$0$ 仿射。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">令 $t=yf$。三段：(i) $t\geq1$：$0/1=0$，hinge $=\max(0,1-t)=0$，等号。(ii) $0<t<1$：$0/1=0$（分对），hinge $=1-t>0$，不等式成立。(iii) $t\leq0$：$0/1=1$（分错），hinge $=1-t\geq1$，不等式成立。$\square$</div>
+    <div class="step">凸性：$L(f)=\max(0,1-yf)=\max\{0,\,1-yf\}$ 是两个仿射函数的逐点最大。仿射函数凸，凸函数的逐点最大仍凸（易证：$\max$ 的上图是凸函数上图的交）。所以 hinge 关于 $f$ 凸。</div>
+    <div class="step"><strong>重要性</strong>：(1) 凸上界 → 最小化 hinge 控制了 0/1 损失的上界，所以 hinge 最小化是 0/1 风险的合理代理。(2) 凸性 + $\ell_2$ 正则 → 整体目标凸 → 全局最优可解。0/1 损失非凸，直接优化 NP-hard。hinge 让 SVM 既统计合理（上界）又计算可行（凸）。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 5 · $C$ 的两极行为 <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    (a) 证明 $C\to\infty$ 时软间隔退化为硬间隔（假设数据线性可分）。<br>
+    (b) 证明 $C\to0$ 时 $\boldsymbol\alpha\to0$，$\mathbf{w}\to0$，决策退化为常数分类器（按多数类）。<br>
+    (c) 解释 $C$ 与 基石 0001 的正则化/损失视角 正则化系数 $\lambda$ 的关系：为什么 $C=1/\lambda$？
+  </div>
+  <details><summary>提示</summary><div class="hint">(a) $C\to\infty$ 时 $\sum\xi_n$ 罚无穷大，最优 $\xi_n=0$，恢复硬约束。(b) $\alpha_n\leq C\to0$，$\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n\to0$。(c) 把目标写成 $\lambda\frac12\|\mathbf{w}\|^2+\sum\text{hinge}$，除以 $C$：$\frac{1}{2C}\|\mathbf{w}\|^2+\sum\text{hinge}$，$\lambda=1/C$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">(a) $C\to\infty$：目标 $C\sum\xi_n$ 主导，任何 $\xi_n>0$ 代价无穷，所以最优 $\xi_n=0$ 对所有 $n$。约束恢复 $y_n f_n\geq1$，即硬间隔。对偶上界 $\alpha_n\leq C\to\infty$ 不起作用，恢复硬间隔对偶。$\square$</div>
+    <div class="step">(b) $C\to0$：对偶约束 $0\leq\alpha_n\leq C\to0$，所有 $\alpha_n\to0$。$\mathbf{w}=\sum\alpha_n y_n\mathbf{x}_n\to0$。决策 $f(\mathbf{x})=b$ 常数，$b$ 由 $\sum\alpha_n y_n=0$ 无法定（退化），实际取多数类使训练损失最小。模型完全欠拟合。$\square$</div>
+    <div class="step">(c) 软间隔目标 $\frac12\|\mathbf{w}\|^2+C\sum\text{hinge}$。除以 $C$（不改变最优解）：$\frac{1}{2C}\|\mathbf{w}\|^2+\sum\text{hinge}$。写成标准正则化形式 $\lambda\cdot\frac12\|\mathbf{w}\|^2+\sum\text{hinge}$，则 $\lambda=1/C$。</div>
+    <div class="step">所以 $C$ 大 $\Leftrightarrow$ $\lambda$ 小 $\Leftrightarrow$ 正则弱 $\Leftrightarrow$ 拟合训练数据紧（易过拟合）；$C$ 小 $\Leftrightarrow$ $\lambda$ 大 $\Leftrightarrow$ 正则强 $\Leftrightarrow$ $\mathbf{w}$ 小（易欠拟合）。与 0002 岭回归的 $\lambda$、0003 边缘似然的 $\alpha/\beta$ 完全同构。<strong>SVM 的 $C$ 就是正则强度的倒数。</strong>$\square$</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 6 · 把软间隔用到 1 维带 outlier 例子（范式迁移） <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    1 维数据：正类 $x=+2,+3$，负类 $x=-2,-3$，加一个 outlier 正类 $x=-1$（在负类区域）。取 $C=1$。用 hinge 损失形式 $\min\frac12 w^2+C\sum\max(0,1-y_n w x_n)$（对称设 $b=0$）分析：outlier 是否会被分错？$w$ 比硬间隔（$w=1/2$）小多少？这训练你把软间隔范式用到具体数字。
+  </div>
+  <details><summary>提示</summary><div class="hint">对称仍 $b=0$。outlier $x=-1,y=+1$：$yw x=1\cdot w\cdot(-1)=-w$，hinge $=\max(0,1-(-w))=\max(0,1+w)=1+w$（$w>0$）。正常点 $\pm2,\pm3$ 的 hinge：$|x|=2$ 点 $\max(0,1-2w)$，$|x|=3$ 点 $\max(0,1-3w)$。设 $w$ 范围分段求总目标，对 $w$ 求导令零。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">对称 $b=0$。各点 hinge（$w>0$）：outlier $(y=+1,x=-1)$：$yw x=-w$，hinge $=\max(0,1+w)=1+w$（必违反，因 $-w<0<1$）。</div>
+    <div class="step">$|x|=2$ 两点：$yw x=2w$，hinge $=\max(0,1-2w)$。$|x|=3$ 两点：hinge $=\max(0,1-3w)$。</div>
+    <div class="step">总目标 $J(w)=\frac12 w^2+1\cdot[(1+w)+2\max(0,1-2w)+2\max(0,1-3w)]$（$C=1$）。</div>
+    <div class="step">分段。当 $w\leq1/3$：所有 $\max$ 取正部，$J=\frac12w^2+(1+w)+2(1-2w)+2(1-3w)=\frac12w^2+5-9w$。$J'=w-9=0\Rightarrow w=9$，不在 $w\leq1/3$ 段，舍。</div>
+    <div class="step">当 $1/3<w\leq1/2$：$|x|=3$ 点 hinge=0，$J=\frac12w^2+(1+w)+2(1-2w)=\frac12w^2+3-3w$。$J'=w-3=0\Rightarrow w=3$，不在段，舍。</div>
+    <div class="step">当 $w>1/2$：只有 outlier 贡献 hinge，$J=\frac12w^2+(1+w)$。$J'=w+1=0\Rightarrow w=-1$，不在段（$w>0$），舍。</div>
+    <div class="step">三段内部无驻点 → 最优在边界。检查 $w=1/3$：$J=\frac12/9+5-9/3=1/18+2\approx2.06$。$w=1/2$：$J=1/8+3-3/2=1/8+1.5=1.625$。$w\to0^+$：$J\to0+5=5$。比较得 $w=1/2$ 最小（在 $1/3<w\leq1/2$ 段右端点）。</div>
+    <div class="step">实际上更精确：$w=1/2$ 时 $|x|=2$ 点 hinge $=\max(0,1-1)=0$（恰在边界），$|x|=3$ 点 hinge=0，outlier hinge $=1+1/2=1.5$。$J=1/8+1.5=1.625$。</div>
+    <div class="step"><strong>结论</strong>：$w^\star=1/2$，与硬间隔相同！outlier 被分错（$yw x=-1/2<0$），付 hinge 代价 $1.5$，但 $C=1$ 不够大到强迫 $w$ 变化去迁就它。若 $C$ 更大，最优 $w$ 会变小（边界往 outlier 挪）以减少 outlier 的 hinge，代价是正常点间隔变窄——这就是 $C$ 权衡。<strong>范式迁移</strong>：把 0007 题 6 的"对称→分段→比边界"套路加了 outlier 项，是软间隔的标准分析方式。$\square$</div>
+  </div></details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 自测</h2>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q1 · 软间隔对偶与硬间隔对偶的唯一区别是什么？为什么？</div>
+  <details><summary>答案</summary><div class="sol">唯一区别：$\alpha_n$ 多了上界 $\alpha_n\leq C$（硬间隔只有 $\alpha_n\geq0$）。来源：$\xi_n\geq0$ 约束引入乘子 $\mu_n\geq0$，$\xi_n$ 的驻点条件给 $\alpha_n=C-\mu_n\leq C$。$C\to\infty$ 时上界消失，退化为硬间隔。其余对偶目标、$\sum\alpha_n y_n=0$ 约束完全相同。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q2 · 为什么说 SVM = $\ell_2$ 正则 + hinge 损失？hinge 损失相对 0/1 损失的优势是什么？</div>
+  <details><summary>答案</summary><div class="sol">把 $\xi_n=\max(0,1-y_n f_n)$ 代回软间隔原始目标，得 $\frac12\|\mathbf{w}\|^2+C\sum\max(0,1-y_n f_n)$，正是 $\ell_2$ 正则 + hinge 损失。hinge 优势：(1) 凸（0/1 非凸，优化 NP-hard），保证全局最优；(2) 是 0/1 的凸上界，最小化 hinge 控制了 0/1 风险上界；(3) 对 outlier 比平方损失鲁棒（线性增长 vs 二次）。代价：hinge 不可导（在 $yf=1$ 处），需次梯度，但这对优化影响不大。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q3 · $\alpha_n=C$ 的样本是什么？$\alpha_n=0$ 的样本是什么？</div>
+  <details><summary>答案</summary><div class="sol">$\alpha_n=C$：违反间隔的点（$\xi_n>0$，在间隔内或分错），是支持向量且乘子顶到上界。$\alpha_n=0$：间隔外分对的点，非支持向量，对解无贡献。$0<\alpha_n<C$：恰在间隔边界上的点，是"自由"支持向量。三类对应 hinge 损失的三段：$yf>1$ 零损失、$yf=1$ 边界、$yf<1$ 正损失。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q4 · SMO 为什么每次优化两个乘子而不是一个？</div>
+  <details><summary>答案</summary><div class="sol">等式约束 $\sum\alpha_n y_n=0$ 把所有乘子绑定。固定其余只动一个 $\alpha_i$，约束要求 $\alpha_i y_i$ 不变，即 $\alpha_i$ 不变——没法优化。动两个 $\alpha_i,\alpha_j$，约束给 $\alpha_i y_i+\alpha_j y_j=\text{const}$，一个自由度，可优化。两个是保持等式约束可行的最少数量。SMO 是约束版坐标下降。</div></details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;">
+    <strong>PRML §7.1（软间隔与 hinge）</strong>——§7.1.3 松弛变量与软间隔、对偶的上界 $\alpha_n\leq C$、与 hinge 损失的联系。本课第 2–5 节的母本。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>CS229 Notes 3 §4–§5（Soft margin & SMO）</strong>——软间隔推导、hinge 损失视角、SMO 算法直觉。对"hinge 是 0/1 凸上界"讲得最直白。
+  </p>
+  <p style="margin-bottom:0; font-size:0.9rem;">
+    <strong>ESL §12.2.2–§12.3.1</strong>——软间隔、hinge 损失、损失函数对比图（图 12.4 把 0/1、hinge、平方、逻辑损失画在一起，直观看出 hinge 的位置）。
+  </p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">
+    这课的关键逻辑链：硬间隔失败 → 加松弛 $\xi_n$ 罚违反 → 对偶多 $\alpha_n\leq C$ → 消去 $\xi_n$ 得 hinge+$\ell_2$ → 回接基石 0001 的正则化/损失视角 正则化框架 → hinge 是 0/1 凸上界保凸可解 → 三类样本分类 → SMO 两乘子优化。
+    题 5（$C$ 两极 + 与 $\lambda$ 关系）和题 6（带 outlier 1 维例子）是钥匙——题 5 把 SVM 完全接回 0001 的正则化叙事，题 6 把软间隔范式落到数字。<strong>SVM 推导至此全部走通。</strong>卡住直接问。
+  </p>
+</div>
+
+<div class="lesson-footer">
+  <a href="0007-svm-hard-margin.html">← 0007 SVM（上）</a> ·
+  <a href="0006-kernel-methods.html">← 0006 核方法</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0009-logistic-regression.html">0009 逻辑回归</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+</body>
+</html>

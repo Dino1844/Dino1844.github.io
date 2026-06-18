@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0022 · Deep RL：从 DQN 到 PPO</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "\01f4a1 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "\026a0\fe0f "; font-style: normal; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .cr { color: var(--accent); border-bottom: 1px dashed var(--accent); cursor: pointer; }
+  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+  .card-popup { position: fixed; z-index: 9999; width: 400px; max-height: 480px; overflow-y: auto; background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); padding: 0; display: none; font-size: 0.88rem; line-height: 1.55; }
+  .card-popup.show { display: block; }
+  .card-popup .concept-card { margin: 0; border: none; border-radius: 0; box-shadow: none; padding: 1rem 1.2rem; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0022 · Deep RL：从 DQN 到 PPO</h1>
+<div class="subtitle">当表格不够用时：DQN、策略梯度、Actor-Critic、PPO、SAC、TD3——神经网络 + RL 的完整路线图 · 阅读时间 ~55 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 死三角：RL + 函数逼近为什么会发散</a><br>
+  <a href="#s2">2. DQN：死三角的工程化解</a><br>
+  <a href="#s3">3. 策略梯度：为什么 $
+abla\log\pi$ 奇迹般出现</a><br>
+  <a href="#s4">4. Actor-Critic：GPI 的神经网络版</a><br>
+  <a href="#s5">5. PPO：Trust Region 与保守策略迭代</a><br>
+  <a href="#s5b">5.5. 现代方法全景</a><br>
+  <a href="#s6">6. 推导与自测</a>
+</div>
+
+<p>
+  0021 的表格型方法假设状态和动作有限——用一个表格存所有的 $Q(s,a)$。现实里状态空间巨大（围棋 $3^{361}$，Atari 是像素），
+  必须用<strong>神经网络做函数逼近</strong>。但直接套用会发散——本课讲三条路和它们的关键稳定技巧，直到 PPO。
+</p>
+
+<div class="retrieval">
+  <h3>激活已有知识</h3>
+  <ol><li>Q-learning：$Q(s,a)\leftarrow Q(s,a)+\alpha[r+\gamma\max_{a'}Q(s',a')-Q(s,a)]$</li>
+  <li>0021 SARSA vs Q-learning（on-policy vs off-policy）</li>
+  <li>0014 神经网络：前向传播 + 反向传播 + 梯度下降</li>
+  <li>0012 偏差-方差分解：估计目标本身的偏差和方差</li></ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 死三角：RL + 函数逼近为什么会发散</h2>
+
+<div class="meta-box">
+  <h4>范式 #26 · RL 的"死三角"（Deadly Triad）</h4>
+  <strong>自举</strong>（bootstrapping：用当前估计做更新目标）+ <strong>Off-policy 学习</strong>（行为策略 ≠ 目标策略）+ <strong>函数逼近</strong>（神经网络替代表格）——三者取二可控，<strong>三者齐上随时发散</strong>。这是 Sutton & Barto §11.3 的命名，DQN 的经验回放和 target network 本质是给这三者各加了一道保险。
+</div>
+
+<p>表格型 Q-learning 能收敛是因为 Bellman 算子 $\mathcal{T}^*$ 是<strong>压缩映射</strong>（$\gamma$-contraction）：$\|\mathcal{T}^*Q_1 - \mathcal{T}^*Q_2\|_\infty \leq \gamma\|Q_1-Q_2\|_\infty$。Banach 不动点定理保证迭代收敛到唯一 $Q^*$。</p>
+
+<p>问题出在<strong>函数逼近破坏了压缩性</strong>。用神经网络 $Q_\theta$ 替代表格后，TD 更新变成了"Bellman 算子 → 梯度下降投影到网络参数空间 → 新的 $Q_\theta$"——两步的复合算子<strong>不再是压缩映射</strong>。Baird (1995) 的经典反例：一个简单 7 状态 MDP，线性函数逼近 + off-policy TD → 参数发散到无穷。</p>
+
+<div class="derivation">
+  <h4>为什么 Bellman 算子 + 函数逼近会发散</h4>
+  <div class="step"><strong>表格型：</strong>$Q_{k+1} = \mathcal{T}^*Q_k$。$\mathcal{T}^*$ 是 $\gamma$-contraction → $\|Q_{k+1}-Q^*\| \leq \gamma\|Q_k-Q^*\|$ → 几何收敛。<span class="reason">压缩映射在 $\ell_\infty$ 范数下保证收敛。</span></div>
+  <div class="step"><strong>函数逼近型：</strong>$Q_{k+1} = \Pi(\mathcal{T}^*Q_k)$，其中 $\Pi$ 是把结果投影回函数空间的<strong>投影算子</strong>（梯度下降一步 ≈ 投影）。<span class="reason">$\Pi$ 在 $\ell_\infty$ 下可能扩大距离——投影到低维流形可能在 $\ell_\infty$ 中拉远。</span></div>
+  <div class="step">$\Pi\circ\mathcal{T}^*$ 不一定是压缩——$\Pi$ 破坏了 $\mathcal{T}^*$ 的压缩性。<span class="reason">这是 off-policy + 函数逼近发散的数学根源。On-policy（SARSA + 线性 FA）在特定条件下仍收敛（Tsitsiklis & Van Roy, 1997）。</span></div>
+</div>
+
+<div class="insight">
+  <strong>DQN 的两个技巧从这个视角看：</strong>经验回放 → 把 off-policy 数据"伪装"成近似 on-policy（随机采样打破时序 → 行为策略 ≈ 过去策略的均匀混合 → 离当前策略不太远）。目标网络 → 把自举目标冻结 $\theta^-$，使 Bellman 算子在一段时间内<strong>不随参数移动</strong>，近似表格型更新（目标固定 → 纯监督回归 → 收敛）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. DQN：死三角的工程化解</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">深度 RL</span><h3>DQN · Deep Q-Network</h3><span class="cc-aliases">Mnih et al. 2015, Nature</span></div>
+  <div class="cc-essence"><strong>数学本质：</strong>在死三角的三条边上各加一道约束——(1) 经验回放打破 off-policy 的时序相关（使训练数据"看起来"更像 on-policy）；(2) 目标网络冻结自举目标（使 TD 更新近似监督回归）；(3) 梯度裁剪/clip 限制单步参数变化（隐式限制 $\Pi$ 的扩张因子）。</div>
+  <div class="cc-section"><h4>损失函数</h4>
+  <div class="cc-formula">$$L(\theta) = \mathbb{E}_{(s,a,r,s')\sim\mathcal{D}}\Big[\big(r + \gamma\max_{a'} Q_{\theta^-}(s',a') - Q_\theta(s,a)\big)^2\Big]$$</div></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0021: Q-learning 的扩展</span><span class="conn-badge">→ 死三角: 三道保险</span></div>
+</div>
+
+<p>但这里有一个<strong>更深的矛盾</strong>：目标网络冻结参数 → 训练稳定了，但 $Q_{\theta^-}$ 是<strong>过时的</strong>——用它做的 TD 目标是错的。更新频率是 tradeoff：更新太快 → 不稳定（死三角再现）；更新太慢 → 目标偏差大 → 收敛慢。这本质上和<b>偏差-方差权衡</b>（0012）同构：目标网络延迟 = 用偏差（旧参数）换方差（训练稳定）。</p>
+
+<div class="insight">
+  <strong>$\max$ 操作为什么导致系统性高估？</strong>不是"噪声里有运气好的"这么简单。深层原因是 <strong>Jensen 不等式</strong>（0010 §4）：$f(\mathbb{E}[X]) \leq \mathbb{E}[f(X)]$ 对凸函数。$\max$ 是凸函数，所以 $\max(\mathbb{E}[Q]) \leq \mathbb{E}[\max(Q)]$——你应该比较"真实 $Q$ 的 $\max$"，但你实际上在比较"估计值 $Q$ 的 $\max$"，估计值含噪声 → $\max$ 放大正噪声、压缩负噪声 → 期望值偏高。<strong>这是凸函数对随机变量的系统性偏误——和 EM 的 ELBO 下界是同一种 Jensen 效应，方向相反。</strong>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 策略梯度：为什么 $\nabla\log\pi$ 奇迹般出现</h2>
+
+<p>Q-learning 走的是<strong>间接路线</strong>：先求出 $Q^*$（一个标量场），再 $\arg\max$ 推出策略。策略梯度走<strong>直接路线</strong>：参数化 $\pi_\phi$，直接对期望回报求梯度。但"期望对参数的梯度"不能直接算——积分和求导交换需要条件。策略梯度定理用一个恒等式绕过了这个问题。</p>
+
+<div class="derivation">
+  <h4>策略梯度定理的深层推导</h4>
+  <div class="step"><strong>目标：</strong>$J(\phi) = \mathbb{E}_{\tau\sim\pi_\phi}[G_0] = \int p_\phi(\tau)\,G(\tau)\,d\tau$，其中 $p_\phi(\tau) = p(s_0)\prod_t\pi_\phi(a_t|s_t)\mathcal{P}(s_{t+1}|s_t,a_t)$ 是轨迹概率。<span class="reason">轨迹分布由策略和环境联合决定。</span></div>
+  <div class="step">$\nabla_\phi J = \int \nabla_\phi p_\phi(\tau)\,G(\tau)\,d\tau$ <span class="reason">交换积分和求导——要求被积函数满足正则条件（RL 里通常满足）。</span></div>
+  <div class="step"><strong>对数求导技巧</strong>（REINFORCE trick）：$\nabla_\phi p_\phi(\tau) = p_\phi(\tau)\,\nabla_\phi\log p_\phi(\tau)$。<span class="reason">$\nabla\log f = \nabla f/f$ ⇔ $\nabla f = f\nabla\log f$——把"密度的梯度"变成"密度 × log-密度的梯度"。</span></div>
+  <div class="step">$\nabla_\phi\log p_\phi(\tau) = \sum_t\nabla_\phi\log\pi_\phi(a_t|s_t)$ <span class="reason">$\mathcal{P}$ 和 $\phi$ 无关——转移概率的梯度为零。不需要知道环境模型！</span></div>
+  <div class="step">$\nabla_\phi J = \mathbb{E}_{\tau\sim\pi_\phi}\!\big[G(\tau)\sum_t\nabla_\phi\log\pi_\phi(a_t|s_t)\big]$ <span class="reason">这就是策略梯度定理。</span></div>
+</div>
+
+<div class="insight">
+  <strong>$\nabla\log\pi$ 和 score function 是同族工具。</strong>0018 的 score function $\nabla_\mathbf{x}\log p(\mathbf{x})$ 衡量"数据方向怎么走能让概率增大"。
+  策略梯度的 $\nabla_\phi\log\pi_\phi(a|s)$ 衡量"参数怎么调能让这个动作的概率增大"。
+  <strong>同一个恒等式（$\nabla\log f = \nabla f/f$），两个完全不同的领域，两种完全不同的用法。</strong>
+</div>
+
+<p><strong>为什么要减 baseline？</strong>不是因为"方差大"——是因为<strong>控制变量法</strong>（control variate）。在蒙特卡洛估计 $\mathbb{E}[f(X)]$ 中，找一个已知期望为零的变量 $h(X)$，用 $f(X) - \beta h(X)$ 替代 $f(X)$——期望不变，方差可以大幅降。在策略梯度里，$b(s_t)$ 就是控制变量：$\mathbb{E}[\nabla\log\pi\cdot b(s)] = b(s)\nabla\sum\pi = 0$。最优 baseline 是 advantage $A^\pi(s,a) = Q^\pi(s,a) - V^\pi(s)$。</p>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. Actor-Critic：GPI 的神经网络版</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">RL 范式 #27</span><h3>Actor-Critic 的深层结构</h3></div>
+  <div class="cc-essence"><strong>Actor-Critic 不是"两个网络互相帮助"——它是<strong>原始-对偶</strong>（primal-dual）优化的一个实例。Actor 在策略空间做梯度上升（原始问题），Critic 在值函数空间做 TD 学习（对偶——提供梯度方向的质量估计）。0020 的策略迭代（策略评估 + 策略改进）是这张图在表格空间的精确版；Actor-Critic 是它在函数空间的近似版。</div>
+  <div class="cc-section"><h4>TD 误差的双重角色</h4>
+  <p>$\delta_t = r + \gamma V(s') - V(s)$ 同时做两件事：(1) <strong>训练 Critic</strong>——$L = \delta_t^2$，最小化预测误差；(2) <strong>训练 Actor</strong>——$\nabla_\phi J = \mathbb{E}[\nabla_\phi\log\pi_\phi(a|s)\,\delta_t]$，TD 误差本身就是 advantage 的无偏估计。<strong>一个标量同时驱动两个网络的更新——这是 Actor-Critic 最优雅的地方。</strong></p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0020: GPI 范式</span><span class="conn-badge">→ 0007: 原始-对偶</span><span class="conn-badge">→ 0010: TD 误差 = Bellman 残差</span></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. PPO：Trust Region 与保守策略迭代</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">深度 RL 范式 #28</span><h3>PPO 的数学机制</h3></div>
+  <div class="cc-essence"><strong>核心洞察：</strong>策略梯度的一步更新可以等价于在旧策略附近解一个<strong>带 KL 约束的优化问题</strong>。PPO 把 KL 约束近似为 clip——保留了约束的"精神"（不让策略变太远），但不需要算 KL 散度。</div>
+  <div class="cc-section"><h4>从 TRPO 到 PPO</h4>
+  <p><strong>TRPO（Trust Region Policy Optimization）</strong>精确求解：$\max_\phi \mathbb{E}[\frac{\pi_\phi}{\pi_{\text{old}}}A] \text{ s.t. } \mathrm{KL}(\pi_{\text{old}}\|\pi_\phi) \leq \delta$——用共轭梯度 + 线搜索保证约束成立。</p>
+  <p><strong>PPO-Clip</strong> 的洞察：不需要精确计算 KL。$r_t = \pi_\phi/\pi_{\text{old}}$ 偏离 1 的程度<strong>就是</strong> KL 的代理指标——当 $r_t\in[1-\epsilon,1+\epsilon]$ 时，KL 充分小。clip 操作等价于："如果这一步让策略变得太远，就别走了"。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0001: KL 是概率空间的距离</span><span class="conn-badge">→ 0014: 梯度裁剪同构</span></div>
+</div>
+
+<div class="derivation">
+  <h4>PPO-Clip 为什么是"悲观下界"</h4>
+  <div class="step">无约束的策略梯度目标：$L^{\text{PG}} = r_t(\phi)\hat{A}_t$——如果 $A_t>0$，无限制增大 $\pi_\phi$ 就能无限降低 loss → 策略可能崩溃。</div>
+  <div class="step">PPO 的 $\min$ 操作：当 $A_t>0$ 且 $r_t > 1+\epsilon$ 时，$\text{clip}(r_t, 1-\epsilon, 1+\epsilon) = 1+\epsilon < r_t$，所以 $\min(r_t A_t, (1+\epsilon)A_t) = (1+\epsilon)A_t$。<span class="reason">clip 版本给出<strong>更保守（更大/更不激进）</strong>的 loss → 梯度为零 → 停止增大。</span></div>
+  <div class="step">$L^{\text{CLIP}} \leq L^{\text{PG}}$（policy gradient 的 loss 永远小于等于 PPO 的）→ PPO 在做<strong>悲观优化</strong>：只在确信改进的方向上走，不确定时原地不动。<span class="reason">这和悲观 MDP（robust MDP）以及 Thompson 采样里的不确定性惩罚同构。</span></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5b">5.5. 现代方法全景：SAC、TD3、以及统一的视角</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">深度 RL</span><h3>SAC · Soft Actor-Critic</h3><span class="cc-aliases">Haarnoja et al. 2018</span></div>
+  <div class="cc-essence"><strong>数学本质：</strong>在 MDP 的奖励里加入<strong>策略熵</strong>：$\tilde{r} = r + \alpha H(\pi(\cdot|s))$。最大化"奖励 + 熵"等价于最小化 $\mathrm{KL}(\pi\|\pi_{\text{optimal}})$——熵正则化把贪心策略变成软策略。<strong>熵 = 探索的数学形式。最大熵 RL 和信息论（KL、熵）共享同一套数学。</strong></div>
+  <div class="cc-section"><h4>三个组件</h4>
+  <p>双 Q（取 $\min$ 防高估）+ 重参数化策略（$\mathbf{a}=f_\phi(\mathbf{s},\boldsymbol{\epsilon})$，让梯度能流过采样）+ 自动调节 $\alpha$（把熵系数当 Lagrangian 乘子，对偶上升求解——和 SVM 的约束优化同构）。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ PPO: on-policy + clip</span><span class="conn-badge">→ SAC: off-policy + entropy</span><span class="conn-badge">→ 0010 EM: KL 驱动探索</span></div>
+</div>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">深度 RL</span><h3>TD3 · Twin Delayed DDPG</h3><span class="cc-aliases">Fujimoto et al. 2018</span></div>
+  <div class="cc-essence"><strong>数学本质：</strong>三个改进全部针对 Q 值高估的"选择偏差"——(1) 双 Q 取 min → 压缩正偏差（$\mathbb{E}[\min(Q_1,Q_2)] \leq \mathbb{E}[Q_i]$）；(2) 延迟策略更新 → Critic 先多走几步，Actor 再跟上，防止 Actor 在不准的 Critic 指导下走错方向；(3) 目标平滑 → 给目标动作加噪声 $\sim\text{clip}(\mathcal{N}(0,\sigma),-c,c)$，防止策略学会"利用"Q 函数的局部尖峰。</div>
+</div>
+
+<table>
+  <tr><th>方法</th><th>解决的核心问题</th><th>数学工具</th><th>与 ML 的联系</th></tr>
+  <tr><td>DQN</td><td>死三角（off-policy + 自举 + FA）</td><td>经验回放（打破时序）+ 目标网络（冻结目标）</td><td>i.i.d. 假设（0016 反例）</td></tr>
+  <tr><td>Double DQN</td><td>$\max$ 的 Jensen 高估</td><td>选评分离（$Q_1$ 选动作，$Q_2$ 估值）</td><td>选择偏差（0012 过拟合同构）</td></tr>
+  <tr><td>策略梯度</td><td>高维连续动作的 $\arg\max$</td><td>$\nabla\log\pi$（REINFORCE trick）</td><td>Score function（0018）</td></tr>
+  <tr><td>Baseline (advantage)</td><td>策略梯度的方差</td><td>控制变量法（control variate）</td><td>蒙特卡洛方差缩减</td></tr>
+  <tr><td>PPO</td><td>策略更新步长的稳定性</td><td>Clipped surrogate（KL 的代理）</td><td>Trust region + 梯度裁剪（0014）</td></tr>
+  <tr><td>SAC</td><td>探索不足 + 样本效率</td><td>最大熵（奖励 + $H(\pi)$）</td><td>KL 散度（0001 §6）· 对偶优化（0007）</td></tr>
+  <tr><td>TD3</td><td>Q 高估 + 策略过拟合 Q</td><td>双 Q min + 目标平滑</td><td>正则化（防止过拟合 Q 函数）</td></tr>
+</table>
+
+<div class="insight">
+  <strong>所有现代 RL 方法都在做同一件事：管理估计的不确定性。</strong>
+  DQN 管理"数据分布的不确定性"（非 i.i.d.）；Double DQN/TD3 管理"估计值的不确定性"（Jensen 偏差）；
+  PPO 管理"策略更新的不确定性"（trust region）；SAC 管理"动作选择的不确定性"（熵最大化）。
+  RL 的根本困难不是"怎么找到最优策略"——而是<strong>"在每一步信息都不完整的情况下，怎么安全地向最优策略移动"</strong>。
+  这和贝叶斯推断（0002/0003）里的"参数不确定时别过度自信"是同一种哲学。
+</div>
+
+<h2 id="s6">6. 推导与自测</h2>
+
+<div class="problem">
+  <div class="ptitle">L1 · 经验回放为什么有效 <span class="plevel l1">L1</span></div>
+  <div class="pbody">假设你在玩 Atari，连续 10 帧几乎一样（球在屏幕同一位置）。如果不做经验回放，用这 10 个连续样本训练——SGD 会有什么问题？经验回放池 $\mathcal{D}$ 有多大容量（存储多少条 $(s,a,r,s')$）为什么重要？</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">连续样本高度相关 → 梯度方向几乎相同 → SGD 走的方向极度偏向"最近几帧的状态分布" → 参数更新有偏。<span class="reason">SGD 假设 mini-batch 是 i.i.d. 的——连续样本违反复数假设。</span></div>
+    <div class="step">经验回放从 $\mathcal{D}$ 随机采样 → 打破时序相关 → 近似 i.i.d.。$\mathcal{D}$ 越大 → 采样多样性越高 → 越接近 i.i.d.。<span class="reason">但 $\mathcal{D}$ 太大 → 旧策略产生的数据占比高 → 数据"过时"——这是 off-policy 的根本张力。</span></div>
+    <div class="step">这和 0016 的"金融数据不能 shuffle"形成对照：金融的时序结构是<strong>真实的信号</strong>（市场状态），shuffle 会破坏它；Atari 的时序相关是<strong>冗余</strong>（连续帧几乎一样），shuffle 消除冗余。</div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L2 · 策略梯度定理的直观证明 <span class="plevel l2">L2</span></div>
+  <div class="pbody">策略梯度定理：$\nabla_\phi\mathbb{E}_{\tau\sim\pi_\phi}[G_0] = \mathbb{E}_\tau[\sum_t\nabla_\phi\log\pi_\phi(a_t|s_t)G_t]$。解释为什么 $\nabla\log\pi$ 出现了（提示：这和 0018 的 score function 同族），并说明为什么可以加任意 baseline $b(s_t)$ 而不改变梯度期望。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">$\nabla_\phi\pi_\phi(\tau) = \pi_\phi(\tau)\nabla_\phi\log\pi_\phi(\tau)$（对数求导技巧：$\nabla\log f = \nabla f/f$）。<span class="reason">这和 $\nabla_\mathbf{x}\log p(\mathbf{x})$（0018 score function）是同一恒等式。</span></div>
+    <div class="step">$\nabla_\phi\log\pi_\phi(\tau) = \sum_t\nabla_\phi\log\pi_\phi(a_t|s_t)$（轨迹 log-概率 = 各步 log-策略之和，与转移概率 $\mathcal{P}$ 无关——$\mathcal{P}$ 不含 $\phi$）。<span class="reason">关键点：不需要知道环境模型也能算策略梯度！</span></div>
+    <div class="step">加 baseline：$\mathbb{E}[\nabla\log\pi(a|s)b(s)] = b(s)\nabla\sum_a\pi(a|s) = b(s)\nabla 1 = 0$<span class="reason">概率分布求和的梯度恒为零 → 加任意与 $a$ 无关的 baseline 不改变期望</span></div>
+    <div class="step">$b(s)$ 降方差的直觉：如果 $G_t$ 总是正数 → 所有动作都被增强（只是程度不同）→ 相对差异被淹没。减去 $V(s)$ → 只有"比平均好"的动作被增强 → 信号更清晰。</div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L3 · PPO-Clip 的梯度行为 <span class="plevel l3">L3</span></div>
+  <div class="pbody">设 $\epsilon=0.2$，$\pi_{\text{old}}(a|s)=0.1$，$\hat{A}_t>0$。分析当 $\pi_\phi(a|s)$ 从 0.1 增加到 0.15 时的 PPO 梯度和未约束策略梯度的差异。$\pi_\phi$ 超过多少时 PPO 的梯度会完全被 clip 置零？</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">$r_t = \pi_\phi/\pi_{\text{old}} = 0.15/0.1 = 1.5$。$1+\epsilon = 1.2$，所以 $r_t > 1+\epsilon$ → 被 clip 到 1.2。<span class="reason">当 $r_t > 1+\epsilon$ 且 $A_t>0$：未 clip 的 loss = $-1.5A_t$（更负），clip 后的 loss = $-1.2A_t$ → $\min$ 取 clip 后（-1.2 大于 -1.5）→ 梯度 = 0。</span></div>
+    <div class="step">梯度为零的阈值：$\pi_\phi > (1+\epsilon)\pi_{\text{old}} = 1.2\times 0.1 = 0.12$。<span class="reason">新策略比旧策略大超 20% 后，PPO 停止继续增大——"已经在变大了，别再变了"。</span></div>
+    <div class="step">未约束策略梯度会继续增大 $\pi_\phi$——可能在新旧策略差异过大时导致训练崩溃（TRPO 论文里的 catastrophic degradation）。<span class="reason">PPO 的 clip 给了 TRPO 级别的稳定性，但实现只有几行代码。</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="reminder">
+  <strong>关键带回：</strong>RL + 神经网络的三条路——(1) <strong>DQN</strong>：值函数逼近，稳定靠经验回放+目标网络；(2) <strong>策略梯度</strong>：直接优化 $\pi$，REINFORCE→Actor-Critic 把 $G_t$ 换成 advantage；(3) <strong>PPO</strong>：Actor-Critic + clipped surrogate，限制策略变化幅度。三条路共享一个数学内核：<strong>用 $\nabla\log\pi$（score function）把"期望对参数的梯度"变成"log-概率梯度的加权和"</strong>——这和 0018 的 score matching、0001 的 MLE 梯度是同族的工具。
+</div>
+
+<div class="primary-source">
+  <h3>主要参考</h3>
+  <strong>Mnih et al. (2015) — Human-level control through deep reinforcement learning</strong>（DQN Nature 论文）。<br>
+  <strong>Sutton et al. (2000) — Policy Gradient Methods for RL with Function Approximation</strong>（策略梯度定理的原始论文）。<br>
+  <strong>Schulman et al. (2017) — Proximal Policy Optimization Algorithms</strong>（PPO 原始论文，clip 方案在 §2）。
+</div>
+
+<div class="lesson-footer">
+  <a href="../index.html">← AI 数学 · 学习路径</a> ·
+  <a href="0021-model-free-rl.html">← 0021 Model-Free RL</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  <a href="../reference/math-primer.html">📐 数学手册</a>
+</div>
+
+<script src="../reference/popup-cards.js"></script>
+
+<script>
+window.addEventListener('load', function() {
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    MathJax.typesetPromise();
+  }
+});
+</script>
+
+</body>
+</html>

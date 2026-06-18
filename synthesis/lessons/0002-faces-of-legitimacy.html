@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0002 · 合法性的面孔</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --text-light: #5c5c5c;
+    --accent: #8b4513; --accent-dim: #a0522d; --border: #d4c5b2; --card-bg: #f8f5f0;
+    --history: #8b4513; --economics: #2d6a4f; --politics: #1a659e; --philosophy: #7b2d8b;
+    --highlight: #fef3c7; --correct: #2d6a4f; --incorrect: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Serif SC', 'SimSun', serif;
+    background: var(--bg); color: var(--text); line-height: 1.85;
+    max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 1.02rem;
+  }
+
+  h1 { font-size: 1.8rem; font-weight: 700; margin: 2rem 0 0.6rem; letter-spacing: 0.02em; line-height: 1.3; }
+  h2 { font-size: 1.25rem; font-weight: 600; margin: 2.6rem 0 0.7rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+  p { margin: 0.9rem 0; }
+  li { margin: 0.4rem 0; }
+  a { color: var(--accent-dim); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  strong { font-weight: 600; }
+
+  .meta {
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+    font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-light);
+    margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+  }
+  .meta .tag {
+    display: inline-block; padding: 0.15rem 0.55rem; border-radius: 3px;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; color: white;
+  }
+  .tag-history { background: var(--history); }
+  .tag-economics { background: var(--economics); }
+  .tag-politics { background: var(--politics); }
+  .tag-philosophy { background: var(--philosophy); }
+
+  .hook {
+    background: var(--highlight); border-left: 4px solid var(--accent);
+    padding: 1.3rem 1.5rem; margin: 1.5rem 0; font-size: 1.02rem; border-radius: 0 6px 6px 0;
+  }
+
+  blockquote {
+    border-left: 3px solid var(--border); padding: 0.6rem 1.2rem;
+    margin: 1.2rem 0; color: var(--text-light); background: var(--card-bg);
+    border-radius: 0 4px 4px 0; font-size: 0.96rem;
+  }
+  blockquote.important { border-left-color: var(--accent); background: var(--highlight); color: var(--text); }
+
+  table { width: 100%; border-collapse: collapse; margin: 1.3rem 0; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; font-size: 0.82rem; letter-spacing: 0.03em; color: var(--text-light); }
+  tr:hover td { background: #fef9f0; }
+
+  .authority-card {
+    background: var(--card-bg); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.2rem 0;
+    border-top: 3px solid var(--border);
+  }
+  .authority-card.traditional { border-top-color: var(--history); }
+  .authority-card.charismatic { border-top-color: var(--philosophy); }
+  .authority-card.legal-rational { border-top-color: var(--politics); }
+  .authority-card .ac-label {
+    font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.3rem;
+  }
+  .authority-card.traditional .ac-label { color: var(--history); }
+  .authority-card.charismatic .ac-label { color: var(--philosophy); }
+  .authority-card.legal-rational .ac-label { color: var(--politics); }
+  .authority-card h3 { margin-top: 0; }
+
+  .concept-box {
+    border: 2px solid var(--accent); border-radius: 8px; padding: 1.3rem 1.5rem;
+    margin: 2rem 0; background: var(--card-bg);
+  }
+  .concept-box .concept-name {
+    font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem;
+  }
+  .concept-box h3 { margin-top: 0; }
+
+  .quiz-section { margin: 2rem 0; }
+  .quiz-question { background: var(--card-bg); border-radius: 6px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; }
+  .quiz-question .q-num { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.3rem; }
+  .quiz-question .q-text { font-weight: 600; margin-bottom: 0.9rem; font-size: 1.02rem; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz-option {
+    padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 4px;
+    cursor: pointer; transition: background 0.12s, border-color 0.12s; font-size: 0.93rem;
+  }
+  .quiz-option:hover { background: #fdf5e8; }
+  .quiz-option.selected { border-color: var(--accent); background: var(--highlight); }
+  .quiz-option.correct { border-color: var(--correct) !important; background: #e8f5e9 !important; }
+  .quiz-option.incorrect { border-color: var(--incorrect) !important; background: #fdecea !important; }
+  .quiz-feedback { margin-top: 0.7rem; font-size: 0.9rem; display: none; padding: 0.7rem 0.9rem; border-radius: 4px; line-height: 1.7; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.fb-correct { background: #e8f5e9; color: #1b5e20; }
+  .quiz-feedback.fb-incorrect { background: #fdecea; color: #b71c1c; }
+
+  .exercise { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .exercise h3 { margin-top: 0; }
+  .exercise textarea {
+    width: 100%; min-height: 100px; margin: 0.8rem 0; padding: 0.6rem;
+    font-family: inherit; font-size: 0.9rem; border: 1px solid var(--border);
+    border-radius: 4px; background: white; resize: vertical; line-height: 1.7;
+  }
+  .exercise .hint { font-size: 0.84rem; color: var(--text-light); font-style: italic; }
+
+  .lesson-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.87rem; color: var(--text-light); }
+  .lesson-footer .links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
+
+  .case-box { background: var(--card-bg); border-radius: 6px; padding: 1.2rem 1.4rem; margin: 1rem 0; }
+  .case-box h4 { margin-top: 0; font-size: 0.96rem; }
+  .case-box .case-meta { font-size: 0.82rem; color: var(--text-light); margin-bottom: 0.5rem; }
+
+  .lens-header { display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+  .lens-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  @media (max-width: 600px) { body { padding: 1.5rem 1rem 4rem; font-size: 0.98rem; } h1 { font-size: 1.4rem; } }
+  @media print { body { max-width: 100%; padding: 1rem; font-size: 10pt; } }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <span>📅 Lesson 0002 · L2</span>
+  <span>⏱ ~30 分钟</span>
+  <span><span class="tag tag-philosophy">哲学</span> <span class="tag tag-politics">政治</span> <span class="tag tag-history">历史</span></span>
+  <span>🔗 <a href="../reference/glossary.html">术语表</a></span>
+</div>
+
+<h1>合法性的面孔</h1>
+<p style="font-size:1.05rem;color:var(--text-light);margin-top:-0.2rem;">
+  韦伯的三种权威类型——以及为什么没有任何政权能仅靠暴力存活
+</p>
+
+<div class="hook">
+  <strong>一个思想实验。</strong>想象你是一个统治者，手下有 100 万臣民、10 万军队、充足的国库。
+  现在你下令：每人每年缴纳 100 元税。<br><br>
+
+  场景 A：你的命令被默默执行。收税官上门，人们交钱，偶尔抱怨，但没有人组织反抗。你只需要 1000 名税务人员就能完成整个工作。<br><br>
+
+  场景 B：同样的命令，但每次收税都需要军队陪同。每个村庄都要驻军，每个集市都要戒严。你把 10 万军队全投入治安，仍然捉襟见肘。两年后，一场叛乱推翻了你。<br><br>
+
+  <strong>同样的命令，同样的暴力机器，结果却天差地别。</strong>差别不在你的军队规模，而在一种看不见的东西——<em>被统治者内心是否接受你的统治为正当</em>。这个东西，就是<strong>合法性</strong>（legitimacy）。<br><br>
+
+  本课要回答的问题是：<strong>合法性从哪里来？它有几种不同的面孔？每种面孔如何产生、如何维持、又如何崩溃？</strong>
+</div>
+
+<!-- ====== PART 1: POWER VS AUTHORITY ====== -->
+<h2>1. 权力与权威：一个必须先做的区分</h2>
+
+<p>在 L1 我们已经遇到了韦伯的国家定义——「合法使用暴力的垄断」。但「合法」这个词在那里只是一带而过。现在我们要把它展开。</p>
+
+<p>韦伯在《经济与社会》中首先区分了两个常被混用的概念：</p>
+
+<blockquote class="important">
+  <p><strong>权力（Macht）：</strong>「在一个社会关系中，一个行动者能够贯彻自己意志的概率，即便遇到反抗也能贯彻——不管这种概率建立在什么基础上。」</p>
+  <p><strong>统治/权威（Herrschaft）：</strong>「特定命令被特定一群人服从的概率，而且这种服从<em>出于自愿</em>——重要的是，被统治者把命令的来源本身视为正当，而不仅仅是出于对后果的算计。」</p>
+  <span style="font-size:0.85rem;">— Max Weber, <em>Economy and Society</em>, §16</span>
+</blockquote>
+
+<p>这个区分至关重要：</p>
+
+<ul>
+  <li><strong>权力</strong>是「我让你做 X，因为不做我会打你」。它建立在<em>对后果的恐惧</em>之上。一个持枪抢劫者有权力，但没有权威。</li>
+  <li><strong>权威</strong>是「我让你做 X，你做 X 是因为你认为我有<em>资格</em>让你做 X」。它建立在<em>对命令来源的认同</em>之上。一个被认可的法官有权威——即使你不喜欢判决，你也会服从，因为你承认法庭的资格。</li>
+</ul>
+
+<p>两者的关键差别在于<strong>服从的成本结构</strong>：</p>
+
+<table>
+  <tr><th></th><th>基于权力（暴力）</th><th>基于权威（合法性）</th></tr>
+  <tr>
+    <td>每次服从需要的强制</td>
+    <td>高——必须持续展示武力</td>
+    <td>低——人们自愿服从</td>
+  </tr>
+  <tr>
+    <td>统治者的规模上限</td>
+    <td>小——受限于监控能力</td>
+    <td>大——可扩展到数亿人</td>
+  </tr>
+  <tr>
+    <td>对反抗的响应</td>
+    <td>需要更多暴力</td>
+    <td>需要修复正当性叙事</td>
+  </tr>
+  <tr>
+    <td>稳定性</td>
+    <td>脆弱——暴力机器一旦松动就崩溃</td>
+    <td>强韧——可承受相当程度的失误</td>
+  </tr>
+</table>
+
+<p>这就是为什么 L1 里奥尔森的「坐寇」论证虽然解释了统治者为什么提供公共品，却没有解释统治为什么能<strong>持久</strong>——一个纯粹自利的坐寇，只要税基够大、镇压成本够低，他可以一直抢下去。但历史一再证明，纯粹掠夺式的统治无法长久。原因就在这张表里：<strong>没有合法性，统治的规模和稳定性都有上限</strong>。</p>
+
+<p>所以问题变成：<strong>合法性——这种「被统治者把命令来源视为正当」的状态——究竟有哪几种产生机制？</strong></p>
+
+<!-- ====== PART 2: THREE PURE TYPES ====== -->
+<h2>2. 韦伯的三种纯粹类型</h2>
+
+<p>韦伯在 1919 年的《政治作为一种志业》和《经济与社会》中提出了三个「纯粹类型」（Idealtypus）。注意：<strong>纯粹类型是分析工具，不是经验描述</strong>——现实中任何政权都是三种的混合，韦伯自己也这么说。但把混合物拆成纯粹成分，我们才能看清每种合法性各自的逻辑、动力学和脆弱性。</p>
+
+<!-- Traditional -->
+<div class="authority-card traditional">
+  <div class="ac-label">类型一 · 传统型</div>
+  <h3>「历来如此」——传统的权威</h3>
+
+  <p><strong>正当性基础：</strong>「一直就是这样做的。」命令的正当性来自<strong>习惯和神圣化的过往</strong>。统治者之所以是统治者，是因为他的家族历来统治；规则之所以是规则，是因为它们历来如此。</p>
+
+  <p><strong>核心特征：</strong></p>
+  <ul>
+    <li>权力范围由<strong>惯例</strong>界定——统治者不能随意突破传统，否则就丧失正当性。一个封建领主不能突然要求农奴交十倍的租，因为「历来不是这样」。</li>
+    <li>行政人员（贵族、长老、家臣）的权力也来自传统，而非统治者的任命。统治者不能随意撤换他们——他们的位置也是「历来如此」。</li>
+    <li><strong>高度稳定但缺乏变革能力。</strong>传统型权威最擅长的是重复昨天，最不擅长的是应对昨天没有出现过的新问题。</li>
+  </ul>
+
+  <p><strong>典型例子：</strong></p>
+  <ul>
+    <li>欧洲的世袭君主制——国王的权力来自血统，但也被血统所限制（他不能像东方专制君主那样随意处置贵族）。</li>
+    <li>中华帝国的「祖宗之法」——皇帝虽拥有极大权力，但重大制度变革常需援引「祖制」为正当性，王安石变法被反对的核心话语就是「祖宗之法不可变」。</li>
+    <li>部族酋长制——酋长的位置由继承规则决定，他的决策权受习俗约束。</li>
+  </ul>
+
+  <p><strong>脆弱性：</strong>当面对传统无法解释的新情境（人口压力、技术变革、外部竞争）时，传统型权威要么僵化到被推翻，要么被迫突破传统——而突破传统本身就侵蚀了它的正当性基础。这是中华帝国在面对西方挑战时的根本困境。</p>
+</div>
+
+<!-- Charismatic -->
+<div class="authority-card charismatic">
+  <div class="ac-label">类型二 · 卡里斯马型</div>
+  <h3>「跟着他」——魅力型权威</h3>
+
+  <p><strong>正当性基础：</strong>对某个个人的<strong>超凡品质</strong>（卡里斯马，charisma）的信仰——他被认为具有神圣的、英雄的或非凡的禀赋，追随者完全献身于他这个人，而非任何职位或规则。</p>
+
+  <p>「卡里斯马」原是早期基督教术语，指神赐的恩宠之礼。韦伯把它世俗化为一个社会学概念：一种被追随者<em>归因于</em>领袖个人的非凡属性——可以是军事天才（拿破仑）、演说魅力（希特勒）、宗教启示（穆罕默德）、革命意志（列宁、毛），甚至商业远见（乔布斯）。</p>
+
+  <p><strong>核心特征：</strong></p>
+  <ul>
+    <li><strong>反制度。</strong>卡里斯马权威天然敌视规则和常规——它说「不要按规矩来，跟着我这个人」。它打破传统、无视法律、绕过官僚。</li>
+    <li><strong>行政人员是追随者而非官员。</strong>他们没有制度化的资格，他们的位置取决于领袖个人的信任——今天的心腹可能是明天的阶下囚。</li>
+    <li><strong>经济上反常规。</strong>卡里斯马权威不靠稳定税收，而靠战利品、捐赠、没收、或追随者的自愿奉献。它没有「预算」概念。</li>
+    <li><strong>极不稳定。</strong>它的正当性完全系于一个活人——这个人会死、会失败、会衰老、会暴露弱点。一旦领袖的「非凡性」被证伪（打了败仗、经济崩溃、被刺杀），整个权威结构瞬间瓦解。</li>
+  </ul>
+
+  <p><strong>典型例子：</strong></p>
+  <ul>
+    <li>拿破仑——从炮兵军官到皇帝，纯粹靠军事天才和个人魅力，没有血统、没有传统、没有法律程序。</li>
+    <li>先知和宗教创始人——穆罕默德、耶稣，他们的权威完全来自启示性个人品质。</li>
+    <li>革命领袖——列宁、毛、卡斯特罗，在革命和建国初期具有强烈的卡里斯马色彩。</li>
+    <li>当代民粹领袖——查韦斯、特朗普，他们的正当性直接诉诸「我和人民之间没有中介」的个人纽带。</li>
+  </ul>
+
+  <p><strong>脆弱性与「魅力的常规化」（Routinization）：</strong>这是韦伯最深刻的洞察之一。卡里斯马权威<strong>无法长期维持</strong>——领袖会死。所以每个成功的卡里斯马运动都面临同一个根本问题：<strong>领袖死后，权威如何延续？</strong></p>
+
+  <p>答案只有两种，每种都改变了权威的性质：</p>
+  <ul>
+    <li><strong>转化为传统型：</strong>「领袖的非凡性传给他的血脉」——这就是世袭王朝的起源。穆罕默德死后，他的女婿阿里和堂弟家族声称继承了其宗教魅力，什叶派由此产生；许多非洲独立运动领袖死后，其子继位（加纳的恩克鲁玛传统、朝鲜的金氏世袭）。</li>
+    <li><strong>转化为法理型：</strong>「领袖的非凡性被写进规则」——魅力被制度化为职位。拿破仑把自己的魅力转化为《拿破仑法典》和一套官僚体系；华盛顿拒绝连任第三届，把自己的魅力转化为「总统任期」这一法理规则。</li>
+  </ul>
+
+  <p>韦伯的悲观结论：<strong>魅力的常规化是不可避免的，而常规化就是魅力的死亡。</strong>一旦卡里斯马变成规则，它就不再是卡里斯马。这意味着卡里斯马型权威是一种<strong>过渡形态</strong>——它打破旧秩序，但无法成为新秩序的稳定形态。它必然让位于传统型或法理型。</p>
+</div>
+
+<!-- Legal-rational -->
+<div class="authority-card legal-rational">
+  <div class="ac-label">类型三 · 法理型</div>
+  <h3>「按规矩办」——法理型权威</h3>
+
+  <p><strong>正当性基础：</strong>对<strong>规则和程序</strong>的信仰。服从的对象不是某个人，也不是某个传统，而是<em>依法制定的规则</em>。统治者之所以有权威，是因为他<strong>依规则获得了职位</strong>；他的命令之所以被服从，是因为它<strong>符合规则</strong>。</p>
+
+  <p><strong>核心特征：</strong></p>
+  <ul>
+    <li><strong>非人格化（impersonal）。</strong>同一职位上的张三和李四拥有同样的权威——权威属于职位而非个人。一个法理型官僚签发的命令，换一个人签发同样有效。这是法理型与传统型/卡里斯马型的根本区别。</li>
+    <li><strong>连续的、规则约束的行政。</strong>行政不是临时的、不是个人的，而是持续运作的、按既定程序进行的。官僚制（科层制）是它的典型组织形态。</li>
+    <li><strong>明确的管辖范围。</strong>每个职位有清晰的权限，超越权限的命令无效。一个卫生部长不能下令调动军队。</li>
+    <li><strong>基于技术资格的任用。</strong>官员通过考试、学历、专业训练获得职位，而非血统或领袖恩宠。</li>
+  </ul>
+
+  <p><strong>典型例子：</strong></p>
+  <ul>
+    <li>现代宪政民主国家——总统/总理的权威来自宪法规定的选举程序，而非个人品质或血统。</li>
+    <li>现代官僚机构——税务局、教育部、央行的权威来自其法定职权。</li>
+    <li>大型现代公司——CEO 的权威来自公司法和公司章程，而非个人魅力（虽然有魅力的 CEO 会叠加卡里斯马成分）。</li>
+    <li>中华帝国的科举官僚制——这是一个有趣的混合：官员任用是法理型的（考试资格），但整个系统的顶端是传统型（皇权世袭），这是韦伯把中华帝国归为「家产制官僚制」（patrimonial bureaucracy）的原因。</li>
+  </ul>
+
+  <p><strong>脆弱性：</strong>法理型权威的正当性系于<strong>程序本身的正当性</strong>。一旦人们认为程序被操纵（选举舞弊、司法被收买）、或程序产出了明显荒谬的结果、或程序无法应对紧急危机（战争、瘟疫中议会的迟缓），法理型权威就会受到侵蚀。它的另一个内在张力是<strong>「铁笼」</strong>——韦伯对法理型权威的著名担忧：高度理性化的官僚制会越来越像一个自动运转的铁笼，把人变成齿轮，效率极高但意义空虚。我们后面会回到这个主题。</p>
+</div>
+
+<!-- ====== PART 3: COMPARISON ====== -->
+<h2>3. 三种面孔的对照</h2>
+
+<table>
+  <tr>
+    <th>维度</th><th>传统型</th><th>卡里斯马型</th><th>法理型</th>
+  </tr>
+  <tr>
+    <td>正当性来源</td>
+    <td>「历来如此」</td>
+    <td>「跟着他」</td>
+    <td>「按规矩办」</td>
+  </tr>
+  <tr>
+    <td>服从对象</td>
+    <td>人（因血统/地位）</td>
+    <td>人（因非凡品质）</td>
+    <td>规则（非人格化）</td>
+  </tr>
+  <tr>
+    <td>行政人员</td>
+    <td>世袭贵族/家臣</td>
+    <td>追随者/心腹</td>
+    <td>考试/资格任命的官僚</td>
+  </tr>
+  <tr>
+    <td>对规则的态度</td>
+    <td>被规则（传统）约束</td>
+    <td>反规则、破规则</td>
+    <td>由规则定义</td>
+  </tr>
+  <tr>
+    <td>稳定性</td>
+    <td>高（但僵化）</td>
+    <td>极低（系于一人）</td>
+    <td>高（且可改革）</td>
+  </tr>
+  <tr>
+    <td>变革能力</td>
+    <td>弱</td>
+    <td>极强（但不可持续）</td>
+    <td>中等（程序性改革）</td>
+  </tr>
+  <tr>
+    <td>规模上限</td>
+    <td>中（受传统网络限制）</td>
+    <td>中（受领袖个人半径限制）</td>
+    <td>极大（可扩展到数亿人）</td>
+  </tr>
+  <tr>
+    <td>典型崩溃方式</td>
+    <td>面对新问题僵化被推翻</td>
+    <td>领袖死/失败/暴露</td>
+    <td>程序被感知为不公或失灵</td>
+  </tr>
+</table>
+
+<p><strong>韦伯的历史叙事（简化版）：</strong>人类政治组织的主线是从传统型走向法理型，中间穿插着卡里斯马的爆发。前现代绝大多数政权是传统型（世袭君主、酋长制）；现代性的标志是法理型（宪政、官僚制、法治）的胜利；而每一次重大转型——宗教改革、革命、建国——都伴随着卡里斯马的爆发，随后必然走向常规化。这个叙事有欧洲中心论之嫌，但它捕捉到了一个真实的宏观趋势。</p>
+
+<!-- ====== PART 4: DYNAMICS ====== -->
+<h2>4. 关键动力学：合法性的生产与崩溃</h2>
+
+<h3>4.1 合法性不是存量，是流量</h3>
+
+<p>一个常见的误解是把合法性当作一种一旦建立就稳定拥有的「存量」。事实上，<strong>合法性是一种持续被生产、被消耗、被补充的「流量」</strong>。每一次成功的政策、每一次公正的判决、每一次平稳的交接都在生产合法性；每一次丑闻、每一次明显的偏私、每一次失败的战争都在消耗它。一个政权即使有深厚的合法性基础，如果持续只消耗不补充，也会慢慢见底。</p>
+
+<p>这就把合法性问题和<strong>绩效</strong>（performance）联系了起来——引出对韦伯最重要的当代修正。</p>
+
+<h3>4.2 超越韦伯：绩效合法性（Seymour Martin Lipset, 1959）</h3>
+
+<p>韦伯的三种类型都是「<strong>规范性</strong>」合法性——它们回答「人们凭什么认为这个政权<em>应当</em>统治」。但政治学家李普塞特指出，现代政权还有一腿要靠「<strong>工具性</strong>」合法性——<strong>绩效合法性</strong>：「人们服从是因为这个政权<em>管用</em>——它带来了经济增长、社会稳定、外部尊严。」</p>
+
+<p>绩效合法性是现代政权（尤其是非民主政权）的生命线，但它有一个致命的内在矛盾：</p>
+
+<blockquote class="important">
+  <strong>绩效合法性悖论：</strong>绩效好时，人们把成绩归功于政权，合法性上升；绩效差时，人们把失败归罪于政权，合法性下降。<br><br>
+
+  这意味着<strong>绩效合法性是条件性的、不可持续的</strong>——没有任何政权能永远保证增长、永远避免危机。一旦增长停滞（中等收入陷阱、人口老龄化、外部冲击），绩效合法性就会快速蒸发，而它没有规范性基础兜底。这正是为什么许多「经济奇迹」政权在增长放缓后会突然面临合法性危机——它们之前的高合法性是建立在沙滩上的。
+</blockquote>
+
+<p>这给了我们一个分析当代中国的重要视角（我们会在 L22 深入）：改革开放后的合法性基础很大程度上从意识形态（卡里斯马的常规化）转向了绩效（经济增长 + 民族复兴）。这个转换在增长期极其有效，但也内嵌了绩效悖论的脆弱性。</p>
+
+<h3>4.3 选举作为魅力仪式（Murray Edelman, 1964）</h3>
+
+<p>另一个超越韦伯的洞察来自政治学家埃德尔曼。他注意到，现代民主国家里，<strong>选举在很大程度上是一种「魅力仪式」</strong>——它的功能不只是选出领导人，更是定期重新生产公民对系统的认同。选举的符号性（国旗、演说、胜选演讲、和平交接）远比它的工具性（政策差异）更重要。</p>
+
+<p>这解释了一个悖论：为什么许多选举中政策差异极小、选民政策影响微乎其微，但选举仍然能维持系统合法性？因为选举作为<strong>仪式</strong>在持续生产法理型合法性——它让公民周期性地「感觉到自己是主权者」，即使他们在政策上的实际影响力接近于零。埃德尔曼的批判让我们看到：法理型合法性中也潜藏着卡里斯马的成分——领袖的个人魅力通过选举仪式被周期性地注入系统。</p>
+
+<h3>4.4 民粹主义作为对法理型的反叛</h3>
+
+<p>把上面几个动力学拼起来，我们就有了分析当代民粹崛起的工具：</p>
+
+<ol>
+  <li>法理型合法性依赖程序正当性。当人们感知程序被精英操纵（政党寡头化、游说集团、媒体过滤）时，法理型合法性被侵蚀。</li>
+  <li>同时，绩效合法性因增长放缓、不平等加剧而下降。</li>
+  <li>此时卡里斯马需求上升——人们开始渴望一个「打破规则、直接代表真正民意」的领袖。</li>
+  <li>民粹领袖提供的就是这种<strong>反制度的卡里斯马</strong>：「现存的规则和中介都是腐败的，只有我和你们（真实的人民）之间的直接纽带是正当的。」</li>
+  <li>这正是韦伯预言的：当法理型僵化时，卡里斯马的爆发几乎是一种结构性必然。但韦伯也预言了它的结局——要么常规化为新的（可能更坏的）法理型，要么退化为传统型（领袖的家族/亲信网络）。</li>
+</ol>
+
+<p>这个分析框架让我们在 L24 讨论民主衰落时有现成的工具。</p>
+
+<!-- ====== PART 5: BEETHAM CRITIQUE ====== -->
+<h2>5. 对韦伯的根本批评：Beetham 的三条件</h2>
+
+<p>英国政治学家大卫·比瑟姆（David Beetham）在 1991 年的《权力的合法性》中对韦伯提出了最系统的批评。他认为韦伯的框架有一个根本缺陷：<strong>它把合法性完全还原为「被统治者主观上相信」</strong>——但这让合法性变成一个无法证伪的心理状态，而且暗示「只要人们相信，就是合法的」。</p>
+
+<p>比瑟姆提出合法性需要<strong>三个相互独立</strong>的条件，缺一不可：</p>
+
+<ol>
+  <li><strong>权力符合既定规则（规则性）：</strong>权力的获取和行使符合社会公认的规则——无论是法律、宪法、传统还是宗教规范。光有「人们相信」不够，权力本身必须真的符合规则。</li>
+  <li><strong>规则本身可被证明正当（正当性）：</strong>这些规则不能是任意的——它们必须能被社会共享的信念（正义观、宗教信仰、传统价值）证明为正当。一部被全民公投通过的宪法比一部独裁者颁布的「宪法」更具合法性，因为前者背后的规则（民主立法）被共享信念证明为正当。</li>
+  <li><strong>被统治者通过明确行动表达同意（同意）：</strong>合法性需要被统治者<em>行动上</em>的表达——投票、纳税、服兵役、遵守法律——而不仅仅是内心的相信。一个政权可能人们内心都不认同，但只要他们还守法、纳税、不反抗，它就在「行为合法性」意义上运转；但这种状态是脆弱的，一旦镇压松动就会崩溃。</li>
+</ol>
+
+<p>比瑟姆的三条件让我们能区分两种长期被韦伯框架混淆的情况：</p>
+<ul>
+  <li><strong>真正的合法性：</strong>规则被遵守、规则被共享信念证明正当、人们通过行动表达同意。这种政权有「纵深」——能承受危机。</li>
+  <li><strong>虚假的合法性（appearance of legitimacy）：</strong>政权举行了选举、颁布了宪法、表面上符合规则，但规则本身不被共享信念证明正当（选举被操纵、宪法是装饰），人们的「服从」纯粹出于恐惧。这种政权在平静期看起来和真正合法的政权无异，但在危机中会迅速崩塌——阿拉伯之春中几个长期「稳定」的政权在几周内倒台，就是虚假合法性的典型暴露。</li>
+</ul>
+
+<p>这个区分对分析当代许多「混合政体」（hybrid regimes，举行选举但实质非民主的政权）至关重要——我们会在 L24 回来。</p>
+
+<!-- ====== PART 6: SYNTHESIS ====== -->
+<h2>6. 综汇：四个学科看合法性</h2>
+
+<p>现在我们把合法性问题放回四学科框架。合法性是一个<strong>典型的交叉概念</strong>——单一学科无法完整把握它：</p>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--philosophy);"></span>
+  <span style="font-weight:600;color:var(--philosophy);">哲学：</span>
+  <span>合法性的<strong>规范基础</strong>——凭什么一个政权<em>应当</em>被服从？这是政治哲学的核心问题。霍布斯答「秩序」、洛克答「权利保护」、卢梭答「公意」、罗尔斯答「正义原则」。不同的规范理论支持不同的合法性类型。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--politics);"></span>
+  <span style="font-weight:600;color:var(--politics);">政治学：</span>
+  <span>合法性的<strong>类型学和生产机制</strong>——韦伯的三类型、李普塞特的绩效合法性、比瑟姆的三条件、埃德尔曼的仪式功能。政治学关心合法性如何被制度性地生产和维持。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--history);"></span>
+  <span style="font-weight:600;color:var(--history);">历史学：</span>
+  <span>合法性的<strong>演化轨迹</strong>——从传统型到法理型的长程转型、卡里斯马在转型时刻的爆发与常规化、具体政权如何混合多种类型。历史学告诉我们合法性不是抽象类型，而是具体时空中具体人群的具体信念。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--economics);"></span>
+  <span style="font-weight:600;color:var(--economics);">经济学：</span>
+  <span>合法性的<strong>成本与绩效</strong>——合法性降低统治成本（这是它最硬的功能）；绩效合法性把经济产出和政权正当性绑定，揭示了「经济奇迹」政权的内在脆弱性。经济学还解释了为什么非法活动（腐败、寻租）会侵蚀合法性——它们是对规则性的直接破坏。</span>
+</div>
+
+<p>这四个视角不是平行的四种合法性，而是<strong>同一个合法性现象的四个不可分割的维度</strong>。一个完整的合法性分析需要同时回答：它的规范基础是什么（哲学）？它属于哪种类型、如何被生产（政治学）？它在历史上如何演化（历史学）？它的成本结构和绩效依赖如何（经济学）？</p>
+
+<div class="concept-box">
+  <div class="concept-name">🧠 可带走的概念工具</div>
+  <h3>合法性审计：分析任何政权的四问</h3>
+  <p>面对任何一个政权（无论是历史上的还是当代的），用以下四个问题做一次「合法性审计」，你就能看清它的结构、强项和脆弱点：</p>
+  <ol>
+    <li><strong>类型构成：</strong>它是传统型、卡里斯马型、法理型的什么比例混合？哪种是主导？</li>
+    <li><strong>规范基础：</strong>它的正当性叙事是什么？这个叙事被哪些人群真心接受、被哪些只是表面服从？</li>
+    <li><strong>绩效依赖：</strong>它的合法性有多少依赖于绩效（经济、安全、尊严）？如果绩效下滑会发生什么？</li>
+    <li><strong>常规化前景：</strong>如果它有强烈的卡里斯马成分，领袖死后/退场后如何常规化？常规化的路径是通向法理型还是传统型？</li>
+  </ol>
+  <p style="margin-bottom:0;">这个审计框架将在后续课程中反复使用——罗马帝国化、中华王朝周期律、法国大革命、中国改革开放、当代民粹——每一次都是一次合法性审计的练习。</p>
+</div>
+
+<!-- ====== PART 7: EXERCISES ====== -->
+<h2>7. 练习与思考</h2>
+
+<div class="quiz-section">
+
+  <div class="quiz-question" id="q1">
+    <div class="q-num">练习 1 · 概念辨析</div>
+    <div class="q-text">「权力」与「权威」的关键区别是什么？</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option" data-answer="wrong">权力是合法的，权威是非法的</div>
+      <div class="quiz-option" data-answer="correct">权力基于对后果的强制（恐惧），权威基于对命令来源本身的认同（自愿服从）</div>
+      <div class="quiz-option" data-answer="wrong">权力属于国家，权威属于民间</div>
+      <div class="quiz-option" data-answer="wrong">权力是物质的，权威是精神的</div>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <div class="q-num">练习 2 · 类型识别</div>
+    <div class="q-text">一个建国初期的革命领袖，凭借军事胜利和个人感召力获得追随，他任命的官员都是他的亲信而非通过任何资格程序，税收靠战利品和没收而非制度化的税法。这最接近韦伯的哪种类型？</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option" data-answer="wrong">传统型——因为革命传统已经成为新传统</div>
+      <div class="quiz-option" data-answer="correct">卡里斯马型——正当性系于领袖个人的非凡品质，行政靠亲信，经济靠非常规手段</div>
+      <div class="quiz-option" data-answer="wrong">法理型——因为革命后建立了新国家</div>
+      <div class="quiz-option" data-answer="wrong">三种混合，无法判断</div>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <div class="q-num">练习 3 · 动力学应用</div>
+    <div class="q-text">韦伯说「魅力的常规化是不可避免的，而常规化就是魅力的死亡」。拿破仑称帝后颁布《拿破仑法典》、建立官僚体系和荣誉军团。这一过程最准确的描述是？</div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option" data-answer="wrong">拿破仑背叛了革命，所以失去了魅力</div>
+      <div class="quiz-option" data-answer="best">拿破仑把自己的卡里斯马转化为法理型（法典、官僚制）和传统型（世袭皇位、荣誉军团）的混合——魅力没有「失去」，而是被「翻译」成了可持续的权威形式，代价是它不再是卡里斯马</div>
+      <div class="quiz-option" data-answer="wrong">这证明韦伯错了，魅力可以与制度共存</div>
+      <div class="quiz-option" data-answer="wrong">拿破仑只是模仿了已有的封建制度</div>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q4">
+    <div class="q-num">练习 4 · 综合分析</div>
+    <div class="q-text">一个非民主政权在过去 30 年通过持续的高速经济增长维持了较高的民众支持，没有举行有竞争的选举。最近增长放缓至停滞，同时出现外部贸易摩擦。基于本课框架，以下分析最有洞察力的是？</div>
+    <div class="quiz-options" id="q4-opts">
+      <div class="quiz-option" data-answer="wrong">只要恢复增长，合法性就会自动恢复</div>
+      <div class="quiz-option" data-answer="wrong">该政权应该立即举行选举以建立法理型合法性</div>
+      <div class="quiz-option" data-answer="best">该政权主要依赖绩效合法性，缺乏独立的规范性基础兜底；增长停滞会暴露这一结构性脆弱。它面临的挑战不是简单的「恢复增长」，而是需要在绩效之外重建规范性合法性叙事（这通常困难且漫长）。同时，绩效下滑可能催生卡里斯马需求，使系统面临民粹或强人政治的压力</div>
+      <div class="quiz-option" data-answer="wrong">合法性主要靠镇压维持，与经济增长无关</div>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+</div>
+
+<div class="exercise">
+  <h3>✏️ 合法性审计（开放练习，10 分钟）</h3>
+  <p>选择一个你熟悉的政权——可以是历史上的（如清朝、罗马帝国、苏联），也可以是当代的。用本课的「合法性审计四问」做一次完整分析：</p>
+  <ol style="margin-left:1.5rem;">
+    <li>类型构成（传统/卡里斯马/法理型的混合比例）</li>
+    <li>规范基础（正当性叙事 + 哪些人群真心接受/表面服从）</li>
+    <li>绩效依赖（合法性有多少绑在经济/安全产出上）</li>
+    <li>常规化前景（如有卡里斯马成分，领袖退场后如何延续）</li>
+  </ol>
+  <textarea placeholder="选择政权：……&#10;&#10;1. 类型构成：……&#10;2. 规范基础：……&#10;3. 绩效依赖：……&#10;4. 常规化前景：……&#10;&#10;你预测的脆弱点：……"></textarea>
+  <p class="hint">💡 把你的审计发给 Claude——我会逐一回应，指出你可能忽略的维度，并补充历史细节。这是把抽象框架变成可操作分析能力的核心练习。</p>
+</div>
+
+<!-- ====== FURTHER READING ====== -->
+<h2>8. 推荐阅读</h2>
+
+<div style="background:var(--card-bg);border-radius:6px;padding:1.3rem 1.5rem;margin:1.2rem 0;">
+  <p style="font-weight:600;margin-top:0;">📖 主读</p>
+  <p style="margin-bottom:0.3rem;"><strong>Max Weber —《经济与社会》第 1 章 §1–§17，以及《学术与政治》中「政治作为一种志业」</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">韦伯关于三种合法性类型的原始论述。中文版由广西师范大学出版社出版。读原文会发现韦伯比二手介绍复杂得多——他反复强调纯粹类型只是分析工具，现实都是混合。</p>
+
+  <p style="font-weight:600;margin-top:1rem;">📖 辅读</p>
+  <p style="margin-bottom:0.3rem;"><strong>David Beetham — <em>The Legitimation of Power</em> (1991)</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">对韦伯框架最系统的当代批评和重构。三条件框架出自此书。有助理解「虚假合法性」与真正合法性的区别。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>Seymour Martin Lipset — <em>Political Man</em> (1960)，第 1 章</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">「绩效合法性」概念的源头。李普塞特把合法性与有效性区分开来，是分析现代政权（尤其是民主化问题）的基础工具。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>Murray Edelman — <em>The Symbolic Uses of Politics</em> (1964)</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:0;">选举作为魅力仪式的开创性研究。会让你永远 differently 看选举。</p>
+</div>
+
+<!-- ====== CROSS-REFERENCES ====== -->
+<h2>9. 关联与展望</h2>
+<ul style="font-size:0.92rem;">
+  <li><strong>L1 回扣：</strong>本课展开了 L1 中韦伯国家定义里「合法性」一词——它是国家能持久运转（而不仅是短期存在）的关键。</li>
+  <li><strong>L9 罗马兴衰：</strong>共和国→帝国的转型是一次大规模的合法性重构——从法理/传统混合（元老院+公民传统）转向卡里斯马（恺撒）再常规化为传统型（世袭元首制）。</li>
+  <li><strong>L10 中华帝国：</strong>「天命」是一种独特的合法性叙事——它同时具有传统型（祖制）和卡里斯马（开国君主的天命）成分，并内嵌了「失德则失命」的革命权，是王朝周期律的合法性根源。</li>
+  <li><strong>L16 法国大革命：</strong>旧制度的合法性危机是革命的导火索；革命本身是卡里斯马爆发；拿破仑是常规化的经典案例。</li>
+  <li><strong>L22 中国革命与改革：</strong>从意识形态合法性到绩效合法性的转换，及其内嵌的脆弱性。</li>
+  <li><strong>L24 民主衰落：</strong>法理型合法性被侵蚀→卡里斯马需求上升→民粹爆发，是本课 4.4 节的展开。</li>
+</ul>
+
+<div class="lesson-footer">
+  <p>🎯 本课服务于你的 <a href="../MISSION.md">MISSION</a>：<em>构建跨学科理解框架。</em>合法性是政治学/政治哲学的核心概念，也是贯穿整个课程的分析工具。</p>
+  <p>💬 任何一个类型你不同意？审计练习中你的分析与框架有冲突？想把它应用到你关心的某个具体政权？<strong>直接问 Claude。</strong></p>
+  <div class="links">
+    <span><a href="./0001-why-states-emerge.html">← L1 国家起源</a></span>
+    <span><a href="#" style="color:var(--text-light);">L3 制度变迁 →</a>（即将推出）</span>
+    <span><a href="../reference/glossary.html">📚 术语表</a></span>
+    <span><a href="../index.html">↑ 课程路径</a></span>
+  </div>
+</div>
+
+<script>
+(function() {
+  function setup(qId) {
+    const opts = document.querySelectorAll('#' + qId + '-opts .quiz-option');
+    const fb = document.getElementById(qId + '-fb');
+    opts.forEach(o => {
+      o.addEventListener('click', function() {
+        opts.forEach(x => { x.classList.remove('selected', 'correct', 'incorrect'); });
+        o.classList.add('selected');
+        const ans = o.dataset.answer;
+        if (ans === 'correct' || ans === 'best') {
+          o.classList.add('correct');
+          fb.className = 'quiz-feedback show fb-correct';
+          if (qId === 'q1') fb.innerHTML = '✅ <strong>正确。</strong>权力可以靠暴力机器单方面施加，权威则需要被统治者的认同——这就是为什么同样规模的军队，有的政权能稳定统治几百年，有的几年就崩。合法性问题的全部重要性就在这个区分里。';
+          else if (qId === 'q2') fb.innerHTML = '✅ <strong>正确。</strong>所有特征都指向卡里斯马型：正当性系于个人、行政靠亲信而非资格、经济靠非常规手段。建国初期的革命政权几乎都有强烈的卡里斯马色彩——这正是韦伯「魅力常规化」问题的起点：领袖死后怎么办？';
+          else if (qId === 'q3') fb.innerHTML = '✅ <strong>正确。</strong>这是理解韦伯「常规化」最精确的方式——魅力不是被「失去」或「背叛」，而是被<strong>翻译</strong>成可持续的权威形式。代价是它不再是卡里斯马（不再系于一人、不再反制度），但收益是它可以延续。每个成功的革命政权都要完成这种翻译，失败则人亡政息。';
+          else if (qId === 'q4') fb.innerHTML = '✅ <strong>正确。</strong>这是绩效合法性悖论的标准展开。关键洞察是：问题不是「恢复增长」那么简单——即使恢复增长，结构性脆弱仍在；真正的修复需要在绩效之外建立规范性合法性，这通常需要代际尺度的制度建设和叙事重构。同时绩效下滑几乎必然催生卡里斯马需求，这是民粹/强人政治的结构性温床。';
+        } else {
+          o.classList.add('incorrect');
+          fb.className = 'quiz-feedback show fb-incorrect';
+          if (qId === 'q1') {
+            if (o.textContent.includes('合法')) fb.innerHTML = '❌ 正好相反——权威才是「合法/被认同」的那一个，权力可以完全非法（持枪抢劫者有权力但无权威）。';
+            else if (o.textContent.includes('国家')) fb.innerHTML = '❌ 民间领袖（宗教领袖、社区长老）可以有权威而无国家权力；国家机器可以有权力而缺乏权威（占领军）。这个区分不对应国家/民间。';
+            else fb.innerHTML = '❌ 「物质/精神」的二元没有抓住要点。关键差别在服从的<strong>机制</strong>——是基于对后果的强制，还是基于对命令来源的认同。';
+          } else if (qId === 'q2') {
+            if (o.textContent.includes('传统')) fb.innerHTML = '❌ 革命初期恰恰是<strong>打破</strong>传统而非建立传统。传统型需要时间积累——「历来如此」需要历来如此过一段时间才成立。';
+            else if (o.textContent.includes('法理')) fb.innerHTML = '❌ 建立新国家不等于建立法理型权威。法理型的标志是非人格化的规则和基于资格的任用——题目描述的亲信任命和非常规税收恰恰是反法理型的。';
+            else fb.innerHTML = '❌ 虽然现实中都是混合，但题目描述的<strong>所有</strong>特征都指向同一类型——这是识别主导类型的练习。';
+          } else if (qId === 'q3') {
+            if (o.textContent.includes('背叛')) fb.innerHTML = '❌ 「背叛」是道德判断，不是分析。拿破仑称帝确实结束了革命的某些承诺，但韦伯的论点不是道德性的——它是结构性的：魅力<strong>无法</strong>长期维持，常规化是必然，不是选择或背叛。';
+            else if (o.textContent.includes('韦伯错了')) fb.innerHTML = '❌ 韦伯没有说魅力和制度不能共存——他说的是魅力<strong>本身</strong>（系于一人、反制度的那种）不能共存于制度。拿破仑的魅力被翻译成了制度，恰恰印证了韦伯。';
+            else fb.innerHTML = '❌ 拿破仑的制度是全新的（法典、荣誉军团），不是模仿封建制。而且题目问的是「过程的最准确描述」，不是制度的来源。';
+          } else if (qId === 'q4') {
+            if (o.textContent.includes('恢复增长')) fb.innerHTML = '❌ 这忽略了结构性问题——绩效合法性悖论的核心就是即使恢复增长，脆弱性仍在；而且增长未必能恢复（人口、技术、地缘等深层因素）。';
+            else if (o.textContent.includes('举行选举')) fb.innerHTML = '❌ 这是政策处方，不是分析。而且举行选举不等于建立法理型合法性——如果选举不被共享信念证明为正当（比瑟姆的三条件），它只是「虚假合法性」。';
+            else fb.innerHTML = '❌ 如果合法性纯靠镇压，政权在平静期不需要花那么大力气做经济和民族叙事。30 年的高支持度恰恰说明合法性有真实成分——只是它主要系于绩效，这就是脆弱所在。';
+          }
+        }
+      });
+    });
+  }
+  ['q1','q2','q3','q4'].forEach(setup);
+})();
+</script>
+
+</body>
+</html>

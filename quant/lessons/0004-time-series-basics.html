@@ -4,299 +4,206 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lesson 0004 · 时间序列基础</title>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.7; color: #1a1a1a; background: #fdfdfb; max-width: 720px; margin: 0 auto; padding: 4rem 2rem 6rem; }
-  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
-  h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; }
-  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
-  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
-  p { margin-bottom: 1rem; }
-  strong { font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
-  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
-  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
-  tr:last-child td { border-bottom: none; }
-  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
-  .card h3 { margin-top: 0; }
-  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
-  .insight h3 { margin-top: 0; color: #8b5a20; }
-  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
-  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
-  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.95rem; }
-  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
-  .formula { text-align: center; font-size: 1.1rem; margin: 1.2rem 0; font-family: 'Inter', sans-serif; color: #333; }
-  .quiz { margin: 2rem 0; }
-  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
-  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
-  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
-  .quiz .opt:hover { background: #f0f0e8; }
-  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
-  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
-  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
-  .quiz .feedback.show { display: block; }
-  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
-  .primary-source h3 { margin-top: 0; }
-  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
-  .nav a { color: #5577aa; text-decoration: none; }
-  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
-  .en { color: #888; font-size: 0.85em; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Serif 4',Georgia,serif;font-size:18px;line-height:1.75;color:#1a1a1a;background:#fdfdfb;max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+  h1{font-size:2.2rem;font-weight:700;margin-bottom:.3rem;letter-spacing:-.02em}
+  h2{font-size:1.45rem;font-weight:600;margin:3rem 0 .8rem;color:#2c2c2c}
+  h3{font-size:1.1rem;font-weight:600;margin:1.8rem 0 .5rem;color:#333}
+  .meta{color:#888;font-size:.9rem;margin-bottom:2rem;font-family:'Inter',sans-serif}
+  p{margin-bottom:1rem} strong{font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.95rem}
+  th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid #e0e0d8}
+  th{font-weight:600;font-family:'Inter',sans-serif;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:#666}
+  tr:last-child td{border-bottom:none}
+  .card{background:#fafaf8;border:1px solid #e8e8e0;border-radius:6px;padding:1.5rem 1.8rem;margin:1.5rem 0}
+  .card h3{margin-top:0}
+  .insight{background:#fff8f0;border-left:3px solid #e08830;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .insight h3{margin-top:0;color:#8b5a20}
+  .retrieval{background:#f8f4ff;border:1px solid #d8d0e8;border-radius:6px;padding:1.2rem 1.5rem;margin:2rem 0}
+  .retrieval h3{margin-top:0;color:#5b4a8a}
+  .crypto-note{background:#f5f9ff;border-left:3px solid #4a90d9;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .crypto-note h3{margin-top:0;color:#2a5a9a}
+  .formula{text-align:center;font-size:1.05rem;margin:1.4rem 0}
+  .danger{background:#fff0f0;border-left:3px solid #c44;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .danger h3{margin-top:0;color:#a33}
+  .connection{background:#f0f8f8;border-left:3px solid #4a9a9a;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#345}
+  .connection h3{margin-top:0;color:#2a6a6a}
+  .open-q{background:#fafafa;border:1px dashed #bbb;border-radius:6px;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#555}
+  .open-q h3{margin-top:0;color:#666}
+  .quiz{margin:2rem 0} .quiz .q{font-weight:600;margin-bottom:.6rem}
+  .quiz .options{display:flex;flex-direction:column;gap:.4rem}
+  .quiz .opt{padding:.6rem 1rem;border:1px solid #d8d8d0;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;transition:background .15s}
+  .quiz .opt:hover{background:#f0f0e8}
+  .quiz .opt.correct{background:#e6f4ea;border-color:#4a9}
+  .quiz .opt.wrong{background:#fce8e8;border-color:#c44}
+  .quiz .feedback{margin-top:.8rem;font-size:.9rem;color:#555;display:none} .quiz .feedback.show{display:block}
+  .primary-source{background:#fffdf5;border-left:3px solid #e6c030;padding:1rem 1.5rem;margin:2.5rem 0 1.5rem;font-size:.95rem}
+  .primary-source h3{margin-top:0}
+  .nav{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #e0e0d8;font-family:'Inter',sans-serif;font-size:.85rem;color:#999}
+  .nav a{color:#5577aa;text-decoration:none}
+  .reminder{background:#f5f7fa;border:1px solid #dde;border-radius:6px;padding:1.2rem 1.5rem;margin:2.5rem 0;font-size:.9rem;color:#445}
+  .en{color:#888;font-size:.85em}
 </style>
 </head>
 <body>
 
 <h1>时间序列基础</h1>
-<p class="meta">Lesson 0004 · 2026-06-15 · 预计 15 分钟</p>
+<p class="meta">Lesson 0004（重写·深度版）· 第一阶段 · 预计 45-55 分钟</p>
 
-<p>
-  前几课我们把收益率当作一串独立的数字来分析（算均值、算标准差）。但金融数据最核心的特征——也是量化策略的源头——是<strong>它们在时间上不独立</strong>。今天的收益率和昨天有关系。这节课就来建立时间序列的三个基本概念——趋势、平稳性、均值回归——每个量化策略归根结底都在利用其中至少一个。
-</p>
-
-<!-- ============================================================ -->
-<div class="retrieval">
-  <h3>🔁 回顾·上节课</h3>
-  <ol style="padding-left:1.2rem; margin-bottom:0;">
-    <li>「肥尾」对夏普比率的最大威胁是什么？</li>
-    <li>波动率聚集意味着我们应该用什么样的波动率估计？（等权还是不等权）</li>
-  </ol>
-</div>
+<div class="retrieval"><h3>🔁 衔接</h3>
+<p>金融数据是<strong>有序的</strong>——今天的观测和昨天有关，不能打乱顺序。这和标准统计（IID 样本）根本不同。这节讲时间序列的核心概念：自相关、平稳性、均值回归，并把<strong>所有常见策略归类</strong>——每个策略本质上都在赌某个时间序列性质。理解这个框架，你看到任何策略都能问："它在赌什么性质？这个性质实证存在吗？什么时候失效？"</p></div>
 
 <!-- ============================================================ -->
-<h2>一、自相关：今天的收益在告诉你明天的什么</h2>
+<h2>一、自相关 <span class="en">Autocorrelation</span></h2>
 
-<p>
-  时间序列的核心问题只有一个：<strong>过去的观测值能否预测未来？</strong>
-</p>
+<p>自相关衡量序列和自己滞后的相关性：</p>
+<div class="formula">$$\rho_k = \text{Corr}(r_t, r_{t-k}) = \frac{\text{Cov}(r_t, r_{t-k})}{\text{Var}(r_t)}$$</div>
+<p>$\rho_k$ 是 $k$ 阶自相关。它告诉你"$k$ 期前的值能预测现在吗"。</p>
 
-<p>统计学上，这个问题通过<strong>自相关</strong>来回答：</p>
-
-<div class="formula">
-  自相关(lag=k) = Corr(r<sub>t</sub>, r<sub>t−k</sub>)
-</div>
-
-<p>
-  你拿今天的收益率，和 1 天前、2 天前、5 天前的收益率分别算相关系数。如果 lag=1 的自相关是正的，意味着「昨天涨，今天更可能继续涨」——这就是<strong>趋势</strong>的数学本质。如果 lag=1 的自相关是负的，意味着「昨天涨，今天更可能跌」——这是<strong>均值回归</strong>的数学本质。
-</p>
-
-<div class="card">
-  <h3>金融数据中自相关的典型模式</h3>
-  <table>
-    <tr><th>Lag</th><th>BTC 日收益自相关</th><th>解读</th></tr>
-    <tr><td>1 天</td><td>~0.02（接近零）</td><td>日级别几乎没有可预测性</td></tr>
-    <tr><td>5 天</td><td>~0.05（微弱正向）</td><td>周级别有极微弱趋势</td></tr>
-    <tr><td>20 天</td><td>~0.08（弱正向）</td><td>月度趋势开始可见</td></tr>
-  </table>
-  <p style="margin-bottom:0;">
-    注意一个关键事实：<strong>收益率本身的自相关通常很弱。</strong>如果日收益有很强的自相关，那所有人都能用它赚钱，这个信号会迅速被套利消除。
-  </p>
-</div>
-
-<p>
-  但<strong>波动率的自相关非常强</strong>——这就是上节课的波动率聚集，后面会再回到这个话题。
-</p>
+<div class="card"><h3>金融数据的自相关结构</h3>
+<table>
+<tr><th>序列</th><th>$\rho_1$（一阶）</th><th>长滞后</th><th>含义</th></tr>
+<tr><td>收益 $r_t$</td><td>~0（微弱）</td><td>~0</td><td>方向难预测——弱有效市场</td></tr>
+<tr><td>$|r_t|$ 或 $r_t^2$</td><td>0.2-0.4（强正）</td><td>缓慢衰减</td><td>波动率聚集（第三课）</td></tr>
+<tr><td>横截面动量信号</td><td>正且持续</td><td>数月衰减</td><td>趋势存在</td></tr>
+<tr><td>价差/基差（套利对）</td><td>强正接近 1</td><td>极慢衰减</td><td>均值回归但慢</td></tr>
+</table>
+<p>关键洞察：<strong>不同变换的序列有完全不同的自相关结构</strong>，对应完全不同的策略。$r_t \approx$ 白噪声 → 方向难预测；$|r_t|$ 强自相关 → 波动率可预测；某些组合有动量 → 趋势可预测。</p></div>
 
 <!-- ============================================================ -->
-<h2>二、趋势：当价格有「惯性」</h2>
+<h2>二、平稳性 <span class="en">Stationarity</span> 与 ADF 检验</h2>
 
-<p>
-  <strong>趋势</strong>在数学上就是正的自相关：上涨之后更可能继续上涨，下跌之后更可能继续下跌。这不是金融理论该预测的东西（有效市场假说认为价格应该随机游走），但它是金融历史上最稳健的经验规律之一——<strong>动量效应</strong>在几乎所有资产类别、几乎所有时间尺度上都存在。
-</p>
+<p>平稳序列 = 均值、方差、自相关结构不随时间变。这是大多数统计模型的<strong>前提</strong>——非平稳序列上跑回归会出"伪回归"（spurious regression，第六课）。</p>
 
-<div class="card">
-  <h3>趋势为什么存在？</h3>
-  <p>学术界争论了几十年，没有定论。但有三个主流解释：</p>
-  <ol>
-    <li style="margin-bottom:0.4rem;"><strong>信息传播缓慢</strong>——重大消息不是瞬间被所有人消化，而是逐步扩散。早期反应者买入 → 价格上涨 → 后来者跟随 → 继续上涨。</li>
-    <li style="margin-bottom:0.4rem;"><strong>行为偏差</strong>——投资者倾向于外推近期趋势（"这个币在涨，还会继续涨"）。锚定效应和处置效应加强了趋势。</li>
-    <li><strong>风险补偿</strong>——趋势跟踪策略在市场崩盘时表现好（做空），但在震荡市中回撤严重。趋势溢价可能是对「承受震荡期痛苦」的补偿。</li>
-  </ol>
-</div>
+<div class="card"><h3>价格 vs 收益</h3>
+<p>价格<strong>非平稳</strong>（均值随时间漂移，BTC 从 100 到 6 万）。收益<strong>近似平稳</strong>（均值方差大致稳定）。这就是为什么量化建模收益不建模价格——不是为了好看，是为了满足平稳性前提，让统计模型有效。</p></div>
 
-<div class="crypto-note">
-  <h3>🔗 币圈：趋势的放大版</h3>
-  <p style="margin-bottom:0;">币圈的动量效应比传统市场更强。原因：散户占比高（行为偏差更大）、信息不对称严重（叙事传播慢）、杠杆正反馈循环（涨 → 空头被清算 → 强制买入 → 继续涨）。在币圈，简单的移动平均交叉策略历史上比在股票市场效果好得多——但也意味着趋势突然断裂时的反转也更猛烈。</p>
-</div>
+<div class="card"><h3>ADF 检验 <span class="en">Augmented Dickey-Fuller</span></h3>
+<p>检验序列是否有单位根（非平稳）：</p>
+<div class="formula">$$\Delta r_t = \alpha + \beta r_{t-1} + \sum_i \gamma_i \Delta r_{t-i} + \varepsilon_t$$</div>
+<p>原假设 $H_0$：$\beta = 0$（有单位根，非平稳）。p 值小 → 拒绝 → 平稳。<strong>实务用法</strong>：检验两个资产价差是否平稳——平稳才能做配对交易（协整，下节）。直接对价格做 ADF 几乎一定不拒绝（非平稳），对收益做几乎一定拒绝（平稳）。</p></div>
+
+<h3>协整 <span class="en">Cointegration</span></h3>
+<p>两个序列各自非平稳（如 BTC 价格和 ETH 价格都随机游走），但某个线性组合平稳（$P_{\text{BTC}} - \beta P_{\text{ETH}}$ 围绕均值波动）。这叫协整。含义：两者有<strong>长期均衡关系</strong>，短期偏离会回归——配对交易/统计套利的数学基础。检验：对价差序列做 ADF，平稳则协整。</p>
 
 <!-- ============================================================ -->
-<h2>三、平稳性：建模的入场券</h2>
+<h2>三、均值回归在不同时间尺度</h2>
 
-<p>这是时间序列分析中最重要但也最容易被忽视的概念。</p>
-
-<p><strong>平稳</strong>意味着序列的统计性质（均值、方差、自相关）不随时间变化。下图帮助理解：</p>
-
-<div class="card">
-  <table>
-    <tr><th>序列类型</th><th>均值</th><th>方差</th><th>举例</th><th>能否直接建模</th></tr>
-    <tr><td>严格平稳</td><td>恒定</td><td>恒定</td><td>日收益率</td><td>✅ 可以</td></tr>
-    <tr><td>趋势平稳</td><td>随时间变化</td><td>可能恒定</td><td>价格（长期上涨）</td><td>❌ 需先去趋势</td></tr>
-    <tr><td>非平稳</td><td>变化</td><td>变化</td><td>有结构性变化的序列</td><td>❌ 需差分/变换</td></tr>
-  </table>
-</div>
-
-<div class="insight">
-  <h3>⚡ 关键直觉</h3>
-  <p style="margin-bottom:0;"><strong>价格是非平稳的。</strong>BTC 五年前 $10,000，现在 $60,000——均值变了，方差也变了。这意味着你不能直接用价格建模。但 <strong>收益率通常是平稳的</strong>——BTC 的日收益率五年前是 ±4%，现在还是 ±4%。这就是为什么量化分析中一切从收益率出发，而不是从价格出发。</p>
-</div>
+<p>"均值回归"在金融里<strong>尺度依赖</strong>，不同尺度完全不同：</p>
+<ul>
+  <li><strong>高频（秒-分）</strong>：强均值回归。订单簿微结构，价格在 bid/ask 间弹跳。做市商赚这个。</li>
+  <li><strong>日-周</strong>：弱或没有。日收益近似随机游走。</li>
+  <li><strong>月-年</strong>：又有均值回归。长期反转（3-5 年赢家变输家，De Bondt-Thaler）。价值因子。</li>
+  <li><strong>跨资产价差</strong>：协整对（BTC-ETH、同所永续-现货）强均值回归。</li>
+</ul>
+<p>所以"均值回归策略"必须说清<strong>哪个尺度</strong>——高频做市和长期价值都叫均值回归，但机制、容量、风险完全不同。</p>
 
 <!-- ============================================================ -->
-<h2>四、均值回归：趋势的反面</h2>
+<h2>四、策略分类——每个策略赌一个时间序列性质</h2>
 
-<p>
-  <strong>均值回归</strong>在数学上就是负的自相关：偏离均值后，有回到均值的倾向。如果趋势是「惯性」，均值回归就是「弹簧」。
-</p>
-
-<div class="two-col">
-  <div>
-    <p><strong>趋势策略：</strong></p>
-    <p>买涨的，卖跌的<br>追着价格走</p>
-  </div>
-  <div>
-    <p><strong>均值回归策略：</strong></p>
-    <p>买跌的，卖涨的<br>赌价格弹回来</p>
-  </div>
-</div>
-
-<p>两种策略在不同时间尺度上成立：</p>
+<p>这是本课的核心框架。把常见策略按"赌什么性质"分类：</p>
 
 <table>
-  <tr><th>时间尺度</th><th>主导效应</th><th>策略方向</th></tr>
-  <tr><td>秒 ~ 分钟（微观结构）</td><td>均值回归</td><td>Bid-Ask 弹跳，做市商赚价差</td></tr>
-  <tr><td>小时 ~ 天</td><td>混合，不稳定</td><td>难以捕捉</td></tr>
-  <tr><td>周 ~ 月（中频）</td><td>趋势（动量）</td><td>趋势跟踪，移动平均线</td></tr>
-  <tr><td>月 ~ 年（低频）</td><td>均值回归</td><td>价值因子（PE 回归均值等）</td></tr>
+<tr><th>策略</th><th>赌的性质</th><th>数学表达</th><th>时间尺度</th><th>币圈适用</th></tr>
+<tr><td>时间序列动量 TSMOM</td><td>收益正自相关（趋势）</td><td>$\text{sign}(\sum_{k=1}^n r_{t-k})$</td><td>周-月</td><td>★★★★★</td></tr>
+<tr><td>横截面动量 XSMOM</td><td>相对强弱持续</td><td>排序做多赢家空输家</td><td>月</td><td>★★★★</td></tr>
+<tr><td>均线交叉</td><td>趋势（动量的简化）</td><td>短期均线上穿长期</td><td>日-周</td><td>★★★</td></tr>
+<tr><td>均值回归（高频）</td><td>短期负自相关</td><td>偏离均值反向开仓</td><td>秒-分</td><td>★★★（需低延迟）</td></tr>
+<tr><td>配对交易/协整</td><td>价差平稳</td><td>价差偏离→反向</td><td>日-周</td><td>★★★★</td></tr>
+<tr><td>长期反转</td><td>长期负自相关</td><td>3-5 年输家做多</td><td>年</td><td>★★（币圈历史短）</td></tr>
+<tr><td>波动率交易</td><td>$|r_t|$ 自相关（聚集）</td><td>GARCH 预测 vs IV</td><td>日-月</td><td>★★★★</td></tr>
+<tr><td>做市</td><td>微观均值回归</td><td>bid/ask 间弹跳</td><td>毫秒-秒</td><td>★★（散户难）</td></tr>
+<tr><td>费率套利 carry</td><td>费率均值回归</td><td>对冲+收费率</td><td>日</td><td>★★★★★</td></tr>
 </table>
 
-<div class="crypto-note">
-  <h3>🔗 币圈：均值回归在哪？</h3>
-  <p style="margin-bottom:0;">币圈的均值回归机会集中在两类场景：（1）<strong>资金费率极端值</strong>——费率飙升后通常均值回归，因为套利者进场；（2）<strong>跨交易所价差</strong>——同一个币在不同 CEX 上的价格会短暂偏离，然后迅速回归。中频趋势（周~月）仍然是币圈一致性最强的 alpha 来源。</p>
-</div>
+<div class="insight"><h3>⚡ 看到任何策略先问：它在赌什么性质？</h3>
+<p style="margin-bottom:0;">这个框架让你<strong>批判性审视</strong>任何策略。有人给你个"年化 50% Sharpe 3"的策略，先问：它赌哪个性质？这个性质实证存在吗？在哪个尺度？什么时候失效（趋势策略在震荡市亏、均值回归在单边趋势亏）？如果答不清，就是没理解，别上仓位。</p></div>
+
+<div class="card"><h3>动量 vs 均值回归：同一资产不同尺度</h3>
+<p>关键：动量和均值回归<strong>不矛盾</strong>——它们在不同尺度生效。BTC 日内可能均值回归（订单簿），月度动量（趋势），年度又均值回归（长期反转）。一个完整策略可能在不同尺度用不同信号。<strong>搞混尺度是新手最常见错误</strong>——用月度动量信号做日内交易，或用日内均值回归信号持仓数月。</p></div>
 
 <!-- ============================================================ -->
-<h2>五、整合：一个策略的本质</h2>
+<div class="crypto-note"><h3>🔗 币圈的时间序列特点</h3>
+<ul>
+  <li><strong>趋势更强</strong>：币圈动量 Sharpe 比传统市场高，因为散户追涨杀跌放大趋势。但崩盘也更猛（动量崩溃）。</li>
+  <li><strong>24/7</strong>：没有日开收盘跳空，时间序列更"连续"。但日内仍有流动性周期（亚洲/欧美时段）。</li>
+  <li><strong>历史短</strong>：BTC 2009 年才有，多数币更短。长期反转（3-5 年）几乎没法做——数据不够。协整检验也受样本量限制。</li>
+  <li><strong>结构性断裂多</strong>：2017 ICO、2020 DeFi、2024 ETF——每个周期市场结构变，历史时间序列的统计性质可能不再适用。平稳性假设更脆弱。</li>
+</ul></div>
 
-<p>现在可以把任何量化策略拆解为它在利用时间序列的哪个性质：</p>
+<!-- ============================================================ -->
+<div class="connection"><h3>🔗 与其他课的连接</h3>
+<p><strong>前置</strong>：0002 收益（平稳性为什么用收益）、0003 波动率聚集（$|r_t|$ 自相关的具体化）。</p>
+<p><strong>后续</strong>：0005 概率分布（时间序列的分布建模）、0006 回归（自相关残差、伪回归）、0010 动量（TSMOM/XSMOM 深入）、0011 费率信号（费率均值回归）、0014 做市（微观均值回归）。本节的策略分类框架贯穿整个因子阶段。</p></div>
 
-<div class="card">
-  <table>
-    <tr><th>策略类别</th><th>利用的性质</th><th>一句话</th></tr>
-    <tr><td>趋势跟踪（时间序列动量）</td><td>正自相关</td><td>涨了做多，跌了做空</td></tr>
-    <tr><td>横截面动量</td><td>相对强度的自相关</td><td>在一堆资产里做多最强的、做空最弱的</td></tr>
-    <tr><td>均值回归（反转）</td><td>负自相关</td><td>涨多了空它，跌多了买它</td></tr>
-    <tr><td>做市 / HFT</td><td>极短尺度均值回归</td><td>两边挂单赚 Bid-Ask 价差</td></tr>
-    <tr><td>波动率目标</td><td>波动率自相关</td><td>高波动自动降仓，低波动放大仓位</td></tr>
-    <tr><td>GARCH / 波动率预测</td><td>波动率自相关</td><td>预测未来颠簸程度，辅助仓位管理</td></tr>
-    <tr><td>协整 / 配对交易</td><td>价差平稳</td><td>两个资产价差偏离后赌回归</td></tr>
-    <tr><td>Carry（资金费率套利等）</td><td>利差持续性</td><td>做空高费率合约 + 现货对冲，稳吃费率</td></tr>
-    <tr><td>波动率套利</td><td>隐含波动率 > 实际波动率</td><td>卖期权 + 动态对冲，赚「保险费」</td></tr>
-  </table>
-</div>
-
-<div class="card">
-  <h3>新增详解</h3>
-
-  <p><strong>横截面动量</strong>——和时间序列动量的区别：时间序列动量只看「这个币自己过去涨没涨」；横截面动量看「这个币在同类里排名第几」。学术发现横截面动量的夏普通常比时间序列动量更高，因为做多强势资产 + 做空弱势资产天然对冲了市场 beta。</p>
-
-  <p><strong>波动率目标</strong>——不是预测方向。你设定一个目标波动率（如 20%），当前波动率高就降仓，低就加仓。逻辑：波动率聚集 → 今天高波动明天大概率也高 → 今天降仓明天少亏。这东西简单到只有一行公式，但加在任何趋势策略上都能提升夏普 0.2-0.3。</p>
-
-  <p><strong>Carry（套息/利差）</strong>——不赌方向，赌「资本是有成本的」。币圈最典型的就是资金费率套利：做空高费率的永续合约同时现货买入对冲，每 8 小时稳吃费率。费率存在持续溢价（因为投机者愿意付），套利者赚的就是这个溢价。</p>
-
-  <p><strong>波动率套利</strong>——期权领域策略。市场对期权的定价（隐含波动率）系统性高于实际发生的波动率——相当于人们习惯性多付保险费来买保护。策略做空期权同时动态对冲 delta，赚这个溢价。需要期权定价知识，后续课程会覆盖。</p>
-</div>
-
-<p>这个框架是你未来学习每个具体策略时的参照系——看到一个策略，先问：「它在赌什么性质？什么情况下这个假设会崩？」</p>
+<div class="open-q"><h3>❓ 开放问题</h3>
+<ul>
+<li>币圈动量在哪个尺度最强？日、周、月？学术证据偏 1-12 月，但币圈可能更短。</li>
+<li>结构性断裂怎么处理——每个周期重新估模型？还是用体制切换模型？</li>
+<li>协整在币圈稳不稳定——BTC-ETH 的 β 长期稳定吗？还是每周期变？</li>
+</ul></div>
 
 <!-- ============================================================ -->
 <h2>测验</h2>
+<div class="quiz" id="q1"><p class="q">1. 为什么量化建模收益而不建模价格？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">收益数字小好算</span>
+<span class="opt" data-answer="correct">价格非平稳（均值方差随时间漂移），收益近似平稳——平稳性是统计模型有效的前提</span>
+<span class="opt" data-answer="wrong">价格不准</span>
+<span class="opt" data-answer="wrong">监管要求</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q1">
-  <p class="q">1. 量化分析中从收益率出发而不从价格出发，最根本的原因是？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">收益率数据更小，好计算</span>
-    <span class="opt" data-answer="correct">价格非平稳而收益率通常平稳</span>
-    <span class="opt" data-answer="wrong">交易所只提供收益率数据</span>
-    <span class="opt" data-answer="wrong">收益率去掉了通胀影响</span>
-  </div>
-  <p class="feedback" id="f1"></p>
-</div>
+<div class="quiz" id="q2"><p class="q">2. 收益 $r_t$ 几乎无自相关，但 $|r_t|$ 有强自相关，说明？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">收益可预测</span>
+<span class="opt" data-answer="correct">方向难预测但波动率可预测——波动率聚集，GARCH 类模型基础</span>
+<span class="opt" data-answer="wrong">数据有问题</span>
+<span class="opt" data-answer="wrong">市场无效</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q2">
-  <p class="q">2. 你发现一个策略在分钟级数据上巨亏但在日线上大赚。最可能的解释是？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">数据有错误</span>
-    <span class="opt" data-answer="correct">分钟级以均值回归为主，日线以趋势为主——策略可能是一个趋势跟踪策略</span>
-    <span class="opt" data-answer="wrong">过拟合</span>
-    <span class="opt" data-answer="wrong">交易费用在分钟级更高</span>
-  </div>
-  <p class="feedback" id="f2"></p>
-</div>
+<div class="quiz" id="q3"><p class="q">3. 协整（cointegration）用于？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">预测方向</span>
+<span class="opt" data-answer="correct">两个非平稳序列的线性组合平稳——长期均衡关系，配对交易/统计套利基础</span>
+<span class="opt" data-answer="wrong">算波动率</span>
+<span class="opt" data-answer="wrong">检验正态</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q3">
-  <p class="q">3. （回顾）「波动率聚集」在自相关视角下意味着什么？</p>
-  <div class="options">
-    <span class="opt" data-answer="correct">收益率平方或绝对值的自相关性很强且为正</span>
-    <span class="opt" data-answer="wrong">收益率的自相关很强且为正</span>
-    <span class="opt" data-answer="wrong">收益率没有任何自相关</span>
-    <span class="opt" data-answer="wrong">价格的自相关为负</span>
-  </div>
-  <p class="feedback" id="f3"></p>
-</div>
+<div class="quiz" id="q4"><p class="q">4. 动量和均值回归矛盾吗？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">矛盾，只能选一个</span>
+<span class="opt" data-answer="correct">不矛盾——在不同时间尺度生效（日内均值回归、月度动量、年度反转），搞混尺度是新手错误</span>
+<span class="opt" data-answer="wrong">都无效</span>
+<span class="opt" data-answer="wrong">只在不同市场</span>
+</div><p class="feedback"></p></div>
 
-<div class="quiz" id="q4">
-  <p class="q">4. 资金费率从 −0.01% 飙升到 +0.15%，你预计接下来？</p>
-  <div class="options">
-    <span class="opt" data-answer="wrong">费率会持续攀升，趋势为王</span>
-    <span class="opt" data-answer="correct">费率更可能均值回归——套利者被高费率吸引进场，压低费率</span>
-    <span class="opt" data-answer="wrong">费率会保持在高位</span>
-    <span class="opt" data-answer="wrong">无法判断</span>
-  </div>
-  <p class="feedback" id="f4"></p>
-</div>
+<div class="quiz" id="q5"><p class="q">5. 看到一个新策略，第一步应该问？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">Sharpe 多少</span>
+<span class="opt" data-answer="correct">它在赌哪个时间序列性质？这个性质实证存在吗？什么尺度？什么时候失效？</span>
+<span class="opt" data-answer="wrong">代码多长</span>
+<span class="opt" data-answer="wrong">谁做的</span>
+</div><p class="feedback"></p></div>
 
 <!-- ============================================================ -->
 <h2>主要参考资料</h2>
-<div class="primary-source">
-  <h3>📖 推荐阅读</h3>
-  <p><strong>Tsay, Ruey S. —《金融时间序列分析》(Analysis of Financial Time Series)</strong>，第 1–2 章。</p>
-  <p>量化金融领域时间序列分析的标准教材。前两章用清晰的例子讲了平稳性、自相关函数（ACF）和随机游走，是通往后面所有高级模型（ARIMA、GARCH、协整）的必经之路。</p>
-</div>
+<div class="primary-source"><h3>📖 教材</h3>
+<p><strong>Hamilton —《时间序列分析》</strong>。时间序列的权威教材，平稳性、ADF、协整的严格处理。<br>
+<strong>Tsay —《金融时间序列分析》</strong>。金融视角，自相关、GARCH、配对交易。</p></div>
+<div class="primary-source" style="margin-top:.5rem;"><h3>📖 经典论文</h3>
+<p><strong>De Bondt & Thaler — "Does the Stock Market Overreact?" (1985)</strong>。长期反转均值回归的奠基实证。<br>
+<strong>Engle & Granger — "Cointegration and Error Correction" (1987)</strong>。协整的奠基。</p></div>
 
-<!-- ============================================================ -->
-<div class="reminder">
-  <strong>💬 有问题随时问。</strong> 自相关的计算、平稳性检验（ADF 检验是怎么做的）、趋势和均值回归的边界在哪里——任何一点都可以深挖。下一课会进入概率与分布，这些时间序列概念会在那里和「随机过程」对接。</div>
+<div class="reminder"><strong>💬 有问题随时问。</strong> ADF 怎么实操、协整怎么找配对、不同尺度信号怎么组合——任何一点都可以深挖。本节的策略分类框架是你审视一切策略的镜子。</div>
 
-<div class="nav">
-  上三课：<a href="0001-financial-markets-basics.html">0001 · 市场基础</a> &nbsp;|&nbsp;
-  <a href="0002-returns-and-risk.html">0002 · 收益与风险</a> &nbsp;|&nbsp;
-  <a href="0003-nature-of-financial-data.html">0003 · 金融数据的本性</a><br>
-  下一课预告：<a href="#">0005 · 概率与分布——从正态到极值</a>
-</div>
+<div class="nav">上一课：<a href="0003-nature-of-financial-data.html">0003 · 金融数据的本质</a> &nbsp;|&nbsp; <a href="../index.html">↑ 返回目录</a><br>下一课：<a href="0005-probability-and-distributions.html">0005 · 概率与分布</a></div>
 
 <script>
-document.querySelectorAll('.quiz').forEach(quiz => {
-  quiz.querySelectorAll('.opt').forEach(opt => {
-    opt.addEventListener('click', function() {
-      const feedback = this.parentElement.nextElementSibling;
-      this.parentElement.querySelectorAll('.opt').forEach(o => {
-        o.classList.remove('correct', 'wrong');
-        o.style.pointerEvents = 'none';
-      });
-      if (this.dataset.answer === 'correct') {
-        this.classList.add('correct');
-        feedback.textContent = '✓ 正确。';
-        feedback.className = 'feedback show';
-      } else {
-        this.classList.add('wrong');
-        const correct = this.parentElement.querySelector('[data-answer="correct"]');
-        correct.classList.add('correct');
-        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
-        feedback.className = 'feedback show';
-      }
-    });
-  });
-});
+document.querySelectorAll('.quiz').forEach(q=>{q.querySelectorAll('.opt').forEach(o=>{o.addEventListener('click',function(){const f=this.parentElement.nextElementSibling;this.parentElement.querySelectorAll('.opt').forEach(x=>{x.classList.remove('correct','wrong');x.style.pointerEvents='none'});if(this.dataset.answer==='correct'){this.classList.add('correct');f.textContent='✓ 正确。';f.className='feedback show'}else{this.classList.add('wrong');this.parentElement.querySelector('[data-answer="correct"]').classList.add('correct');f.textContent='✗ 不对。绿色高亮的是正确答案。';f.className='feedback show'}})})});
 </script>
-
 </body>
 </html>

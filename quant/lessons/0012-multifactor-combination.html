@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0012 · 多因子组合与因子择时</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.75; color: #1a1a1a; background: #fdfdfb; max-width: 760px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3rem 0 0.8rem; color: #2c2c2c; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.5rem; color: #333; }
+  .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e0e0d8; }
+  th { font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+  tr:last-child td { border-bottom: none; }
+  .card { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 1.5rem 0; }
+  .card h3 { margin-top: 0; }
+  .insight { background: #fff8f0; border-left: 3px solid #e08830; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .insight h3 { margin-top: 0; color: #8b5a20; }
+  .retrieval { background: #f8f4ff; border: 1px solid #d8d0e8; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2rem 0; }
+  .retrieval h3 { margin-top: 0; color: #5b4a8a; }
+  .crypto-note { background: #f5f9ff; border-left: 3px solid #4a90d9; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .crypto-note h3 { margin-top: 0; color: #2a5a9a; }
+  .formula { text-align: center; font-size: 1.05rem; margin: 1.4rem 0; }
+  .danger { background: #fff0f0; border-left: 3px solid #c44; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.97rem; }
+  .danger h3 { margin-top: 0; color: #a33; }
+  .connection { background: #f0f8f8; border-left: 3px solid #4a9a9a; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #345; }
+  .connection h3 { margin-top: 0; color: #2a6a6a; }
+  .open-q { background: #fafafa; border: 1px dashed #bbb; border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0; font-size: 0.92rem; color: #555; }
+  .open-q h3 { margin-top: 0; color: #666; }
+  .phase-summary { background: #f0f8f0; border: 1px solid #c0d8c0; border-radius: 6px; padding: 1.5rem 1.8rem; margin: 2rem 0; }
+  .phase-summary h3 { margin-top: 0; color: #3a6a3a; }
+  .quiz { margin: 2rem 0; }
+  .quiz .q { font-weight: 600; margin-bottom: 0.6rem; }
+  .quiz .options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz .opt { padding: 0.6rem 1rem; border: 1px solid #d8d8d0; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: background 0.15s; }
+  .quiz .opt:hover { background: #f0f0e8; }
+  .quiz .opt.correct { background: #e6f4ea; border-color: #4a9; }
+  .quiz .opt.wrong { background: #fce8e8; border-color: #c44; }
+  .quiz .feedback { margin-top: 0.8rem; font-size: 0.9rem; color: #555; display: none; }
+  .quiz .feedback.show { display: block; }
+  .primary-source { background: #fffdf5; border-left: 3px solid #e6c030; padding: 1rem 1.5rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
+  .nav a { color: #5577aa; text-decoration: none; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 6px; padding: 1.2rem 1.5rem; margin: 2.5rem 0; font-size: 0.9rem; color: #445; }
+  .en { color: #888; font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<h1>多因子组合与因子择时</h1>
+<p class="meta">Lesson 0012（重写·深度版）· 第三阶段收官 · 预计 40-50 分钟</p>
+
+<div class="retrieval">
+  <h3>🔁 衔接</h3>
+  <p>0010-0011 给了你一堆因子。但单因子都有长失效期（动量崩溃、价值 5 年跑输、carry unwinding），单用任何一个多数人扛不住。这节讲怎么组合：每个因子单独生成信号 → 标准化 → 加权合成 → 得到一个比任何单因子都稳的综合信号。这是从"有一堆因子"到"有一个策略"的跨越。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>一、为什么要组合——数学上为什么有效</h2>
+
+<p>组合夏普比单因子高，不只是"分散"的直觉，有严格数学。两个因子组合的夏普：</p>
+<div class="formula">
+  $$\text{Sharpe}_{\text{组合}}^2 = \frac{(w_1 \mu_1 + w_2 \mu_2)^2}{w_1^2 \sigma_1^2 + w_2^2 \sigma_2^2 + 2 w_1 w_2 \rho \sigma_1 \sigma_2}$$
+</div>
+<p>关键在分母的 $\rho$（因子相关系数）：</p>
+<ul>
+  <li>$\rho = 1$（完全相关）：组合没好处，等价于单因子</li>
+  <li>$\rho = 0$（不相关）：组合夏普平方 = 单因子夏普平方之和（夏普提升显著）</li>
+  <li>$\rho < 0$（负相关，如动量-价值）：组合夏普<strong>比任一单因子都高得多</strong>——负相关意味着一方的回撤被另一方对冲</li>
+</ul>
+
+<div class="insight">
+  <h3>⚡ 这就是为什么 0010 强调动量-价值负相关</h3>
+  <p style="margin-bottom:0;">负相关不是"碰巧好"——它是组合夏普提升的最大来源。设计多因子策略的核心问题不是"加哪个因子"，而是"加哪个<strong>和现有组合负相关</strong>的因子"。一个本身很好但和组合高度相关的因子，加进去几乎不提升夏普。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>二、信号标准化——组合的前提</h2>
+
+<p>不同因子的量纲差异巨大（动量是 %、费率是 bp、MVRV 是比值），不能直接相加。必须先标准化到同一尺度。</p>
+
+<div class="card">
+  <h3>横截面 z-score（最常用）</h3>
+  <p>在每个时点 $t$，对所有资产 $i$，把因子值转成横截面 z-score：</p>
+  <div class="formula">
+    $$z_{i,t} = \frac{f_{i,t} - \text{median}(f_{\cdot,t})}{\text{IQR}(f_{\cdot,t})}$$
+  </div>
+  <p>用中位数和 IQR（而非均值/标准差）是因为因子分布常有肥尾和异常值——均值/std 会被极端值带偏。z-score 后每个因子都是均值 0、尺度 1 的量，可以相加。</p>
+</div>
+
+<div class="card">
+  <h3>时间序列 rank（更稳健）</h3>
+  <p>不用 z-score，用<strong>横截面排名百分位</strong>（0 到 1）。对肥尾和异常值完全免疫。代价是损失一点信息（线性变 rank）。实务中 rank 比 z-score 更常用，因为更稳健。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、组合方法——从简单到复杂</h2>
+
+<h3>3.1 等权 <span class="en">Equal Weight</span></h3>
+<div class="formula">
+  $$S_i = \frac{1}{K} \sum_{k=1}^{K} z_{i}^{(k)}$$
+</div>
+<p>每个因子权重 $1/K$。优点：无参数、不过拟合、鲁棒。缺点：忽略因子强弱和相关结构。<strong>实务中往往是最好的起点</strong>——DeMiguel et al. (2009) 证明等权经常胜过复杂优化，因为优化对估计误差敏感。</p>
+
+<h3>3.2 风险加权 <span class="en">Inverse Volatility Weighting</span></h3>
+<div class="formula">
+  $$w_k = \frac{1/\sigma_k}{\sum_j 1/\sigma_j}$$
+</div>
+<p>波动大的因子少配。比等权合理，且不需要预测因子收益（只需波动率，好估）。这是从等权往上走一步的安全选择。</p>
+
+<h3>3.3 IC 加权 <span class="en">Information Coefficient Weighting</span></h3>
+<p>IC = 因子值与未来收益的相关系数，衡量因子预测能力。用历史 IC 作权重：</p>
+<div class="formula">
+  $$w_k \propto \overline{\text{IC}_k} \quad (\text{IC 高的因子多配})$$
+</div>
+<div class="danger">
+  <h3>⚠️ 陷阱</h3>
+  <p style="margin-bottom:0;">IC 本身不稳定——历史 IC 高的因子未来未必高。直接用 IC 加权容易过拟合（追近期表现好的因子）。改进：用<strong>滚动 IC 的 shrinkage 估计</strong>，或 IC 的 t 统计量（显著性）而非 IC 值本身作权重。</p>
+</div>
+
+<h3>3.4 优化加权（因子层面 Markowitz）</h3>
+<p>在因子层面做均值-方差优化，输入因子收益均值和协方差矩阵。</p>
+<div class="danger">
+  <h3>⚠️ 和资产层面 Markowitz 一样的病</h3>
+  <p style="margin-bottom:0;">error maximization——对因子收益均值估计误差敏感。第七课讲的问题在因子层面同样存在。实务中慎用，或加强约束（权重 ∈ [0, 0.4]、和为 1）。</p>
+</div>
+
+<div class="card">
+  <h3>实务建议（按优先级）</h3>
+  <ol>
+    <li>从<strong>等权</strong>开始，作为基准。这步就能拿到大部分夏普提升</li>
+    <li>试<strong>风险加权</strong>，看是否稳定提升</li>
+    <li>IC 加权和优化加权谨慎用，<strong>必须样本外验证</strong>，且加强约束</li>
+    <li>因子数量 3-7 个为宜。太多过拟合，太少不分散</li>
+    <li>每加一个因子，检查它和现有组合的<strong>相关系数</strong>——>0.7 几乎不提升夏普，不值得加</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2>四、因子正交化——避免重复暴露</h2>
+
+<p>因子之间往往相关（动量和低波动负相关、价值和质量正相关）。直接组合会有<strong>隐式重复加权</strong>——某个风险被多个因子同时表达，组合对该风险过度暴露。</p>
+
+<div class="card">
+  <h3>方法：回归正交化</h3>
+  <p>把因子按顺序加入，每个新因子对已有因子回归，取<strong>残差</strong>作为"纯因子"：</p>
+  <div class="formula">
+    $$f_k^{\perp} = f_k - \sum_{j<k} \beta_{kj} f_j^{\perp}$$
+  </div>
+  <p>残差 $f_k^{\perp}$ 是 $f_k$ 中<strong>已有因子解释不了的部分</strong>——它捕捉独立的风险来源。组合时用正交化后的因子，每个权重对应独立的 risk premium。</p>
+  <p>注意：正交化顺序影响结果（先入为主）——通常按因子<strong>稳健性排序</strong>（最稳健的先入）。</p>
+</div>
+
+<div class="card">
+  <h3>PCA 正交化</h3>
+  <p>对因子协方差矩阵做 PCA，得主成分作为正交因子。优点：不依赖人为排序。缺点：主成分没有经济含义（是因子的线性组合），解释性差。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>五、从综合得分到仓位</h2>
+
+<p>组合后得到每个资产的综合得分 $S_i$。怎么转成仓位？</p>
+
+<div class="card">
+  <h3>常用映射</h3>
+  <ul>
+    <li><strong>线性</strong>：$w_i \propto S_i$，得分正做多负做空</li>
+    <li><strong>分位数</strong>：只对得分最高/最低的 N% 开仓，中间不开——减少弱信号噪声</li>
+    <li><strong>sigmoid</strong>：$w_i \propto \tanh(S_i)$，限制极端仓位——得分再大仓位也有上限</li>
+    <li><strong>风险调整</strong>：$w_i \propto S_i / \sigma_i$，得分除以波动率——波动大的资产降仓（波动率目标思想）</li>
+  </ul>
+  <p>最后总仓位按<strong>组合波动率目标</strong>缩放（如目标年化 20%），并加单资产上限（如 ≤30%）和总杠杆上限。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>六、因子择时 <span class="en">Factor Timing</span></h2>
+
+<p>更激进：不固定权重，动态调整——某些时期多配动量，某些多配价值。</p>
+
+<div class="danger">
+  <h3>⚠️ 因子择时极难</h3>
+  <p>学术共识（Asness 等）：<strong>因子择时几乎和选股一样难</strong>。因子的相对表现极难预测。大多数择时模型样本外失效。原因：因子收益的噪声远大于信号，择时信号被噪声淹没。业内主流：<strong>做因子配置（静态权重）可以，做因子择时（动态权重）要非常谨慎</strong>。</p>
+</div>
+
+<div class="card">
+  <h3>少数可行的体制性择时</h3>
+  <p>不是短期择时，是<strong>体制识别</strong>——只在极端状态调整：</p>
+  <ul>
+    <li><strong>动量崩溃预警</strong>：市场急速反转 + 动量估值极贵时，降动量权重。Daniel-Moskowitz 提出的条件偏度信号</li>
+    <li><strong>价值-动量价差</strong>：价值相对动量极便宜时（spread 在历史低分位），加价值权重——Asness 等 (2017)</li>
+    <li><strong>波动率体制</strong>：高波动体制下降低所有因子暴露（波动率目标的全局版）</li>
+    <li><strong>趋势过滤</strong>：市场-wide 趋势明确时多配时序动量，震荡时多配横截面/反转</li>
+  </ul>
+  <p>共同点：只在<strong>极端体制</strong>调整，不频繁交易。频繁择时 = 过拟合。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>七、因子衰减与监控</h2>
+
+<p>因子不是永生的。生命周期：发现 → 发表 → 拥挤 → 失效。</p>
+
+<div class="card">
+  <h3>监控指标</h3>
+  <table>
+    <tr><th>指标</th><th>含义</th><th>警报</th></tr>
+    <tr><td>滚动 IC</td><td>因子值与未来收益的滚动相关</td><td>持续下降或转负</td></tr>
+    <tr><td>滚动夏普</td><td>因子组合的滚动夏普</td><td>持续下降</td></tr>
+    <tr><td>因子估值</td><td>因子多空组合的估值（如 P/E of 多头-空头）</td><td>极贵→拥挤→将反转</td></tr>
+    <tr><td>因子相关性</td><td>和其他因子的相关</td><td>相关性上升→失去分散价值</td></tr>
+  </table>
+</div>
+
+<div class="insight">
+  <h3>⚡ 实操</h3>
+  <p style="margin-bottom:0;">每月跟踪每个因子的滚动 IC 和夏普。IC 持续下降 = 因子在衰减。一旦某因子 IC 长期为零或负，从组合剔除或降权。<strong>币圈因子衰减更快</strong>——市场参与者学习快、容量小、新因子很快被复制。链上因子 2018 时 alpha 厚，2024 已衰减不少。持续寻找新因子是币圈量化的常态。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>八、币圈多因子策略骨架（完整示例）</h2>
+
+<div class="crypto-note">
+  <h3>🔗 一个可落地的币圈多因子策略</h3>
+  <p><strong>选因子</strong>（按 0011 适用性）：动量、费率方向、MVRV、稳定币流量。</p>
+  <p><strong>流程</strong>：</p>
+  <ol>
+    <li>每个因子单独算信号 → 横截面 rank 标准化（0-1）</li>
+    <li>正交化（动量先入，其他对动量回归取残差）</li>
+    <li>等权合成（先从等权开始）：$S_i = \frac{1}{4}(\text{rank}_{\text{动量}} + \text{rank}_{\text{费率}} + \text{rank}_{\text{MVRV}} + \text{rank}_{\text{稳定币}})$</li>
+    <li>得分 → 仓位：$w_i \propto S_i / \sigma_i$（风险调整），单资产 ≤30%，总杠杆 ≤200%</li>
+    <li>组合波动率目标 20% 年化，动态缩放</li>
+    <li>每月再平衡，每次检查因子滚动 IC，衰减的降权</li>
+  </ol>
+  <p><strong>权重示例</strong>（起步）：动量 40%、费率方向 20%、MVRV 20%、稳定币 20%。动量多配因为币圈动量最稳健、alpha 最厚。</p>
+  <p><strong>回测必须</strong>（第八课）：含已归零币（幸存者偏差）、扣费率+滑点、walk-forward、波动率目标验证崩溃保护。</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="phase-summary">
+  <h3>📚 第三阶段总结：因子四课</h3>
+  <table>
+    <tr><td>0009</td><td>因子基础</td><td>CAPM 推导、Fama-French 构造、α vs β</td></tr>
+    <tr><td>0010</td><td>因子（上）</td><td>动量（3 解释+崩溃）、价值（3 解释+陷阱）、Carry</td></tr>
+    <tr><td>0011</td><td>因子（下）+ 币圈特有</td><td>BAB、质量、费率信号、MVRV、稳定币、清算带</td></tr>
+    <tr><td>0012</td><td>多因子组合</td><td>标准化、加权、正交化、择时、衰减监控</td></tr>
+  </table>
+  <p style="margin-bottom:0;">第四阶段：<strong>衍生品定价（期权）→ 做市与微观结构</strong></p>
+</div>
+
+<!-- ============================================================ -->
+<div class="connection">
+  <h3>🔗 与其他课的连接</h3>
+  <p><strong>前置</strong>：0009-0011（因子本身）、0007 Markowitz（因子层面优化同样的病）、0006 回归（正交化用回归）、0008 回测（衰减监控用 walk-forward）。</p>
+  <p><strong>后续</strong>：0013 衍生品——期权是另一种构建组合的方式（非线性暴露）；0014 微观结构——执行层面的因子。本节的多因子骨架是你落地币圈策略的起点。</p>
+</div>
+
+<div class="open-q">
+  <h3>❓ 开放问题</h3>
+  <ul>
+    <li>币圈因子<strong>相关结构</strong>是否稳定——牛熊市因子相关性会变，正交化顺序要不要动态调？</li>
+    <li>因子择时在币圈<strong>是否更可行</strong>——币圈体制切换更剧烈（牛熊分明），也许择时 alpha 比传统市场大？尚无定论</li>
+    <li>机器学习能不能替代加权——让模型学权重？0014 之后可深入，但过拟合风险大</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+
+<div class="quiz" id="q1">
+  <p class="q">1. 为什么负相关因子组合夏普提升最大？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">负相关因子收益更高</span>
+    <span class="opt" data-answer="correct">组合方差分母里 ρ 为负，方差变小；且一方回撤被另一方对冲</span>
+    <span class="opt" data-answer="wrong">负相关意味着独立</span>
+    <span class="opt" data-answer="wrong">负相关因子没有风险</span>
+  </div>
+  <p class="feedback" id="f1"></p>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="q">2. 为什么信号组合前要先标准化（z-score 或 rank）？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">不标准化算不出来</span>
+    <span class="opt" data-answer="correct">不同因子量纲不同（动量是%、费率是 bp），不标准化直接相加会被量纲大的因子主导</span>
+    <span class="opt" data-answer="wrong">标准化提升精度</span>
+    <span class="opt" data-answer="wrong">监管要求</span>
+  </div>
+  <p class="feedback" id="f2"></p>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="q">3. 因子正交化的目的是？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">减少因子数量</span>
+    <span class="opt" data-answer="correct">避免对同一风险重复暴露——每个正交因子捕捉独立的风险来源</span>
+    <span class="opt" data-answer="wrong">提升单因子收益</span>
+    <span class="opt" data-answer="wrong">简化计算</span>
+  </div>
+  <p class="feedback" id="f3"></p>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="q">4. 因子择时为什么难？什么择时相对可行？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">数据不够；高频择时可行</span>
+    <span class="opt" data-answer="correct">因子相对收益噪声大、择时信号被淹没；只有体制性择时（极端状态如动量崩溃预警）相对可行</span>
+    <span class="opt" data-answer="wrong">择时不可行</span>
+    <span class="opt" data-answer="wrong">择时很简单</span>
+  </div>
+  <p class="feedback" id="f4"></p>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="q">5. 一个因子滚动 IC 持续下降到零，应该？</p>
+  <div class="options">
+    <span class="opt" data-answer="wrong">加大权重</span>
+    <span class="opt" data-answer="correct">因子在衰减，从组合剔除或降权，并寻找替代因子</span>
+    <span class="opt" data-answer="wrong">保持不变</span>
+    <span class="opt" data-answer="wrong">反向使用</span>
+  </div>
+  <p class="feedback" id="f5"></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source">
+  <h3>📖 组合方法</h3>
+  <p><strong>DeMiguel, Garlappi & Uppal — "Optimal Versus Naive Diversification" (2009, RFS)</strong>。证明等权常胜过优化加权。<br>
+  <strong>Asness et al. — "Fact, Fiction and Momentum Investing" (2017)</strong>。因子择时和动量崩溃的讨论。</p>
+</div>
+<div class="primary-source" style="margin-top:0.5rem;">
+  <h3>📖 实务</h3>
+  <p><strong>Grinold & Kahn —《主动投资组合管理》(Active Portfolio Management)</strong>。IC、IR、因子组合的工业级教材。</p>
+</div>
+
+<div class="reminder">
+  <strong>💬 有问题随时问。</strong> 正交化顺序怎么定、IC 加权怎么 shrinkage、币圈骨架怎么落地到代码——任何一点都可以深挖。第三阶段结束，你已经能设计完整多因子策略。第四阶段进入衍生品（期权）和微观结构——你最初最感兴趣的方向。
+</div>
+
+<div class="nav">
+  上一课：<a href="0011-factors-lowvol-quality-crypto.html">0011 · 因子（下）+ 币圈</a> &nbsp;|&nbsp;
+  <a href="../index.html">↑ 返回目录</a><br>
+  下一阶段：<a href="0013-derivatives-pricing.html">0013 · 衡生品定价——期货 → 期权</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  quiz.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const feedback = this.parentElement.nextElementSibling;
+      this.parentElement.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'none';
+      });
+      if (this.dataset.answer === 'correct') {
+        this.classList.add('correct');
+        feedback.textContent = '✓ 正确。';
+        feedback.className = 'feedback show';
+      } else {
+        this.classList.add('wrong');
+        const correct = this.parentElement.querySelector('[data-answer="correct"]');
+        correct.classList.add('correct');
+        feedback.textContent = '✗ 不对。绿色高亮的是正确答案。';
+        feedback.className = 'feedback show';
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

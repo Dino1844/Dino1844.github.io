@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0020 · MDP 与 Bellman 方程</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "\01f4a1 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "\026a0\fe0f "; font-style: normal; }
+
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-section { margin-top: 0.7rem; }
+  .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+
+  .cr { color: var(--accent); border-bottom: 1px dashed var(--accent); cursor: pointer; transition: background 0.12s; }
+  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+  .card-popup { position: fixed; z-index: 9999; width: 400px; max-height: 480px; overflow-y: auto; background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); padding: 0; display: none; font-size: 0.88rem; line-height: 1.55; }
+  .card-popup.show { display: block; }
+  .card-popup .concept-card { margin: 0; border: none; border-radius: 0; box-shadow: none; padding: 1rem 1.2rem; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0020 · MDP 与 Bellman 方程</h1>
+<div class="subtitle">RL 公理集：MDP → Bellman 方程 → 动态规划（策略迭代 + 值迭代）——已知模型时的完整求解链 · 阅读时间 ~45 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. RL 与监督学习的本质区别</a><br>
+  <a href="#s2">2. MDP：五元组形式化一切序贯决策</a><br>
+  <a href="#s3">3. 回报与价值函数：从"这步赚多少"到"长远看有多好"</a><br>
+  <a href="#s4">4. Bellman 期望方程：把未来折叠到现在</a><br>
+  <a href="#s5">5. Bellman 最优方程：最优策略的充要条件</a><br>
+  <a href="#s5b">5.5. 动态规划</a><br>
+  <a href="#s5c">5.6. 策略迭代</a><br>
+  <a href="#s5d">5.7. 值迭代</a><br>
+  <a href="#s6">6. 推导与自测</a>
+</div>
+
+<p>
+  你有一个智能体，在一个未知环境里通过试错学习。它不知道状态转移规律，不知道奖励函数，
+  只能通过"做出动作 → 看到新状态和奖励 → 调整策略"来学习。
+  这就是<strong>强化学习</strong>（RL）——和 ML 的监督学习共享概率和优化的数学工具，
+  但核心问题完全不同。
+</p>
+
+<div class="insight">
+  <strong>RL 与监督学习的本质区别：</strong>监督学习有正确答案（标签 $y$），RL 只有奖励信号（reward）——正确的不是"这个动作对不对"，而是"长期来看做这些动作能拿多少奖励"。<strong>延迟反馈</strong>和<strong>探索-利用权衡</strong>是 RL 独有的困难。
+</div>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>激活已有知识</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>条件概率 $p(s'\mid s,a)$——给定当前状态和动作，下一状态的概率分布。</li>
+    <li>期望 $\mathbb{E}[X] = \sum_x p(x)x$——RL 里大量用期望，因为环境和策略都是随机的。</li>
+    <li>动态规划——把大问题拆成重叠子问题，Bellman 方程就是动态规划在 MDP 上的形式。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. RL 与监督学习的本质区别</h2>
+
+<p>
+  监督学习：给定 $(\mathbf{x}_n, y_n)$，学 $p(y\mid\mathbf{x})$ 或 $f(\mathbf{x})\approx y$。评价标准：预测误差。
+</p>
+<p>
+  强化学习：智能体在环境里做动作，环境反馈奖励。没有"正确答案"——只有"这个动作在这个状态下长期看有多好"。
+</p>
+
+<table>
+  <tr><th></th><th>监督学习</th><th>强化学习</th></tr>
+  <tr><td>反馈形式</td><td>标签 $y$（即时、完整）</td><td>奖励 $r$（可能延迟、稀疏）</td></tr>
+  <tr><td>数据来源</td><td>给定的固定数据集</td><td>智能体与环境交互产生</td></tr>
+  <tr><td>核心困难</td><td>过拟合、泛化</td><td>延迟奖励 + 探索/利用权衡</td></tr>
+  <tr><td>数学框架</td><td>概率建模 + 优化</td><td>MDP + 动态规划 + 函数逼近</td></tr>
+</table>
+
+<div class="insight">
+  <strong>RL 的"打游戏"类比：</strong>你玩一个没见过的游戏，没人告诉你规则。你按了一个键 → 角色跳了一下 → 得分 +10。下一次，你会不会更愿意按那个键？按了之后，后续的事件会不会导致最终得分更高？这就是 RL 要回答的两个核心问题：(1) 这个动作在那时有多好？(2) 长远来看，怎么选动作序列使总奖励最大？
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. MDP：五元组形式化一切序贯决策</h2>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag">RL 基础</span>
+    <h3>Markov 决策过程 · MDP</h3>
+    <span class="cc-aliases">Markov Decision Process</span>
+  </div>
+  <div class="cc-essence">
+    <strong>数学本质：</strong>MDP = $(\mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \gamma)$——五个组件精确描述了"智能体在随机环境里做序贯决策"的所有要素。
+  </div>
+  <div class="cc-section">
+    <h4>五元组</h4>
+    <ul>
+      <li>$\mathcal{S}$：<strong>状态空间</strong>（state space），环境所有可能状态的集合</li>
+      <li>$\mathcal{A}$：<strong>动作空间</strong>（action space），智能体在每个状态可执行的动作</li>
+      <li>$\mathcal{P}(s'\mid s,a)$：<strong>状态转移概率</strong>（transition dynamics），做完 $a$ 后从 $s$ 跳到 $s'$ 的概率</li>
+      <li>$\mathcal{R}(s,a,s')$：<strong>奖励函数</strong>（reward function），过渡到 $s'$ 时获得的即时期望奖励</li>
+      <li>$\gamma\in[0,1]$：<strong>折扣因子</strong>（discount factor），未来的奖励在今天值多少</li>
+    </ul>
+  </div>
+  <div class="cc-section">
+    <h4>Markov 性质</h4>
+    <p>状态包含"所有相关历史"：$p(s_{t+1}\mid s_t,a_t,s_{t-1},a_{t-1},\ldots) = p(s_{t+1}\mid s_t,a_t)$。给定当前状态，<strong>未来与过去条件独立</strong>。这意味着决策只需要当前状态——不需要记住完整历史。</p>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ §2: MDP 定义</span>
+    <span class="conn-badge">→ 0021: 动态规划求解已知 MDP</span>
+  </div>
+</div>
+
+<p>MDP 的交互循环：</p>
+
+<div class="formula-block">
+  $$s_0 \xrightarrow{a_0} s_1, r_1 \xrightarrow{a_1} s_2, r_2 \xrightarrow{a_2} \cdots$$
+</div>
+
+<p>每一步：智能体观测状态 $s_t$ → 选动作 $a_t$（根据策略 $\pi$）→ 环境采样 $s_{t+1}\sim\mathcal{P}(\cdot\mid s_t,a_t)$ 并给奖励 $r_{t+1}=\mathcal{R}(s_t,a_t,s_{t+1})$。</p>
+
+<p>注意两个关键：<strong>转移概率 $\mathcal{P}$ 由环境决定，智能体不知道</strong>（model-free）或只知道部分（model-based）。<strong>奖励信号是唯一的学习信号</strong>——没有标签告诉你"正确动作是什么"。</p>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 回报与价值函数：从"这步赚多少"到"长远看有多好"</h2>
+
+<p>
+  RL 的目标不是最大化单步奖励，而是最大化<strong>累积奖励</strong>——用折扣因子 $\gamma$ 把未来奖励折现：
+</p>
+
+<div class="formula-block">
+  $$\boxed{\;G_t = r_{t+1} + \gamma r_{t+2} + \gamma^2 r_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^k r_{t+k+1}\;}$$
+</div>
+
+<p>$\gamma=0$：只看眼前（贪婪），$\gamma\to 1$：看长远。$\gamma<1$ 保证无穷序列的回报有限（只要奖励有界）。</p>
+
+<div class="meta-box">
+  <h4>范式 #21 · 价值函数 = 期望回报</h4>
+  回报 $G_t$ 是<strong>随机的</strong>（取决于未来的状态转移和动作选择）。价值函数取期望，消去随机性，变成<strong>状态的确定性函数</strong>——这就是 RL 里一切计算的起点。
+</div>
+
+<p><strong>状态价值函数</strong> $V^\pi(s)$：从状态 $s$ 开始，一直按策略 $\pi$ 选动作，能拿到的期望回报。</p>
+
+<div class="formula-block">
+  $$V^\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s] = \mathbb{E}_\pi\!\left[\sum_{k=0}^{\infty} \gamma^k r_{t+k+1} \;\middle|\; S_t = s\right]$$
+</div>
+
+<p><strong>动作价值函数</strong> $Q^\pi(s,a)$：从状态 $s$ 开始，<strong>做动作 $a$</strong>，之后一直按 $\pi$ 选动作，能拿到的期望回报。</p>
+
+<div class="formula-block">
+  $$Q^\pi(s,a) = \mathbb{E}_\pi[G_t \mid S_t = s, A_t = a]$$
+</div>
+
+<div class="insight">
+  <strong>$V$ 和 $Q$ 的关系：</strong>$V^\pi(s) = \mathbb{E}_{a\sim\pi(\cdot\mid s)}[Q^\pi(s,a)]$——状态的价值 = 按策略分布加权所有动作的 $Q$ 值。$V$ 告诉你在状态 $s$ 有多好，$Q$ 告诉你在状态 $s$ 做动作 $a$ 有多好。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. Bellman 期望方程：把未来折叠到现在</h2>
+
+<p>
+  价值函数的定义里有一个"未来求和"——看似需要知道无限远的奖励才能算。Bellman 方程的洞察是：
+  今天的价值 = <strong>今天的期望奖励 + 明天价值的折扣</strong>。这就把无限和变成了一个递归关系。
+</p>
+
+<div class="derivation">
+  <h4>推导 · $V^\pi$ 的 Bellman 方程</h4>
+  <div class="step">
+    $V^\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s]$
+    <span class="reason">定义</span>
+  </div>
+  <div class="step">
+    $= \mathbb{E}_\pi[r_{t+1} + \gamma G_{t+1} \mid S_t = s]$
+    <span class="reason">$G_t = r_{t+1} + \gamma G_{t+1}$（回报的递归定义）</span>
+  </div>
+  <div class="step">
+    $= \sum_a \pi(a\mid s) \sum_{s'} \mathcal{P}(s'\mid s,a) \big[\mathcal{R}(s,a,s') + \gamma\, \mathbb{E}_\pi[G_{t+1}\mid S_{t+1}=s']\big]$
+    <span class="reason">展开动作和状态转移的期望</span>
+  </div>
+  <div class="step">
+    $= \sum_a \pi(a\mid s) \sum_{s'} \mathcal{P}(s'\mid s,a) \big[\mathcal{R}(s,a,s') + \gamma\, V^\pi(s')\big]$
+    <span class="reason">最后一项就是 $V^\pi(s')$ —— 这就是递归！</span>
+  </div>
+</div>
+
+<div class="formula-block">
+  $$\boxed{\;V^\pi(s) = \sum_a \pi(a\mid s) \sum_{s'} \mathcal{P}(s'\mid s,a)\big[\mathcal{R}(s,a,s') + \gamma V^\pi(s')\big]\;}$$
+</div>
+
+<p>同理，$Q^\pi$ 的 Bellman 方程：</p>
+
+<div class="formula-block">
+  $$\boxed{\;Q^\pi(s,a) = \sum_{s'} \mathcal{P}(s'\mid s,a)\big[\mathcal{R}(s,a,s') + \gamma\sum_{a'} \pi(a'\mid s') Q^\pi(s',a')\big]\;}$$
+</div>
+
+<div class="insight">
+  <strong>Bellman 方程的本质：自洽性条件。</strong>它说"如果 $V^\pi$ 是正确的价值函数，那么对它自己的递归定义必须成立"。反过来，满足 Bellman 方程的函数就是 $V^\pi$。这给了我们一个<strong>检验</strong>和<strong>求解</strong>价值函数的方法：猜一个 $V$，看它是否满足方程 —— 这就是下一课动态规划的基础。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. Bellman 最优方程：最优策略的充要条件</h2>
+
+<p>
+  有多个策略时，怎么定义"最优"？<strong>偏序</strong>：$\pi \geq \pi'$ 当且仅当 $V^\pi(s) \geq V^{\pi'}(s)$ 对所有 $s$。
+  这个偏序下<strong>存在最优策略</strong> $\pi^*$（在有限 MDP 中），且所有最优策略共享同一个最优价值函数 $V^*(s) = \max_\pi V^\pi(s)$。
+</p>
+
+<p>最优策略不是最大化单步奖励——是选 <strong>$Q$ 值最大的动作</strong>：$\pi^*(s) = \arg\max_a Q^*(s,a)$。</p>
+
+<div class="derivation">
+  <h4>推导 · Bellman 最优方程</h4>
+  <div class="step">
+    $V^*(s) = \max_a Q^*(s,a)$
+    <span class="reason">最优策略选最好的动作，所以最优状态价值 = 最优动作价值的 max</span>
+  </div>
+  <div class="step">
+    $= \max_a \sum_{s'} \mathcal{P}(s'\mid s,a)\big[\mathcal{R}(s,a,s') + \gamma V^*(s')\big]$
+    <span class="reason">代入 $Q^*$ 的 Bellman 方程，且最优策略在 $s'$ 也用最优动作</span>
+  </div>
+</div>
+
+<div class="formula-block">
+  $$\boxed{\;V^*(s) = \max_a \sum_{s'} \mathcal{P}(s'\mid s,a)\big[\mathcal{R}(s,a,s') + \gamma V^*(s')\big]\;}$$
+</div>
+
+<div class="formula-block">
+  $$\boxed{\;Q^*(s,a) = \sum_{s'} \mathcal{P}(s'\mid s,a)\big[\mathcal{R}(s,a,s') + \gamma \max_{a'} Q^*(s',a')\big]\;}$$
+</div>
+
+<div class="warning">
+  <strong>Bellman 最优方程与期望方程的关键区别：</strong>期望方程里是 $\sum_a\pi(a\mid s)$（按策略分布加权），最优方程里是 $\max_a$（选最好的动作）。<strong>max 让方程变成非线性的</strong>——无法用线性方程组求解。这就是 RL 需要迭代方法（值迭代、策略迭代、Q-learning）的根本原因。
+</div>
+
+<table>
+  <tr><th>方程</th><th>形式</th><th>求解方式</th><th>解</th></tr>
+  <tr><td>Bellman 期望方程</td><td>$V^\pi = \mathcal{T}^\pi V^\pi$（线性）</td><td>解线性方程组 或 迭代</td><td>$V^\pi$（给定策略）</td></tr>
+  <tr><td>Bellman 最优方程</td><td>$V^* = \mathcal{T}^* V^*$（非线性，含 $\max$）</td><td>值迭代、策略迭代、Q-learning</td><td>$V^*$（最优）</td></tr>
+</table>
+
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<h2 id="s5b">5.5. 动态规划：已知模型，怎么求最优策略</h2>
+
+<p>
+  Bellman 方程给了我们检验和定义价值函数的方式。但<strong>怎么算出来</strong>？
+  如果 MDP 的 $\mathcal{P}$ 和 $\mathcal{R}$ 完全已知（白盒环境），动态规划（DP）用 Bellman 方程做迭代更新，
+  收敛到 $V^*$。
+</p>
+
+<p>
+  DP 的核心假设：<strong>已知环境模型</strong>（$\mathcal{P}$ 和 $\mathcal{R}$），且状态和动作空间<strong>有限</strong>（表格型，非函数逼近）。
+  这限制了 DP 的直接应用范围（大多数实际问题不知道 $\mathcal{P}$），但它是所有 RL 方法的<strong>理论基础</strong>——
+  model-free 方法本质上是在<strong>用采样近似 DP 的期望计算</strong>。
+</p>
+
+<div class="meta-box">
+  <h4>范式 #22 · 广义策略迭代（GPI）</h4>
+  几乎所有 RL 算法都可以理解为两个交替过程的交互：
+  <strong>策略评估</strong>（policy evaluation）：给定策略 $\pi$，算出 $V^\pi$（或 $Q^\pi$）；<br>
+  <strong>策略改进</strong>（policy improvement）：给定 $Q^\pi$，构造一个更好的策略 $\pi'(s)=\arg\max_a Q^\pi(s,a)$。<br>
+  两者轮流进行，直到策略不再变化 → 到达最优。DP、MC、TD、Actor-Critic 全是 GPI 的不同实现。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5c">5.6. 策略迭代（Policy Iteration）</h2>
+
+<p>
+  策略迭代在两个步骤间交替，直到收敛：
+</p>
+
+<div class="derivation">
+  <h4>算法 · 策略迭代</h4>
+  <div class="step"><strong>① 策略评估（Policy Evaluation）</strong></div>
+  <div class="step">用 Bellman 期望方程迭代更新 $V$，直到收敛（或近似收敛）：
+  $$V_{k+1}(s) \leftarrow \sum_a \pi(a\mid s) \sum_{s'} \mathcal{P}(s'\mid s,a)\big[\mathcal{R}(s,a,s') + \gamma V_k(s')\big]$$
+  <span class="reason">Bellman 期望方程作为"赋值"操作——把右边算出来的值赋给左边。这叫<strong>迭代策略评估</strong>。</span>
+  </div>
+  <div class="step"><strong>② 策略改进（Policy Improvement）</strong></div>
+  <div class="step">对每个状态 $s$，用当前 $V^\pi$ 算出 $Q^\pi(s,a)$，选最优动作：
+  $$\pi'(s) \leftarrow \arg\max_a \sum_{s'} \mathcal{P}(s'\mid s,a)\big[\mathcal{R}(s,a,s') + \gamma V^\pi(s')\big]$$
+  <span class="reason">贪心改进：对当前价值函数做一步最优选择</span>
+  </div>
+  <div class="step"><strong>③ 如果 $\pi' = \pi$（所有状态动作不变）→ 停止，已收敛到 $\pi^*$。</strong>否则回到①。
+  <span class="reason">策略改进定理（L3 题）保证每轮严格不退化，有限 MDP 必收敛</span>
+  </div>
+</div>
+
+<div class="insight">
+  <strong>策略迭代的代价：</strong>策略评估需要<strong>迭代到收敛</strong>——每轮评估都跑很多次 Bellman 更新。
+  对大状态空间这很贵。但工程上可以<strong>不等到完全收敛</strong>就做策略改进——这引出了值迭代。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5d">5.7. 值迭代（Value Iteration）</h2>
+
+<p>策略迭代的瓶颈在策略评估——每轮都要把 $V^\pi$ 算到收敛。值迭代的洞察：<strong>策略评估做一步就够了</strong>。把 Bellman 最优方程直接当更新规则用：</p>
+
+<div class="formula-block">
+  $$\boxed{\;V_{k+1}(s) \leftarrow \max_a \sum_{s'} \mathcal{P}(s'\mid s,a)\big[\mathcal{R}(s,a,s') + \gamma V_k(s')\big]\;}$$
+</div>
+
+<p>这就是<strong>值迭代</strong>——它等价于：策略评估只做<strong>一步</strong> → 策略改进（取 $\max$）→ 重复。可以证明值迭代收敛到 $V^*$。</p>
+
+<table>
+  <tr><th></th><th>策略迭代</th><th>值迭代</th></tr>
+  <tr><td>策略评估</td><td>迭代到收敛（多步）</td><td>只做一步 Bellman 更新</td></tr>
+  <tr><td>策略改进</td><td>显式更新 $\pi(s)$（取 $\arg\max$）</td><td>隐式——$\max$ 直接嵌在更新里</td></tr>
+  <tr><td>收敛</td><td>策略不变时停止（有限步收敛）</td><td>$V$ 变化小于阈值时停止（渐近收敛）</td></tr>
+  <tr><td>计算量/轮</td><td>大（多步评估）</td><td>小（一步更新）</td></tr>
+  <tr><td>适用</td><td>动作空间不大的 MDP</td><td>大多数表格型 MDP 的默认选择</td></tr>
+</table>
+
+<div class="warning">
+  <strong>DP 的两个根本局限：</strong>(1) 需要已知 $\mathcal{P}$ 和 $\mathcal{R}$——大多数实际问题不知道；(2) 需要对所有 $s\in\mathcal{S}$ 做全扫描——状态空间巨大时不可行。
+  这两个局限直接逼出了 model-free 方法（不需要 $\mathcal{P}$）和函数逼近（不枚举所有状态）——下一课的主题。
+</div>
+
+
+<h2 id="s6">6. 推导与自测</h2>
+
+<div class="problem">
+  <div class="ptitle">L1 · Bellman 方程的手算验证 <span class="plevel l1">L1</span></div>
+  <div class="pbody">一个 MDP 有两个状态 $\{s_1,s_2\}$，一个动作 $a$。$\mathcal{P}(s_1\mid s_1,a)=0.5$，$\mathcal{P}(s_2\mid s_1,a)=0.5$；$\mathcal{P}(s_2\mid s_2,a)=1$（$s_2$ 是吸收态）。$\mathcal{R}(s_1,a,s_1)=0$，$\mathcal{R}(s_1,a,s_2)=10$，$\mathcal{R}(s_2,a,s_2)=0$。$\gamma=0.9$。策略始终选 $a$。写出 $V(s_1)$ 和 $V(s_2)$ 的 Bellman 方程并求解。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">$V(s_2) = 1\cdot[0 + 0.9\cdot V(s_2)] \Rightarrow V(s_2) = 0.9V(s_2) \Rightarrow V(s_2)=0$<span class="reason">吸收态，奖励为零，价值也为零</span></div>
+    <div class="step">$V(s_1) = 0.5[0+0.9V(s_1)] + 0.5[10+0.9\cdot 0] = 0.45V(s_1) + 5$<span class="reason">一半概率留在 $s_1$（奖励 0），一半去 $s_2$（奖励 10）</span></div>
+    <div class="step">$V(s_1) - 0.45V(s_1) = 5 \Rightarrow V(s_1) = \frac{5}{0.55} \approx 9.09$<span class="reason">解一元一次方程</span></div>
+    <div class="step">$Q(s_1,a) = V(s_1) \approx 9.09$（只有一个动作）<span class="reason">验证：从 $s_1$ 出发，期望回报约 9.09</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L2 · 最优方程的 $\max$ 导致非线性 <span class="plevel l2">L2</span></div>
+  <div class="pbody">在上述 MDP 的基础上，增加第二个动作 $b$：$\mathcal{P}(s_1\mid s_1,b)=0$，$\mathcal{P}(s_2\mid s_1,b)=1$，$\mathcal{R}(s_1,b,s_2)=5$。写出 Bellman 最优方程，求解 $V^*(s_1)$ 和最优动作。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">$V^*(s_2)=0$（吸收态，不变）</div>
+    <div class="step">$Q^*(s_1,a) = 0.5[0+0.9V^*(s_1)] + 0.5[10+0] = 0.45V^*(s_1) + 5$</div>
+    <div class="step">$Q^*(s_1,b) = 0\cdot[0+0.9V^*(s_1)] + 1\cdot[5+0] = 5$</div>
+    <div class="step">$V^*(s_1) = \max(Q^*(s_1,a), Q^*(s_1,b)) = \max(0.45V^*(s_1)+5, 5)$<span class="reason">这里 $\max$ 使方程非线性——需要判断哪个更大</span></div>
+    <div class="step">如果 $V^*(s_1)=5$，则 $Q^*(s_1,a)=0.45\cdot 5+5=7.25 > 5$ → 矛盾！所以 $V^*(s_1)>5$，最优动作是 $a$。<span class="reason">迭代才能找到不动点——这就是"值迭代"的雏形</span></div>
+    <div class="step">$V^*(s_1) = 0.45V^*(s_1)+5 \Rightarrow V^*(s_1) = 5/0.55 \approx 9.09$，和之前一样。<span class="reason">$a$ 仍然是更优的动作</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L3 · 从 Bellman 方程到 "策略改进定理" <span class="plevel l3">L3</span></div>
+  <div class="pbody">证明：若对所有 $s$，$Q^\pi(s,\pi'(s)) \geq V^\pi(s)$，则 $V^{\pi'}(s) \geq V^\pi(s)$（策略 $\pi'$ 至少和 $\pi$ 一样好）。这就是策略迭代的理论基础——贪心改进永远不降性能。</div>
+  <details><summary>展开推导</summary>
+  <div class="sol">
+    <div class="step">对任意 $s$：$V^\pi(s) \leq Q^\pi(s,\pi'(s))$<span class="reason">已知条件</span></div>
+    <div class="step">$= \mathbb{E}[r + \gamma V^\pi(s') \mid s, \pi'(s)]$<span class="reason">$Q^\pi$ 的 Bellman 方程</span></div>
+    <div class="step">$\leq \mathbb{E}[r + \gamma Q^\pi(s',\pi'(s')) \mid s, \pi'(s)]$<span class="reason">再次用已知条件，这次在 $s'$ 上</span></div>
+    <div class="step">$= \mathbb{E}_{\pi'}[r + \gamma r' + \gamma^2 V^\pi(s'') \mid s]$<span class="reason">展开一层</span></div>
+    <div class="step">重复展开到无穷：$\leq \mathbb{E}_{\pi'}[\sum\gamma^k r_{t+k+1}\mid s] = V^{\pi'}(s)$<span class="reason">右端正是按 $\pi'$ 走的期望回报</span></div>
+    <div class="step">因此 $V^{\pi'} \geq V^\pi$——策略严格不退化。这就是<strong>策略改进定理</strong>，它保证了贪心策略迭代收敛到最优。<span class="reason">整个 RL 的理论基石之一</span></div>
+  </div>
+  </details>
+</div>
+
+<div class="reminder">
+  <strong>关键带回：</strong>MDP 是 RL 的"概率模型"（相当于 ML 里的 $p(y\mid\mathbf{x})$）。Bellman 方程是"损失函数"——满足它就找到了价值函数。
+  期望方程（有 $\sum\pi$）→ 评估给定策略；最优方程（有 $\max$）→ 找最优策略。
+  $\max$ 带来的非线性是 RL 需要迭代算法的根源，也是下一课"动态规划"要解决的核心问题。
+</div>
+
+<div class="primary-source">
+  <h3>主要参考</h3>
+  <strong>Sutton & Barto — Reinforcement Learning: An Introduction (2nd ed., 2018)</strong> —
+  Chapter 3（MDP）、Chapter 4（动态规划）。RL 的圣经，本课及后续课的母本。<br>
+  <strong>Puterman (1994) — Markov Decision Processes</strong>（MDP 的数学理论基础，偏重运筹学视角）。
+</div>
+
+<div class="lesson-footer">
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  <a href="../reference/math-primer.html">📐 数学手册</a> ·
+  下一课：<a href="0021-dp-value-policy-iter.html">0021 Model-Free RL：MC → TD → Q-learning → SARSA</a>（待写）
+</div>
+
+<script src="../reference/popup-cards.js"></script>
+
+<script>
+window.addEventListener('load', function() {
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    MathJax.typesetPromise();
+  }
+});
+</script>
+
+</body>
+</html>

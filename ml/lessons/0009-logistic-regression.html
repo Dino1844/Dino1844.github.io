@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0009 · 逻辑回归</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  /* derivation problems */
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0009 · 逻辑回归</h1>
+<div class="subtitle">从 Bernoulli 似然到交叉熵、梯度、IRLS、多类 softmax——GLM 框架的第二个实例 · 阅读时间 ~45 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. GLM 回顾：Bernoulli 似然推出 Sigmoid</a><br>
+  <a href="#s2">2. 似然推出损失：交叉熵</a><br>
+  <a href="#s3">3. 损失推出梯度：$\nabla J = \sum (\sigma - y)\mathbf{x}$</a><br>
+  <a href="#s4">4. Hessian 与凸性：$\mathbf{X}^\top\mathbf{S}\mathbf{X}$ 正定，但无闭式解</a><br>
+  <a href="#s5">5. Newton 法与 IRLS：加权最小二乘的迭代</a><br>
+  <a href="#s6">6. 多类推广：Softmax 回归</a><br>
+  <a href="#s7">7. 推导与演算</a><br>
+  <a href="#s8">8. 自测</a>
+</div>
+
+<p>
+	  0004（指数族）建立了统一的分布语言——把 Bernoulli 写成指数族的标准形。
+	  高斯似然 + 线性自然参数 → 线性回归；Bernoulli 似然 + 线性自然参数 → <strong>逻辑回归</strong>。
+	  本课在此基础上，从交叉熵推到 IRLS，把逻辑回归做透。
+	</p>
+
+<p>
+  逻辑回归是分类领域最基础的模型，但它的故事远比"用 sigmoid 做二分类"深刻：
+  交叉熵损失是从 Bernoulli 似然 MLE 推出来的必然结果；
+  梯度的简洁形式 $\sum(\sigma-y)\mathbf{x}$ 来自 sigmoid 导数 $\sigma'=\sigma(1-\sigma)$ 的巧合；
+  Hessian 正定保证凸优化，但似然不是 $\mathbf{w}$ 的二次函数，所以没有闭式解——与线性回归形成鲜明对比；
+  Newton 法迭代等价于加权最小二乘（IRLS），揭示了逻辑回归与线性回归的深层联系；
+  多类 softmax 的梯度与二分类形式完全同构，因为 Multinomial 和 Bernoulli 同属指数族。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>指数族分布的标准形式 $p(y;\eta)=b(y)\exp(\eta^\top T(y)-a(\eta))$。Bernoulli 分布写成这个形式后，自然参数 $\eta$ 是什么？</li>
+    <li>GLM 的三个假设是什么？从 Bernoulli 似然推出 sigmoid 的过程还记得吗？</li>
+    <li>线性回归的 MLE 为什么有闭式解？Hessian 是什么？</li>
+    <li>矩阵导数：$\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{x})=\mathbf{x}$，$\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{A}\mathbf{w})=2\mathbf{A}\mathbf{w}$（$\mathbf{A}$ 对称）。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. GLM 回顾：Bernoulli 似然推出 Sigmoid</h2>
+
+
+<p>
+  二分类问题：$y\in\{0,1\}$。假设 $y\mid\mathbf{x};\mathbf{w}\sim\text{Bernoulli}(\phi)$，其中 $\phi=p(y=1\mid\mathbf{x})$。
+  Bernoulli 分布写成指数族形式：
+</p>
+
+<div class="formula-block">
+  $$p(y;\phi) = \phi^y(1-\phi)^{1-y} = \exp\!\Big(y\log\frac{\phi}{1-\phi} + \log(1-\phi)\Big)$$
+</div>
+
+<p>
+  对比指数族标准形 $p(y;\eta)=b(y)\exp(\eta^\top T(y)-a(\eta))$，读出：
+</p>
+
+<ul>
+  <li>自然参数 $\eta = \log\frac{\phi}{1-\phi}$（即 log-odds / logit 函数）</li>
+  <li>充分统计量 $T(y)=y$</li>
+  <li>对数配分函数 $a(\eta)=-\log(1-\phi)=\log(1+e^\eta)$</li>
+</ul>
+
+<p>
+  GLM 的第三个假设是自然参数与输入线性相关：$\eta = \mathbf{w}^\top\mathbf{x}$。
+  反解 $\phi$ 得到预测值：
+</p>
+
+<div class="formula-block">
+  $$\phi = \frac{1}{1+e^{-\eta}} = \frac{1}{1+e^{-\mathbf{w}^\top\mathbf{x}}} \equiv \sigma(\mathbf{w}^\top\mathbf{x})$$
+</div>
+
+<p>
+  其中 $\sigma(z)=1/(1+e^{-z})$ 是 <strong>logistic sigmoid</strong> 函数。
+  注意它把 $\mathbb{R}$ 映射到 $(0,1)$，天然适合作为概率输出。
+</p>
+
+<div class="insight">
+  <strong>Sigmoid 不是为二分类设计的激活函数——它是 Bernoulli 似然 + 线性自然参数假设下 MLE 的自然产物。</strong>
+  从指数族形式出发，$\eta=\log(\phi/(1-\phi))$ 是"规范链接"（canonical link），
+  反解即得 sigmoid。这与"线性回归的平方损失来自高斯噪声"是同一类事。
+</div>
+
+<p>
+  记 $\sigma_n = \sigma(\mathbf{w}^\top\mathbf{x}_n)$，则 $p(y_n=1\mid\mathbf{x}_n,\mathbf{w})=\sigma_n$，
+  $p(y_n=0\mid\mathbf{x}_n,\mathbf{w})=1-\sigma_n$。合起来：
+</p>
+
+<div class="formula-block">
+  $$p(y_n\mid\mathbf{x}_n,\mathbf{w}) = \sigma_n^{y_n}\,(1-\sigma_n)^{1-y_n}$$
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 似然推出损失：交叉熵</h2>
+<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#e07b39;">核心概念</span>
+	    <h3>交叉熵 · Cross-Entropy</h3>
+	    <span class="cc-aliases">Bernoulli MLE = min Cross-Entropy</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>$H(p,q) = -\mathbb{E}_p[\log q] = -\sum_k p_k\log q_k$。当 $p$ 是 one-hot 真实标签、$q$ 是模型预测时，交叉熵 = 负对数似然。最小化交叉熵 = 最大似然 = 最小化 $\mathrm{KL}(p\|q)$（因为 $H(p)$ 固定）。
+	  </div>
+	  <div class="cc-section">
+	    <h4>二分类形式</h4>
+	    <div class="cc-formula">$$J(\mathbf{w}) = -\sum_n \big[y_n\log\sigma_n + (1-y_n)\log(1-\sigma_n)\big]$$</div>
+	    <p>每个样本贡献 $-\log($模型给正确类别的概率$)$。分类错误时概率小 → $\log$ 的绝对值大 → 损失大。</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0001 §6: MLE = min KL</span>
+	    <span class="conn-badge">→ 0004(指数族): Bernoulli = ExpFamily</span>
+	    <span class="conn-badge">→ 0014: 神经网络输出层用交叉熵</span>
+	  </div>
+	</div>
+
+<p>
+  数据 i.i.d.，似然函数为：
+</p>
+
+<div class="formula-block">
+  $$p(\mathbf{y}\mid\mathbf{X},\mathbf{w}) = \prod_{n=1}^N \sigma_n^{y_n}\,(1-\sigma_n)^{1-y_n}$$
+</div>
+
+<p>
+  取负对数（最小化负对数似然等价于最大化似然）：
+</p>
+
+<div class="derivation">
+  <h4>负对数似然 → 交叉熵损失</h4>
+  <div class="step">
+    $\displaystyle J(\mathbf{w}) = -\log p(\mathbf{y}\mid\mathbf{X},\mathbf{w}) = -\sum_{n=1}^N \big[y_n\log\sigma_n + (1-y_n)\log(1-\sigma_n)\big]$
+    <span class="reason">log 把 ∏ 变 ∑，代入 Bernoulli 形式</span>
+  </div>
+</div>
+
+<p>
+  这就是<strong>交叉熵损失</strong>（cross-entropy loss）。名字的由来：两个 Bernoulli 分布 $p$（真实标签分布，集中在 $y_n$）和 $q$（预测分布，$\sigma_n$）之间的交叉熵正是 $H(p,q)=-\sum p\log q$。
+  这里 $p$ 是 one-hot（$y_n$ 处为 1），$q$ 是 $(\sigma_n, 1-\sigma_n)$，交叉熵退化为上式。
+</p>
+
+<div class="insight">
+  <strong>交叉熵损失 = Bernoulli 似然的负对数，不是另起炉灶。</strong>
+  线性回归的平方损失来自高斯似然的负对数——两者是 GLM 框架下同一套逻辑的不同实例。
+  深度学习里的交叉熵损失不是拍脑袋选的，它就是从分类问题的输出分布假设推出来的。
+</div>
+
+<p>
+  对比线性回归的平方损失 $\sum(y_n-\mathbf{w}^\top\mathbf{x}_n)^2$，交叉熵在形式上是"概率的 log"而非"误差的平方"。
+  这个差别导致了优化上的根本不同——平方损失是 $\mathbf{w}$ 的二次函数，交叉熵不是。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 损失推出梯度：$\nabla J = \sum (\sigma - y)\mathbf{x}$</h2>
+
+<p>
+  计算 $J(\mathbf{w})$ 对 $\mathbf{w}$ 的梯度。关键工具是 sigmoid 的导数：
+</p>
+
+<div class="formula-block">
+  $$\frac{d\sigma}{dz} = \sigma(z)(1-\sigma(z))$$
+</div>
+
+<p>
+  这个等式是 sigmoid 最漂亮的性质——它的导数可以用自身表达，不需要额外计算指数。
+  证明很简单：$\sigma(z)=1/(1+e^{-z})$，求导得 $e^{-z}/(1+e^{-z})^2 = \sigma(z)(1-\sigma(z))$。
+</p>
+
+<p>现在对单个样本 $(\mathbf{x}_n, y_n)$ 的损失 $J_n = -[y_n\log\sigma_n + (1-y_n)\log(1-\sigma_n)]$ 求导：</p>
+
+<div class="derivation">
+  <h4>单样本梯度推导</h4>
+  <div class="step">
+    $\displaystyle \frac{\partial J_n}{\partial \mathbf{w}} = -\frac{\partial}{\partial \mathbf{w}}\big[y_n\log\sigma_n + (1-y_n)\log(1-\sigma_n)\big]$
+  </div>
+  <div class="step">
+    $\displaystyle = -\Big[y_n\frac{1}{\sigma_n} - (1-y_n)\frac{1}{1-\sigma_n}\Big]\frac{\partial\sigma_n}{\partial\mathbf{w}}$
+    <span class="reason">链式法则，$\log(1-\sigma)$ 的导数是 $-1/(1-\sigma)$</span>
+  </div>
+  <div class="step">
+    $\displaystyle = -\Big[\frac{y_n}{\sigma_n} - \frac{1-y_n}{1-\sigma_n}\Big]\sigma_n(1-\sigma_n)\,\mathbf{x}_n$
+    <span class="reason">代入 $\partial\sigma_n/\partial\mathbf{w} = \sigma_n(1-\sigma_n)\mathbf{x}_n$</span>
+  </div>
+  <div class="step">
+    $\displaystyle = -\big[y_n(1-\sigma_n) - (1-y_n)\sigma_n\big]\,\mathbf{x}_n$
+    <span class="reason">$\frac{y_n}{\sigma_n}\sigma_n(1-\sigma_n)=y_n(1-\sigma_n)$，$\frac{1-y_n}{1-\sigma_n}\sigma_n(1-\sigma_n)=(1-y_n)\sigma_n$</span>
+  </div>
+  <div class="step">
+    $\displaystyle = -[y_n - y_n\sigma_n - \sigma_n + y_n\sigma_n]\,\mathbf{x}_n = -[y_n - \sigma_n]\,\mathbf{x}_n$
+    <span class="reason">化简，$-y_n\sigma_n$ 与 $+y_n\sigma_n$ 抵消</span>
+  </div>
+  <div class="step">
+    所以 $\displaystyle \frac{\partial J_n}{\partial \mathbf{w}} = (\sigma_n - y_n)\,\mathbf{x}_n$，总梯度 $\displaystyle \nabla J(\mathbf{w}) = \sum_{n=1}^N (\sigma_n - y_n)\,\mathbf{x}_n$
+  </div>
+</div>
+
+<div class="insight">
+  <strong>梯度的简洁形式 $\nabla J = \sum(\sigma_n - y_n)\mathbf{x}_n$ 来自 $\sigma'=\sigma(1-\sigma)$ 的巧合。</strong>
+  这个形式与线性回归的梯度 $\nabla J_{\text{LS}} = \sum(\mathbf{w}^\top\mathbf{x}_n - y_n)\mathbf{x}_n$ 在结构上完全对应——
+  都是"预测减真实"乘以输入。差别只在于线性回归的预测是 $\mathbf{w}^\top\mathbf{x}$，逻辑回归的预测是 $\sigma(\mathbf{w}^\top\mathbf{x})$。
+  这个一致性不是偶然：对任何 GLM 的规范链接，梯度都是 $\sum(\text{预测} - \text{真实})\times\text{输入}$。
+</div>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #4 · 规范链接让梯度"预测减真实"——指数族的统一礼物</h4>
+  对任何指数族 GLM，只要用规范链接 $g(\mu)=\eta=\mathbf{w}^\top\mathbf{x}$（$g$ 是 $a'(\eta)$ 的反函数），负对数似然对 $\mathbf{w}$ 的梯度恒为 $\sum_n(\text{预测}_n-\text{真实}_n)\mathbf{x}_n$。
+  机制：$-\log p = \sum[a(\eta_n)-\eta_n y_n]$，求导 $\partial/\partial\mathbf{w}$ 时 $\eta_n=\mathbf{w}^\top\mathbf{x}_n$ 给 $\mathbf{x}_n$，$a'(\eta_n)=\mu_n$（预测），于是 $\nabla=\sum(\mu_n-y_n)\mathbf{x}_n$。
+  <strong>本课（Bernoulli）、0001（高斯）、0009（指数族总论）、0010 EM 的 M 步——全是这一招。</strong>
+  规范链接不是凑出来的，它是让"梯度=预测误差"成立的唯一链接。
+</div>
+
+<p>
+  梯度形式简单，意味着随机梯度下降（SGD）实现极其直接——每次迭代只需计算 $\sigma(\mathbf{w}^\top\mathbf{x}_n)$ 然后更新 $\mathbf{w}\leftarrow\mathbf{w}-\eta(\sigma_n-y_n)\mathbf{x}_n$。
+  但梯度下降在逻辑回归上收敛较慢，因为曲率（Hessian）在不同方向差异很大。这就引出了二阶方法。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. Hessian 与凸性：$\mathbf{X}^\top\mathbf{S}\mathbf{X}$ 正定，但无闭式解</h2>
+
+
+<p>
+  计算 Hessian 矩阵 $\mathbf{H} = \nabla^2 J(\mathbf{w})$。对梯度 $\nabla J = \sum_n (\sigma_n - y_n)\mathbf{x}_n$ 再求一次导：
+</p>
+
+<div class="derivation">
+  <h4>Hessian 推导</h4>
+  <div class="step">
+    $\displaystyle \mathbf{H} = \frac{\partial}{\partial\mathbf{w}}\sum_{n=1}^N (\sigma_n - y_n)\mathbf{x}_n = \sum_{n=1}^N \frac{\partial\sigma_n}{\partial\mathbf{w}}\,\mathbf{x}_n^\top$
+    <span class="reason">$\mathbf{x}_n$ 与 $\mathbf{w}$ 无关，$y_n$ 是常数</span>
+  </div>
+  <div class="step">
+    $\displaystyle = \sum_{n=1}^N \sigma_n(1-\sigma_n)\,\mathbf{x}_n\mathbf{x}_n^\top$
+    <span class="reason">$\partial\sigma_n/\partial\mathbf{w} = \sigma_n(1-\sigma_n)\,\mathbf{x}_n$</span>
+  </div>
+  <div class="step">
+    写成矩阵形式：$\displaystyle \mathbf{H} = \mathbf{X}^\top\mathbf{S}\,\mathbf{X}$
+    <span class="reason">其中 $\mathbf{S}=\operatorname{diag}\big(\sigma_n(1-\sigma_n)\big)\in\mathbb{R}^{N\times N}$，$\mathbf{X}\in\mathbb{R}^{N\times D}$</span>
+  </div>
+</div>
+
+<p>
+  几个关键性质：
+</p>
+
+<ul>
+  <li><strong>正定。</strong> $\sigma_n(1-\sigma_n)>0$ 对所有 $\sigma_n\in(0,1)$ 成立（除非 $\sigma_n$ 恰为 0 或 1，在有限数据下几乎不可能）。所以 $\mathbf{S}$ 正定，$\mathbf{H} = \mathbf{X}^\top\mathbf{S}\mathbf{X}$ 半正定；若 $\mathbf{X}$ 列满秩则正定。</li>
+  <li><strong>凸优化。</strong> Hessian 正定意味着 $J(\mathbf{w})$ 是严格凸函数——有唯一全局最小值，没有局部极值。</li>
+  <li><strong>但无闭式解。</strong> 与线性回归不同，$\nabla J=0$ 是一个<strong>非线性方程组</strong>：$\sum_n(\sigma(\mathbf{w}^\top\mathbf{x}_n)-y_n)\mathbf{x}_n=0$。$\sigma$ 的非线性让 $\mathbf{w}$ 无法被显式解出。必须用迭代方法。</li>
+</ul>
+
+<div class="warning">
+  <strong>为什么线性回归有闭式解而逻辑回归没有？</strong><br>
+  线性回归的似然是 $\mathbf{w}$ 的二次函数（高斯密度的指数部分），梯度是 $\mathbf{w}$ 的线性函数，$\nabla J=0$ 是线性方程组，直接求逆即得。<br>
+  逻辑回归的似然是 $\mathbf{w}$ 的<strong>非线性</strong>函数（sigmoid 嵌套在指数里），梯度是 $\mathbf{w}$ 的非线性函数，$\nabla J=0$ 是超越方程，无闭式解。<br>
+  根源在于：<strong>线性回归的噪声假设（高斯）让似然是 $\mathbf{w}$ 的二次型；逻辑回归的输出假设（Bernoulli）让似然是 $\mathbf{w}$ 的 sigmoid 复合函数。</strong>
+  换噪声分布就换一切——本课展开 0001 的 GLM 框架 预告的 GLM，这是其核心信息。
+</div>
+
+<p>
+  Hessian 正定保证了凸性，但凸性不等于可解析求解。实际中我们使用迭代优化方法，下一节讲最经典的二阶方法。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. Newton 法与 IRLS：加权最小二乘的迭代</h2>
+<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#c44d4d;">优化算法</span>
+	    <h3>IRLS · Iteratively Reweighted Least Squares</h3>
+	    <span class="cc-aliases">Newton法在GLM中的等价形式</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>逻辑回归没有闭式解（似然不是 $\mathbf{w}$ 的二次型），但 Hessian $\mathbf{H}=\boldsymbol{\Phi}^\top\mathbf{S}\boldsymbol{\Phi}$ 正定 → 凸优化。Newton 法的每一步等价于解一个<strong>加权最小二乘</strong>问题——权重 $\mathbf{S}_{nn}=\sigma_n(1-\sigma_n)$ 随 $\mathbf{w}$ 更新。
+	  </div>
+	  <div class="cc-section">
+	    <h4>IRLS 迭代公式</h4>
+	    <div class="cc-formula">$$\mathbf{w}^{(t+1)} = (\boldsymbol{\Phi}^\top\mathbf{S}\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top\mathbf{S}\mathbf{z}, \quad \mathbf{z} = \boldsymbol{\Phi}\mathbf{w}^{(t)} - \mathbf{S}^{-1}(\boldsymbol{\sigma}-\mathbf{y})$$</div>
+	    <p>每一步都像在做加权线性回归——但权重和"目标" $\mathbf{z}$ 每步更新。这就是为什么叫"迭代重加权"。</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0001 §3: 正规方程 = IRLS 的特例（$\mathbf{S}=\mathbf{I}$）</span>
+	    <span class="conn-badge">→ 0014: Newton/二阶优化</span>
+	  </div>
+	</div>
+
+<p>
+  Newton-Raphson 法（也称 Newton 法）是二阶优化方法：在每次迭代中，用目标函数的局部二次近似来更新参数。
+  更新公式为：
+</p>
+
+<div class="formula-block">
+  $$\mathbf{w}^{\text{new}} = \mathbf{w}^{\text{old}} - \mathbf{H}^{-1}\,\nabla J$$
+</div>
+
+<p>
+  代入逻辑回归的梯度和 Hessian：
+</p>
+
+<div class="derivation">
+  <h4>Newton 法 → IRLS</h4>
+  <div class="step">
+    $\displaystyle \mathbf{w}^{\text{new}} = \mathbf{w} - (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\,\mathbf{X}^\top(\boldsymbol{\sigma} - \mathbf{y})$
+    <span class="reason">代入 $\nabla J=\mathbf{X}^\top(\boldsymbol{\sigma}-\mathbf{y})$，$\mathbf{H}=\mathbf{X}^\top\mathbf{S}\mathbf{X}$</span>
+  </div>
+  <div class="step">
+    $\displaystyle = (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{S}\,\mathbf{z}$
+    <span class="reason">其中 $\mathbf{z} = \mathbf{X}\mathbf{w} - \mathbf{S}^{-1}(\boldsymbol{\sigma} - \mathbf{y})$，整理可得此形式</span>
+  </div>
+</div>
+
+<p>详细推导：从 $\mathbf{w}^{\text{new}} = \mathbf{w} - (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\mathbf{X}^\top(\boldsymbol{\sigma}-\mathbf{y})$ 出发，</p>
+
+<div class="formula-block">
+  $$\mathbf{w}^{\text{new}} = (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\Big[(\mathbf{X}^\top\mathbf{S}\mathbf{X})\mathbf{w} - \mathbf{X}^\top(\boldsymbol{\sigma}-\mathbf{y})\Big]$$
+</div>
+
+<div class="formula-block">
+  $$= (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\mathbf{X}^\top\Big[\mathbf{S}\mathbf{X}\mathbf{w} - (\boldsymbol{\sigma}-\mathbf{y})\Big]$$
+</div>
+
+<p>定义<strong>工作响应变量</strong>（working response）$\mathbf{z}$：</p>
+
+<div class="formula-block">
+  $$\mathbf{z} = \mathbf{X}\mathbf{w} - \mathbf{S}^{-1}(\boldsymbol{\sigma} - \mathbf{y})$$
+</div>
+
+<p>即 $z_n = \mathbf{w}^\top\mathbf{x}_n - \frac{\sigma_n - y_n}{\sigma_n(1-\sigma_n)}$。代入得：</p>
+
+<div class="formula-block">
+  $$\boxed{\;\mathbf{w}^{\text{new}} = (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{S}\,\mathbf{z}\;}$$
+</div>
+
+<p>
+  这个形式叫做<strong>迭代重加权最小二乘</strong>（IRLS, Iteratively Reweighted Least Squares）。
+  它看起来就像一个<strong>加权线性回归</strong>的解：$\mathbf{w}=(\mathbf{X}^\top\mathbf{W}\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{W}\mathbf{z}$，
+  其中权重矩阵 $\mathbf{S}=\operatorname{diag}(\sigma_n(1-\sigma_n))$，目标变量是 $\mathbf{z}$（不是原始 $y$）。
+  每次迭代用当前 $\mathbf{w}$ 计算 $\boldsymbol{\sigma}$ 和 $\mathbf{S}$，然后解一个加权最小二乘问题得到新 $\mathbf{w}$。
+</p>
+
+<div class="insight">
+  <strong>IRLS 揭示了逻辑回归与线性回归的深层联系：</strong>
+  逻辑回归的 Newton 法迭代等价于<strong>在每次迭代中解一个加权线性回归</strong>。
+  权重 $\sigma_n(1-\sigma_n)$ 在决策边界附近（$\sigma_n\approx0.5$）最大——那些"最不确定"的样本对参数更新贡献最大；
+  在远离决策边界的区域（$\sigma_n\approx0$ 或 $1$），权重趋近于 0——那些"已经分得很清楚"的样本几乎不参与。
+  这是非常直观的行为。
+</div>
+
+<p>
+  IRLS 通常比梯度下降收敛快得多（二次收敛 vs 线性收敛），但每次迭代需要解一个 $D\times D$ 线性系统，代价 $O(D^3)$。
+  当 $D$ 很大时（如文本分类中 $D$ 可达数十万），IRLS 不可行，此时 SGD 或 L-BFGS 更实用。
+</p>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #5 · Newton 法 = "局部二次化 + 闭式解该二次"</h4>
+  Newton 法的本质：在当前点用二阶 Taylor 近似 $J(\mathbf{w}+\Delta)\approx J+\nabla^\top\Delta+\frac12\Delta^\top\mathbf{H}\Delta$，对这个<strong>二次函数</strong>求闭式解 $\Delta=-\mathbf{H}^{-1}\nabla$。
+  所以"无闭式解"和"Newton 迭代"不矛盾——前者指原问题非线性，后者指每步的局部近似是二次的、可解。
+  IRLS 是这招在 GLM 上的具体化：每步的二次近似恰好是加权最小二乘。
+  <strong>0014 神经网络的反传 + Gauss-Newton/自然梯度、0015 变分推断的坐标上升、0010 EM 的收敛——背后都是"局部二次化 + 解二次"。</strong>
+  把 Newton 当成"把难问题降成一串简单问题"的元方法，而不是一个具体算法。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 多类推广：Softmax 回归</h2>
+
+<p>
+  二分类推广到 $K$ 类。输出 $y\in\{1,2,\dots,K\}$，用 one-hot 编码：$\mathbf{y}\in\{0,1\}^K$，$\sum_k y_k=1$。
+  假设 $y\mid\mathbf{x}$ 服从<strong>多项分布</strong>（Multinomial distribution）——这是 Bernoulli 在多类下的自然推广。
+</p>
+
+<p>
+  多项分布是指数族成员。写出它的指数族形式，自然参数 $\eta_k = \log\frac{\phi_k}{\phi_K}$（以第 $K$ 类为参考），
+  线性假设 $\eta_k = \mathbf{w}_k^\top\mathbf{x}$，反解得：
+</p>
+
+<div class="formula-block">
+  $$\phi_k = p(y=k\mid\mathbf{x},\{\mathbf{w}_j\}) = \frac{\exp(\mathbf{w}_k^\top\mathbf{x})}{\sum_{j=1}^K \exp(\mathbf{w}_j^\top\mathbf{x})} \equiv \operatorname{softmax}_k(\mathbf{W}^\top\mathbf{x})$$
+</div>
+
+<p>
+  这就是 <strong>softmax</strong> 函数——sigmoid 的多类推广。注意 $K=2$ 时 softmax 退化为 sigmoid（取 $\mathbf{w}_2=\mathbf{0}$ 则 $\phi_1=\sigma(\mathbf{w}_1^\top\mathbf{x})$）。
+</p>
+
+<p>
+  负对数似然（交叉熵）：
+</p>
+
+<div class="formula-block">
+  $$J(\{\mathbf{w}_k\}) = -\sum_{n=1}^N\sum_{k=1}^K y_{nk}\log\phi_{nk} = -\sum_{n=1}^N\log\phi_{n,y_n}$$
+</div>
+
+<p>
+  其中 $\phi_{nk} = \operatorname{softmax}_k(\mathbf{W}^\top\mathbf{x}_n)$，$y_{nk}=1$ 当 $y_n=k$ 否则 0。
+</p>
+
+<p>
+  对 $\mathbf{w}_k$ 求梯度：
+</p>
+
+<div class="derivation">
+  <h4>Softmax 回归的梯度</h4>
+  <div class="step">
+    $\displaystyle \frac{\partial J}{\partial \mathbf{w}_k} = -\sum_{n=1}^N \frac{\partial}{\partial\mathbf{w}_k}\log\phi_{n,y_n}$
+  </div>
+  <div class="step">
+    $\displaystyle = -\sum_{n=1}^N \frac{1}{\phi_{n,y_n}}\frac{\partial\phi_{n,y_n}}{\partial\mathbf{w}_k}$
+  </div>
+  <div class="step">
+    用 softmax 导数：$\displaystyle \frac{\partial\phi_{nj}}{\partial\mathbf{w}_k} = \phi_{nj}(\delta_{jk} - \phi_{nk})\,\mathbf{x}_n$
+    <span class="reason">其中 $\delta_{jk}=1$ 当 $j=k$ 否则 0</span>
+  </div>
+  <div class="step">
+    代入得：$\displaystyle \frac{\partial J}{\partial \mathbf{w}_k} = -\sum_{n=1}^N \frac{1}{\phi_{n,y_n}}\phi_{n,y_n}(\delta_{y_n,k} - \phi_{nk})\,\mathbf{x}_n$
+  </div>
+  <div class="step">
+    $\displaystyle = -\sum_{n=1}^N (\delta_{y_n,k} - \phi_{nk})\,\mathbf{x}_n = \sum_{n=1}^N (\phi_{nk} - \mathbf{1}[y_n=k])\,\mathbf{x}_n$
+    <span class="reason">$\delta_{y_n,k}$ 是指示函数 $\mathbf{1}[y_n=k]$</span>
+  </div>
+</div>
+
+<div class="insight">
+  <strong>Softmax 回归的梯度 $\nabla_{\mathbf{w}_k} J = \sum_n(\phi_{nk} - \mathbf{1}[y_n=k])\mathbf{x}_n$ 与二分类梯度 $\sum(\sigma_n - y_n)\mathbf{x}_n$ 形式完全同构。</strong>
+  都是"预测概率减真实指示"乘以输入。这个一致性来自指数族的统一性：<strong>对任何 GLM 的规范链接，梯度都是 $\sum(\text{预测} - \text{真实})\times\text{输入}$</strong>。
+  这就是为什么理解了二分类逻辑回归，多类 softmax 回归没有任何本质新东西——只是把标量 $\sigma$ 换成向量 $\boldsymbol{\phi}$。
+</div>
+
+<p>
+  Softmax 回归的 Hessian 是分块矩阵 $\mathbf{H}_{kl} = \partial^2 J/\partial\mathbf{w}_k\partial\mathbf{w}_l^\top = \sum_n \phi_{nk}(\delta_{kl}-\phi_{nl})\mathbf{x}_n\mathbf{x}_n^\top$，
+  它是半正定的（但不是严格正定，因为 $\sum_k\phi_{nk}=1$ 导致冗余——通常固定 $\mathbf{w}_K=\mathbf{0}$ 消除冗余）。
+  IRLS 也可以推广到多类情形，但实现更复杂，实践中常用 L-BFGS 或 SGD。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 推导与演算</h2>
+
+<p>下面 6 道题，难度递增。<strong>先自己做，做不出再看提示，做完再对解答</strong>。这些题考的是真的会推，不是查上下文能答的。</p>
+
+<div class="problem">
+  <div class="ptitle">题 1 · 从 Bernoulli 似然推交叉熵损失 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    给定 $N$ 个独立样本 $\{(\mathbf{x}_n,y_n)\}$，$y_n\in\{0,1\}$，模型预测 $\sigma_n=\sigma(\mathbf{w}^\top\mathbf{x}_n)$。
+    写出 Bernoulli 似然 $p(\mathbf{y}\mid\mathbf{X},\mathbf{w})$，取负对数，证明它等于交叉熵损失
+    $J(\mathbf{w}) = -\sum_{n=1}^N\big[y_n\log\sigma_n + (1-y_n)\log(1-\sigma_n)\big]$。
+  </div>
+  <details><summary>提示</summary><div class="hint">Bernoulli 分布的概率质量函数是 $p(y;\phi)=\phi^y(1-\phi)^{1-y}$。把 $\phi$ 换成 $\sigma_n$，把 $N$ 个样本的似然乘起来，取负对数。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">似然：$p(\mathbf{y}\mid\mathbf{X},\mathbf{w}) = \prod_{n=1}^N p(y_n\mid\mathbf{x}_n,\mathbf{w}) = \prod_{n=1}^N \sigma_n^{y_n}(1-\sigma_n)^{1-y_n}$</div>
+    <div class="step">取负对数：$-\log p = -\sum_{n=1}^N \log\big[\sigma_n^{y_n}(1-\sigma_n)^{1-y_n}\big]$</div>
+    <div class="step">$= -\sum_{n=1}^N \big[y_n\log\sigma_n + (1-y_n)\log(1-\sigma_n)\big]$。证毕。</div>
+    <div class="step">这就是交叉熵损失。它衡量真实标签分布（集中在 $y_n$ 的 one-hot 分布）与预测分布 $(\sigma_n,1-\sigma_n)$ 之间的交叉熵。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 2 · Sigmoid 导数与梯度化简 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    (a) 证明 $\sigma'(z)=\sigma(z)(1-\sigma(z))$，其中 $\sigma(z)=1/(1+e^{-z})$。<br>
+    (b) 利用 (a) 证明逻辑回归的梯度 $\nabla J(\mathbf{w})=\sum_{n=1}^N(\sigma_n-y_n)\mathbf{x}_n$。
+  </div>
+  <details><summary>提示</summary><div class="hint">(a) 直接对 $\sigma(z)=(1+e^{-z})^{-1}$ 求导，或者用 $\sigma(z)=e^z/(1+e^z)$ 求导。(b) 对单个样本的损失 $J_n=-[y_n\log\sigma_n+(1-y_n)\log(1-\sigma_n)]$ 用链式法则，代入 (a) 的结果。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">(a) $\sigma(z)=(1+e^{-z})^{-1}$，$\sigma'(z)=e^{-z}(1+e^{-z})^{-2}=\frac{e^{-z}}{1+e^{-z}}\cdot\frac{1}{1+e^{-z}}=\frac{1}{1+e^{z}}\cdot\sigma(z)$。</div>
+    <div class="step">注意 $\frac{1}{1+e^{z}}=1-\frac{1}{1+e^{-z}}=1-\sigma(z)$，所以 $\sigma'(z)=\sigma(z)(1-\sigma(z))$。</div>
+    <div class="step" style="margin-top:0.6rem;">(b) 对单样本 $J_n=-[y_n\log\sigma_n+(1-y_n)\log(1-\sigma_n)]$：</div>
+    <div class="step">$\frac{\partial J_n}{\partial\mathbf{w}} = -\big[\frac{y_n}{\sigma_n} - \frac{1-y_n}{1-\sigma_n}\big]\frac{\partial\sigma_n}{\partial\mathbf{w}}$，其中 $\frac{\partial\sigma_n}{\partial\mathbf{w}}=\sigma_n(1-\sigma_n)\mathbf{x}_n$。</div>
+    <div class="step">代入：$= -\big[\frac{y_n}{\sigma_n} - \frac{1-y_n}{1-\sigma_n}\big]\sigma_n(1-\sigma_n)\mathbf{x}_n$</div>
+    <div class="step">$= -\big[y_n(1-\sigma_n) - (1-y_n)\sigma_n\big]\mathbf{x}_n = -[y_n - \sigma_n]\mathbf{x}_n = (\sigma_n - y_n)\mathbf{x}_n$。</div>
+    <div class="step">求和得 $\nabla J = \sum_{n=1}^N (\sigma_n - y_n)\mathbf{x}_n$。$\square$</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 3 · Hessian 正定性与凸性 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    (a) 证明逻辑回归的 Hessian 可写成 $\mathbf{H}=\mathbf{X}^\top\mathbf{S}\mathbf{X}$，其中 $\mathbf{S}=\operatorname{diag}(\sigma_n(1-\sigma_n))$。<br>
+    (b) 证明若 $\mathbf{X}$ 列满秩，则 $\mathbf{H}$ 正定，从而 $J(\mathbf{w})$ 是严格凸函数。<br>
+    (c) 对比线性回归的 Hessian $\mathbf{H}_{\text{LS}}=\mathbf{X}^\top\mathbf{X}$，说明两者在结构上的异同。
+  </div>
+  <details><summary>提示</summary><div class="hint">(a) 对 $\nabla J=\sum(\sigma_n-y_n)\mathbf{x}_n$ 再求一次导。(b) 对任意 $\mathbf{v}\neq\mathbf{0}$，验证 $\mathbf{v}^\top\mathbf{H}\mathbf{v}>0$。(c) 注意 $\mathbf{S}$ 的作用。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">(a) $\mathbf{H}=\frac{\partial}{\partial\mathbf{w}}\sum_n(\sigma_n-y_n)\mathbf{x}_n = \sum_n\frac{\partial\sigma_n}{\partial\mathbf{w}}\mathbf{x}_n^\top = \sum_n\sigma_n(1-\sigma_n)\mathbf{x}_n\mathbf{x}_n^\top$。</div>
+    <div class="step">写成矩阵：$\mathbf{H}=\mathbf{X}^\top\mathbf{S}\mathbf{X}$，其中 $\mathbf{S}_{nn}=\sigma_n(1-\sigma_n)$。</div>
+    <div class="step" style="margin-top:0.6rem;">(b) 对任意 $\mathbf{v}\neq\mathbf{0}$：$\mathbf{v}^\top\mathbf{H}\mathbf{v}=\mathbf{v}^\top\mathbf{X}^\top\mathbf{S}\mathbf{X}\mathbf{v}=(\mathbf{X}\mathbf{v})^\top\mathbf{S}(\mathbf{X}\mathbf{v})=\sum_n\sigma_n(1-\sigma_n)(\mathbf{x}_n^\top\mathbf{v})^2$。</div>
+    <div class="step">$\sigma_n(1-\sigma_n)>0$（除非 $\sigma_n=0$ 或 $1$，有限数据下几乎不可能），且 $\mathbf{X}$ 列满秩时 $\mathbf{X}\mathbf{v}\neq\mathbf{0}$，故至少一项 $(\mathbf{x}_n^\top\mathbf{v})^2>0$。所以 $\mathbf{v}^\top\mathbf{H}\mathbf{v}>0$，$\mathbf{H}$ 正定。</div>
+    <div class="step" style="margin-top:0.6rem;">(c) 相同：都是 $\mathbf{X}^\top(\text{权重})\mathbf{X}$ 形式。不同：线性回归的权重是恒等矩阵（$\mathbf{S}=\mathbf{I}$），逻辑回归的权重 $\mathbf{S}$ 依赖 $\mathbf{w}$（通过 $\sigma_n$）。这意味着逻辑回归的 Hessian 随 $\mathbf{w}$ 变化——损失函数不是二次的，曲率处处不同。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 4 · IRLS 的加权最小二乘形式 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    从 Newton 法 $\mathbf{w}^{\text{new}} = \mathbf{w} - \mathbf{H}^{-1}\nabla J$ 出发，代入逻辑回归的 $\nabla J$ 和 $\mathbf{H}$，
+    推导 $\mathbf{w}^{\text{new}} = (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{S}\,\mathbf{z}$，
+    其中 $z_n = \mathbf{w}^\top\mathbf{x}_n - \frac{\sigma_n - y_n}{\sigma_n(1-\sigma_n)}$。
+    解释为什么这叫"加权最小二乘"。
+  </div>
+  <details><summary>提示</summary><div class="hint">写出 $\mathbf{w}^{\text{new}} = \mathbf{w} - (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\mathbf{X}^\top(\boldsymbol{\sigma}-\mathbf{y})$，把 $\mathbf{w}$ 写成 $(\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}(\mathbf{X}^\top\mathbf{S}\mathbf{X})\mathbf{w}$ 并入括号内。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\mathbf{w}^{\text{new}} = \mathbf{w} - (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\mathbf{X}^\top(\boldsymbol{\sigma}-\mathbf{y})$</div>
+    <div class="step">$= (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\big[(\mathbf{X}^\top\mathbf{S}\mathbf{X})\mathbf{w} - \mathbf{X}^\top(\boldsymbol{\sigma}-\mathbf{y})\big]$</div>
+    <div class="step">$= (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\mathbf{X}^\top\big[\mathbf{S}\mathbf{X}\mathbf{w} - (\boldsymbol{\sigma}-\mathbf{y})\big]$</div>
+    <div class="step">定义 $\mathbf{z} = \mathbf{X}\mathbf{w} - \mathbf{S}^{-1}(\boldsymbol{\sigma}-\mathbf{y})$，即 $z_n = \mathbf{w}^\top\mathbf{x}_n - \frac{\sigma_n-y_n}{\sigma_n(1-\sigma_n)}$。</div>
+    <div class="step">则 $\mathbf{S}\mathbf{z} = \mathbf{S}\mathbf{X}\mathbf{w} - (\boldsymbol{\sigma}-\mathbf{y})$，代入得 $\mathbf{w}^{\text{new}} = (\mathbf{X}^\top\mathbf{S}\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{S}\mathbf{z}$。</div>
+    <div class="step" style="margin-top:0.6rem;"><strong>为什么叫加权最小二乘：</strong>这个形式 $\mathbf{w}=(\mathbf{X}^\top\mathbf{W}\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{W}\mathbf{z}$ 正是加权线性回归的闭式解，其中权重 $\mathbf{W}=\mathbf{S}$。每次迭代中，我们用当前 $\mathbf{w}$ 构造"伪目标" $\mathbf{z}$ 和权重 $\mathbf{S}$，然后解一个加权最小二乘问题。权重 $\sigma_n(1-\sigma_n)$ 在决策边界附近最大——那些"不确定"的样本贡献最大。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 5 · Softmax 的梯度与二分类同构性 <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    (a) 证明 softmax 函数的导数：$\frac{\partial\phi_j}{\partial\mathbf{w}_k} = \phi_j(\delta_{jk} - \phi_k)\,\mathbf{x}$，其中 $\phi_j=\exp(\mathbf{w}_j^\top\mathbf{x})/\sum_{i=1}^K\exp(\mathbf{w}_i^\top\mathbf{x})$，$\delta_{jk}=1$ 当 $j=k$ 否则 0。<br>
+    (b) 利用 (a) 推导多类交叉熵损失 $J=-\sum_{n=1}^N\log\phi_{n,y_n}$ 对 $\mathbf{w}_k$ 的梯度，证明它等于 $\sum_{n=1}^N(\phi_{nk} - \mathbf{1}[y_n=k])\mathbf{x}_n$。<br>
+    (c) 说明为什么这个形式与二分类逻辑回归的梯度 $\sum(\sigma_n-y_n)\mathbf{x}_n$ 同构。
+  </div>
+  <details><summary>提示</summary><div class="hint">(a) 用商法则或 $\log\phi_j$ 的导数更方便：$\frac{\partial\log\phi_j}{\partial\mathbf{w}_k} = \delta_{jk}\mathbf{x} - \phi_k\mathbf{x}$，再用链式法则。(b) $J=-\sum_n\log\phi_{n,y_n}$，对 $\mathbf{w}_k$ 求导时只有 $y_n=k$ 的项直接贡献 $\partial\log\phi_{nk}/\partial\mathbf{w}_k$，其他项贡献 $\partial\log\phi_{n,y_n}/\partial\mathbf{w}_k$（$y_n\neq k$）。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">(a) 先求 $\log\phi_j$ 的导数：$\log\phi_j = \mathbf{w}_j^\top\mathbf{x} - \log\sum_i\exp(\mathbf{w}_i^\top\mathbf{x})$。</div>
+    <div class="step">$\frac{\partial\log\phi_j}{\partial\mathbf{w}_k} = \delta_{jk}\mathbf{x} - \frac{\exp(\mathbf{w}_k^\top\mathbf{x})}{\sum_i\exp(\mathbf{w}_i^\top\mathbf{x})}\mathbf{x} = \delta_{jk}\mathbf{x} - \phi_k\mathbf{x}$。</div>
+    <div class="step">由链式法则 $\frac{\partial\phi_j}{\partial\mathbf{w}_k} = \phi_j\frac{\partial\log\phi_j}{\partial\mathbf{w}_k} = \phi_j(\delta_{jk} - \phi_k)\mathbf{x}$。$\square$</div>
+    <div class="step" style="margin-top:0.6rem;">(b) $J = -\sum_{n=1}^N\log\phi_{n,y_n}$。对 $\mathbf{w}_k$ 求导：</div>
+    <div class="step">$\frac{\partial J}{\partial\mathbf{w}_k} = -\sum_{n=1}^N\frac{\partial\log\phi_{n,y_n}}{\partial\mathbf{w}_k} = -\sum_{n=1}^N(\delta_{y_n,k} - \phi_{nk})\mathbf{x}_n$</div>
+    <div class="step">$= \sum_{n=1}^N(\phi_{nk} - \mathbf{1}[y_n=k])\mathbf{x}_n$。$\square$</div>
+    <div class="step" style="margin-top:0.6rem;">(c) 二分类中 $\sigma_n$ 是 $y=1$ 的概率，梯度 $\sum(\sigma_n-y_n)\mathbf{x}_n$。多类中 $\phi_{nk}$ 是 $y=k$ 的概率，梯度 $\sum(\phi_{nk}-\mathbf{1}[y_n=k])\mathbf{x}_n$。形式完全一致：都是"预测概率减真实指示"乘以输入。这是因为 Bernoulli 和 Multinomial 都是指数族，规范链接下梯度形式由指数族的一般性质决定——$\nabla_{\mathbf{w}_k}J = \sum_n(\mathbb{E}[y_{nk}\mid\mathbf{x}_n] - y_{nk})\mathbf{x}_n$。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 6 · 逻辑回归无闭式解的根源 <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    (a) 线性回归的负对数似然 $J_{\text{LS}}(\mathbf{w}) = \frac{1}{2}\|\mathbf{y}-\mathbf{X}\mathbf{w}\|^2$ 是 $\mathbf{w}$ 的二次函数。证明 $\nabla J_{\text{LS}}=0$ 给出线性方程组，从而有闭式解。<br>
+    (b) 逻辑回归的 $J_{\text{LR}}(\mathbf{w}) = -\sum_n[y_n\log\sigma(\mathbf{w}^\top\mathbf{x}_n)+(1-y_n)\log(1-\sigma(\mathbf{w}^\top\mathbf{x}_n))]$。证明它不是 $\mathbf{w}$ 的二次函数（提示：$\sigma$ 不是线性函数）。<br>
+    (c) 从指数族的角度解释：为什么高斯似然导致二次损失（有闭式解），而 Bernoulli 似然导致非二次损失（无闭式解）？关键区别在哪里？
+  </div>
+  <details><summary>提示</summary><div class="hint">(c) 看指数族的对数配分函数 $a(\eta)$。高斯的对数配分函数是 $\eta$ 的二次函数（$a(\eta)=\eta^2/2$ 对单位方差），Bernoulli 的是 $\log(1+e^\eta)$——不是二次的。负对数似然 = $-\sum[\eta_n y_n - a(\eta_n)] + \text{const}$，其中 $\eta_n=\mathbf{w}^\top\mathbf{x}_n$。$a$ 的二次性决定损失的二次性。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">(a) $J_{\text{LS}} = \frac{1}{2}(\mathbf{y}^\top\mathbf{y} - 2\mathbf{w}^\top\mathbf{X}^\top\mathbf{y} + \mathbf{w}^\top\mathbf{X}^\top\mathbf{X}\mathbf{w})$。</div>
+    <div class="step">$\nabla J_{\text{LS}} = -\mathbf{X}^\top\mathbf{y} + \mathbf{X}^\top\mathbf{X}\mathbf{w} = \mathbf{0} \Rightarrow \mathbf{X}^\top\mathbf{X}\mathbf{w} = \mathbf{X}^\top\mathbf{y}$。</div>
+    <div class="step">这是 $\mathbf{w}$ 的线性方程组，$\mathbf{X}^\top\mathbf{X}$ 可逆时 $\mathbf{w}=(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{y}$——闭式解。</div>
+    <div class="step" style="margin-top:0.6rem;">(b) $\sigma(z)=1/(1+e^{-z})$ 不是 $z$ 的线性函数（实际上它是无限阶可微的非线性函数）。$J_{\text{LR}}$ 中 $\sigma$ 嵌套在 $\log$ 内，整体不是 $\mathbf{w}$ 的二次函数。$\nabla J_{\text{LR}}=0$ 是超越方程 $\sum_n(\sigma(\mathbf{w}^\top\mathbf{x}_n)-y_n)\mathbf{x}_n=\mathbf{0}$，$\mathbf{w}$ 无法被显式解出。</div>
+    <div class="step" style="margin-top:0.6rem;">(c) 指数族负对数似然的一般形式：$-\log p(\mathbf{y}\mid\boldsymbol{\eta}) = -\sum_n[\eta_n^\top y_n - a(\eta_n)] + \text{const}$，其中 $\eta_n=\mathbf{w}^\top\mathbf{x}_n$（GLM 假设）。</div>
+    <div class="step"><strong>高斯：</strong>$a(\eta)=\eta^2/2$（单位方差），所以 $-\log p = \frac{1}{2}\sum_n(\mathbf{w}^\top\mathbf{x}_n)^2 - \sum_n y_n\mathbf{w}^\top\mathbf{x}_n + \text{const}$——$\mathbf{w}$ 的二次函数。</div>
+    <div class="step"><strong>Bernoulli：</strong>$a(\eta)=\log(1+e^\eta)$，所以 $-\log p = \sum_n\log(1+e^{\mathbf{w}^\top\mathbf{x}_n}) - \sum_n y_n\mathbf{w}^\top\mathbf{x}_n$——$\log(1+e^\eta)$ 不是 $\eta$ 的二次函数，所以不是 $\mathbf{w}$ 的二次函数。</div>
+    <div class="step"><strong>根源：</strong>高斯分布的对数配分函数 $a(\eta)$ 是 $\eta$ 的二次函数，导致似然是 $\mathbf{w}$ 的二次型；Bernoulli 的 $a(\eta)=\log(1+e^\eta)$ 不是二次的。<strong>闭式解的存在性等价于 $a(\eta)$ 是 $\eta$ 的二次函数——这只在指数族中高斯分布成立。</strong> 这就是为什么线性回归是"特例中的特例"：它既是 GLM，又有闭式解。大多数 GLM（逻辑回归、Poisson 回归等）都需要迭代求解。</div>
+  </div></details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 自测</h2>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q1 · 逻辑回归的梯度 $\nabla J = \sum_{n=1}^N (\sigma_n - y_n)\mathbf{x}_n$ 中，$\sigma_n$ 是什么？这个形式与线性回归的梯度有什么相似之处？</div>
+  <details><summary>答案</summary><div class="sol">$\sigma_n = \sigma(\mathbf{w}^\top\mathbf{x}_n) = 1/(1+e^{-\mathbf{w}^\top\mathbf{x}_n})$，是模型预测的 $p(y=1\mid\mathbf{x}_n)$。线性回归梯度 $\nabla J_{\text{LS}} = \sum(\mathbf{w}^\top\mathbf{x}_n - y_n)\mathbf{x}_n$。两者都是"预测减真实"乘以输入。区别：线性回归的预测是 $\mathbf{w}^\top\mathbf{x}$（线性），逻辑回归的是 $\sigma(\mathbf{w}^\top\mathbf{x})$（非线性）。这个一致性来自 GLM 的规范链接——对任何指数族 GLM，梯度都是 $\sum(\text{预测} - \text{真实})\times\text{输入}$。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q2 · 为什么逻辑回归的 Hessian $\mathbf{H} = \mathbf{X}^\top\mathbf{S}\mathbf{X}$ 正定，但逻辑回归没有闭式解？</div>
+  <details><summary>答案</summary><div class="sol">Hessian 正定只保证损失函数是严格凸的（有唯一全局最小值），但不保证这个最小值可以用闭式表达。闭式解需要 $\nabla J=0$ 是 $\mathbf{w}$ 的线性方程组。逻辑回归的梯度 $\sum(\sigma(\mathbf{w}^\top\mathbf{x}_n)-y_n)\mathbf{x}_n=0$ 是 $\mathbf{w}$ 的非线性方程（$\sigma$ 非线性），无法解析求解。相比之下，线性回归的梯度是 $\mathbf{w}$ 的线性方程，直接求逆即得。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q3 · IRLS 中权重 $\sigma_n(1-\sigma_n)$ 在什么时候最大？这有什么直观含义？</div>
+  <details><summary>答案</summary><div class="sol">$\sigma_n(1-\sigma_n)$ 在 $\sigma_n=0.5$（即 $\mathbf{w}^\top\mathbf{x}_n=0$，决策边界上）时最大，值为 $0.25$；在 $\sigma_n\to0$ 或 $1$ 时趋于 $0$。直观含义：那些"最不确定"（在决策边界附近）的样本对参数更新贡献最大；那些"已经分得很清楚"（远离决策边界）的样本几乎不参与更新。这是非常合理的行为——模型应该把精力集中在它最不确定的地方。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q4 · Softmax 回归的梯度 $\nabla_{\mathbf{w}_k}J = \sum_n(\phi_{nk} - \mathbf{1}[y_n=k])\mathbf{x}_n$ 与二分类逻辑回归的梯度形式相同。这个同构性来自哪里？</div>
+  <details><summary>答案</summary><div class="sol">来自指数族的统一性。对任何 GLM 的规范链接（canonical link），负对数似然的梯度都是 $\sum_n(\text{预测}_n - \text{真实}_n)\times\text{输入}_n$。二分类中预测是 $\sigma_n$（标量），多类中预测是 $\phi_{nk}$（向量分量）。Bernoulli 和 Multinomial 都是指数族成员，规范链接下梯度形式由指数族的一般性质决定。所以理解了二分类，多类没有任何本质新东西。</div></details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;">
+    <strong>PRML §4.3（逻辑回归）</strong>——§4.3.1 二分类逻辑回归（交叉熵、梯度）、§4.3.2 Newton-Raphson / IRLS（公式 4.99 的加权最小二乘形式）、§4.3.4 多类逻辑回归（softmax）。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>CS229 Notes 1 §5（Logistic Regression）</strong>——从 Bernoulli 指数族形式到 sigmoid 的推导、梯度、Newton 法。讲得最清晰简洁。
+  </p>
+  <p style="margin-bottom:0; font-size:0.9rem;">
+    <strong>ESL §4.4（逻辑回归）</strong>——§4.4.1 拟合逻辑回归模型（IRLS）、§4.4.2 多类逻辑回归。偏统计视角，对 IRLS 的数值实现讲得细致。
+  </p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">
+    这课的关键逻辑链：Bernoulli 似然 → 交叉熵损失 → 梯度简洁形式（$\sigma'=\sigma(1-\sigma)$ 的功劳）→ Hessian 正定但无闭式解 → IRLS 揭示与线性回归的联系 → softmax 推广到多类。
+    题 5（softmax 梯度）和题 6（无闭式解的根源）是理解最深层的钥匙——题 6 的答案揭示了一个重要事实：<strong>线性回归是 GLM 中唯一有闭式解的特例，因为高斯是唯一 $a(\eta)$ 为二次的指数族分布。</strong>
+    卡住直接问。
+  </p>
+</div>
+
+<div class="lesson-footer">
+  <a href="0008-svm-soft-margin.html">← 0008 SVM（下）</a> ·
+  回接：<a href="0001-probabilistic-linear-regression.html">0001 公理集</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0010-mixture-models-em.html">0010 混合模型与 EM</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<template id="card-data-newton">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">优化</span><h3>Newton 法</h3><span class="cc-aliases">Newton-Raphson · 二阶优化</span></div>
+  <div class="cc-essence">迭代公式：$\mathbf{w}^{(t+1)} = \mathbf{w}^{(t)} - \mathbf{H}^{-1}\nabla J$。用 Hessian（二阶信息）做 pre-conditioning——在陡峭方向缩步长，平缓方向放步长。收敛速度：二次（梯度下降是一次）。</div>
+  <div class="cc-section"><h4>在逻辑回归里</h4><p>Hessian $\mathbf{H}=\boldsymbol{\Phi}^\top\mathbf{S}\boldsymbol{\Phi}$ 正定 → 凸优化 → Newton 每步 = 加权最小二乘（IRLS）。代价：每步 $O(M^3)$ 求逆。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0009 §5: IRLS</span><span class="conn-badge">→ 0014: Adam ≈ 对角 Hessian 近似</span></div>
+</div>
+</template>
+
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0004 · 权力的三维</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --text-light: #5c5c5c;
+    --accent: #8b4513; --accent-dim: #a0522d; --border: #d4c5b2; --card-bg: #f8f5f0;
+    --history: #8b4513; --economics: #2d6a4f; --politics: #1a659e; --philosophy: #7b2d8b;
+    --highlight: #fef3c7; --correct: #2d6a4f; --incorrect: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Serif SC', 'SimSun', serif; background: var(--bg); color: var(--text); line-height: 1.85; max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 1.02rem; }
+  h1 { font-size: 1.8rem; font-weight: 700; margin: 2rem 0 0.6rem; letter-spacing: 0.02em; line-height: 1.3; }
+  h2 { font-size: 1.25rem; font-weight: 600; margin: 2.6rem 0 0.7rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+  p { margin: 0.9rem 0; } li { margin: 0.4rem 0; }
+  a { color: var(--accent-dim); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); } strong { font-weight: 600; }
+  .meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-light); margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .meta .tag { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 3px; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; color: white; }
+  .tag-history { background: var(--history); } .tag-economics { background: var(--economics); } .tag-politics { background: var(--politics); } .tag-philosophy { background: var(--philosophy); }
+  .meta .synthesis-badge { background: var(--accent); color: white; padding: 0.15rem 0.55rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; }
+  .hook { background: var(--highlight); border-left: 4px solid var(--accent); padding: 1.3rem 1.5rem; margin: 1.5rem 0; font-size: 1.02rem; border-radius: 0 6px 6px 0; }
+  blockquote { border-left: 3px solid var(--border); padding: 0.6rem 1.2rem; margin: 1.2rem 0; color: var(--text-light); background: var(--card-bg); border-radius: 0 4px 4px 0; font-size: 0.96rem; }
+  blockquote.important { border-left-color: var(--accent); background: var(--highlight); color: var(--text); }
+  table { width: 100%; border-collapse: collapse; margin: 1.3rem 0; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; font-size: 0.82rem; letter-spacing: 0.03em; color: var(--text-light); }
+  tr:hover td { background: #fef9f0; }
+  .dim-card { background: var(--card-bg); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; border-top: 3px solid var(--border); }
+  .dim-card.coercion { border-top-color: var(--politics); }
+  .dim-card.utility { border-top-color: var(--economics); }
+  .dim-card.normative { border-top-color: var(--philosophy); }
+  .dim-card .dc-label { font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.3rem; }
+  .dim-card.coercion .dc-label { color: var(--politics); }
+  .dim-card.utility .dc-label { color: var(--economics); }
+  .dim-card.normative .dc-label { color: var(--philosophy); }
+  .dim-card h3 { margin-top: 0; }
+  .concept-box { border: 2px solid var(--accent); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 2rem 0; background: var(--card-bg); }
+  .concept-box .concept-name { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem; }
+  .concept-box h3 { margin-top: 0; }
+  .quiz-section { margin: 2rem 0; }
+  .quiz-question { background: var(--card-bg); border-radius: 6px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; }
+  .quiz-question .q-num { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.3rem; }
+  .quiz-question .q-text { font-weight: 600; margin-bottom: 0.9rem; font-size: 1.02rem; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz-option { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; transition: background 0.12s, border-color 0.12s; font-size: 0.93rem; }
+  .quiz-option:hover { background: #fdf5e8; }
+  .quiz-option.selected { border-color: var(--accent); background: var(--highlight); }
+  .quiz-option.correct { border-color: var(--correct) !important; background: #e8f5e9 !important; }
+  .quiz-option.incorrect { border-color: var(--incorrect) !important; background: #fdecea !important; }
+  .quiz-feedback { margin-top: 0.7rem; font-size: 0.9rem; display: none; padding: 0.7rem 0.9rem; border-radius: 4px; line-height: 1.7; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.fb-correct { background: #e8f5e9; color: #1b5e20; }
+  .quiz-feedback.fb-incorrect { background: #fdecea; color: #b71c1c; }
+  .exercise { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .exercise h3 { margin-top: 0; }
+  .exercise textarea { width: 100%; min-height: 110px; margin: 0.8rem 0; padding: 0.6rem; font-family: inherit; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px; background: white; resize: vertical; line-height: 1.7; }
+  .exercise .hint { font-size: 0.84rem; color: var(--text-light); font-style: italic; }
+  .lesson-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.87rem; color: var(--text-light); }
+  .lesson-footer .links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
+  .lens-header { display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+  .lens-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .case-box { background: var(--card-bg); border-radius: 6px; padding: 1.2rem 1.4rem; margin: 1rem 0; }
+  .case-box h4 { margin-top: 0; font-size: 0.96rem; }
+  .case-box .case-meta { font-size: 0.82rem; color: var(--text-light); margin-bottom: 0.5rem; }
+  .synth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 1.3rem 0; }
+  .synth-cell { background: var(--card-bg); border-radius: 6px; padding: 0.9rem 1.1rem; font-size: 0.88rem; }
+  .synth-cell .sc-label { font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 0.3rem; }
+  @media (max-width: 600px) { body { padding: 1.5rem 1rem 4rem; font-size: 0.98rem; } h1 { font-size: 1.4rem; } .synth-grid { grid-template-columns: 1fr; } }
+  @media print { body { max-width: 100%; padding: 1rem; font-size: 10pt; } }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <span>📅 Lesson 0004 · L4</span>
+  <span>⏱ ~30 分钟</span>
+  <span><span class="synthesis-badge">PHASE 1 综合</span></span>
+  <span><span class="tag tag-politics">政治</span> <span class="tag tag-philosophy">哲学</span> <span class="tag tag-economics">经济</span> <span class="tag tag-history">历史</span></span>
+  <span>🔗 <a href="../reference/glossary.html">术语表</a></span>
+</div>
+
+<h1>权力的三维</h1>
+<p style="font-size:1.05rem;color:var(--text-light);margin-top:-0.2rem;">
+  强制、效用、规范——以及 Phase 1 的综汇：用权力语言重读国家起源
+</p>
+
+<div class="hook">
+  <strong>三个看似无关的场景。</strong><br><br>
+
+  场景 A：一个独裁者派军队镇压罢工。工人复工。<br>
+  场景 B：一个雇主对工人说「你罢工我就换人」，工人复工。<br>
+  场景 C：一个工人从未想过罢工——因为他真心相信「老板给多少工资是老板的事，工人不该闹」。<br><br>
+
+  <strong>三个场景里，工人都没罢工。但这是同一种「不罢工」吗？</strong><br><br>
+
+  场景 A 里，工人是因为<strong>害怕</strong>而不罢工——这是<strong>强制</strong>。<br>
+  场景 B 里，工人是因为<strong>算账</strong>而不罢工——罢工的代价（失业）超过收益，这是<strong>效用</strong>。<br>
+  场景 C 里，工人是因为<strong>相信</strong>而不罢工——他根本不认为罢工是正当选项，这是<strong>规范</strong>。<br><br>
+
+  <em>三种情况下「权力都赢了」——但赢的机制完全不同，对应着权力的三个维度。本课要做的，就是把这三维讲清楚，然后用它把 Phase 1（L1–L3）的所有概念重新串起来。</em>
+</div>
+
+<!-- ====== PART 1: WHAT IS POWER ====== -->
+<h2>1. 权力是什么？一个比想象中难的问题</h2>
+
+<p>「权力」是社会科学中最常用、也最混乱的概念之一。韦伯在 L2 给过一个定义——「贯彻自己意志的概率，即便遇到反抗也能贯彻」。但这个定义只抓住了开场场景 A——<strong>公开的、可观察的冲突中的胜出</strong>。它看不到 B 和 C。</p>
+
+<p>这正是英国政治学家史蒂文·卢克斯（Steven Lukes）在《权力：一种激进的观点》（1974）中提出的著名批评。他梳理了权力概念的三种「面相」（dimensions/faces），每一维都比上一维更难观察、也更深刻。</p>
+
+<h3>第一维：决策权（Dahl）</h3>
+
+<blockquote>
+  <strong>一维权力：</strong>A 对 B 有权力，当且仅当 A 能让 B 做 B 本不会做的事。<br>
+  <span style="font-size:0.85rem;">— Robert Dahl, "The Concept of Power" (1957)</span>
+</blockquote>
+
+<p>这是最直观的权力观——<strong>在公开的、可观察的政策决策中，A 的偏好胜过 B 的偏好</strong>。一个市长否决了市议会的提案，市长对市议会有（一维）权力。达尔的研究方法是：找一个有争议的议题，看谁的偏好最终变成政策。</p>
+
+<p>这一维对应开场场景 A：有公开冲突，有可见的胜出方。它的优点是<strong>可观察、可测量</strong>；它的局限是<strong>只看得到台面上的胜负</strong>。</p>
+
+<h3>第二维：议程设定权（Bachrach & Baratz）</h3>
+
+<blockquote>
+  <strong>二维权力：</strong>A 对 B 有权力，不仅当 A 在决策中胜出，还当 A 能<strong>决定什么进入决策</strong>——把对 A 不利的议题挡在议程之外。<br>
+  <span style="font-size:0.85rem;">— Peter Bachrach & Morton Baratz, "Two Faces of Power" (1962)</span>
+</blockquote>
+
+<p>二维权力捕捉了一个一维看不到的现象：<strong>不决策也是一种权力</strong>。如果一个议题从未被提上议程，就没有公开冲突，一维方法会报告「这里没有权力在运作」——但事实上，把议题挡在门外本身就是权力的行使。</p>
+
+<p>经典例子：一个公司董事会从不把「提高工人工资」列入议程——不是每次都否决，而是<strong>从不讨论</strong>。一维权力观会错过这种情况，因为它只研究发生了的决策。二维权力观指出：议程的<strong>边界</strong>本身就是权力。</p>
+
+<p>这一维开始触及场景 B——工人不是被公开击败，而是<strong>选项被结构性地限定</strong>了（罢工这个选项的代价被设得极高，以至于它事实上不在可行集里）。</p>
+
+<h3>第三维：偏好塑造权（Lukes）</h3>
+
+<blockquote class="important">
+  <strong>三维权力：</strong>A 对 B 有权力，当 A 能<strong>塑造 B 的偏好本身</strong>——让 B 想要 A 希望 B 想要的东西，从而 B 根本不 experience 冲突。<br>
+  <span style="font-size:0.85rem;">— Steven Lukes, <em>Power: A Radical View</em> (1974)</span>
+</blockquote>
+
+<p>这是最深刻也最令人不安的一维。<strong>真正的权力让冲突在发生之前就消失</strong>——因为被统治者已经想要统治者希望他们想要的东西。B 不反抗不是因为害怕或算账，而是因为 B 的欲望和信念本身已经被 A 塑造。</p>
+
+<p>这正是场景 C：工人从不罢工，因为他真心相信现状是正当的。没有冲突可观察，没有议程可审查——一维和二维权力观都会报告「这里没有权力」。但 Lukes 说：这恰恰是<strong>权力运作得最彻底</strong>的情形。</p>
+
+<p>三维权力的难点在于<strong>可观察性</strong>：你怎么证明 B 的偏好是「被塑造的」而非「真实的」？这看起来需要一种「真实利益」的外部标准——而谁有权定义 B 的「真实利益」？这是 Lukes 框架受到的主要批评（它似乎需要一个全知的观察者）。但即使不解决这个认识论难题，三维权力观已经给了我们一个不可逆的洞察：<strong>只看公开冲突会系统性低估权力的总量</strong>。教育、媒体、宗教、文化——这些不直接发号施令的机构——可能是权力运作的最重要场所。</p>
+
+<table>
+  <tr><th>维度</th><th>权力机制</th><th>对应场景</th><th>可观察性</th></tr>
+  <tr><td>一维</td><td>公开决策中的胜出</td><td>A 强制</td><td>高</td></tr>
+  <tr><td>二维</td><td>议程设定 / 不决策</td><td>B 选项被限定</td><td>中</td></tr>
+  <tr><td>三维</td><td>偏好塑造 / 意义建构</td><td>C 欲望被塑造</td><td>低（认识论难题）</td></tr>
+</table>
+
+<!-- ====== PART 2: MANN'S THREE SOURCES ====== -->
+<h2>2. 迈克尔·曼的权力来源三分</h2>
+
+<p>Lukes 的三维是权力的<strong>深度</strong>——同一权力运作的不同层次。我们要补上另一个维度：权力的<strong>来源</strong>——权力<strong>凭什么</strong>能运作。英国历史社会学家迈克尔·曼（Michael Mann）在《社会权力的来源》（1986）中给出了最有影响力的分类。</p>
+
+<p>曼的出发点是一个关键区分：<strong>权力 ≠ 资源</strong>。资源是潜在的能力（一支军队、一笔财富、一套信仰）；权力是<strong>组织化的、被 mobilize 起来实现集体目的</strong>的能力。一堆散落的武器不是权力，被组织进一个指挥结构的武器才是。这个区分让我们关注<strong>组织</strong>而非<strong>存量</strong>——解释了为什么同样的资源在不同社会产生完全不同的权力。</p>
+
+<p>曼区分了四种（他常说三种，第四种是政治权力，作为前三种的组织性结晶）权力来源：</p>
+
+<!-- Coercion -->
+<div class="dim-card coercion">
+  <div class="dc-label">来源一 · 强制性权力 (Diffuse Coercive Power)</div>
+  <h3>军事 / 意识形态强制</h3>
+
+  <p><strong>机制：</strong>通过物理强制或其威胁，让他人因恐惧而服从。曼称之为「diffuse」是因为它不需要持续的面对面——一次示范性暴力（公开处决、屠城）可以在很大范围内产生服从。</p>
+
+  <p><strong>组织载体：</strong>军队、警察、监狱、秘密警察。在更广意义上，任何能施加物理伤害的组织。</p>
+
+  <p><strong>特征：</strong></p>
+  <ul>
+    <li><strong>高度集中</strong>——暴力机器必须统一指挥才有威力。</li>
+    <li><strong>负向激励</strong>——它通过惩罚而非奖励运作。「不服从的代价」是它的语言。</li>
+    <li><strong>规模可扩展但维持成本高</strong>——暴力可以快速扩张（征兵），但持续占领、监控、镇压的成本随规模超线性增长。</li>
+    <li><strong>可见性高，反弹风险大</strong>——纯粹的强制最容易激起反抗，因为它公开承认了利益的对立。</li>
+  </ul>
+
+  <p><strong>对应 L1：</strong>蒂利的「战争缔造国家」、卡内罗的环围论、奥尔森的流寇→坐寇——全部是强制性权力的逻辑。国家的暴力垄断（韦伯定义的核心要件）就是强制性权力的制度化。</p>
+</div>
+
+<!-- Utility -->
+<div class="dim-card utility">
+  <div class="dc-label">来源二 · 效用性权力 (Diffuse Economic Power)</div>
+  <h3>经济 / 交换 / 利益</h3>
+
+  <p><strong>机制：</strong>通过控制他人<strong>想要或需要</strong>的东西（食物、土地、就业、信贷、商品），让他人因<strong>算账</strong>而服从。不服从的代价不是被惩罚，而是失去利益。</p>
+
+  <p><strong>组织载体：</strong>市场、企业、银行、地主-租户关系、雇主-雇员关系。在更广意义上，任何控制稀缺资源的分配的组织。</p>
+
+  <p><strong>特征：</strong></p>
+  <ul>
+    <li><strong>分散</strong>——经济权力通常分散在许多交换节点，不像军队那样集中。</li>
+    <li><strong>正向激励</strong>——它通过利益而非惩罚运作。「合作的收益」是它的语言。</li>
+    <li><strong>看似自愿，实则强制</strong>——这是经济权力最微妙之处。交换表面上是自愿的（没人拿枪逼你打工），但当一方控制了另一方生存所需的资源，"自愿"就失去了实质内容。一个没有土地、没有储蓄、没有福利网的人「自愿」接受任何工资——这不是真正的自愿。</li>
+    <li><strong>隐蔽性高，反弹风险低</strong>——经济权力让被支配者把服从归因于「自己的选择」或「市场规律」，而非「某人的支配」。这是它相对于强制的巨大优势——它运作于 Lukes 的二维甚至三维层面。</li>
+  </ul>
+
+  <p><strong>对应 L1：</strong>柴尔德的农业剩余论、博塞拉普的人口压力论——经济权力的物质基础。奥尔森的「坐寇提供公共品」也是经济权力逻辑——统治者通过提供利益（安全、基础设施）换取服从，比纯强制更可持续。</p>
+</div>
+
+<!-- Normative -->
+<div class="dim-card normative">
+  <div class="dc-label">来源三 · 规范性权力 (Diffuse Ideological Power)</div>
+  <h3>意识形态 / 信仰 / 意义</h3>
+
+  <p><strong>机制：</strong>通过塑造他人<strong>的欲望、信念和意义感</strong>，让他人因<strong>认同</strong>而服从。被支配者不 experience 自己被支配——他们做的是自己「真正想要」的事。</p>
+
+  <p><strong>组织载体：</strong>教会、学校、媒体、家庭、文化生产机构、知识分子网络。在更广意义上，任何生产意义和正当性叙事的组织。</p>
+
+  <p><strong>特征：</strong></p>
+  <ul>
+    <li><strong>极分散</strong>——规范性权力运作于无数日常场合（每一次布道、每一堂课、每一篇社论、每一个家庭餐桌对话），没有中心。</li>
+    <li><strong>非激励</strong>——它既不靠惩罚也不靠奖励，而靠<strong>意义</strong>。「这是对的」「这是理所当然的」「向来如此」是它的语言。</li>
+    <li><strong>运作于 Lukes 第三维</strong>——规范性权力正是偏好塑造权力的主要载体。它让被支配者把支配结构体验为自然、正当、甚至神圣。</li>
+    <li><strong>维持成本最低，反弹风险最小</strong>——当人们真心认同，不需要任何强制或利诱就会服从。这是为什么所有稳固的政权都投入巨大于规范性权力（教育、宗教、意识形态、民族叙事）。</li>
+    <li><strong>但建立极慢，且难以人为制造</strong>——你不能一夜之间让一个社会相信新神话。规范性权力的积累需要代际时间，这也是为什么它是最珍贵也最难替换的权力来源。</li>
+  </ul>
+
+  <p><strong>对应 L1/L2：</strong>L1 的哲学视角（霍布斯的恐惧、洛克的财产、休谟的习惯）全部是规范性权力的不同侧面。L2 韦伯的三种合法性类型——传统型（规范：向来如此）、卡里斯马型（规范：领袖非凡）、法理型（规范：程序正当）——是规范性权力的三种制度化形态。</p>
+</div>
+
+<h3>第四种：政治权力作为结晶</h3>
+
+<p>曼把<strong>政治权力</strong>（political power）视为前三种来源的<strong>组织性结晶</strong>——国家是把强制、经济、规范三种 diffuse 权力集中、 territorialize、制度化的装置。国家不是第四种独立的权力来源，而是三种来源的<strong>汇聚点和放大器</strong>。这个观点与 L1 韦伯的国家定义高度契合——国家的「暴力垄断」是强制性权力的制度化，其「合法性」是规范性权力的制度化，其「税收能力」是经济性权力的制度化。</p>
+
+<p>曼用首字母缩写 <strong>IEMP</strong> 概括：Ideological, Economic, Military, Political。这不是四种平行的权力，而是一个「三种 diffuse 来源 + 一种 territorial 结晶」的结构。</p>
+
+<!-- ====== PART 3: SYNTHESIS REREAD L1 ====== -->
+<h2>3. 综汇一：用权力语言重读 L1 的国家起源</h2>
+
+<p>现在我们做 Phase 1 的第一次综汇——把 L1 的四视角重新解读为四种权力来源的汇聚。这不是重复，而是<strong>升维</strong>：L1 把国家起源讲成「四个学科各自回答」，现在我们看清它们其实是<strong>同一种权力现象的四个面</strong>。</p>
+
+<div class="synth-grid">
+  <div class="synth-cell">
+    <div class="sc-label" style="color:var(--economics);">L1 经济学视角 = 经济权力的物质基础</div>
+    <p>农业剩余、人口密度、贸易网络——这些是<strong>经济权力</strong>得以运作的物质条件。没有剩余，就没有可被分配的利益，经济权力无从施展。国家的税收能力本质上是经济权力的制度化提取。</p>
+  </div>
+  <div class="synth-cell">
+    <div class="sc-label" style="color:var(--politics);">L1 政治学视角 = 强制性权力的竞争筛选</div>
+    <p>蒂利的战争、卡内罗的环围、奥尔森的坐寇——这些是<strong>强制性权力</strong>的组织化过程。国家是暴力竞争的胜出者，把分散的强制集中为领土内的垄断。</p>
+  </div>
+  <div class="synth-cell">
+    <div class="sc-label" style="color:var(--philosophy);">L1 哲学视角 = 规范性权力的正当性建构</div>
+    <p>霍布斯的恐惧、洛克的财产、休谟的习惯——这些是<strong>规范性权力</strong>的不同叙事。国家不能纯靠强制维持，必须让被统治者认同其正当——这就是规范性权力的生产。</p>
+  </div>
+  <div class="synth-cell">
+    <div class="sc-label" style="color:var(--history);">L1 历史学视角 = 三种权力汇聚的具体过程</div>
+    <p>六大原生国家的具体序列——这些是三种权力在具体地理和时空中<strong>汇聚</strong>的实证。每个案例都是 IEMP 四源的不同配比。</p>
+  </div>
+</div>
+
+<p><strong>关键洞察：国家不是「有军队 + 有税收 + 有法律」三件套的拼凑，而是三种权力来源被组织化、领土化、制度化的同一个装置。</strong>军队、税收、法律不是三个独立部件，而是同一种权力（国家权力）的三种面相——分别对应它的强制、经济、规范维度。这就解释了为什么削弱任何一维都会动摇整体：军队崩溃→强制失效→税收无法征收→经济权力瓦解→合法性叙事空洞化→规范权力枯竭。权力来源是<strong>相互依赖</strong>的，不是可加的。</p>
+
+<!-- ====== PART 4: SYNTHESIS WITH L2 L3 ====== -->
+<h2>4. 综汇二：把 L2、L3 接进来</h2>
+
+<p>现在把 L2（合法性）和 L3（制度变迁）也纳入这个权力框架：</p>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--philosophy);"></span>
+  <span style="font-weight:600;color:var(--philosophy);">L2 合法性 = 规范性权力的制度化形态。</span>
+  <span>韦伯的三种合法性类型，正是规范性权力三种不同的制度化方式：传统型（规范沉淀为「向来如此」）、卡里斯马型（规范系于个人的非凡性叙事）、法理型（规范系于程序正当性）。合法性危机本质上是规范性权力的供给不足——当旧叙事不再被相信，强制和经济权力必须填补空缺，而它们的维持成本远高于规范权力。这就是为什么合法性危机总是政权最危险的时刻。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--economics);"></span>
+  <span style="font-weight:600;color:var(--economics);">L3 制度变迁 = 权力来源配置的改变。</span>
+  <span>制度是权力来源的<strong>配置规则</strong>——它规定谁可以动用强制、谁控制经济资源、谁的叙事算正当。制度变迁就是这种配置的改变。路径依赖之所以发生，是因为现有配置造就了既得利益者，他们有能力和激励维护配置。关键节点之所以能松动锁定，是因为外生冲击暂时改变了三种权力的相对强度，使重新配置成为可能。包容性 vs 榨取性制度的差别，本质上是经济权力是分散（包容）还是集中（榨取）。</span>
+</div>
+
+<p>至此 Phase 1 的四块拼图（L1 国家起源、L2 合法性、L3 制度变迁、L4 权力三维）形成一个闭合的框架：</p>
+
+<blockquote class="important">
+  <strong>国家</strong>（L1）是<strong>权力</strong>（L4）的领土化结晶，其稳定依赖<strong>合法性</strong>（L2）即规范性权力的持续供给，其变迁遵循<strong>路径依赖与关键节点</strong>（L3）即权力配置改变的动力学。<br><br>
+
+  四个概念相互定义、相互支撑——任何一个单独拿出来都不完整。这就是跨学科思想体系的样子：不是四个学科的拼盘，而是一组相互锁合的概念，每一个都通过其他几个获得完整意义。
+</blockquote>
+
+<!-- ====== PART 5: A WORKED EXAMPLE ====== -->
+<h2>5. 工作案例：用 IEMP 分析封建制的瓦解</h2>
+
+<p>让我们用一个具体历史过程检验这个框架——欧洲封建制（约 900–1300）的缓慢瓦解。这是一个三种权力来源此消彼长的经典案例。</p>
+
+<div class="case-box">
+  <h4>起点：封建制（~900 CE）</h4>
+  <p class="case-meta">三种权力来源的初始配置</p>
+  <p><strong>强制（M）：</strong>极度分散——每个领主有自己的武装随从，国王只是「同侪之首」（primus inter pares），没有垄断暴力。军事权力碎片化。</p>
+  <p><strong>经济（E）：</strong>土地是主要财富，绑定在封建采邑关系上。农奴被束缚在领主土地上，劳动力不自由。经济权力分散在无数庄园。</p>
+  <p><strong>规范（I）：</strong>基督教提供统一的意义框架——「三等级」教义（祈祷者/打仗者/劳作者）把不平等秩序神圣化。规范性权力相对集中（教会），但运作于分散的日常。</p>
+</div>
+
+<div class="case-box">
+  <h4>三个世纪的变化</h4>
+  <p class="case-meta">三种权力来源的非同步漂移</p>
+  <p><strong>经济权力率先集中：</strong>城镇复兴、长途贸易、货币经济回归。商人阶层出现，他们有现金——而现金是流动的、可集中的，不像土地。国王发现可以从商人借钱、收税，绕过封建领主。经济权力开始从庄园流向城镇和王室。</p>
+  <p><strong>强制权力随后集中：</strong>有了钱（经济权力），国王可以雇佣常备军——而常备军比封建征召军队更可靠、更集中。火药（14 世纪）进一步使城堡（领主权力的物质基础）过时。军事权力从领主流向国王。</p>
+  <p><strong>规范权力最后松动：</strong>宗教改革（16 世纪）打破了教会的规范性垄断——但这是在封建制已实质瓦解两个世纪之后。规范权力的变化最慢，印证了曼的论点：规范权力最分散、最难人为改变。</p>
+</div>
+
+<div class="case-box">
+  <h4>结果：绝对君主制的兴起（~1500–1700）</h4>
+  <p class="case-meta">新的权力配置</p>
+  <p>三种权力都向王室集中：<strong>经济</strong>（税收+国债体系）、<strong>强制</strong>（常备军+垄断暴力）、<strong>规范</strong>（君权神授+民族认同）。封建制让位于绝对君主制——这是 IEMP 三源同步向 territorial 中心集中的结果。</p>
+  <p><strong>关键洞察：</strong>三种权力来源<strong>不是同步变化</strong>的。经济最先动（贸易复兴是外生于封建制的），强制跟着动（需要经济支撑），规范最后动（最粘滞）。这个<strong>时序差</strong>解释了为什么制度转型常经历漫长的「过渡形态」——新经济+旧政治+旧规范并存，直到三者重新对齐。我们将在 L11（封建制政治经济学）和 L14（大转型）深入这个时序。</p>
+</div>
+
+<div class="concept-box">
+  <div class="concept-name">🧠 可带走的概念工具</div>
+  <h3>IEMP 权力审计：分析任何权力关系</h3>
+  <p>面对任何一个权力关系（一个政权、一个公司对员工、一个平台对用户、一个家庭中的性别权力），用以下框架审计：</p>
+  <ol>
+    <li><strong>三源配置：</strong>强制、经济、规范三种权力各占多少？哪种是主导？哪种是兜底？</li>
+    <li><strong>运作维度：</strong>主导权力运作于 Lukes 的哪一维？（一维=公开强制；二维=议程限定；三维=偏好塑造）维度越高，反抗越难发生也越难组织。</li>
+    <li><strong>相互依赖：</strong>三源如何相互支撑？削弱一维会怎样波及其他？（如：经济权力崩溃→强制必须加强→维持成本上升→规范叙事更难成立）</li>
+    <li><strong>变迁时序：</strong>如果要发生权力转移，三源中哪个最先可能松动？哪个最粘滞？这决定了转型的速度和形态。</li>
+  </ol>
+  <p style="margin-bottom:0;">这个审计框架将在后续课程中反复使用：L9 罗马帝国化、L10 中华帝国、L16 法国大革命、L22 中国改革、L24 当代民主衰落、L25 AI 与权力重塑——每一次都是 IEMP 审计的练习。</p>
+</div>
+
+<!-- ====== PART 6: EXERCISES ====== -->
+<h2>6. 练习与思考</h2>
+
+<div class="quiz-section">
+
+  <div class="quiz-question" id="q1">
+    <div class="q-num">练习 1 · 三维权力</div>
+    <div class="q-text">一个工厂小镇只有一家雇主。工人从未组织过工会，也从未讨论过组织工会——不是因为他们满意，而是因为「这里不兴那个」是所有人的默认常识。这最对应 Lukes 的哪一维权力？</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option" data-answer="wrong">一维——雇主在公开决策中胜出</div>
+      <div class="quiz-option" data-answer="wrong">二维——雇主把工会挡在议程之外</div>
+      <div class="quiz-option" data-answer="correct">三维——工人「组织工会」这个偏好本身从未形成，议题不仅不在议程上，甚至不在想象空间里</div>
+      <div class="quiz-option" data-answer="wrong">这不是权力运作，只是文化习惯</div>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <div class="q-num">练习 2 · 权力来源识别</div>
+    <div class="q-text">19 世纪英国工厂主反对《工厂法》（限制工时、禁用童工）。他们的反对主要动用哪种权力来源？</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option" data-answer="wrong">强制性权力——威胁动用军队阻止立法</div>
+      <div class="quiz-option" data-answer="best">经济性权力——以「工厂会倒闭、工人会失业、英国会失去竞争力」为论证，把反对包装成对工人和国家的利益关切；同时在议会通过财产资格和游说影响议程（二维经济权力）</div>
+      <div class="quiz-option" data-answer="wrong">规范性权力——援引神圣的财产权</div>
+      <div class="quiz-option" data-answer="wrong">三种等量使用</div>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <div class="q-num">练习 3 · 权力 ≠ 资源</div>
+    <div class="q-text">曼强调「权力 ≠ 资源」。以下哪个例子最能说明这个区分？</div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option" data-answer="wrong">一个国家有核武器但从不使用</div>
+      <div class="quiz-option" data-answer="correct">两个国家有完全相同的军队规模和装备，但一个能动员这支军队实现国家目标，另一个的军队是军阀割据、互相消耗——资源相同，组织化的权力天差地别</div>
+      <div class="quiz-option" data-answer="wrong">一个穷人突然中了彩票</div>
+      <div class="quiz-option" data-answer="wrong">资源会贬值，权力不会</div>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q4">
+    <div class="q-num">练习 4 · 综汇应用</div>
+    <div class="q-text">用 IEMP 框架分析当代大型科技公司（如平台对用户/商家的权力）。以下分析最有洞察力的是？</div>
+    <div class="quiz-options" id="q4-opts">
+      <div class="quiz-option" data-answer="wrong">平台主要靠强制性权力——可以封号</div>
+      <div class="quiz-option" data-answer="best">平台同时动用三源：经济（控制流量/排名/支付，商家「自愿」接受分成因为离开就失去生计——经济权力的「自愿强制」）；规范（塑造「平台是中立的」「算法是客观的」的叙事，运作于 Lukes 三维）；强制（封号、下架，作为兜底）。三源相互支撑：经济依赖规范叙事的正当性，规范叙事依赖经济上「没有更好的选择」，强制很少动用正因为前两源已足够</div>
+      <div class="quiz-option" data-answer="wrong">平台只有经济权力，没有政治性</div>
+      <div class="quiz-option" data-answer="wrong">平台的权力是全新的，IEMP 框架不适用</div>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+</div>
+
+<div class="exercise">
+  <h3>✏️ IEMP 权力审计（开放练习，10 分钟）</h3>
+  <p>选一个你关心的权力关系——可以是宏观的（某国政权、欧盟对成员国、美元体系），也可以是微观的（公司对员工、房东对租客、父母对子女、大学对教师）。用 IEMP 权力审计四问做完整分析：</p>
+  <ol style="margin-left:1.5rem;">
+    <li>三源配置（强制/经济/规范各占多少，哪种主导/兜底）</li>
+    <li>运作维度（Lukes 一/二/三维）</li>
+    <li>相互依赖（削弱一维如何波及其他）</li>
+    <li>变迁时序（三源中哪个最先可能松动）</li>
+  </ol>
+  <textarea placeholder="选择权力关系：……&#10;&#10;1. 三源配置：……&#10;2. 运作维度：……&#10;3. 相互依赖：……&#10;4. 变迁时序：……&#10;&#10;你的洞察：……"></textarea>
+  <p class="hint">💡 把审计发给 Claude——我会回应你忽略的权力来源、挑战你的维度判断、补充历史对照。这是 Phase 1 综合课的核心练习，把前三课的所有概念整合成可操作的分析能力。</p>
+</div>
+
+<!-- ====== FURTHER READING ====== -->
+<h2>7. 推荐阅读</h2>
+
+<div style="background:var(--card-bg);border-radius:6px;padding:1.3rem 1.5rem;margin:1.2rem 0;">
+  <p style="font-weight:600;margin-top:0;">📖 主读</p>
+  <p style="margin-bottom:0.3rem;"><strong>Michael Mann —《社会权力的来源》第一卷（The Sources of Social Power, Vol. I, 1986），导论 + 第 1 章</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">IEMP 框架的原始论述。曼的写作是历史社会学的典范——从美索不达米亚讲到一战，每个案例都用 IEMP 审计。导论章是本课权力来源部分的核心来源。有中译本。</p>
+
+  <p style="font-weight:600;margin-top:1rem;">📖 辅读</p>
+  <p style="margin-bottom:0.3rem;"><strong>Steven Lukes —《权力：一种激进的观点》（Power: A Radical View, 1974 / 2005 修订版）</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">三维权力观的经典文本。很短（不到 100 页），但概念密度极高。2005 修订版回应了三十年来的批评，值得看。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>Robert Dahl — "The Concept of Power" (Behavioral Science, 1957)</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:0;">一维权力的奠基论文。短短几页，但定义了整个行为主义权力分析的范式。</p>
+</div>
+
+<!-- ====== CROSS-REFERENCES ====== -->
+<h2>8. 关联与展望</h2>
+<ul style="font-size:0.92rem;">
+  <li><strong>L1 回扣：</strong>本课把 L1 的四视角升维为 IEMP 四源——国家是三种 diffuse 权力的 territorial 结晶。</li>
+  <li><strong>L2 回扣：</strong>合法性 = 规范性权力的制度化；三种合法性类型 = 规范权力的三种制度化形态；合法性危机 = 规范权力供给不足。</li>
+  <li><strong>L3 回扣：</strong>制度 = 权力配置规则；路径依赖 = 现有配置的既得利益者维护；关键节点 = 外生冲击改变三源相对强度；包容/榨取 = 经济权力分散/集中。</li>
+  <li><strong>Phase 1 闭合：</strong>本课是 Phase 1 的综合课——L1–L4 形成一个相互锁合的概念框架。这是后续所有课程的脚手架。</li>
+  <li><strong>L9 罗马：</strong>共和国→帝国的转型用 IEMP 审计——经济（征服财富涌入）、强制（军团从公民军变职业军）、规范（从共和传统到元首崇拜）三源的重新配置。</li>
+  <li><strong>L25 AI 与权力：</strong>AI 重塑三种权力来源——规范（算法塑造偏好，Lukes 三维的工业化）、经济（平台控制注意力市场）、强制（监控+预测性警务）——本课的 IEMP 框架是分析这一重塑的核心工具。</li>
+</ul>
+
+<div class="lesson-footer">
+  <p>🎯 本课服务于你的 <a href="../MISSION.md">MISSION</a>：<em>构建跨学科理解框架。</em>这是 Phase 1 的综合课——把 L1–L3 的概念整合成一个可操作的权力分析框架。完成本课意味着 Phase 1（思维脚手架）结束，你拥有了贯穿后续所有课程的核心工具箱。</p>
+  <p>💬 任何一个维度你不同意？IEMP 审计中你的判断和框架有冲突？想把它应用到你关心的具体权力关系？<strong>直接问 Claude。</strong></p>
+  <div class="links">
+    <span><a href="./0003-institutional-change.html">← L3 制度变迁</a></span>
+    <span><a href="#" style="color:var(--text-light);">L5 轴心时代 →</a>（Phase 2 开始，即将推出）</span>
+    <span><a href="../reference/glossary.html">📚 术语表</a></span>
+    <span><a href="../index.html">↑ 课程路径</a></span>
+  </div>
+</div>
+
+<script>
+(function() {
+  function setup(qId) {
+    const opts = document.querySelectorAll('#' + qId + '-opts .quiz-option');
+    const fb = document.getElementById(qId + '-fb');
+    opts.forEach(o => {
+      o.addEventListener('click', function() {
+        opts.forEach(x => { x.classList.remove('selected', 'correct', 'incorrect'); });
+        o.classList.add('selected');
+        const ans = o.dataset.answer;
+        if (ans === 'correct' || ans === 'best') {
+          o.classList.add('correct');
+          fb.className = 'quiz-feedback show fb-correct';
+          if (qId === 'q1') fb.innerHTML = '✅ <strong>正确。</strong>这是三维权力的典型情形——议题不仅不在议程上（那是二维），而是<strong>不在想象空间里</strong>。工人没有「被击败」的体验，因为他们从未把组织工会当作一个可能的选项。这正是 Lukes 所说权力运作得最彻底的情形——冲突在发生之前就消失了。';
+          else if (qId === 'q2') fb.innerHTML = '✅ <strong>正确。</strong>工厂主的主要武器是经济权力——而且运作于二维（通过财产资格和游说影响议程，把不利于他们的议题挡在门外）。注意他们如何把经济利益<strong>包装成公共善</strong>（「工人会失业」「国家会失去竞争力」）——这是经济权力借用规范叙事的常见手法。纯强制（动用军队）在 19 世纪英国议会政治中既不必要也不可行。';
+          else if (qId === 'q3') fb.innerHTML = '✅ <strong>正确。</strong>这是曼的论点的精髓——权力是<strong>组织化的能力</strong>，不是潜在的资源。同样的武器存量，组织进统一指挥结构就是权力，散落在互相消耗的军阀手里就不是。这解释了为什么国家间能力差异远大于资源差异——组织能力本身就是权力的核心组成部分。';
+          else if (qId === 'q4') fb.innerHTML = '✅ <strong>正确。</strong>这是 IEMP 框架在当代的应用。关键洞察是三源<strong>相互支撑</strong>——平台很少需要动用强制（封号），正因为经济（没有替代品）和规范（算法客观的叙事）已经足够。这也意味着平台的权力极稳定——要削弱它必须同时松动三源，而规范叙事（Lukes 三维）最难松动。这是为什么平台监管如此困难，也是 L25 的核心议题。';
+        } else {
+          o.classList.add('incorrect');
+          fb.className = 'quiz-feedback show fb-incorrect';
+          if (qId === 'q1') {
+            if (o.textContent.includes('一维')) fb.innerHTML = '❌ 一维权力需要<strong>公开决策中的胜出</strong>——这里没有公开冲突，没有可见的胜负。一维方法会报告「这里没有权力」。';
+            else if (o.textContent.includes('二维')) fb.innerHTML = '❌ 二维是议题被挡在<strong>议程</strong>之外——但议程之外的东西至少被某些人想到过。这里工人从未把组织工会当作<strong>可能的选项</strong>——比议程外更深一层。';
+            else fb.innerHTML = '❌ 「文化习惯」不是对权力运作的<strong>解释</strong>，而是它的<strong>载体</strong>。这个习惯从何而来？谁受益于它的延续？这些问题正是三维权力观要追问的。把它归为「只是文化」就放弃了分析。';
+          } else if (qId === 'q2') {
+            if (o.textContent.includes('强制性')) fb.innerHTML = '❌ 19 世纪英国工厂主没有动用军队阻止立法的能力（议会主权、法治传统）。把他们的反对归为强制既不符合史实，也错过了他们真正动用的（经济+议程）权力。';
+            else if (o.textContent.includes('财产权')) fb.innerHTML = '❌ 财产权叙事确实被援引，但它是<strong>辅助</strong>而非主要武器。工厂主的核心论证是经济后果（倒闭、失业、失去竞争力），而非神圣权利。而且 19 世纪功利主义兴起后，神圣权利叙事的说服力已下降。';
+            else fb.innerHTML = '❌ 三源并非等量。强制几乎不动用，规范是辅助，经济是主导。识别<strong>主导</strong>权力来源是 IEMP 审计的关键——它决定了反抗应针对什么。';
+          } else if (qId === 'q3') {
+            if (o.textContent.includes('核武器')) fb.innerHTML = '❌ 「有而不用」说明的是<strong>威慑</strong>，不是资源 vs 权力的区分。核武器作为威慑恰恰是组织化权力的运作（指挥链、预警系统、外交承诺）。';
+            else if (o.textContent.includes('彩票')) fb.innerHTML = '❌ 这说明的是资源分布的改变，不涉及资源 vs 组织化权力的区分。';
+            else fb.innerHTML = '❌ 「资源会贬值权力不会」既不准确（权力也会衰退）也不是曼的论点。曼的论点关于<strong>组织</strong>——资源是潜在的，权力是被组织 mobilize 的能力。';
+          } else if (qId === 'q4') {
+            if (o.textContent.includes('主要靠强制')) fb.innerHTML = '❌ 封号是平台权力的<strong>最弱</strong>一面——它最可见、最易引起反弹、最少被使用。把平台权力归为强制错过了它真正强大之处（经济+规范）。';
+            else if (o.textContent.includes('只有经济')) fb.innerHTML = '❌ 「平台是中立的」「算法是客观的」是规范性叙事，运作于 Lukes 三维——这恰恰是平台权力最隐蔽也最强的一面。说平台只有经济权力严重低估了它。';
+            else fb.innerHTML = '❌ IEMP 框架是关于权力<strong>来源</strong>的分类，对任何权力关系都适用——当代平台权力当然可以用它分析。说「不适用」是放弃分析。平台的「新」在于三源的<strong>配置和运作方式</strong>，而非超出了这个框架。';
+          }
+        }
+      });
+    });
+  }
+  ['q1','q2','q3','q4'].forEach(setup);
+})();
+</script>
+
+</body>
+</html>

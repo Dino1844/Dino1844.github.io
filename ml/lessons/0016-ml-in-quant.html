@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0016 · ML 在量化中的角色</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "\01f4a1 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "\026a0\0fe0f "; font-style: normal; }
+
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-section { margin-top: 0.7rem; }
+  .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; }
+  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0016 · ML 在量化中的角色</h1>
+<div class="subtitle">当 i.i.d. 假设遇到时间序列——过拟合理论的金融实战版 · 阅读时间 ~45 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 为什么量化需要单独的 ML 课</a><br>
+  <a href="#s2">2. 前视偏差：时间序列的数据泄露</a><br>
+  <a href="#s3">3. 清洗交叉验证（Purged CV）</a><br>
+  <a href="#s4">4. 紧缩夏普比率（Deflated Sharpe）</a><br>
+  <a href="#s5">5. IC 与 IR：因子选股的两个核心指标</a><br>
+  <a href="#s6">6. 过拟合陷阱：多重测试与数据窥探</a><br>
+  <a href="#s7">7. 范式总结</a><br>
+  <a href="#s8">8. 推导与演算</a><br>
+  <a href="#s9">9. 自测</a>
+</div>
+
+<p>
+  <strong>这是路径 B（优化与泛化）在量化金融中的直接应用。</strong>
+  0012 用偏差-方差分解量化了过拟合——但那是在 i.i.d. 数据上。
+  金融数据是<strong>时序的</strong>：今天和昨天高度相关，训练集和测试集不是独立抽取的。
+  本课把过拟合理论从 i.i.d. 搬到时间序列。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>激活已有知识</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>0012 的偏差-方差分解：$\mathbb{E}[(y-\hat{f})^2] = \text{Bias}^2 + \text{Var} + \sigma^2$</li>
+    <li>交叉验证的基本逻辑：留出部分数据做验证</li>
+    <li>假设检验：$p$ 值、多重测试的 Bonferroni 校正</li>
+    <li>0001 §5：MLE 低估 $\sigma^2$，过拟合的根源</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 为什么量化需要单独的 ML 课</h2>
+
+<div class="meta-box">
+  <h4>范式 #16 · 前视完整性</h4>
+  在时间序列上做 ML，<strong>训练集的所有数据必须在测试集所有数据之前</strong>。
+  违反这一条——比如用今天的 PE 预测昨天的收益率——在实际交易中不可能做到，但回测里很容易无意泄露。
+</div>
+
+<p>
+  i.i.d. 假设下，随机打乱交叉验证是合法的。金融数据不是 i.i.d.——收益率有自相关、波动率有聚类。
+  更重要的是：<strong>你只能交易未来</strong>。任何从未来"泄露"到过去的信息在实盘中都会消失，
+  导致回测夏普虚高 30%–100%。
+</p>
+
+<table>
+  <tr><th>问题</th><th>i.i.d. ML</th><th>金融 ML</th></tr>
+  <tr><td>数据划分</td><td>随机 k-fold</td><td>时间顺序划分（purged + embargoed）</td></tr>
+  <tr><td>过拟合度量</td><td>验证集误差</td><td>紧缩夏普比率（deflated Sharpe）</td></tr>
+  <tr><td>特征选择</td><td>L1/L2 正则化</td><td>+ 时序稳定性 + 换手率约束</td></tr>
+  <tr><td>性能指标</td><td>准确率 / MSE</td><td>IC / IR / 夏普比率（含交易成本）</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 前视偏差：时间序列的数据泄露</h2>
+
+<p>
+  前视偏差（look-ahead bias）是最常见也最致命的量化 ML 错误。
+  它发生在训练特征用到了<strong>该时间点之后的信息</strong>时。
+</p>
+
+<div class="example-box">
+  <h4>典型场景</h4>
+  <p>你在 2020 年 3 月用"过去 12 个月的动量"预测 4 月的收益率。
+  但如果你的动量计算窗口包含了 4 月的数据——哪怕只是一个收盘价——你就在用未来预测未来了。</p>
+  <p>更隐蔽的形式：用全样本标准化特征（z-score）→ $\mu$ 和 $\sigma$ 用了"未来"数据。</p>
+</div>
+
+<div class="insight">
+  <strong>前视偏差 = 时序版的信息泄露。</strong>在 i.i.d. 里信息泄露来自训练/测试集的重叠；
+  在时序里来自时间方向的反转。两种泄露都让回测虚高，但时序版更难检测——因为每个时间点的"泄露量"很小，累积起来才显著。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 清洗交叉验证（Purged + Embargoed CV）</h2>
+
+<p>
+  标准交叉验证随机划分数据。时序数据必须保持时间顺序。
+  <strong>Purged CV</strong>（清洗交叉验证）做两件事：
+</p>
+
+<ol>
+  <li><strong>清洗（Purge）</strong>：从训练集中删除与测试集时间上重叠或紧邻的样本。因为金融特征（如波动率、动量）有持续性，相邻时间点的特征高度相关——不删除等于变相泄露。</li>
+  <li><strong>禁运（Embargo）</strong>：在训练集和测试集之间插入一个"禁运期"。训练集的最末点与测试集的最初点之间至少隔 $h$ 个时间单位。典型 $h$ = 资产持有期的 2 倍。</li>
+</ol>
+
+<div class="formula-block">
+  $$\text{purge width} = 2h - 1, \quad h = \text{holding period}$$
+</div>
+
+<p>例如持有一周（$h=5$ 天），清洗宽度 = 9 天。训练集最后一天是 $t$，测试集第一天至少是 $t+10$。</p>
+
+<div class="meta-box">
+  <h4>范式 #17 · 残差 = 正交投影的量化版</h4>
+  0001 §4 的正交投影 $\hat{\mathbf{y}}=\mathbf{P}\mathbf{y}$ 在因子模型里变成<strong>中性化</strong>（neutralization）：
+  将组合收益对行业/市值/风格因子做正交投影，取残差。残差 = 纯 alpha，与因子正交。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 紧缩夏普比率（Deflated Sharpe Ratio）</h2>
+
+<p>
+  假设你试了 $N$ 个不同的交易策略，选出了其中夏普比率最高的那个。
+  这个"最高夏普"的期望值是多少？
+</p>
+
+<div class="derivation">
+  <h4>推导 · 极端值分布</h4>
+  <div class="step">
+    在零假设（所有策略夏普 = 0）下，$N$ 个独立策略的夏普比率近似服从标准正态 $\mathcal{N}(0,1)$。
+    <span class="reason">中心极限定理 + 夏普比率的渐近正态性</span>
+  </div>
+  <div class="step">
+    最大值的期望：$\mathbb{E}[\max_i \text{SR}_i] \approx \sigma\sqrt{2\ln N}$
+    <span class="reason">正态极值分布的经典结果</span>
+  </div>
+  <div class="step">
+    紧缩夏普：$\text{DSR} = \text{SR}^* - \mathbb{E}[\max \text{SR}\mid H_0]$
+    <span class="reason">观测夏普减去多重测试的期望虚高</span>
+  </div>
+</div>
+
+<div class="formula-block">
+  $$\boxed{\;\mathbb{E}[\max_i \text{SR}_i] \approx \sigma\sqrt{2\ln N}\;}$$
+</div>
+
+<div class="warning">
+  <strong>直觉：</strong>试的策略越多，"最好"的那个越可能是运气。试 100 个策略，即使全无效，期望最好夏普也能到 $\sim 3.0$（$N=100$ 时 $\sqrt{2\ln 100}\approx 3.03$）。紧缩夏普把这个虚高减掉。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. IC 与 IR：因子选股的两个核心指标</h2>
+
+<p>
+  在量化选股里，MSE 和准确率不是主要指标。真正用的是：
+</p>
+
+<table>
+  <tr><th>指标</th><th>定义</th><th>含义</th></tr>
+  <tr><td><strong>IC</strong> (Information Coefficient)</td><td>$\text{corr}(\hat{y}_t, y_{t+1})$</td><td>预测与实现的相关性——"你猜对方向了吗"</td></tr>
+  <tr><td><strong>Rank IC</strong></td><td>$\text{corr}(\text{rank}(\hat{y}_t), \text{rank}(y_{t+1}))$</td><td>对异常值稳健的 IC 版本</td></tr>
+  <tr><td><strong>IR</strong> (Information Ratio)</td><td>$\frac{\mathbb{E}[r_p - r_b]}{\sigma[r_p - r_b]}$</td><td>单位主动风险的超额收益</td></tr>
+</table>
+
+<div class="derivation">
+  <h4>IR 分解（Grinold 法则）</h4>
+  <div class="step">
+    $\text{IR} \approx \text{IC} \times \sqrt{\text{BR}}$
+    <span class="reason">BR = 广度（breadth）= 独立下注次数/年。IC = 每次下注的预测能力。</span>
+  </div>
+  <div class="step">
+    提高 IR 有两条路：提高预测准确度（IC↑）或增加独立下注次数（BR↑）。
+    <span class="reason">量化交易的核心权衡——高频（高 BR）vs 高精度（高 IC）</span>
+  </div>
+</div>
+
+<div class="formula-block">
+  $$\boxed{\;\text{IR} \approx \text{IC} \cdot \sqrt{\text{BR}}\;}$$
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 过拟合陷阱：多重测试与数据窥探</h2>
+
+<p>
+  0012 告诉我们过拟合是模型记住了训练集的噪声。在量化里，过拟合多了一个维度：
+  <strong>你不仅拟合了数据，你还"选择"了拟合得最好的那个策略</strong>——这是过拟合加选择偏差的叠加。
+</p>
+
+<div class="meta-box">
+  <h4>范式 #18 · 不确定性感知的仓位管理</h4>
+  贝叶斯后验的方差显式表达了参数不确定性（0002 §6）。在量化里，这直接对应<strong>仓位大小不应超过你确定性的范围</strong>。
+  高不确定性 → 小仓位，低不确定性 → 大仓位。Kelly 公式是这一原则在二元结果下的特例。
+</div>
+
+<p>
+  防御过拟合的三条量化纪律：
+</p>
+<ol>
+  <li><strong>时序分割</strong>：训练/验证/测试必须按时序划分，不能随机</li>
+  <li><strong>紧缩夏普</strong>：报告策略夏普时用紧缩版，减掉多重测试的虚高</li>
+  <li><strong>样本外追踪</strong>：策略上线后，实盘夏普显著低于回测夏普 → 过拟合的红旗</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 范式总结</h2>
+
+<table>
+  <tr><th>范式</th><th>名称</th><th>数学内容</th></tr>
+  <tr><td>#16</td><td>前视完整性</td><td>$t_{\text{train}} < t_{\text{test}}$，purge + embargo</td></tr>
+  <tr><td>#17</td><td>中性化 = 正交投影</td><td>$\mathbf{r}_\perp = (\mathbf{I}-\mathbf{P})\mathbf{r}$，消因子暴露</td></tr>
+  <tr><td>#18</td><td>不确定性感知仓位</td><td>$w \propto \frac{\mathbb{E}[r]}{\operatorname{Var}[r]}$，贝叶斯后验方差缩放</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与演算</h2>
+
+<div class="problem">
+  <div class="ptitle">L1 · 紧缩夏普计算 <span class="plevel l1">L1</span></div>
+  <div class="pbody">你回测了 $N=50$ 个独立策略，最好夏普 = 2.8。假设零假设下夏普 $\sim\mathcal{N}(0,1)$，计算紧缩夏普。</div>
+  <details>
+    <summary>展开推导</summary>
+    <div class="sol">
+      <div class="step">$\mathbb{E}[\max\text{SR}] \approx \sqrt{2\ln 50} = \sqrt{2\times 3.912} = \sqrt{7.824} \approx 2.80$</div>
+      <div class="step">$\text{DSR} = 2.8 - 2.80 \approx 0$<span class="reason">观测的最好夏普恰好等于零假设下的期望值——这个策略大概率是噪音。</span></div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L2 · Purge 宽度推导 <span class="plevel l2">L2</span></div>
+  <div class="pbody">持有期 $h=10$ 天。解释为什么 purge width = $2h-1$，并说明 embargo 期的长度应该怎么设。</div>
+  <details>
+    <summary>展开推导</summary>
+    <div class="sol">
+      <div class="step">训练集中最后 $h$ 天的标签（收益率）依赖于之后 $h$ 天的价格 → 与测试集前 $h$ 天的标签重叠。</div>
+      <div class="step">因此需清除训练集最后 $h-1$ 天 + 测试集前 $h$ 天对应标签进入训练集的那部分 = 需 purge $2h-1$ 天。<span class="reason">双边重叠 = 训练尾巴 + 测试头部</span></div>
+      <div class="step">Embargo: 训练集最后一天与测试集第一天至少隔 $h$ 天，确保没有标签重叠。</div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">L3 · 中性化 = 投影 <span class="plevel l3">L3</span></div>
+  <div class="pbody">证明：组合收益 $\mathbf{r}$ 对行业哑变量矩阵 $\mathbf{X}$ 做中性化（取残差）等价于 0001 §4 的正交投影。残差的方差与其他行业因子的协方差为零。</div>
+  <details>
+    <summary>展开推导</summary>
+    <div class="sol">
+      <div class="step">行业中性化：$\mathbf{r}_\perp = \mathbf{r} - \mathbf{X}(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{r} = (\mathbf{I}-\mathbf{P})\mathbf{r}$<span class="reason">这正是 0001 §4 的残差空间投影</span></div>
+      <div class="step">$\mathbf{X}^\top\mathbf{r}_\perp = \mathbf{X}^\top(\mathbf{I}-\mathbf{P})\mathbf{r} = (\mathbf{X}^\top - \mathbf{X}^\top\mathbf{P})\mathbf{r} = (\mathbf{X}^\top - \mathbf{X}^\top)\mathbf{r} = 0$<span class="reason">$\mathbf{P}$ 投影到 $\mathbf{X}$ 的列空间，所以 $\mathbf{X}^\top\mathbf{P} = \mathbf{X}^\top$</span></div>
+      <div class="step">$\operatorname{Cov}(\mathbf{r}_\perp, \mathbf{X}) = 0$ 因为残差与行业因子正交。<span class="reason">中性化消除了因子暴露，残差 = 纯 $\alpha$</span></div>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 自测</h2>
+
+<div class="retrieval">
+  <h3>快速检索</h3>
+  <ol>
+    <li>前视偏差最隐蔽的形式是什么？为什么全样本标准化是前视偏差？</li>
+    <li>Purged CV 做哪两件事？Purge width 为什么是 $2h-1$？</li>
+    <li>试了 100 个策略后最好夏普 = 3.5，紧缩夏普大约是多少？</li>
+    <li>IR 分解公式是什么？提高 IR 的两种方式各有什么代价？</li>
+    <li>中性化在数学上对应 0001 的哪个操作？残差空间的维度是多少？</li>
+  </ol>
+</div>
+
+<div class="reminder">
+  <strong>关键带回：</strong>金融 ML 和 i.i.d. ML 用的是同一套数学（投影、偏差-方差、贝叶斯）——
+  但时间维度改变了所有假设。时序交叉验证、紧缩夏普、中性化，本质上都是同一件事：
+  <strong>不让未来的信息以任何形式溜进你对过去的建模中</strong>。
+</div>
+
+<div class="primary-source">
+  <h3>主要参考</h3>
+  <strong>López de Prado — Advances in Financial Machine Learning (2018)</strong> —
+  第 7 章（交叉验证）、第 11 章（回测过拟合）、第 14 章（紧缩夏普）。
+  Grinold & Kahn — Active Portfolio Management（IR 分解的经典来源）。
+</div>
+
+<div class="lesson-footer">
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> · <a href="../reference/math-primer.html">📐 数学手册</a> ·
+  <strong>上一课</strong>：<a href="0015-variational-inference.html">0015 变分推断与采样</a>　|
+  <strong>下一课</strong>：<a href="0017-factor-models-and-ml.html">0017 因子模型与 ML</a>
+</div>
+
+
+<script src="../reference/popup-cards.js"></script>
+</body>
+</html>

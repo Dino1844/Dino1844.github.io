@@ -102,6 +102,9 @@ window.MathJax = {
   <a href="#ibp">· 分部积分 Integration by Parts</a><br>
   <a href="#divergence">· 散度 Divergence</a><br>
   <a href="#sec-prob">概率</a><br>
+  <a href="#sec-matrix-calc">矩阵微积分</a> · <a href="#sec-matrix-id">矩阵恒等式</a><br>
+  <a href="#sec-matrix-calc">矩阵微积分 · 求导公式</a><br>
+  <a href="#sec-matrix-id">矩阵恒等式 · 常用技巧</a><br>
   <a href="#expectation">· 期望 Expectation</a><br>
   <a href="#variance">· 方差与协方差 Variance &amp; Covariance</a><br>
   <a href="#kl">· KL 散度 KL Divergence</a><br>
@@ -127,8 +130,8 @@ window.MathJax = {
     在 $(1, 1)$ 处，$\nabla f = (2, 6)^\top$——往 $y$ 方向走比往 $x$ 方向走增长快 3 倍。
   </div>
   <p class="used-in">
-    梯度下降 (L0002 §1)；Score function $\nabla_{\mathbf{x}} \log p(\mathbf{x})$ (L0001 §2)；
-    参数 score $\nabla_{\boldsymbol{\theta}} \log p$ (L0002 §2)
+    梯度下降 (L0019 §1)；Score function $\nabla_{\mathbf{x}} \log p(\mathbf{x})$ (L0018 §2)；
+    参数 score $\nabla_{\boldsymbol{\theta}} \log p$ (L0019 §2)
   </p>
 </div>
 
@@ -156,7 +159,7 @@ window.MathJax = {
     在 $(1, 2)$ 处，$\mathbf{J}_\mathbf{f} = \begin{pmatrix} 2 & 1 \\ 2 & 1 \end{pmatrix}$。
   </div>
   <p class="used-in">
-    $\nabla_{\mathbf{x}} \mathbf{s}_\theta(\mathbf{x})$：score 网络的 Jacobian，其迹出现在 score matching 损失中 (L0001 §4)；<br>
+    $\nabla_{\mathbf{x}} \mathbf{s}_\theta(\mathbf{x})$：score 网络的 Jacobian，其迹出现在 score matching 损失中 (L0018 §4)；<br>
     Normalizing Flow 的变量替换公式用到 Jacobian 行列式 (算法卡片·Flow)
   </p>
 </div>
@@ -180,11 +183,11 @@ window.MathJax = {
   </p>
   <div class="example">
     $f(x, y) = x^2 + 3y^2$，$\mathbf{H}_f = \begin{pmatrix} 2 & 0 \\ 0 & 6 \end{pmatrix}$。<br>
-    在 $y$ 方向曲率是 $x$ 方向的 3 倍——这就是为什么普通梯度下降在峡谷中震荡（L0002 §1 的核心问题）。
+    在 $y$ 方向曲率是 $x$ 方向的 3 倍——这就是为什么普通梯度下降在峡谷中震荡（L0019 §1 的核心问题）。
   </div>
   <p class="used-in">
-    牛顿法用 Hessian 做 pre-conditioning：$\Delta\boldsymbol{\theta} = -\mathbf{H}^{-1}\nabla f$ (L0002 §6)；<br>
-    Fisher 信息 = 负期望 Hessian：$\mathbf{F} = -\mathbb{E}_p[\nabla_{\boldsymbol{\theta}}^2 \log p]$ (L0002 §2.4)
+    牛顿法用 Hessian 做 pre-conditioning：$\Delta\boldsymbol{\theta} = -\mathbf{H}^{-1}\nabla f$ (L0019 §6)；<br>
+    Fisher 信息 = 负期望 Hessian：$\mathbf{F} = -\mathbb{E}_p[\nabla_{\boldsymbol{\theta}}^2 \log p]$ (L0019 §2.4)
   </p>
 </div>
 
@@ -206,7 +209,7 @@ window.MathJax = {
     特征值：$\lambda_1 \approx 5.37, \lambda_2 \approx -0.37$，和 = 5 ✓
   </div>
   <p class="used-in">
-    Score matching 损失：$\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta)$ 是 score 场的散度 (L0001 §4)
+    Score matching 损失：$\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta)$ 是 score 场的散度 (L0018 §4)
   </p>
 </div>
 
@@ -229,7 +232,7 @@ window.MathJax = {
     外积：$\mathbf{u} \mathbf{v}^\top = \begin{pmatrix} 2\times 1 & 2\times 4 \\ 3\times 1 & 3\times 4 \end{pmatrix} = \begin{pmatrix} 2 & 8 \\ 3 & 12 \end{pmatrix}$（一个矩阵）
   </div>
   <p class="used-in">
-    Fisher 信息矩阵的定义：$\mathbf{F} = \mathbb{E}[\nabla\log p \cdot \nabla\log p^\top]$ (L0002 §2.2)
+    Fisher 信息矩阵的定义：$\mathbf{F} = \mathbb{E}[\nabla\log p \cdot \nabla\log p^\top]$ (L0019 §2.2)
   </p>
 </div>
 
@@ -272,7 +275,7 @@ window.MathJax = {
     $\mathbf{C} = \begin{pmatrix} 1 & 2 \\ 2 & 1 \end{pmatrix}$：不是正定（特征值 3, -1）
   </div>
   <p class="used-in">
-    Fisher 矩阵的半正定性保证了自然梯度方向不会「倒退」——$\nabla\mathcal{L}^\top (-\mathbf{F}^{-1}\nabla\mathcal{L}) \leq 0$ (L0002 §2.4)
+    Fisher 矩阵的半正定性保证了自然梯度方向不会「倒退」——$\nabla\mathcal{L}^\top (-\mathbf{F}^{-1}\nabla\mathcal{L}) \leq 0$ (L0019 §2.4)
   </p>
 </div>
 
@@ -292,7 +295,7 @@ window.MathJax = {
     不可逆 = 行列式为零 = 存在冗余维度（比如两个参数对分布的影响完全一样）。
   </div>
   <p class="used-in">
-    自然梯度下降：$\Delta\boldsymbol{\theta} = -\eta \mathbf{F}^{-1} \nabla\mathcal{L}$ (L0002 §4)
+    自然梯度下降：$\Delta\boldsymbol{\theta} = -\eta \mathbf{F}^{-1} \nabla\mathcal{L}$ (L0019 §4)
   </p>
 </div>
 
@@ -317,8 +320,8 @@ window.MathJax = {
     $h'(x) = \frac{1}{g(x)} \cdot 2x = \frac{2x}{x^2+1}$。
   </div>
   <p class="used-in">
-    反向传播 (贯穿)；Score 的恒等式 $\nabla\log p = \frac{\nabla p}{p}$ (L0001 §2.4)；<br>
-    重参数化下 Fisher 矩阵的变换 (L0002 §2.4)
+    反向传播 (贯穿)；Score 的恒等式 $\nabla\log p = \frac{\nabla p}{p}$ (L0018 §2.4)；<br>
+    重参数化下 Fisher 矩阵的变换 (L0019 §2.4)
   </p>
 </div>
 
@@ -339,7 +342,7 @@ window.MathJax = {
     $\log(1 + \varepsilon) \approx \varepsilon - \frac{\varepsilon^2}{2} + \frac{\varepsilon^3}{3} - \cdots$（$\log$ 的麦克劳林级数）
   </div>
   <p class="used-in">
-    KL 散度的二阶展开：$D_{\text{KL}}(p_{\boldsymbol{\theta}} \| p_{\boldsymbol{\theta}+d\boldsymbol{\theta}}) \approx \frac{1}{2} d\boldsymbol{\theta}^\top \mathbf{F} d\boldsymbol{\theta}$ (L0002 §3)
+    KL 散度的二阶展开：$D_{\text{KL}}(p_{\boldsymbol{\theta}} \| p_{\boldsymbol{\theta}+d\boldsymbol{\theta}}) \approx \frac{1}{2} d\boldsymbol{\theta}^\top \mathbf{F} d\boldsymbol{\theta}$ (L0019 §3)
   </p>
 </div>
 
@@ -398,7 +401,7 @@ window.MathJax = {
   </div>
 
   <p class="used-in">
-    Hyvärinen score matching 推导的核心步骤 (L0001 §4.3)
+    Hyvärinen score matching 推导的核心步骤 (L0018 §4.3)
   </p>
 </div>
 
@@ -419,9 +422,120 @@ window.MathJax = {
     $\mathbf{f}(x, y) = \begin{pmatrix} x \\ -y \end{pmatrix}$，$\nabla \cdot \mathbf{f} = \frac{\partial}{\partial x}(x) + \frac{\partial}{\partial y}(-y) = 1 - 1 = 0$（处处无散，这是一个鞍点场）。
   </div>
   <p class="used-in">
-    Score matching 损失：$\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta) = \nabla \cdot \mathbf{s}_\theta$ (L0001 §4)
+    Score matching 损失：$\operatorname{tr}(\nabla_{\mathbf{x}} \mathbf{s}_\theta) = \nabla \cdot \mathbf{s}_\theta$ (L0018 §4)
   </p>
 </div>
+
+
+<!-- ============================================================ -->
+<h2 id="sec-matrix-calc">矩阵微积分 · 求导公式</h2>
+
+<!-- Gradient of linear form -->
+<div class="concept" id="mcalc-linear">
+  <span class="tag tag-calc">矩阵微积分</span>
+  <h4>线性型的梯度 $\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{x})$</h4>
+  <p class="def">$\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{x}) = \mathbf{x}$。更一般地：$\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{a}) = \nabla_{\mathbf{w}}(\mathbf{a}^\top\mathbf{w}) = \mathbf{a}$。</p>
+  <p class="intuition">$\mathbf{w}^\top\mathbf{x} = w_1x_1 + \cdots + w_Mx_M$。对 $w_j$ 求偏导得 $x_j$——第 $j$ 个分量就是 $\mathbf{x}$ 的第 $j$ 个元素。梯度的每个分量就是对应输入的系数。</p>
+  <div class="example">$f(\mathbf{w}) = \mathbf{w}^\top\boldsymbol{\Phi}^\top\mathbf{y}$。令 $\mathbf{a} = \boldsymbol{\Phi}^\top\mathbf{y}$，则 $\nabla_{\mathbf{w}}f = \boldsymbol{\Phi}^\top\mathbf{y}$。</div>
+  <p class="used-in"><a href="../lessons/0001-probabilistic-linear-regression.html#s3">0001 §3 正规方程推导</a> · 损失函数对 $\mathbf{w}$ 求导</p>
+</div>
+
+<!-- Gradient of quadratic form -->
+<div class="concept" id="mcalc-quad">
+  <span class="tag tag-calc">矩阵微积分</span>
+  <h4>二次型的梯度 $\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{A}\mathbf{w})$</h4>
+  <p class="def">当 $\mathbf{A}$ 对称时，$\nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{A}\mathbf{w}) = 2\mathbf{A}\mathbf{w}$。当 $\mathbf{A}$ 不对称时，结果为 $(\mathbf{A}+\mathbf{A}^\top)\mathbf{w}$。</p>
+  <div class="derivation" style="font-size:0.9rem; margin:0.5rem 0;">
+    <div class="step">$\mathbf{w}^\top\mathbf{A}\mathbf{w} = \sum_{i,j} w_i A_{ij} w_j$</div>
+    <div class="step">$\frac{\partial}{\partial w_k} = \sum_j A_{kj}w_j + \sum_i w_i A_{ik} = [\mathbf{A}\mathbf{w}]_k + [\mathbf{A}^\top\mathbf{w}]_k$<span class="reason">第一项来自 $i=k$，第二项来自 $j=k$</span></div>
+  </div>
+  <div class="example">$\nabla_{\mathbf{w}}\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}\|^2 = \nabla_{\mathbf{w}}(\mathbf{w}^\top\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w} - 2\mathbf{y}^\top\boldsymbol{\Phi}\mathbf{w}) = 2\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w} - 2\boldsymbol{\Phi}^\top\mathbf{y}$<span class="reason">$\mathbf{A}=\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 对称</span></div>
+  <p class="used-in"><a href="../lessons/0001-probabilistic-linear-regression.html#s3">0001 §3</a> · <a href="../lessons/0002-bayesian-linear-regression.html#s3">0002 §3 配平方</a> · <a href="../lessons/0007-svm-hard-margin.html#s4">0007 §4 SVM 对偶</a></p>
+</div>
+
+<!-- Matrix derivative of trace -->
+<div class="concept" id="mcalc-trace">
+  <span class="tag tag-calc">矩阵微积分</span>
+  <h4>迹的矩阵导数</h4>
+  <p class="def">
+    $\nabla_{\mathbf{A}}\operatorname{tr}(\mathbf{A}\mathbf{B}) = \mathbf{B}^\top$<br>
+    $\nabla_{\mathbf{A}}\operatorname{tr}(\mathbf{A}^\top\mathbf{B}) = \mathbf{B}$<br>
+    $\nabla_{\mathbf{A}}\log|\mathbf{A}| = \mathbf{A}^{-\top}$（$\mathbf{A}$ 对称可逆时 $= \mathbf{A}^{-1}$）
+  </p>
+  <p class="intuition">迹 = 矩阵的对角元和。$\operatorname{tr}(\mathbf{A}\mathbf{B}) = \sum_i\sum_j A_{ij}B_{ji}$。对 $A_{ij}$ 求偏导得 $B_{ji}$——刚好是 $\mathbf{B}^\top$ 的 $(i,j)$ 元素。</p>
+  <div class="example">PCA 里 $\max_{\mathbf{W}} \operatorname{tr}(\mathbf{W}^\top\mathbf{S}\mathbf{W})$ s.t. $\mathbf{W}^\top\mathbf{W}=\mathbf{I}$。拉格朗日项对 $\mathbf{W}$ 求导时用到此公式。</div>
+  <p class="used-in"><a href="../lessons/0011-pca.html">0011 PCA</a> · 迹优化</p>
+</div>
+
+<!-- Least squares gradient -->
+<div class="concept" id="mcalc-ls-grad">
+  <span class="tag tag-calc">矩阵微积分</span>
+  <h4>最小二乘梯度的完整推导</h4>
+  <p class="def">$\nabla_{\mathbf{w}}\|\mathbf{y} - \boldsymbol{\Phi}\mathbf{w}\|^2 = -2\boldsymbol{\Phi}^\top(\mathbf{y} - \boldsymbol{\Phi}\mathbf{w})$</p>
+  <div class="derivation" style="font-size:0.9rem; margin:0.5rem 0;">
+    <div class="step">展开：$\|\mathbf{y} - \boldsymbol{\Phi}\mathbf{w}\|^2 = (\mathbf{y} - \boldsymbol{\Phi}\mathbf{w})^\top(\mathbf{y} - \boldsymbol{\Phi}\mathbf{w}) = \mathbf{y}^\top\mathbf{y} - 2\mathbf{y}^\top\boldsymbol{\Phi}\mathbf{w} + \mathbf{w}^\top\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w}$</div>
+    <div class="step">$\mathbf{y}^\top\mathbf{y}$：与 $\mathbf{w}$ 无关 → 梯度 $\mathbf{0}$</div>
+    <div class="step">$-2\mathbf{y}^\top\boldsymbol{\Phi}\mathbf{w}$：线性型 → 梯度 $-2\boldsymbol{\Phi}^\top\mathbf{y}$<span class="reason">用公式 $\nabla(\mathbf{w}^\top\mathbf{a}) = \mathbf{a}$，这里 $\mathbf{a}=\boldsymbol{\Phi}^\top\mathbf{y}$</span></div>
+    <div class="step">$\mathbf{w}^\top\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w}$：二次型，$\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 对称 → 梯度 $2\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w}$</div>
+    <div class="step">总和：$-2\boldsymbol{\Phi}^\top\mathbf{y} + 2\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w} = -2\boldsymbol{\Phi}^\top(\mathbf{y} - \boldsymbol{\Phi}\mathbf{w})$</div>
+  </div>
+  <p class="used-in"><a href="../lessons/0001-probabilistic-linear-regression.html#s3">0001 §3 正规方程</a> · 所有线性回归变体</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec-matrix-id">矩阵恒等式 · 常用技巧</h2>
+
+<!-- Trace cyclic property -->
+<div class="concept" id="trace-cyclic">
+  <span class="tag tag-la">线性代数</span>
+  <h4>迹的循环性质 $\operatorname{tr}(\mathbf{A}\mathbf{B}) = \operatorname{tr}(\mathbf{B}\mathbf{A})$</h4>
+  <p class="def">只要乘积的维度匹配，迹在循环置换下不变。更一般地：$\operatorname{tr}(\mathbf{A}\mathbf{B}\mathbf{C}) = \operatorname{tr}(\mathbf{B}\mathbf{C}\mathbf{A}) = \operatorname{tr}(\mathbf{C}\mathbf{A}\mathbf{B})$。</p>
+  <p class="intuition">$\operatorname{tr}(\mathbf{A}\mathbf{B}) = \sum_i\sum_j A_{ij}B_{ji}$。交换 $\mathbf{A},\mathbf{B}$：$\operatorname{tr}(\mathbf{B}\mathbf{A}) = \sum_j\sum_i B_{ji}A_{ij}$——同一个双重求和，只是顺序不同。</p>
+  <div class="example">
+    $\operatorname{tr}(\boldsymbol{\Phi}(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top) = \operatorname{tr}((\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top\boldsymbol{\Phi}) = \operatorname{tr}(\mathbf{I}_M) = M$<br>
+    <span class="reason">这就是 0001 §4 里 $\operatorname{tr}(\mathbf{P}) = M$ 的证明——用循环性质把投影矩阵的迹变成单位矩阵的迹。</span>
+  </div>
+  <p class="used-in"><a href="../lessons/0001-probabilistic-linear-regression.html#s4">0001 §4 投影迹</a> · <a href="../lessons/0001-probabilistic-linear-regression.html#s5">0001 §5 σ² 偏差推导</a></p>
+</div>
+
+<!-- Gaussian quadratic expectation -->
+<div class="concept" id="gauss-quad-expect">
+  <span class="tag tag-prob">概率</span> <span class="tag tag-la">线性代数</span>
+  <h4>高斯二次型期望 $\mathbb{E}[\boldsymbol{\varepsilon}^\top\mathbf{A}\boldsymbol{\varepsilon}] = \sigma^2\operatorname{tr}(\mathbf{A})$</h4>
+  <p class="def">当 $\boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \sigma^2\mathbf{I})$ 时，$\mathbb{E}[\boldsymbol{\varepsilon}^\top\mathbf{A}\boldsymbol{\varepsilon}] = \sigma^2\operatorname{tr}(\mathbf{A})$。这是 $\mathbb{E}[\varepsilon_i\varepsilon_j] = \sigma^2\delta_{ij}$ 的直接推论。</p>
+  <div class="derivation" style="font-size:0.9rem; margin:0.5rem 0;">
+    <div class="step">$\boldsymbol{\varepsilon}^\top\mathbf{A}\boldsymbol{\varepsilon} = \sum_{i=1}^N\sum_{j=1}^N A_{ij}\,\varepsilon_i\varepsilon_j$</div>
+    <div class="step">取期望：$\mathbb{E}[A_{ij}\varepsilon_i\varepsilon_j] = A_{ij}\,\sigma^2\delta_{ij}$（$i=j$ 时 $=\sigma^2 A_{ii}$，$i\neq j$ 时 $=0$）</div>
+    <div class="step">只剩对角元：$\sum_i A_{ii} = \operatorname{tr}(\mathbf{A})$ × $\sigma^2$</div>
+  </div>
+  <div class="example">残差 $\mathbf{r} = (\mathbf{I}-\mathbf{P})\mathbf{y}$，$\mathbb{E}[\mathbf{r}^\top\mathbf{r}] = \sigma^2\operatorname{tr}(\mathbf{I}-\mathbf{P}) = \sigma^2(N-M)$。这就是为什么 MLE 的 $\hat\sigma^2$ 有 $N-M$ 偏差。</div>
+  <p class="used-in"><a href="../lessons/0001-probabilistic-linear-regression.html#s5">0001 §5 σ² MLE 偏差</a> · <a href="../lessons/0012-bias-variance.html">0012 偏差-方差分解</a></p>
+</div>
+
+<!-- Woodbury identity -->
+<div class="concept" id="woodbury-id">
+  <span class="tag tag-la">线性代数</span>
+  <h4>Woodbury 恒等式（矩阵求逆引理）</h4>
+  <p class="def">$(\mathbf{A} + \mathbf{U}\mathbf{C}\mathbf{V})^{-1} = \mathbf{A}^{-1} - \mathbf{A}^{-1}\mathbf{U}(\mathbf{C}^{-1} + \mathbf{V}\mathbf{A}^{-1}\mathbf{U})^{-1}\mathbf{V}\mathbf{A}^{-1}$</p>
+  <p class="intuition">把"大矩阵求逆"转换为"小矩阵求逆"。当 $\mathbf{A}$ 是 $N\times N$（易求逆）而 $\mathbf{C}$ 是 $M\times M$（小），右侧只需要求 $\mathbf{C}^{-1}$ 和 $(\mathbf{C}^{-1}+\mathbf{V}\mathbf{A}^{-1}\mathbf{U})^{-1}$（两个小矩阵），而非直接求 $N\times N$ 的逆。</p>
+  <div class="example">
+    贝叶斯预测分布需要 $(\alpha\mathbf{I} + \beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}$。<br>
+    直接求逆 $O(M^3)$。Woodbury 令 $\mathbf{A}=\alpha\mathbf{I}, \mathbf{U}=\boldsymbol{\Phi}^\top, \mathbf{C}=\beta\mathbf{I}, \mathbf{V}=\boldsymbol{\Phi}$ → 变成 $O(N^3)$。<br>
+    当 $N \ll M$（数据少、特征多）时，Woodbury 快几十倍。
+  </div>
+  <p class="used-in"><a href="../lessons/0002-bayesian-linear-regression.html#s5">0002 §5 预测分布</a> · <a href="../lessons/0011-pca.html">0011 概率 PCA</a> · 高斯过程 · Kalman 滤波</p>
+</div>
+
+<!-- Gaussian integral -->
+<div class="concept" id="gauss-integral">
+  <span class="tag tag-prob">概率</span> <span class="tag tag-calc">微积分</span>
+  <h4>高斯积分 $\int\exp(-\frac12\mathbf{w}^\top\mathbf{A}\mathbf{w})\,d\mathbf{w}$</h4>
+  <p class="def">$\displaystyle\int_{\mathbb{R}^M} \exp\!\left(-\frac12\mathbf{w}^\top\mathbf{A}\mathbf{w} + \mathbf{b}^\top\mathbf{w}\right)d\mathbf{w} = (2\pi)^{M/2}|\mathbf{A}|^{-1/2}\exp\!\left(\frac12\mathbf{b}^\top\mathbf{A}^{-1}\mathbf{b}\right)$，$\mathbf{A}$ 正定。</p>
+  <p class="intuition">一元高斯 $\int e^{-ax^2/2}dx = \sqrt{2\pi/a}$。多元版：$a$ 变成矩阵 $\mathbf{A}$，$\sqrt{1/a}$ 变成 $|\mathbf{A}|^{-1/2}$。配平方把一次项 $\mathbf{b}^\top\mathbf{w}$ 吸进完全平方——产生 $\frac12\mathbf{b}^\top\mathbf{A}^{-1}\mathbf{b}$ 因子。</p>
+  <div class="example">边缘似然：$\int p(\mathbf{t}|\mathbf{w})p(\mathbf{w})d\mathbf{w}$ → 把似然和先验合并为一个 $\mathbf{w}$ 的二次型 → 用高斯积分公式 → 得闭式边缘似然。</div>
+  <p class="used-in"><a href="../lessons/0003-marginal-likelihood.html#s3">0003 §3 边缘似然计算</a> · 贝叶斯推断的所有闭式解</p>
+</div>
+
 
 <!-- ============================================================ -->
 <h2 id="sec-prob">概率</h2>
@@ -442,7 +556,7 @@ window.MathJax = {
     均匀骰子各面概率 $1/6$，点数平方的期望：$\mathbb{E}[X^2] = \frac{1}{6}(1+4+9+16+25+36) = 91/6 \approx 15.2$。
   </div>
   <p class="used-in">
-    Fisher 矩阵定义 (L0002 §2.2)；Score matching 损失 (L0001 §4)；所有损失函数
+    Fisher 矩阵定义 (L0019 §2.2)；Score matching 损失 (L0018 §4)；所有损失函数
   </p>
 </div>
 
@@ -464,7 +578,7 @@ window.MathJax = {
     $\mathbf{X} = (X_1, X_2)$，$\operatorname{Cov}[\mathbf{X}] = \begin{pmatrix} \operatorname{Var}[X_1] & \operatorname{Cov}[X_1, X_2] \\ \operatorname{Cov}[X_2, X_1] & \operatorname{Var}[X_2] \end{pmatrix}$
   </div>
   <p class="used-in">
-    Fisher 矩阵 = $\operatorname{Cov}_{p}[\nabla_{\boldsymbol{\theta}} \log p]$ (L0002 §2.2)
+    Fisher 矩阵 = $\operatorname{Cov}_{p}[\nabla_{\boldsymbol{\theta}} \log p]$ (L0019 §2.2)
   </p>
 </div>
 
@@ -486,7 +600,7 @@ window.MathJax = {
     $D_{\text{KL}}(p \| q) = \log\sigma + \frac{1+\mu^2}{2\sigma^2} - \frac{1}{2}$
   </div>
   <p class="used-in">
-    KL 二阶展开 = Fisher 度量 (L0002 §3.2)；VAE 的 ELBO (算法卡片·VAE)
+    KL 二阶展开 = Fisher 度量 (L0019 §3.2)；VAE 的 ELBO (算法卡片·VAE)
   </p>
 </div>
 
@@ -494,6 +608,88 @@ window.MathJax = {
 <h2 id="sec-geom">几何（概念层）</h2>
 
 <!-- Riemannian Metric -->
+
+<!-- Eigenvalue Decomposition -->
+<div class="concept" id="eigen">
+  <span class="tag tag-la">线性代数</span>
+  <h4>特征分解 Eigenvalue Decomposition</h4>
+  <p class="def">对称矩阵 $\mathbf{A} \in \mathbb{R}^{d\times d}$ 可分解为 $\mathbf{A} = \mathbf{V}\boldsymbol{\Lambda}\mathbf{V}^\top = \sum_{i=1}^d \lambda_i \mathbf{v}_i\mathbf{v}_i^\top$。$\lambda_i$ = 特征值，$\mathbf{v}_i$ = 特征向量（正交，$\mathbf{v}_i^\top\mathbf{v}_j=\delta_{ij}$）。</p>
+  <p class="intuition">特征向量 = 矩阵作用后<strong>方向不变</strong>的向量（$\mathbf{A}\mathbf{v}=\lambda\mathbf{v}$）。特征值 = 该方向拉伸/压缩的倍数。对称矩阵的特征向量正交 → 构成空间的一组"自然基底"。</p>
+  <div class="example">协方差矩阵 $\frac{1}{N}\mathbf{X}^\top\mathbf{X}$ 的特征向量 = PCA 主成分方向。最大特征值对应的特征向量 = 方差最大的方向（第一主成分）。</div>
+  <p class="used-in"><a href="../lessons/0011-pca.html">0011 PCA</a> · <a href="../lessons/0017-factor-models-and-ml.html">0017 统计因子模型</a> · 谱聚类</p>
+</div>
+
+<!-- SVD -->
+<div class="concept" id="svd">
+  <span class="tag tag-la">线性代数</span>
+  <h4>奇异值分解 SVD</h4>
+  <p class="def">任意矩阵 $\mathbf{X} \in \mathbb{R}^{N\times M}$ 可分解为 $\mathbf{X} = \mathbf{U}\boldsymbol{\Sigma}\mathbf{V}^\top$。$\mathbf{U}$（$N\times N$）和 $\mathbf{V}$（$M\times M$）正交，$\boldsymbol{\Sigma}$ 对角（奇异值 $\sigma_1\geq\sigma_2\geq\cdots\geq 0$）。</p>
+  <p class="intuition">SVD = 对任意矩阵的"特征分解"。$\mathbf{X}^\top\mathbf{X} = \mathbf{V}\boldsymbol{\Sigma}^2\mathbf{V}^\top$（右奇异向量 = 协方差矩阵的特征向量）。$\mathbf{X}\mathbf{X}^\top = \mathbf{U}\boldsymbol{\Sigma}^2\mathbf{U}^\top$。奇异值 $\sigma_i = \sqrt{\lambda_i}$。</p>
+  <div class="example">截断 SVD：只保留前 $K$ 个奇异值 → 最优秩-$K$ 近似（Eckart-Young 定理）→ PCA 的另一种推导。</div>
+  <p class="used-in"><a href="../lessons/0011-pca.html">0011 PCA</a> · 推荐系统（矩阵分解）· 模型压缩</p>
+</div>
+
+<!-- Convex function -->
+<div class="concept" id="convex-fn">
+  <span class="tag tag-calc">微积分</span>
+  <h4>凸函数 Convex Function</h4>
+  <p class="def">$f$ 是凸函数 ⇔ $f(\lambda\mathbf{x}+(1-\lambda)\mathbf{y}) \leq \lambda f(\mathbf{x})+(1-\lambda)f(\mathbf{y})$（函数值在弦之下）。等价条件：$\nabla^2 f(\mathbf{x}) \succeq 0$（Hessian 处处半正定）。</p>
+  <p class="intuition">凸函数没有局部极小——任何局部极小就是全局极小。这是梯度下降能找到最优解的保证。非凸函数（神经网络）有鞍点和局部极小——优化困难得多。</p>
+  <div class="example">线性回归的 MSE 损失：Hessian $=\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\succeq 0$ → 凸 → 正规方程给全局最优。逻辑回归：Hessian $=\boldsymbol{\Phi}^\top\mathbf{S}\boldsymbol{\Phi}$，$\mathbf{S}_{nn}=\sigma_n(1-\sigma_n)>0$ → 凸 → IRLS 收敛到全局最优。</div>
+  <p class="used-in"><a href="../lessons/0009-logistic-regression.html#s4">0009 §4 Hessian 与凸性</a> · <a href="../lessons/0007-svm-hard-margin.html#s6">0007 §6 强对偶</a></p>
+</div>
+
+<!-- Jensen's inequality -->
+<div class="concept" id="jensen">
+  <span class="tag tag-calc">微积分</span> <span class="tag tag-prob">概率</span>
+  <h4>Jensen 不等式 Jensen's Inequality</h4>
+  <p class="def">对凸函数 $f$：$f(\mathbb{E}[X]) \leq \mathbb{E}[f(X)]$。对凹函数（如 $\log$）：$\log\mathbb{E}[X] \geq \mathbb{E}[\log X]$。</p>
+  <p class="intuition">凸函数把期望"往外推"。$\log$ 是凹的 → $\log\sum$（期望的 $\log$）≥ $\sum\log$（$\log$ 的期望）。这就是 EM 把 $\log\sum$ 变成 $\sum\log$ 的数学基础——造出一个可以最大化的下界。</p>
+  <div class="example">EM：$\log p(\mathbf{x}) = \log\sum_z p(\mathbf{x},z) = \log\mathbb{E}_{q}[\frac{p}{q}] \geq \mathbb{E}_q[\log\frac{p}{q}] = \text{ELBO}$。Jensen 给出了似然的下界——ELBO。</div>
+  <p class="used-in"><a href="../lessons/0010-mixture-models-em.html#s4">0010 §4 ELBO 推导</a> · <a href="../lessons/0015-variational-inference.html#s2">0015 §2 ELBO</a> · <a href="../lessons/0003-marginal-likelihood.html">0003 边缘似然</a></p>
+</div>
+
+<!-- Lagrange multiplier -->
+<div class="concept" id="lagrange-mult">
+  <span class="tag tag-calc">微积分</span> <span class="tag tag-la">优化</span>
+  <h4>拉格朗日乘子法 Lagrange Multipliers</h4>
+  <p class="def">约束优化 $\min f(\mathbf{x})$ s.t. $g(\mathbf{x})=0$ 转化为 $\nabla f = \lambda\nabla g$——在最优点，目标函数的梯度<strong>平行</strong>于约束函数的梯度。$\lambda$ = 拉格朗日乘子。</p>
+  <p class="intuition">如果 $\nabla f$ 和 $\nabla g$ 不平行，你可以沿约束面移动，在保持 $g=0$ 的同时降低 $f$。只有在梯度平行时，任何保持约束的移动都无法进一步降低 $f$。</p>
+  <div class="example">PCA：$\max_{\mathbf{w}} \mathbf{w}^\top\mathbf{S}\mathbf{w}$ s.t. $\|\mathbf{w}\|=1$ → $\mathcal{L} = \mathbf{w}^\top\mathbf{S}\mathbf{w} - \lambda(\mathbf{w}^\top\mathbf{w}-1)$ → $\mathbf{S}\mathbf{w} = \lambda\mathbf{w}$ → $\mathbf{w}$ 是特征向量，$\lambda$ 是特征值。</div>
+  <p class="used-in"><a href="../lessons/0007-svm-hard-margin.html#s3">0007 §3 SVM 对偶</a> · <a href="../lessons/0011-pca.html#s3">0011 §3 PCA 推导</a></p>
+</div>
+
+<!-- Sigmoid -->
+<div class="concept" id="sigmoid-fn">
+  <span class="tag tag-calc">微积分</span>
+  <h4>Sigmoid 函数及其导数</h4>
+  <p class="def">$\sigma(z) = \frac{1}{1+e^{-z}}$。定义域 $\mathbb{R}$，值域 $(0,1)$。关键性质：<strong>$\sigma'(z) = \sigma(z)(1-\sigma(z))$</strong>（导数用函数自身表达——计算极高效）。</p>
+  <p class="intuition">Sigmoid 把实数映射为概率。$z\to\infty$ 时 $\sigma\to 1$；$z\to-\infty$ 时 $\sigma\to 0$；$z=0$ 时 $\sigma=0.5$（最不确定）。它不是为分类"设计"的——它是<strong>Bernoulli 分布写成指数族后反解自然参数的自然产物</strong>。</p>
+  <div class="example">逻辑回归梯度：$\frac{\partial J}{\partial\mathbf{w}} = \sum_n (\sigma_n - y_n)\mathbf{x}_n$。简洁形式来自 $\sigma'=\sigma(1-\sigma)$ 消去了分母。</div>
+  <p class="used-in"><a href="../lessons/0009-logistic-regression.html#s1">0009 §1 逻辑回归</a> · <a href="../lessons/0014-neural-networks.html">0014 激活函数</a></p>
+</div>
+
+<!-- Softmax -->
+<div class="concept" id="softmax-fn">
+  <span class="tag tag-calc">微积分</span>
+  <h4>Softmax 函数</h4>
+  <p class="def">$\text{softmax}(\mathbf{z})_k = \frac{e^{z_k}}{\sum_{j=1}^K e^{z_j}}$。把 $K$ 个任意实数映射为 $K$ 个正数，和为 1 → 多类概率分布。</p>
+  <p class="intuition">Softmax = "指数化 + 归一化"。指数化放大差距（$e^{10}/e^{5}=e^{5}\approx 148$），归一化确保输出是合法分布。导数：$\frac{\partial p_k}{\partial z_j} = p_k(\delta_{kj} - p_j)$——类似于 Bernoulli 的 $\sigma(1-\sigma)$。</p>
+  <div class="example">三分类：$z=(2,1,0)$ → softmax $=(0.67, 0.24, 0.09)$。类别 1 概率最高但不是 100%——保留了不确定性。</div>
+  <p class="used-in"><a href="../lessons/0009-logistic-regression.html#s6">0009 §6 Softmax 回归</a> · <a href="../lessons/0014-neural-networks.html">0014 输出层</a></p>
+</div>
+
+<!-- Entropy & Cross-entropy -->
+<div class="concept" id="entropy">
+  <span class="tag tag-prob">概率</span>
+  <h4>熵与交叉熵 Entropy &amp; Cross-Entropy</h4>
+  <p class="def"><strong>熵</strong>：$H(p) = -\mathbb{E}_p[\log p] = -\sum_k p_k\log p_k$（分布的"内在不确定性"）。<br><strong>交叉熵</strong>：$H(p,q) = -\mathbb{E}_p[\log q] = -\sum_k p_k\log q_k$（用 $q$ 编码 $p$ 的成本）。</p>
+  <p class="intuition">$\mathrm{KL}(p\|q) = H(p,q) - H(p) \geq 0$。最小化 KL = 最小化交叉熵（$H(p)$ 固定）。MLE = 最小化交叉熵 = 最小化 KL——三位一体，来自同一个恒等式。</p>
+  <div class="example">二分类交叉熵：$-\sum_n[y_n\log\sigma_n+(1-y_n)\log(1-\sigma_n)]$。正确类别的概率越低，$-\log$ 越大 → 损失大。这就是"惩罚错误"的数学形式。</div>
+  <p class="used-in"><a href="../lessons/0001-probabilistic-linear-regression.html#s6">0001 §6 MLE=KL</a> · <a href="../lessons/0009-logistic-regression.html#s2">0009 §2 交叉熵损失</a></p>
+</div>
+
+
 <div class="concept" id="metric">
   <span class="tag tag-geom">几何</span>
   <h4>黎曼度量 Riemannian Metric</h4>
@@ -501,17 +697,52 @@ window.MathJax = {
   <div class="formula-block">
     $$ds^2 = d\mathbf{x}^\top \mathbf{G}(\mathbf{x})\, d\mathbf{x} = \sum_{i,j} G_{ij}(\mathbf{x})\, dx_i\, dx_j$$
   </div>
+
   <p class="intuition">
-    在平直欧氏空间里 $\mathbf{G} = \mathbf{I}$——走 $dx$ 就移动距离 $|dx|$。
-    但在弯曲空间里，不同方向的「单位距离」不一样。一个经典例子是地球表面：在赤道附近经度差 1° 对应的实际距离
-    <strong>大于</strong>两极附近同样经度差的距离。这就是度规矩阵 $\mathbf{G}$ 依赖于位置。
-    <strong>在概率分布空间中，$\mathbf{G}(\boldsymbol{\theta}) = \mathbf{F}(\boldsymbol{\theta})$（Fisher 矩阵）。</strong>
+    <strong>核心直觉：度规矩阵是一个「域翻译器」——</strong>它把你在坐标域中走的一步 $d\mathbf{x}$，映射成另一个域（实际空间）中的真实距离 $ds^2$。
   </p>
-  <div class="example">
-    二维中 $\mathbf{G} = \text{diag}(1, \sigma^2)$ 的曲面：$x$ 方向是平的，但 $y$ 方向的「真实距离」随 $y$ 的绝对值增大而放大。
+  <div class="formula-block" style="font-size:1.1rem;">
+    $$\underbrace{d\boldsymbol{\theta}}_{\text{坐标域}} \;\xrightarrow{\;ds^2 = d\boldsymbol{\theta}^\top \mathbf{G}\, d\boldsymbol{\theta}\;}\; \underbrace{ds^2}_{\text{实际距离域}}$$
   </div>
+
+  <h4 style="margin-top:1rem;">🌍 从地球说起</h4>
+  <p>用经纬度坐标走路：</p>
+  <ul>
+    <li><strong>纬度变化 $d\theta$：</strong>不论你在哪，1° 纬度 ≈ 111 km——系数恒为 $R^2$。</li>
+    <li><strong>经度变化 $d\phi$：</strong>在赤道 1° ≈ 111 km；在北京（40°N）1° ≈ 85 km；在北极 1° ≈ <strong>0 km</strong>——系数是 $R^2\sin^2\theta$，<strong>随纬度变化</strong>。</li>
+  </ul>
+  <p>所以地球表面任意两点之间的地面距离：</p>
+  <div class="formula-block">
+    $$ds^2 = R^2 \cdot d\theta^2 + R^2\sin^2\theta \cdot d\phi^2$$
+  </div>
+  <p>写成矩阵——这就是地球的<strong>度规矩阵</strong>：</p>
+  <div class="formula-block">
+    $$\mathbf{G}(\theta, \phi) = \begin{pmatrix} R^2 & 0 \\ 0 & R^2\sin^2\theta \end{pmatrix}$$
+  </div>
+  <p>$\mathbf{G}$ <strong>依赖于 $\theta$（纬度）</strong>，因为经度方向的实际距离取决于你在哪。你走的坐标步长相同，但实际距离可以完全不同。</p>
+
+  <h4 style="margin-top:1rem;">🎲 概率分布空间：完全一样的故事</h4>
+  <p>模型参数 $\boldsymbol{\theta}$ 是「坐标」，<strong>分布之间的 KL 散度</strong>是「真实距离」。Fisher 矩阵就是概率空间的度规：</p>
+  <div class="formula-block">
+    $$D_{\text{KL}}(p_{\boldsymbol{\theta}} \| p_{\boldsymbol{\theta}+d\boldsymbol{\theta}}) \approx \frac{1}{2}\, d\boldsymbol{\theta}^\top \mathbf{F}(\boldsymbol{\theta})\, d\boldsymbol{\theta}$$
+  </div>
+  <p>比如 $\mathcal{N}(\mu, \sigma)$ 的 Fisher 矩阵 $\mathbf{F} = \begin{pmatrix} 1/\sigma^2 & 0 \\ 0 & 2/\sigma^2 \end{pmatrix}$：</p>
+  <ul>
+    <li>改变 $\mu$ 对分布的影响 → 系数 $1/\sigma^2$，<strong>依赖于 $\sigma$ 的值</strong>（分布宽时不敏感，窄时极敏感）</li>
+    <li>改变 $\sigma$ 对分布的影响 → 系数 $2/\sigma^2$，是 $\mu$ 方向的<strong>两倍</strong>（方差同时影响形状和 spread）</li>
+  </ul>
+
+  <h4 style="margin-top:1rem;">🔗 和 L0018 的联系：同一个结构，两个域</h4>
+  <table>
+    <tr><th></th><th>L0018 · Score Function</th><th>L0019 · Fisher 度量</th></tr>
+    <tr><td><strong>从哪个域</strong></td><td>数据 $\mathbf{x}$</td><td>参数 $\boldsymbol{\theta}$</td></tr>
+    <tr><td><strong>到哪个域</strong></td><td>概率的变化方向和强度</td><td>分布之间的真实距离</td></tr>
+    <tr><td><strong>翻译器</strong></td><td>$\nabla_{\mathbf{x}} \log p$</td><td>$\mathbf{F}(\boldsymbol{\theta})$</td></tr>
+    <tr><td><strong>做什么</strong></td><td>告诉你往哪走概率最大</td><td>告诉你走一步到底改变了分布多少</td></tr>
+  </table>
+
   <p class="used-in">
-    Fisher 度量定义概率空间的几何 (L0002 §3)
+    Fisher 度量定义概率空间的几何 (L0019 §3)
   </p>
 </div>
 
@@ -529,7 +760,7 @@ window.MathJax = {
     一维高斯的统计流形是上半平面 $\{(\mu, \sigma) : \mu \in \mathbb{R}, \sigma > 0\}$，Fisher 度量 $\mathbf{F} = \text{diag}(1/\sigma^2, 2/\sigma^2)$ 让它成为一个<strong>双曲空间</strong>（负常曲率）。
   </div>
   <p class="used-in">
-    L0002 的核心概念
+    L0019 的核心概念
   </p>
 </div>
 
@@ -539,9 +770,9 @@ window.MathJax = {
     本手册随课程进展持续扩充。每个概念只录入了<strong>在已有课程中实际出现</strong>的部分——更深的分支（如特征分解、SVD、凸优化对偶等）将在后续课程中用到时补充。
   </p>
   <p style="margin-top: 0.5rem;">
-    <a href="../lessons/0000-the-mathematical-landscape.html">← L0000 · 地貌</a> &emsp;
-    <a href="../lessons/0001-the-score-function.html">L0001 · Score</a> &emsp;
-    <a href="../lessons/0002-information-geometry.html">L0002 · 信息几何</a> &emsp;
+    <a href="../index.html">← 地貌 · 地貌</a> &emsp;
+    <a href="../lessons/0018-score-function.html">L0018 · Score</a> &emsp;
+    <a href="../lessons/0019-information-geometry.html">L0019 · 信息几何</a> &emsp;
     <a href="algorithm-cards.html">📇 算法卡片</a> &emsp;
     <a href="empirical-evidence.html">🔬 实证证据</a> &emsp;
     <a href="../MISSION.md">🎯 Mission</a>

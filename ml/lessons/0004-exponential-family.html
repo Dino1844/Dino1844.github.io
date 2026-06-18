@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0004 · 指数族与共轭先验</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0004 · 指数族与共轭先验</h1>
+<div class="subtitle">把高斯/Bernoulli/Multinomial/Poisson/Gamma 统一进一个标准形，读出充分统计量、矩公式、共轭先验 · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 为什么要统一：一个标准形覆盖一大类分布</a><br>
+  <a href="#s2">2. 标准形与三个组件：$\eta,T,a,b$</a><br>
+  <a href="#s3">3. 矩公式：$a'(\eta)$ 给均值，$a''(\eta)$ 给方差</a><br>
+  <a href="#s4">4. 五大分布归位：高斯/Bernoulli/Multinomial/Poisson/Gamma</a><br>
+  <a href="#s5">5. 共轭先验：似然决定先验形状</a><br>
+  <a href="#s6">6. 后验更新：自然参数累加，伪计数</a><br>
+  <a href="#s7">7. 极大似然 = 矩匹配</a><br>
+  <a href="#s8">8. 推导与演算</a><br>
+  <a href="#s9">9. 自测</a>
+</div>
+
+<p>
+  0001 把线性回归放进指数族框架，后续课把逻辑回归、Poisson 回归放进同一个框架——这些课里反复出现同一个身影：<strong>指数族</strong>。
+  本课把它单独抽出来讲透。指数族不是"又一种分布"，而是一个<strong>标准形</strong>，把高斯、Bernoulli、Multinomial、Poisson、Gamma、Beta、Dirichlet 等一大类分布写成同一副骨架。
+  一旦写进标准形，<strong>所有这些分布的性质都由同一个公式给出</strong>：均值是 $a'(\eta)$，方差是 $a''(\eta)$，充分统计量是 $T(y)$，MLE 是矩匹配，共轭先验有统一构造。
+</p>
+
+<p>
+  这是 ML 里最大的"一次投入，反复回报"：花一节课把指数族搞定，后面 0010 混合模型、0011 概率 PCA、0012 偏差方差、0015 变分推断全都在用它。
+  共轭先验是贝叶斯计算的命脉——它让后验和先验同形，避免每次都做数值积分。本课把"为什么共轭先验长那样"从机制上讲清。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>0001 的核心公理——高斯噪声→平方损失——在指数族框架下推广：$y\mid\mathbf{x}\sim\text{ExpFamily}(\eta)$，$\eta=\mathbf{w}^\top\mathbf{x}$，预测 $\mathbb{E}[y\mid\mathbf{x}]$。本课是总论，把这三假设的指数族基础讲透（Bernoulli→sigmoid，高斯→线性回归是其实例）。</li>
+    <li>0002 共轭先验：高斯似然 + 高斯先验 → 高斯后验。配平方读出后验精度 $\mathbf{S}_N^{-1}=\mathbf{S}_0^{-1}+\beta\boldsymbol\Phi^\top\boldsymbol\Phi$。</li>
+    <li>0004 梯度 $\nabla J=\sum(\sigma_n-y_n)\mathbf{x}_n$——"预测减真实"形式来自指数族规范链接。</li>
+    <li>充分统计量：数据的函数 $T(\mathbf{y})$，使似然只通过它依赖数据。正态样本的 $\bar y,s^2$ 就是。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 为什么要统一：一个标准形覆盖一大类分布</h2>
+
+<p>
+  分散地学高斯、Bernoulli、Poisson，每个都要单独推均值、方差、MLE、共轭先验——重复劳动且看不出共性。
+  指数族提供一个<strong>标准形</strong>，把这些分布写成同一副骨架，然后<strong>一次性</strong>推出所有性质。共性自动免费，个性只在四个组件 $(\eta,T,a,b)$ 里。
+</p>
+
+<div class="insight">
+  <strong>指数族的哲学：分离"数据怎么进"（$T(y)$）和"参数怎么进"（$\eta$），用 $a(\eta)$ 配分。</strong>
+  $T(y)$ 是充分统计量（数据压缩），$\eta$ 是自然参数（参数的"规范坐标"），$a(\eta)$ 是对数配分函数（保证归一化，且生成所有矩）。
+  这个分离让"换分布 = 换四个组件"，其余推导不变。这就是 GLM 能统一线性/逻辑/Poisson 回归的根基。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 标准形与三个组件：$\eta,T,a,b$</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#5b8c5a;">核心框架</span>
+	    <h3>指数族标准形 · Exponential Family</h3>
+	    <span class="cc-aliases">GLM 的语言基础</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>$p(y;\eta) = b(y)\exp(\eta^\top T(y) - a(\eta))$。把高斯/Bernoulli/Poisson/Gamma 写成<strong>同一副骨架</strong>。换分布 = 换四个组件 $(\eta, T, a, b)$，其余推导不变。
+	  </div>
+	  <div class="cc-section">
+	    <h4>四个组件</h4>
+	    <ul>
+	      <li>$\eta$：自然参数（参数的规范坐标）</li>
+	      <li>$T(y)$：充分统计量（数据压缩——似然只通过它依赖数据）</li>
+	      <li>$a(\eta)$：对数配分函数（保证归一化，且生成所有矩）</li>
+	      <li>$b(y)$：底测度（通常不重要）</li>
+	    </ul>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ §3: $\mathbb{E}[T(y)]=a'(\eta)$</span>
+	    <span class="conn-badge">→ §4: 五大分布归位</span>
+	    <span class="conn-badge">→ 0001: 线性回归 = 高斯实例</span>
+	    <span class="conn-badge">→ 0009(逻辑回归): Bernoulli 实例</span>
+	  </div>
+	</div>
+
+
+<p>指数族标准形：</p>
+
+<div class="formula-block">
+  $$\boxed{\;p(y;\eta)=b(y)\exp\!\big(\eta^\top T(y)-a(\eta)\big)\;}$$
+</div>
+
+<p>四个组件：</p>
+
+<ul>
+  <li>$\eta$：<strong>自然参数</strong>（natural parameter），参数的规范坐标。可能向量（如 Multinomial）。</li>
+  <li>$T(y)$：<strong>充分统计量</strong>（sufficient statistic），数据进似然的方式。</li>
+  <li>$a(\eta)$：<strong>对数配分函数</strong>（log-partition / cumulant），保证 $\int p=1$。它是矩生成函数的对数，<strong>所有矩由它的导数给出</strong>。</li>
+  <li>$b(y)$：<strong>底测度</strong>（base measure），与参数无关的 $y$ 的函数，通常不重要。</li>
+</ul>
+
+<p>
+  "充分统计量"的含义：似然 $p(\mathbf{y};\eta)\propto\exp(\eta^\top\sum_n T(y_n))$，数据只通过 $\sum T(y_n)$ 进入似然。由 Fisher–Neyman 因子定理，$T$ 是充分的。这是<strong>数据压缩</strong>：无论样本多少，似然只依赖 $\sum T(y_n)$ 这一个量。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 矩公式：$a'(\eta)$ 给均值，$a''(\eta)$ 给方差</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#e07b39;">核心性质</span>
+	    <h3>矩公式 · $a'(\eta)$ 给均值，$a''(\eta)$ 给方差</h3>
+	    <span class="cc-aliases">Cumulant generating function</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>$a(\eta)$ 是累积量生成函数的对数。对它求导直接给出充分统计量的各阶矩——<strong>不需要对每个分布单独推均值和方差</strong>。
+	  </div>
+	  <div class="cc-section">
+	    <h4>核心公式</h4>
+	    <div class="cc-formula">$$\mathbb{E}[T(y)] = a'(\eta), \quad \operatorname{Var}[T(y)] = a''(\eta)$$</div>
+	    <p>对高斯：$a(\eta)=\eta^2/2$ → $a'=\eta=\mu$（均值），$a''=1=\sigma^2$（方差）</p>
+	    <p>对 Bernoulli：$a(\eta)=\log(1+e^\eta)$ → $a'=\sigma(\eta)$，$a''=\sigma(\eta)(1-\sigma(\eta))$</p>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0001: 噪声假设→损失的推广</span>
+	    <span class="conn-badge">→ 0014: 输出层由指数族成员决定</span>
+	  </div>
+	</div>
+
+
+<p>对数配分函数 $a(\eta)$ 是矩的生成器。从归一化 $\int b(y)\exp(\eta^\top T(y)-a(\eta))\,dy=1$ 出发，两边对 $\eta$ 求导：</p>
+
+<div class="derivation">
+  <h4>均值与方差</h4>
+  <div class="step">
+    $\int b(y)\exp(\eta^\top T(y)-a(\eta))\,dy=1$
+    <span class="reason">归一化</span>
+  </div>
+  <div class="step">
+    对 $\eta$ 求导：$\int T(y)\,p(y;\eta)\,dy - a'(\eta)\int p\,dy=0\;\Rightarrow\;\mathbb{E}[T(y)]=a'(\eta)$
+    <span class="reason">$\int p=1$，第一项是 $\mathbb{E}[T(y)]$</span>
+  </div>
+  <div class="step">
+    再求导一次：$\mathbb{E}[T(y)T(y)^\top]-a''(\eta)-a'(\eta)a'(\eta)^\top=0\;\Rightarrow\;\operatorname{Var}[T(y)]=a''(\eta)$
+    <span class="reason">$\operatorname{Var}=\mathbb{E}[TT^\top]-\mathbb{E}[T]\mathbb{E}[T]^\top$</span>
+  </div>
+</div>
+
+<div class="formula-block">
+  $$\mathbb{E}[T(y)]=\nabla_\eta a(\eta),\qquad \operatorname{Cov}[T(y)]=\nabla_\eta^2 a(\eta)$$
+</div>
+
+<div class="insight">
+  <strong>$a(\eta)$ 是累积量生成函数（cumulant generating function）。</strong> 一阶导给均值，二阶导给方差，三阶给偏度……所有矩从 $a$ 的导数免费读出。
+  这就是为什么指数族这么好算：只要把分布写进标准形读出 $a(\eta)$，均值方差不用再算积分，直接求导。
+  <strong>0004 题 6 的"高斯 $a(\eta)=\eta^2/2$ 二次 → 闭式解"就是用这条：$a''$ 是 Hessian 的来源。</strong>
+</div>
+
+<p>
+  方差 $=a''(\eta)$ 还说明一件事：$a(\eta)$ 必须是<strong>凸</strong>的（因方差 $\geq0$）。这是指数族的内在凸性，也是 0009 逻辑回归 Hessian 正定、0008 SVM 对偶凹的根源。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 五大分布归位：高斯/Bernoulli/Multinomial/Poisson/Gamma</h2>
+
+<p>把五大分布写进标准形，读出 $(\eta,T,a,b)$：</p>
+
+<table>
+  <tr><th>分布</th><th>$\eta$</th><th>$T(y)$</th><th>$a(\eta)$</th><th>$\mathbb{E}[y]=a'(\eta)$</th></tr>
+  <tr><td>Bernoulli</td><td>$\log\frac{\phi}{1-\phi}$</td><td>$y$</td><td>$\log(1+e^\eta)$</td><td>$\sigma(\eta)$</td></tr>
+  <tr><td>高斯 $\mathcal{N}(\mu,\sigma^2)$，$\sigma^2$ 固定</td><td>$\mu/\sigma^2$</td><td>$y$</td><td>$\eta^2\sigma^2/2$</td><td>$\eta\sigma^2=\mu$</td></tr>
+  <tr><td>Multinomial</td><td>$\log(\phi_k/\phi_K)$</td><td>$\mathbf{y}$（one-hot）</td><td>$\log(1+\sum_k e^{\eta_k})$</td><td>$\operatorname{softmax}(\eta)$</td></tr>
+  <tr><td>Poisson</td><td>$\log\lambda$</td><td>$y$</td><td>$e^\eta$</td><td>$e^\eta=\lambda$</td></tr>
+  <tr><td>Gamma（固定形状 $k$）</td><td>$-\beta$</td><td>$y$</td><td>$-k\log(-\eta)$</td><td>$k/(-\eta)=k/\beta$</td></tr>
+</table>
+
+<p>
+  注意几个回接：(1) Bernoulli 的 $a'(\eta)=\sigma(\eta)$ 就是 0004 的 sigmoid——<strong>sigmoid 是 Bernoulli 的均值函数</strong>。(2) Multinomial 的 $a'(\eta)=\operatorname{softmax}(\eta)$——softmax 是 Multinomial 的均值函数。(3) 高斯 $a(\eta)=\eta^2\sigma^2/2$ 是 $\eta$ 的二次 → 0004 题 6 的闭式解根源。
+</p>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #11 · "写进指数族标准形 → 读 $a(\eta)$ → 求导得均值/方差/MLE/共轭"</h4>
+  遇到任何新分布，先试写进 $b(y)\exp(\eta^\top T(y)-a(\eta))$。读出 $a(\eta)$ 后，均值 $=a'$、方差 $=a''$、MLE $=$ 矩匹配、共轭先验 $=\exp(\eta^\top\boldsymbol\tau-\nu a(\eta))$ 全免费。
+  <strong>本课是总论；0001 高斯、0004 Bernoulli、0010 GMM、0015 变分指数族——全是这一招的实例。</strong> 把"读 $a(\eta)$"练成本能，后面省巨多力气。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 共轭先验：似然决定先验形状</h2>
+
+<p>
+  贝叶斯里后验 $\propto$ 似然 $\times$ 先验。若先验选得巧，后验和先验<strong>同形</strong>（同分布族，参数更新）——这叫<strong>共轭</strong>（conjugacy）。共轭的好处：后验有闭式，不用数值积分。
+</p>
+
+<p>指数族似然 $p(y\mid\eta)=b(y)\exp(\eta^\top T(y)-a(\eta))$ 的<strong>共轭先验</strong>有统一构造：</p>
+
+<div class="formula-block">
+  $$p(\eta\mid\boldsymbol\tau,\nu)\propto\exp\!\big(\eta^\top\boldsymbol\tau-\nu\,a(\eta)\big)$$
+</div>
+
+<p>
+  其中 $\boldsymbol\tau$ 是"伪充分统计量"、$\nu$ 是"伪样本数"（先验强度）。这个先验长得像" $\nu$ 个伪样本，充分统计量之和为 $\boldsymbol\tau$"。
+</p>
+
+<p>为什么这个先验共轭？看后验：</p>
+
+<div class="derivation">
+  <h4>后验 = 先验被似然更新</h4>
+  <div class="step">
+    $p(\eta\mid\mathbf{y})\propto p(\eta)\prod_n p(y_n\mid\eta)$
+  </div>
+  <div class="step">
+    $\propto\exp(\eta^\top\boldsymbol\tau-\nu a(\eta))\cdot\prod_n b(y_n)\exp(\eta^\top T(y_n)-a(\eta))$
+  </div>
+  <div class="step">
+    $\propto\exp\!\Big(\eta^\top\big(\boldsymbol\tau+\textstyle\sum_n T(y_n)\big)-(\nu+N)\,a(\eta)\Big)$
+    <span class="reason">合并指数项，$b(y_n)$ 与 $\eta$ 无关吸进比例常数</span>
+  </div>
+  <div class="step">
+    $=p(\eta\mid\boldsymbol\tau+\textstyle\sum_n T(y_n),\,\nu+N)$
+    <span class="reason">同形！参数更新 $\boldsymbol\tau\to\boldsymbol\tau+\sum T(y_n)$，$\nu\to\nu+N$</span>
+  </div>
+</div>
+
+<div class="insight">
+  <strong>共轭更新的机制：自然参数累加，伪计数加真实计数。</strong>
+  先验 $(\boldsymbol\tau,\nu)$ 看作 $\nu$ 个伪样本充分统计量之和 $\boldsymbol\tau$；看到 $N$ 个真样本后，后验是 $(\boldsymbol\tau+\sum T(y_n),\,\nu+N)$——伪计数 + 真计数。
+  这与 0002 高斯后验精度 $\mathbf{S}_N^{-1}=\mathbf{S}_0^{-1}+\beta\boldsymbol\Phi^\top\boldsymbol\Phi$（先验精度 + 数据精度）是同一件事：精度累加 = 自然参数累加。
+</div>
+
+<p>常见共轭对：</p>
+
+<table>
+  <tr><th>似然</th><th>共轭先验</th><th>后验更新</th></tr>
+  <tr><td>Bernoulli</td><td>Beta</td><td>$\alpha\to\alpha+\sum y_n,\;\beta\to\beta+N-\sum y_n$</td></tr>
+  <tr><td>Multinomial</td><td>Dirichlet</td><td>$\alpha_k\to\alpha_k+\sum_n y_{nk}$</td></tr>
+  <tr><td>高斯（均值未知，方差已知）</td><td>高斯</td><td>精度累加，均值加权</td></tr>
+  <tr><td>Poisson</td><td>Gamma</td><td>$\alpha\to\alpha+\sum y_n,\;\beta\to\beta+N$</td></tr>
+  <tr><td>Gamma（率未知）</td><td>Gamma</td><td>形状/率累加</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 后验更新：自然参数累加，伪计数</h2>
+
+<p>
+  Beta-Bernoulli 是最干净的例子，走一遍。Bernoulli 似然 $p(y\mid\phi)=\phi^y(1-\phi)^{1-y}$，参数 $\phi\in(0,1)$。Beta 先验：
+</p>
+
+<div class="formula-block">
+  $$p(\phi\mid\alpha,\beta)=\frac{\phi^{\alpha-1}(1-\phi)^{\beta-1}}{B(\alpha,\beta)}\propto\phi^{\alpha-1}(1-\phi)^{\beta-1}$$
+</div>
+
+<p>看到 $N$ 个样本，$\sum y_n=s$ 个成功。后验：</p>
+
+<div class="derivation">
+  <h4>Beta-Bernoulli 后验</h4>
+  <div class="step">
+    $p(\phi\mid\mathbf{y})\propto\phi^{\alpha-1}(1-\phi)^{\beta-1}\cdot\prod_n\phi^{y_n}(1-\phi)^{1-y_n}$
+  </div>
+  <div class="step">
+    $=\phi^{\alpha-1+s}(1-\phi)^{\beta-1+N-s}$
+    <span class="reason">$\sum y_n=s$，$\sum(1-y_n)=N-s$</span>
+  </div>
+  <div class="step">
+    $\Rightarrow\;\phi\mid\mathbf{y}\sim\text{Beta}(\alpha+s,\,\beta+N-s)$
+    <span class="reason">同形，参数 $\alpha\to\alpha+s$，$\beta\to\beta+N-s$</span>
+  </div>
+</div>
+
+<p>
+  直觉：先验 Beta$(\alpha,\beta)$ 相当于"之前看过 $\alpha-1$ 次成功、$\beta-1$ 次失败"。看到 $s$ 成功 $N-s$ 失败后，后验是"总共 $\alpha+s-1$ 成功、$\beta+N-s-1$ 失败"。<strong>先验是伪计数，数据是真计数，后验是两者相加。</strong>
+</p>
+
+<p>
+  后验均值 $\mathbb{E}[\phi\mid\mathbf{y}]=\frac{\alpha+s}{\alpha+\beta+N}$——介于先验均值 $\frac{\alpha}{\alpha+\beta}$ 和 MLE $\frac{s}{N}$ 之间，权重由伪计数 $\alpha+\beta$ vs 真计数 $N$ 决定。$N\to\infty$ 时后验均值 → MLE（数据淹没先验）。这与 0002 贝叶斯回归后验、0003 边缘似然的有效参数 $\gamma$ 同构。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 极大似然 = 矩匹配</h2>
+
+<p>指数族的 MLE 有一个极简洁的形式。对数似然 $\ell(\eta)=\sum_n[\eta^\top T(y_n)-a(\eta)]+\text{const}$，求导令零：</p>
+
+<div class="formula-block">
+  $$\nabla_\eta\ell=\sum_n T(y_n)-N\,a'(\eta)=0\;\Rightarrow\;a'(\eta_{\text{MLE}})=\frac{1}{N}\sum_n T(y_n)$$
+</div>
+
+<p>
+  即<strong>充分统计量的模型均值 $a'(\eta)$ 等于经验均值 $\bar T$</strong>。这叫<strong>矩匹配</strong>（moment matching）：MLE 把模型矩调到等于数据矩。
+</p>
+
+<div class="insight">
+  <strong>MLE = 矩匹配是指数族的通用性质。</strong>
+  Bernoulli：$\sigma(\eta)=\bar y$ → $\hat\phi=\bar y$。高斯：$\eta\sigma^2=\bar y$ → $\hat\mu=\bar y$。Poisson：$e^\eta=\bar y$ → $\hat\lambda=\bar y$。
+  全是"样本均值"，因为它们的 $T(y)=y$。这是为什么这些分布的 MLE 都是 $\bar y$——不是巧合，是指数族 + $T(y)=y$ 的必然。
+  <strong>回接 0004：GLM 梯度 $\sum(\text{预测}-\text{真实})\mathbf{x}=0$ 正是"模型均值 = 数据均值"的推广——每个 $\mathbf{x}$ 处的预测匹配标签。</strong>
+</div>
+
+<div class="meta-box">
+  <h4>🔗 联系 · 指数族贯穿后续课程</h4>
+  <strong>0010 EM</strong>：混合模型的完整数据似然是指数族，M 步就是矩匹配（用期望充分统计量）。<strong>0011 概率 PCA</strong>：隐变量模型写成指数族，后验高斯。<strong>0012 偏差–方差</strong>：指数族的 Fisher 信息 $=a''(\eta)$，Cramér–Rao 下界由它定。<strong>0015 变分推断</strong>：平均场假设下，最优因子形如指数族共轭——"指数族在乘积下闭合"是变分能算的根基。
+  本课是它们的公共前置。把标准形和共轭构造内化，后面四课的推导会顺很多。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与演算</h2>
+
+<p>下面 6 道题，难度递增。把五大分布写进标准形、推矩公式、推共轭更新。</p>
+
+<div class="problem">
+  <div class="ptitle">题 1 · Bernoulli 写进标准形 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    把 Bernoulli $p(y;\phi)=\phi^y(1-\phi)^{1-y}$ 写成 $b(y)\exp(\eta T(y)-a(\eta))$，读出 $\eta,T,a,b$。用 $a'(\eta)$ 验证 $\mathbb{E}[y]=\phi$。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\phi^y(1-\phi)^{1-y}=\exp(y\log\phi+(1-y)\log(1-\phi))=\exp(y\log\frac{\phi}{1-\phi}+\log(1-\phi))$。$\eta=\log\frac{\phi}{1-\phi}$，$a(\eta)=-\log(1-\phi)=\log(1+e^\eta)$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$p(y;\phi)=\exp(y\log\frac{\phi}{1-\phi}+\log(1-\phi))$。读：$\eta=\log\frac{\phi}{1-\phi}$（logit），$T(y)=y$，$a(\eta)=-\log(1-\phi)=\log(1+e^\eta)$（用 $\phi=\frac{e^\eta}{1+e^\eta}$ 算 $1-\phi=\frac{1}{1+e^\eta}$），$b(y)=1$。</div>
+    <div class="step">$a'(\eta)=\frac{e^\eta}{1+e^\eta}=\sigma(\eta)=\phi$。✓ 均值 $=\phi$。$a''(\eta)=\sigma(\eta)(1-\sigma(\eta))=\phi(1-\phi)$。✓ 方差。</div>
+    <div class="step">回接 0004：sigmoid $\sigma(\eta)=a'(\eta)$ 是 Bernoulli 的均值函数，不是拍脑袋的激活。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 2 · 高斯写进标准形（方差固定） <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    把 $\mathcal{N}(y\mid\mu,\sigma^2)$（$\sigma^2$ 固定）写成指数族标准形，读出 $\eta,T,a$。用 $a'(\eta)$ 验证 $\mathbb{E}[y]=\mu$，$a''(\eta)=\sigma^2$。说明为什么 $a(\eta)$ 是 $\eta$ 的二次。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\mathcal{N}=\frac{1}{\sqrt{2\pi}\sigma}\exp(-\frac{(y-\mu)^2}{2\sigma^2})$。展开 $(y-\mu)^2=y^2-2\mu y+\mu^2$。含 $y$ 的项 $\frac{\mu y}{\sigma^2}$ 给 $\eta=\mu/\sigma^2$。$a(\eta)=\eta^2\sigma^2/2$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\mathcal{N}(y\mid\mu,\sigma^2)=\frac{1}{\sqrt{2\pi}\sigma}\exp(-\frac{y^2-2\mu y+\mu^2}{2\sigma^2})=\frac{1}{\sqrt{2\pi}\sigma}\exp(-\frac{y^2}{2\sigma^2})\exp(\frac{\mu y}{\sigma^2}-\frac{\mu^2}{2\sigma^2})$。</div>
+    <div class="step">读：$\eta=\mu/\sigma^2$，$T(y)=y$，$a(\eta)=\mu^2/(2\sigma^2)=\eta^2\sigma^2/2$（用 $\mu=\eta\sigma^2$），$b(y)=\frac{1}{\sqrt{2\pi}\sigma}\exp(-y^2/(2\sigma^2))$。</div>
+    <div class="step">$a'(\eta)=\eta\sigma^2=\mu$ ✓。$a''(\eta)=\sigma^2$ ✓（方差，常数）。</div>
+    <div class="step">$a(\eta)=\eta^2\sigma^2/2$ 是 $\eta$ 的二次 → 0004 题 6 的根源：高斯似然对 $\eta=\mathbf{w}^\top\mathbf{x}$（从而对 $\mathbf{w}$）是二次 → $\nabla J=0$ 线性 → 闭式解。$\square$</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 3 · 矩公式证明 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    从归一化 $\int b(y)\exp(\eta T(y)-a(\eta))\,dy=1$ 出发，对 $\eta$ 求一阶和二阶导，证明 $\mathbb{E}[T(y)]=a'(\eta)$ 和 $\operatorname{Var}[T(y)]=a''(\eta)$。说清每一步为什么能交换积分和求导。
+  </div>
+  <details><summary>提示</summary><div class="hint">求导时 $a(\eta)$ 也要对 $\eta$ 求导。积分号下求导合法因为指数族被积函数光滑且可积（正则条件）。二阶导时用 $\mathbb{E}[T^2]-\mathbb{E}[T]^2$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">归一化：$\int b(y)e^{\eta T(y)-a(\eta)}dy=1$。对 $\eta$ 求导（正则条件下可换）：$\int T(y)b(y)e^{\eta T(y)-a(\eta)}dy - a'(\eta)\int b(y)e^{\eta T(y)-a(\eta)}dy=0$。</div>
+    <div class="step">即 $\mathbb{E}[T(y)]-a'(\eta)\cdot1=0\Rightarrow\mathbb{E}[T(y)]=a'(\eta)$。$\square$</div>
+    <div class="step">再求导：$\int T(y)^2 p\,dy - a''(\eta)\int p\,dy - a'(\eta)\int T(y)p\,dy=0$，即 $\mathbb{E}[T^2]-a''(\eta)-a'(\eta)\mathbb{E}[T]=0$。</div>
+    <div class="step">用 $\mathbb{E}[T]=a'$：$\mathbb{E}[T^2]=a''(\eta)+(a'(\eta))^2$。$\operatorname{Var}[T]=\mathbb{E}[T^2]-\mathbb{E}[T]^2=a''(\eta)$。$\square$</div>
+    <div class="step">交换合法性：指数族在自然参数空间内部满足正则条件（积分与求导可交换），这是"正则指数族"的定义。非正则（如 Beta 在边界）需小心。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 4 · Beta-Bernoulli 共轭更新 <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    Beta 先验 $\propto\phi^{\alpha-1}(1-\phi)^{\beta-1}$，Bernoulli 似然，$N$ 样本中 $s$ 成功。证明后验 $\text{Beta}(\alpha+s,\beta+N-s)$。解释 $\alpha,\beta$ 的"伪计数"含义，并证明 $N\to\infty$ 时后验均值 → MLE $s/N$。
+  </div>
+  <details><summary>提示</summary><div class="hint">后验 $\propto$ 先验 $\times$ 似然，合并 $\phi$ 和 $(1-\phi)$ 的幂。后验均值 $=\frac{\alpha+s}{\alpha+\beta+N}$，$N\to\infty$ 时分子分母同除 $N$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$p(\phi\mid\mathbf{y})\propto\phi^{\alpha-1}(1-\phi)^{\beta-1}\cdot\phi^s(1-\phi)^{N-s}=\phi^{\alpha+s-1}(1-\phi)^{\beta+N-s-1}$。识别为 Beta$(\alpha+s,\beta+N-s)$。$\square$</div>
+    <div class="step">伪计数：Beta$(\alpha,\beta)$ 形如"看过 $\alpha-1$ 成功、$\beta-1$ 失败"。$\alpha+\beta$ 是先验总伪计数，越大先验越强。</div>
+    <div class="step">后验均值 $=\frac{\alpha+s}{\alpha+\beta+N}$。$N\to\infty$：$\frac{\alpha+s}{\alpha+\beta+N}=\frac{\alpha/N+s/N}{\alpha/N+\beta/N+1}\to\frac{s/N}{1}=\frac{s}{N}$。即 MLE。$\square$</div>
+    <div class="step">回接 0002：高斯后验均值也是"先验均值 $\times$ 先验精度 + 数据均值 $\times$ 数据精度"的加权，$N\to\infty$ 数据淹没先验。同一机制。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 5 · MLE = 矩匹配 <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    对指数族对数似然 $\ell(\eta)=\sum_n[\eta^\top T(y_n)-a(\eta)]+\text{const}$，求 $\nabla_\eta\ell=0$，证明 $a'(\eta_{\text{MLE}})=\frac1N\sum T(y_n)$（模型矩 = 经验矩）。对 Poisson 似然具体推出 $\hat\lambda=\bar y$。
+  </div>
+  <details><summary>提示</summary><div class="hint">Poisson $p(y;\lambda)=\frac{\lambda^y e^{-\lambda}}{y!}$，写成指数族 $\eta=\log\lambda$，$a(\eta)=e^\eta=\lambda$，$T(y)=y$。矩匹配 $a'(\eta)=e^\eta=\lambda=\bar y$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\ell(\eta)=\eta^\top\sum_n T(y_n)-N a(\eta)+\text{const}$。$\nabla_\eta\ell=\sum_n T(y_n)-N a'(\eta)=0\Rightarrow a'(\eta_{\text{MLE}})=\frac1N\sum_n T(y_n)$。$\square$ 模型充分统计量均值 = 经验均值。</div>
+    <div class="step">Poisson：$p(y;\lambda)=\frac{1}{y!}\exp(y\log\lambda-\lambda)$。$\eta=\log\lambda$，$T(y)=y$，$a(\eta)=\lambda=e^\eta$，$b(y)=1/y!$。</div>
+    <div class="step">矩匹配：$a'(\eta)=e^\eta=\lambda=\frac1N\sum y_n=\bar y$。所以 $\hat\lambda=\bar y$。$\square$（Poisson MLE 是样本均值，众所周知，这里从指数族一般定理一把推出。）</div>
+    <div class="step">回接 0004：GLM 每个样本有自己的 $\eta_n=\mathbf{w}^\top\mathbf{x}_n$，梯度 $\sum(a'(\eta_n)-y_n)\mathbf{x}_n=0$ 是"每点模型均值匹配标签"的加权版。统一性来自指数族。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 6 · 共轭先验的统一构造（范式迁移） <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    对一般指数族似然 $p(y\mid\eta)=b(y)\exp(\eta^\top T(y)-a(\eta))$，证明先验 $p(\eta\mid\boldsymbol\tau,\nu)\propto\exp(\eta^\top\boldsymbol\tau-\nu a(\eta))$ 共轭，后验参数为 $(\boldsymbol\tau+\sum T(y_n),\nu+N)$。然后用这个统一构造推出 Gamma-Poisson 共轭（Poisson 似然，Gamma 先验于 $\lambda$），写出后验更新。这训练你用统一范式造共轭对，而不是死记。
+  </div>
+  <details><summary>提示</summary><div class="hint">后验 $\propto\exp(\eta^\top\boldsymbol\tau-\nu a(\eta))\prod_n\exp(\eta^\top T(y_n)-a(\eta))=\exp(\eta^\top(\boldsymbol\tau+\sum T(y_n))-(\nu+N)a(\eta))$。Gamma-Poisson：$\eta=\log\lambda$，$a(\eta)=e^\eta=\lambda$。先验 $\propto\exp(\eta\tau-\nu e^\eta)$，换回 $\lambda$：$\eta=\log\lambda$，$d\eta=d\lambda/\lambda$，得 $\lambda^{\tau-1}e^{-\nu\lambda}$ = Gamma$(\tau,\nu)$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">后验 $\propto p(\eta)\prod_n p(y_n\mid\eta)\propto\exp(\eta^\top\boldsymbol\tau-\nu a(\eta))\cdot\prod_n\exp(\eta^\top T(y_n)-a(\eta))$。</div>
+    <div class="step">$=\exp\big(\eta^\top(\boldsymbol\tau+\sum_n T(y_n))-(\nu+N)a(\eta)\big)$，即 $p(\eta\mid\boldsymbol\tau+\sum T(y_n),\nu+N)$。同形，共轭。$\square$</div>
+    <div class="step">Gamma-Poisson：Poisson 指数族 $\eta=\log\lambda$，$T(y)=y$，$a(\eta)=\lambda=e^\eta$。统一先验 $p(\eta\mid\tau,\nu)\propto\exp(\eta\tau-\nu e^\eta)$。</div>
+    <div class="step">换回 $\lambda$：$\eta=\log\lambda$，$d\eta=d\lambda/\lambda$。$p(\lambda)d\lambda=p(\eta)d\eta\Rightarrow p(\lambda)\propto\exp(\tau\log\lambda-\nu\lambda)\cdot\frac{1}{\lambda}=\lambda^{\tau-1}e^{-\nu\lambda}$，即 Gamma$(\alpha=\tau,\beta=\nu)$（形状 $\tau$，率 $\nu$）。</div>
+    <div class="step">后验更新：$\tau\to\tau+\sum y_n$，$\nu\to\nu+N$。即 Gamma$(\tau,\nu)\to$ Gamma$(\tau+\sum y_n,\nu+N)$。形状加 $\sum y_n$（总事件数），率加 $N$（观测数）。与 Beta-Bernoulli 同构：伪计数 + 真计数。$\square$</div>
+    <div class="step"><strong>范式迁移</strong>：不背共轭表，用"统一先验 $\exp(\eta^\top\boldsymbol\tau-\nu a(\eta))$ + 换回原参数"造任何指数族的共轭对。0010 EM 的 M 步、0015 变分的最优因子都用这个构造。</div>
+  </div></details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 自测</h2>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q1 · 为什么 $a(\eta)$ 是凸的？这和 0009 逻辑回归 Hessian 正定有什么关系？</div>
+  <details><summary>答案</summary><div class="sol">$a''(\eta)=\operatorname{Var}[T(y)]\geq0$，所以 $a$ 凸。逻辑回归 Hessian $\mathbf{H}=\mathbf{X}^\top\mathbf{S}\mathbf{X}$，$\mathbf{S}=\operatorname{diag}(\sigma_n(1-\sigma_n))$，对角元 $\sigma(1-\sigma)=a''(\eta_n)=$ Bernoulli 方差 $\geq0$。所以 Hessian 正定直接来自 $a$ 凸。更一般地，任何指数族 GLM 的 Hessian $=\sum_n a''(\eta_n)\mathbf{x}_n\mathbf{x}_n^\top$，正定性由 $a$ 凸保证。这是 GLM 凸优化的统一根源。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q2 · 充分统计量 $T(y)$ 的意义是什么？为什么说"数据压缩"？</div>
+  <details><summary>答案</summary><div class="sol">似然 $p(\mathbf{y}\mid\eta)\propto\exp(\eta^\top\sum_n T(y_n))$，数据只通过 $\sum T(y_n)$ 进入。由 Fisher–Neyman 因子定理，$T$ 充分。意义：无论样本量多大，似然（从而 MLE、后验）只依赖 $\sum T(y_n)$ 这一个低维量。如 Bernoulli 只需 $\sum y_n$（成功数），高斯只需 $\sum y_n,\sum y_n^2$（样本均值方差）。这是"数据压缩"——把 $N$ 个样本压成几个充分统计量，且不丢任何关于 $\eta$ 的信息。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q3 · 共轭先验为什么重要？不共轭会怎样？</div>
+  <details><summary>答案</summary><div class="sol">共轭让后验和先验同形，参数闭式更新（伪计数 + 真计数），贝叶斯计算可解析。不共轭：后验无闭式，需数值方法（MCMC 采样、变分推断——0015 课）。共轭是"可算性"的保证。但共轭先验可能不够灵活（表达力受限），现代贝叶斯常在"共轭可算"和"非共轭灵活"间权衡，用变分或 MCMC 处理后者。0002 高斯共轭、本课 Beta/Dirichlet/Gamma 共轭都是"选共轭换可算"。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q4 · MLE = 矩匹配。这个视角如何统一 Bernoulli、高斯、Poisson 的 MLE 都是样本均值？</div>
+  <details><summary>答案</summary><div class="sol">三者 $T(y)=y$，矩匹配 $a'(\eta_{\text{MLE}})=\bar y$。Bernoulli $a'=\sigma(\eta)=\phi\Rightarrow\hat\phi=\bar y$；高斯 $a'=\eta\sigma^2=\mu\Rightarrow\hat\mu=\bar y$；Poisson $a'=e^\eta=\lambda\Rightarrow\hat\lambda=\bar y$。全是 $\bar y$ 因为 $T(y)=y$ 且 $a'$ 可逆。这不是巧合，是指数族 + $T(y)=y$ 的必然。若 $T(y)\neq y$（如高斯方差未知时 $T=(y,y^2)$），MLE 是相应矩的匹配。</div></details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;">
+    <strong>PRML §2.4（指数族）+ §2.2（共轭先验）</strong>——§2.4.1–2.4.2 指数族标准形、矩公式、充分统计量；§2.2.1–2.2.5 高斯/Beta/Dirichlet 共轭。本课第 2–6 节的母本。
+  </p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;">
+    <strong>CS229 Notes 1 §8（The Exponential Family）+ §9（GLM）</strong>——指数族定义、五大分布归位、GLM 三假设。对"写进标准形"的机械操作讲得最清楚。
+  </p>
+  <p style="margin-bottom:0; font-size:0.9rem;">
+    <strong>MML §6.6（指数族）+ §6.7（共轭先验与指数族）</strong>——用更代数的视角讲共轭统一构造 $p(\eta\mid\tau,\nu)\propto\exp(\eta^\top\tau-\nu a(\eta))$，本课第 5 节和题 6 的来源。
+  </p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">
+    这课的关键逻辑链：标准形 $b\exp(\eta^\top T-a)$ → $a$ 是矩生成器（$a'$ 均值 $a''$ 方差）→ 五大分布归位 → 共轭先验统一构造 $\exp(\eta^\top\tau-\nu a)$ → 后验自然参数累加（伪计数+真计数）→ MLE = 矩匹配。
+    题 3（矩公式证明）和题 6（统一构造造 Gamma-Poisson 共轭）是钥匙——题 6 让你不背共轭表、用范式造任意共轭对，是迁移能力的训练。
+    <strong>指数族是后面 0010/0011/0015 的公共语言，内化它后面顺一大截。</strong>卡住直接问。
+  </p>
+</div>
+
+<div class="lesson-footer">
+  <a href="0003-marginal-likelihood.html">← 0003 边缘似然与模型比较</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0005-generative-vs-discriminative.html">0005 生成 vs 判别</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<template id="card-data-fisher-neyman">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">统计</span><h3>Fisher-Neyman 因子定理</h3><span class="cc-aliases">Factorization Theorem</span></div>
+  <div class="cc-essence">统计量 $T(\mathbf{y})$ 对参数 $\eta$ <strong>充分</strong> ⇔ 似然可分解为 $p(\mathbf{y}|\eta) = g(T(\mathbf{y}),\eta) \cdot h(\mathbf{y})$。$h$ 与 $\eta$ 无关，所有关于 $\eta$ 的信息都在 $T$ 里。</div>
+  <div class="cc-section"><h4>在指数族里</h4><p>指数族直接写成了因子形式：$p(\mathbf{y}|\eta) = (\prod b(y_n))\cdot\exp(\eta^\top\sum T(y_n) - Na(\eta))$ → $\sum T(y_n)$ 是充分统计量。数据只通过这一个量影响推断。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0004 §2: 指数族</span></div>
+</div>
+</template>
+
+</body>
+</html>

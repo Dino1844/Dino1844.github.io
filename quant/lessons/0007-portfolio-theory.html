@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0007 · 组合理论</title>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Serif 4',Georgia,serif;font-size:18px;line-height:1.75;color:#1a1a1a;background:#fdfdfb;max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+  h1{font-size:2.2rem;font-weight:700;margin-bottom:.3rem;letter-spacing:-.02em}
+  h2{font-size:1.45rem;font-weight:600;margin:3rem 0 .8rem;color:#2c2c2c}
+  h3{font-size:1.1rem;font-weight:600;margin:1.8rem 0 .5rem;color:#333}
+  .meta{color:#888;font-size:.9rem;margin-bottom:2rem;font-family:'Inter',sans-serif}
+  p{margin-bottom:1rem} strong{font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.95rem}
+  th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid #e0e0d8}
+  th{font-weight:600;font-family:'Inter',sans-serif;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:#666}
+  tr:last-child td{border-bottom:none}
+  .card{background:#fafaf8;border:1px solid #e8e8e0;border-radius:6px;padding:1.5rem 1.8rem;margin:1.5rem 0}
+  .card h3{margin-top:0}
+  .insight{background:#fff8f0;border-left:3px solid #e08830;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .insight h3{margin-top:0;color:#8b5a20}
+  .retrieval{background:#f8f4ff;border:1px solid #d8d0e8;border-radius:6px;padding:1.2rem 1.5rem;margin:2rem 0}
+  .retrieval h3{margin-top:0;color:#5b4a8a}
+  .crypto-note{background:#f5f9ff;border-left:3px solid #4a90d9;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .crypto-note h3{margin-top:0;color:#2a5a9a}
+  .formula{text-align:center;font-size:1.05rem;margin:1.4rem 0}
+  .danger{background:#fff0f0;border-left:3px solid #c44;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.97rem}
+  .danger h3{margin-top:0;color:#a33}
+  .connection{background:#f0f8f8;border-left:3px solid #4a9a9a;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#345}
+  .connection h3{margin-top:0;color:#2a6a6a}
+  .open-q{background:#fafafa;border:1px dashed #bbb;border-radius:6px;padding:1rem 1.5rem;margin:1.5rem 0;font-size:.92rem;color:#555}
+  .open-q h3{margin-top:0;color:#666}
+  .quiz{margin:2rem 0} .quiz .q{font-weight:600;margin-bottom:.6rem}
+  .quiz .options{display:flex;flex-direction:column;gap:.4rem}
+  .quiz .opt{padding:.6rem 1rem;border:1px solid #d8d8d0;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;transition:background .15s}
+  .quiz .opt:hover{background:#f0f0e8}
+  .quiz .opt.correct{background:#e6f4ea;border-color:#4a9}
+  .quiz .opt.wrong{background:#fce8e8;border-color:#c44}
+  .quiz .feedback{margin-top:.8rem;font-size:.9rem;color:#555;display:none} .quiz .feedback.show{display:block}
+  .primary-source{background:#fffdf5;border-left:3px solid #e6c030;padding:1rem 1.5rem;margin:2.5rem 0 1.5rem;font-size:.95rem}
+  .primary-source h3{margin-top:0}
+  .nav{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #e0e0d8;font-family:'Inter',sans-serif;font-size:.85rem;color:#999}
+  .nav a{color:#5577aa;text-decoration:none}
+  .reminder{background:#f5f7fa;border:1px solid #dde;border-radius:6px;padding:1.2rem 1.5rem;margin:2.5rem 0;font-size:.9rem;color:#445}
+  .en{color:#888;font-size:.85em}
+</style>
+</head>
+<body>
+
+<h1>组合理论</h1>
+<p class="meta">Lesson 0007（重写·深度版）· 第二阶段 · 预计 45-55 分钟</p>
+
+<div class="retrieval"><h3>🔁 衔接</h3>
+<p>前面讲单资产的风险收益。这节讲多资产：<strong>怎么组合让风险收益最优</strong>。Markowitz 均值-方差优化是 1952 的诺贝尔工作，理论上完美——实务上却几乎不可直接用。这节讲清它的数学、它为什么失败（error maximization）、以及实务怎么修：风险平价、Black-Litterman、约束。理解 Markowitz 的缺陷是理解 0012 多因子组合为什么从等权开始的关键。</p></div>
+
+<!-- ============================================================ -->
+<h2>一、组合的收益与风险</h2>
+
+<p>$n$ 个资产，权重 $w$，收益均值向量 $\mu$，协方差 $\Sigma$。组合收益和方差：</p>
+<div class="formula">$$\mu_p = w^\top \mu, \quad \sigma_p^2 = w^\top \Sigma w$$</div>
+<p>关键在 $\sigma_p^2$——协方差矩阵含两两相关性。组合风险不是单个风险的简单相加，相关性决定分散效果。</p>
+
+<div class="card"><h3>两资产情形的直觉</h3>
+<p>两资产等权组合：$\sigma_p^2 = \frac{1}{4}(\sigma_1^2 + \sigma_2^2 + 2\rho\sigma_1\sigma_2)$。$\rho=1$ 无分散（$\sigma_p$ = 平均），$\rho=0$ 部分分散，$\rho=-1$ 完全对冲（可零风险）。<strong>负相关是分散化的金子</strong>——但 0003 讲了危机时 $\rho \to 1$，分散消失。</p></div>
+
+<!-- ============================================================ -->
+<h2>二、Markowitz 均值-方差优化</h2>
+
+<p>给定目标收益 $\mu^*$，最小化风险：</p>
+<div class="formula">$$\min_w w^\top \Sigma w \quad \text{s.t.} \quad w^\top \mu = \mu^*, \; w^\top \mathbf{1} = 1$$</div>
+<p>用拉格朗日法解出最优权重。扫不同 $\mu^*$ 得<strong>有效前沿</strong>——给定风险下最高收益的组合集。前沿上有个<strong>切点组合</strong>（tangency portfolio），从无风险利率画到前沿的切点，是夏普最高的组合。CAPM（0009）就是从这里推出来的——市场组合 = 切点组合。</p>
+
+<!-- ============================================================ -->
+<h2>三、Markowitz 为什么实务不可用——Error Maximization</h2>
+
+<div class="danger"><h3>⚠️ 核心病：error maximization</h3>
+<p>Markowitz 解 $w \propto \Sigma^{-1} \mu$——<strong>对 $\mu$ 和 $\Sigma$ 的估计误差极度敏感</strong>。原因：</p>
+<ul>
+  <li>需要<strong>逆协方差矩阵</strong> $\Sigma^{-1}$。逆矩阵把小特征值放大成大权重——而金融协方差矩阵总有接近零的特征值（资产高度相关）。</li>
+  <li>优化器会<strong>把正估计误差的资产配大权、负的配负权</strong>——它在最大化你的<strong>估计误差</strong>，不是真实收益。</li>
+  <li>结果：权重极不稳定，样本微变权重大变；常给出荒谬仓位（某资产 300%、另一 -250%）。</li>
+</ul></div>
+
+<div class="card"><h3>具体例子</h3>
+<p>三个资产，真实最优等权。但你估的 $\mu$ 有 1% 误差——Markowitz 可能给出 [0.7, 0.5, -0.2]（因为某个资产估高了 1% 就被配大权）。样本外表现远差于等权。<strong>DeMiguel et al. (2009) 实证：等权组合经常样本外胜过 Markowitz 优化</strong>——因为等权不放大估计误差。</p></div>
+
+<div class="insight"><h3>⚡ 这就是 0012 从等权开始的原因</h3>
+<p style="margin-bottom:0;">因子组合层面同样的问题。优化加权对因子收益估计误差敏感。实务优先级：等权 → 风险加权 → IC 加权 → 优化，越往后越要样本外验证。Markowitz 不是错——是<strong>对输入精度要求太高，金融数据给不了</strong>。</p></div>
+
+<!-- ============================================================ -->
+<h2>四、实务修正</h2>
+
+<div class="card"><h3>4.1 风险平价 <span class="en">Risk Parity</span></h3>
+<p>不让收益相等，让<strong>各资产风险贡献相等</strong>：</p>
+<div class="formula">$$w_i \cdot \frac{\partial \sigma_p}{\partial w_i} = \text{常数} \quad \forall i$$</div>
+<p>不需要估 $\mu$（只估 $\Sigma$，好估得多），避免 error maximization 的一半问题。桥水 All Weather 是风险平价代表。实务稳健，但假设资产相关性结构稳定（0003 警告：危机时失效）。</p></div>
+
+<div class="card"><h3>4.2 Black-Litterman</h3>
+<p>把<strong>投资者观点</strong>和<strong>市场均衡</strong>结合。从市场组合反推隐含 $\mu$（均衡收益），再用你的观点调整——避免直接估 $\mu$ 的误差。公式（直觉）：$\mu_{BL} = $ 市场隐含 $\mu$ + 你的观点的贝叶斯调整。结果是稳定、不极端的权重。机构资产配置常用。</p></div>
+
+<div class="card"><h3>4.3 约束 + 收缩 <span class="en">Shrinkage</span></h3>
+<ul>
+  <li><strong>仓位约束</strong>：$w_i \in [0, 0.3]$，禁止极端仓位。简单但有效——直接限制 error maximization 的破坏。</li>
+  <li><strong>协方差收缩</strong>：$\hat\Sigma_{\text{收缩}} = \delta \cdot \hat\Sigma_{\text{样本}} + (1-\delta) \cdot \hat\Sigma_{\text{目标}}$（目标如单因子结构或常数相关）。Ledoit-Wolf 收缩让 $\Sigma^{-1}$ 稳定。</li>
+  <li><strong>正则化</strong>：Lasso/Ridge 在优化目标加 $\lambda \|w\|$ 惩罚，压小权重。</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2>五、分散化的层次（重申 0003）</h2>
+
+<div class="card"><h3>资产层面 vs 因子层面</h3>
+<p>持 20 个币是<strong>资产层面分散</strong>——表面分散，但都暴露于 BTC beta + 流动性 + 风险偏好，危机时相关性→1，分散消失。</p>
+<p>暴露于不同<strong>风险因子</strong>（动量、价值、carry、波动率）是<strong>因子层面分散</strong>——因子间相关性低且危机时升高幅度小，是真分散。</p>
+<p>Markowitz 在资产层面优化，看不到背后的因子结构——这是它分散化失败的深层原因。因子层面组合（0012）才是正道。</p></div>
+
+<!-- ============================================================ -->
+<div class="crypto-note"><h3>🔗 币圈组合的特殊问题</h3>
+<ul>
+  <li><strong>相关性极高</strong>：币圈币之间相关性普遍 0.6-0.9，远高于股票。资产层面分散化效果差——Markowitz 优化在币圈更容易 error maximization（$\Sigma$ 接近奇异）。</li>
+  <li><strong>方差时变剧烈</strong>：币圈波动率体制切换频繁，$\Sigma$ 估的快过期。用滚动估计 + 衰减权重。</li>
+  <li><strong>做空难</strong>：币圈做空（永续空）有资金费率成本和清算风险，Markowitz 给的负权难执行。常限制为做多。</li>
+  <li><strong>建议</strong>：币圈组合从风险平价或等权 + 流动性过滤开始，别直接 Markowitz。因子层面（动量+费率+MVRV）组合比币层面组合分散好得多。</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<div class="connection"><h3>🔗 与其他课的连接</h3>
+<p><strong>前置</strong>：0002 收益/方差、0003 相关性崩溃（Markowitz 用历史相关 = 核心缺陷）、0006 回归（估 $\Sigma$）。</p>
+<p><strong>后续</strong>：0008 回测（组合优化过拟合）、0009 CAPM（从 Markowitz 切点组合推出）、0012 多因子组合（因子层面 Markowitz 同样的病，所以从等权开始）。本课的"为什么 Markowitz 不可直接用"是 0012 方法论的根基。</p></div>
+
+<div class="open-q"><h3>❓ 开放问题</h3>
+<ul>
+<li>币圈有没有"市场组合"对应物——全市场市值加权币组合？Liu-Tsyvinski 试过。</li>
+<li>风险平价在币圈——币波动率差异巨大（BTC 60% vs 山寨 200%），风险平价会重配低波动 BTC，是不是就是"低波动因子"暴露？</li>
+<li>Black-Litterman 在币圈怎么用——市场均衡 $\mu$ 怎么估？</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2>测验</h2>
+<div class="quiz" id="q1"><p class="q">1. Markowitz 优化的核心实务问题？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">计算太慢</span>
+<span class="opt" data-answer="correct">error maximization——对 $\mu$ 和 $\Sigma$ 估计误差极敏感，逆协方差放大误差成极端仓位</span>
+<span class="opt" data-answer="wrong">理论错误</span>
+<span class="opt" data-answer="wrong">不能做空</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q2"><p class="q">2. 为什么等权组合常样本外胜过 Markowitz？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">等权更聪明</span>
+<span class="opt" data-answer="correct">等权不依赖估计、不放大误差；Markowitz 最大化了估计误差</span>
+<span class="opt" data-answer="wrong">Markowitz 错</span>
+<span class="opt" data-answer="wrong">数据问题</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q3"><p class="q">3. 风险平价相对 Markowitz 的优势？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">收益更高</span>
+<span class="opt" data-answer="correct">只需估协方差不需估 $\mu$（$\mu$ 更难估），让各资产风险贡献相等，避免一半 error maximization</span>
+<span class="opt" data-answer="wrong">完全无风险</span>
+<span class="opt" data-answer="wrong">更复杂</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q4"><p class="q">4. 为什么持 20 个币不是真分散化？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">数量不够</span>
+<span class="opt" data-answer="correct">资产层面分散——都暴露于同一组因子（BTC beta、流动性），危机时相关性→1 分散消失；要因子层面分散</span>
+<span class="opt" data-answer="wrong">币都是骗局</span>
+<span class="opt" data-answer="wrong">相关性总为 1</span>
+</div><p class="feedback"></p></div>
+
+<div class="quiz" id="q5"><p class="q">5. Black-Litterman 解决什么？</p>
+<div class="options">
+<span class="opt" data-answer="wrong">不用协方差</span>
+<span class="opt" data-answer="correct">避免直接估 $\mu$ 的误差——从市场均衡反推隐含 $\mu$，再用投资者观点贝叶斯调整，得稳定权重</span>
+<span class="opt" data-answer="wrong">算得更快</span>
+<span class="opt" data-answer="wrong">替代风险平价</span>
+</div><p class="feedback"></p></div>
+
+<!-- ============================================================ -->
+<h2>主要参考资料</h2>
+<div class="primary-source"><h3>📖 经典</h3>
+<p><strong>Markowitz — "Portfolio Selection" (1952)</strong>。均值-方差优化奠基，诺奖工作。<br>
+<strong>DeMiguel, Garlappi & Uppal — "Optimal Versus Naive Diversification" (2009, RFS)</strong>。等权常胜过优化的实证。</p></div>
+<div class="primary-source" style="margin-top:.5rem;"><h3>📖 实务修正</h3>
+<p><strong>Black & Litterman — "Asset Allocation Combining Investor Views with Market Equilibrium" (1991)</strong>。<br>
+<strong>Ledoit & Wolf — "Honey, I Shrunk the Sample Covariance Matrix" (2004)</strong>。协方差收缩。</p></div>
+
+<div class="reminder"><strong>💬 有问题随时问。</strong> error maximization 怎么直观理解、风险平价怎么算、币圈组合从哪开始——任何一点都可以深挖。下一课讲回测——所有策略和组合都要回测验证，而回测里陷阱最多。</div>
+
+<div class="nav">上一课：<a href="0006-linear-regression.html">0006 · 线性回归</a> &nbsp;|&nbsp; <a href="../index.html">↑ 返回目录</a><br>下一课：<a href="0008-backtesting.html">0008 · 回测</a></div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(q=>{q.querySelectorAll('.opt').forEach(o=>{o.addEventListener('click',function(){const f=this.parentElement.nextElementSibling;this.parentElement.querySelectorAll('.opt').forEach(x=>{x.classList.remove('correct','wrong');x.style.pointerEvents='none'});if(this.dataset.answer==='correct'){this.classList.add('correct');f.textContent='✓ 正确。';f.className='feedback show'}else{this.classList.add('wrong');this.parentElement.querySelector('[data-answer="correct"]').classList.add('correct');f.textContent='✗ 不对。绿色高亮的是正确答案。';f.className='feedback show'}})})});
+</script>
+</body>
+</html>

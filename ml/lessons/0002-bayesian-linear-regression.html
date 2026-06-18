@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0002 · 贝叶斯线性回归</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+	  /* ===== 概念卡片 ===== */
+	  .concept-card {
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    padding: 1.2rem 1.4rem;
+	    margin: 1.5rem 0;
+	    transition: box-shadow 0.2s;
+	  }
+	  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+	  .concept-card .cc-header {
+	    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+	    margin-bottom: 0.7rem;
+	  }
+	  .concept-card .cc-tag {
+	    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+	    letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px;
+	    color: white; background: #2d6a4f;
+	  }
+	  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+	  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+	  .concept-card .cc-essence {
+	    background: var(--light-accent);
+	    border-left: 3px solid var(--accent);
+	    padding: 0.5rem 0.9rem;
+	    margin: 0.7rem 0;
+	    border-radius: 0 5px 5px 0;
+	    font-size: 0.9rem;
+	  }
+	  .concept-card .cc-section { margin-top: 0.7rem; }
+	  .concept-card .cc-section h4 {
+	    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+	    color: var(--muted); margin-bottom: 0.3rem;
+	  }
+	  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+	  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+	  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+	  .concept-card .conn-badge {
+	    font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px;
+	    background: var(--code-bg); border: 1px solid var(--border); color: var(--accent);
+	  }
+
+
+	  /* ===== Hover popup card ===== */
+	  .cr {
+	    color: var(--accent);
+	    border-bottom: 1px dashed var(--accent);
+	    cursor: pointer;
+	    transition: background 0.12s;
+	  }
+	  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+	  .card-popup {
+	    position: fixed;
+	    z-index: 9999;
+	    width: 400px;
+	    max-height: 480px;
+	    overflow-y: auto;
+	    background: #fffdfb;
+	    border: 1px solid var(--border);
+	    border-radius: 10px;
+	    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	    padding: 0;
+	    display: none;
+	    font-size: 0.88rem;
+	    line-height: 1.55;
+	  }
+	  .card-popup.show { display: block; }
+	  .card-popup .concept-card {
+	    margin: 0;
+	    border: none;
+	    border-radius: 0;
+	    box-shadow: none;
+	    padding: 1rem 1.2rem;
+	  }
+	  .card-popup .concept-card:hover { box-shadow: none; }
+	  @media (max-width: 450px) {
+	    .card-popup { width: 95vw; left: 2.5vw !important; }
+	  }
+
+</style>
+</head>
+<body>
+
+<h1>Lesson 0002 · 贝叶斯线性回归</h1>
+<div class="subtitle">从点估计到分布：共轭·配平方·边缘化，以及一个贯穿全书的推导范式 · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 为什么要从点走到分布（认识论的差别）</a><br>
+  <a href="#s2">2. 共轭先验：似然形状决定先验形状</a><br>
+  <a href="#s3">3. 后验：配平方——一个贯穿全书的范式</a><br>
+  <a href="#s4">4. MAP = 正则化：贝叶斯与频率派的接点</a><br>
+  <a href="#s5">5. 预测分布：边缘化 = 高斯卷积</a><br>
+  <a href="#s6">6. 预测方差两项：噪声 + 参数不确定性</a><br>
+  <a href="#s7">7. 顺序学习与一致性：精度域的线性性</a><br>
+  <a href="#s8">8. 回接与预告：KL 视角、高斯过程、Kalman</a><br>
+  <a href="#s9">9. 推导与演算</a><br>
+  <a href="#s10">10. 自测</a>
+</div>
+
+<p>
+  上一课结尾留了一条线：MLE 是点估计，会过拟合；正则化是贝叶斯的"贫民版"——取后验众数，丢掉后验形状。
+  这条线现在走到底，但要走得比"会算后验"更深。本课有三层目标：
+  <strong>(i)</strong> 把贝叶斯线性回归的三个动作——共轭、配平方、边缘化——讲透，它们是后面 EM、变分推断、高斯过程反复复用的<strong>同一套范式</strong>；
+  <strong>(ii)</strong> 讲清贝叶斯与频率派在<strong>认识论</strong>上的差别（参数是不是随机变量），而不只是算法差别；
+  <strong>(iii)</strong> 预告高斯过程（函数空间版贝叶斯回归）和 Kalman 滤波（顺序学习的状态空间版）。
+</p>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 上节课与本课前置</h3>
+  <ol style="margin-bottom:0.5rem;">
+    <li>贝叶斯定理：后验 $p(\mathbf{w}\mid\mathcal{D})$ 与似然、先验的关系？归一化常数是什么？</li>
+    <li>高斯 $\mathcal{N}(\mathbf{x}\mid\boldsymbol{\mu},\boldsymbol{\Sigma})$ 的指数部分是 $\mathbf{x}$ 的几次函数？这个"二次型"为什么是本课一切的关键？</li>
+    <li>两个高斯相乘还是高斯吗？均值方差怎么变？（记不清没关系，本课会从配平方重推——这是范式之一。）</li>
+    <li>上节课 Ridge 解 $(\boldsymbol{\Phi}^\top\boldsymbol{\Phi}+\lambda\mathbf{I})^{-1}\boldsymbol{\Phi}^\top\mathbf{t}$ 和 KL 视角 $\mathrm{KL}(\widehat{p}\|p_{\mathbf{w}})$——本课会把后者接上后验。</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 为什么要从点走到分布（认识论的差别）</h2>
+
+<p>
+  MLE 给 $\mathbf{w}_{\text{ML}}$，MAP 给 $\mathbf{w}_{\text{MAP}}$——都是单个值。贝叶斯给一个<strong>分布</strong>。
+  这不只是"多输出一个方差"的技术差别，而是对"参数是什么"的根本立场差别：
+</p>
+
+<table>
+  <tr><th></th><th>频率派</th><th>贝叶斯派</th></tr>
+  <tr><td>参数 $\mathbf{w}$</td><td>固定但未知的真值</td><td>随机变量，有分布</td></tr>
+  <tr><td>概率的意义</td><td>长期频率</td><td>信念程度（degree of belief）</td></tr>
+  <tr><td>不确定性来源</td><td>仅来自数据采样</td><td>数据采样 + 先验信念</td></tr>
+  <tr><td>输出</td><td>点估计 +（渐近）置信区间</td><td>完整后验分布</td></tr>
+</table>
+
+<p>
+  频率派的置信区间有反直觉之处："$\mathbf{w}$ 落在区间里的概率是 95%"——但 $\mathbf{w}$ 是固定的，随机的是区间，
+  正确读法是"重复采样下 95% 的区间会罩住真值"，<strong>不能</strong>说"这一次的区间罩住真值的概率是 95%"。
+  贝叶斯后验区间（credible interval）没有这个别扭：它就是"给定这份数据，$\mathbf{w}$ 落在此区间的信念概率是 95%"。
+  这个差别在数据少时最明显——频率派只能靠渐近理论（大样本），贝叶斯小样本就给有意义的不确定性。
+</p>
+
+<p>贝叶斯的三步动作：</p>
+<ol>
+  <li><strong>先验</strong> $p(\mathbf{w})$：看数据前对 $\mathbf{w}$ 的信念。</li>
+  <li><strong>后验</strong> $p(\mathbf{w}\mid\mathcal{D})=\frac{p(\mathcal{D}\mid\mathbf{w})p(\mathbf{w})}{p(\mathcal{D})}$：更新后的信念。分母 $p(\mathcal{D})=\int p(\mathcal{D}\mid\mathbf{w})p(\mathbf{w})\,d\mathbf{w}$ 是<strong>边缘似然</strong>（下下课 0003 的主角），这里只是归一化常数。</li>
+  <li><strong>预测</strong> $p(y_\ast\mid\mathbf{x}_\ast,\mathcal{D})=\int p(y_\ast\mid\mathbf{x}_\ast,\mathbf{w})p(\mathbf{w}\mid\mathcal{D})\,d\mathbf{w}$：<strong>积分而非代入</strong>——把参数不确定性传播到预测。</li>
+</ol>
+
+<div class="insight">
+  第三步的"积分而非代入"是贝叶斯相对 MAP 的本质增益。MAP 只用后验的<strong>一个点</strong>（众数）；
+  贝叶斯用后验的<strong>全部</strong>。当后验尖锐集中时两者接近；当后验宽或多峰时差别巨大——
+  而恰恰是这种时候（数据少、模型复杂），我们最需要那个被 MAP 丢掉的不确定性。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 共轭先验：似然形状决定先验形状</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#5b8c5a;">范式 #1</span>
+	    <h3>共轭先验 · Conjugate Prior</h3>
+	    <span class="cc-aliases">Conjugacy · 闭式后验的钥匙</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>选先验使后验与先验<strong>同族</strong>。高斯似然 × 高斯先验 → 高斯后验。参数更新有闭式，无需数值积分。<strong>似然的代数形式决定共轭先验的形式</strong>。
+	  </div>
+	  <div class="cc-section">
+	    <h4>为什么高斯 × 高斯 = 高斯</h4>
+	    <p>似然（$\mathbf{w}$ 的二次型）+ 先验（$\mathbf{w}$ 的二次型）= 后验（还是 $\mathbf{w}$ 的二次型）</p>
+	    <div class="cc-formula">$$\mathbf{S}_N^{-1} = \alpha\mathbf{I} + \beta\boldsymbol{\Phi}^\top\!\boldsymbol{\Phi}, \quad \mathbf{m}_N = \beta\mathbf{S}_N\boldsymbol{\Phi}^\top\mathbf{t}$$</div>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0004(指数族): 共轭先验统一构造</span>
+	    <span class="conn-badge">→ 0010: EM Q函数也是配平方</span>
+	    <span class="conn-badge">→ 0015: VI ELBO 也用共轭</span>
+	  </div>
+	</div>
+
+
+<p>
+  上一课的似然 $p(\mathbf{t}\mid\mathbf{w})=\prod_n\mathcal{N}(t_n\mid\mathbf{w}^\top\boldsymbol{\phi}_n,\beta^{-1})$，
+  取对数是 $\mathbf{w}$ 的<strong>二次函数的指数</strong>。若先验也取 $\mathbf{w}$ 的二次指数——即高斯——
+  则后验 = 似然 × 先验 仍是二次指数，<strong>还是高斯</strong>。这叫<strong>共轭</strong>（conjugacy）：
+  先验与后验同族，后验参数有闭式更新。
+</p>
+
+<div class="formula-block">
+  $$p(\mathbf{w}) = \mathcal{N}(\mathbf{w}\mid\mathbf{m}_0,\mathbf{S}_0) \;\Longrightarrow\; p(\mathbf{w}\mid\mathbf{t}) = \mathcal{N}(\mathbf{w}\mid\mathbf{m}_N,\mathbf{S}_N)$$
+</div>
+
+<p>
+  共轭不是"为了好算而妥协"。它体现一个深层原理：<strong>似然的函数形状决定了先验的自然形状</strong>。
+  似然作为 $\mathbf{w}$ 的函数属于指数族时，存在一个共轭先验族使后验仍在族内——
+  这是 0009 课（指数族与共轭先验）的一般定理。这里高斯似然配高斯先验，就像
+  Bernoulli 配 Beta、Poisson 配 Gamma、Categorical 配 Dirichlet，全是同一套逻辑的不同实例。
+  <strong>记住这一个原理，就记住了所有共轭对，不用背表。</strong>
+</p>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #1 · 共轭 = "似然与先验在同一个指数族下闭合"</h4>
+  后面 EM（0010）的 M 步、变分推断（0015）的最优因子、指数族（0009）的充分统计量，
+  本质都在用"指数族在乘积/积分下闭合"这一性质。本课是它最简单的实例。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 后验：配平方——一个贯穿全书的范式</h2>
+	<div class="concept-card">
+	  <div class="cc-header">
+	    <span class="cc-tag" style="background:#c44d4d;">推导范式</span>
+	    <h3>配平方 · Completing the Square</h3>
+	    <span class="cc-aliases">二次型配方 · 全书反复复用的动作</span>
+	  </div>
+	  <div class="cc-essence">
+	    <strong>数学本质：</strong>高斯 × 高斯 = 高斯——但要知道后验的均值和协方差，必须把指数里的二次型写成标准形式 $(\mathbf{w}-\mathbf{m})^\top\mathbf{S}^{-1}(\mathbf{w}-\mathbf{m})$。<strong>配平方 = 在高斯指数的二次型里提取均值和精度矩阵。</strong>
+	  </div>
+	  <div class="cc-section">
+	    <h4>标准配方（三步）</h4>
+	    <ol>
+	      <li>展开所有二次项，合并 $\mathbf{w}^\top(\cdots)\mathbf{w}$ 得精度 $\mathbf{S}_N^{-1}$</li>
+	      <li>合并一次项系数得 $\mathbf{S}_N^{-1}\mathbf{m}_N$</li>
+	      <li>反解 $\mathbf{m}_N = \mathbf{S}_N \cdot (\text{一次系数向量})$</li>
+	    </ol>
+	  </div>
+	  <div class="cc-connections">
+	    <span class="conn-badge">→ 0002 §3: 本课完整演示</span>
+	    <span class="conn-badge">→ 0010: EM Q函数配平方</span>
+	    <span class="conn-badge">→ 0015: ELBO优化 = 变分配平方</span>
+	    <span class="conn-badge">→ 高斯过程: 后验也是配平方</span>
+	  </div>
+	</div>
+
+
+<p>后验对数（丢掉与 $\mathbf{w}$ 无关的常数）：</p>
+
+<div class="formula-block">
+  $$\log p(\mathbf{w}\mid\mathbf{t}) = -\frac{\beta}{2}\|\mathbf{t}-\boldsymbol{\Phi}\mathbf{w}\|^2 - \frac{1}{2}(\mathbf{w}-\mathbf{m}_0)^\top\mathbf{S}_0^{-1}(\mathbf{w}-\mathbf{m}_0) + \text{const}$$
+</div>
+
+<p>这是 $\mathbf{w}$ 的二次型。要读出后验均值和协方差，用<strong>配平方</strong>（complete the square）。</p>
+
+<div class="derivation">
+  <h4>推导 · 矩阵配平方（范式 #2）</h4>
+  <div class="step">展开两个二次项，按 $\mathbf{w}$ 的幂次收集：</div>
+  <div class="step">
+    $\log p = -\frac{1}{2}\mathbf{w}^\top\big(\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}+\mathbf{S}_0^{-1}\big)\mathbf{w} + \mathbf{w}^\top\big(\beta\boldsymbol{\Phi}^\top\mathbf{t}+\mathbf{S}_0^{-1}\mathbf{m}_0\big) + \text{const}$
+    <span class="reason">$\|\mathbf{t}-\boldsymbol{\Phi}\mathbf{w}\|^2=\mathbf{w}^\top\boldsymbol{\Phi}^\top\boldsymbol{\Phi}\mathbf{w}-2\mathbf{w}^\top\boldsymbol{\Phi}^\top\mathbf{t}+\text{const}$；交叉项合并</span>
+  </div>
+  <div class="step">
+    与标准高斯对数 $-\frac{1}{2}\mathbf{w}^\top\mathbf{S}_N^{-1}\mathbf{w}+\mathbf{w}^\top\mathbf{S}_N^{-1}\mathbf{m}_N+\text{const}$ 逐项对比：
+  </div>
+  <div class="step">
+    $\mathbf{S}_N^{-1}=\mathbf{S}_0^{-1}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$，$\mathbf{S}_N^{-1}\mathbf{m}_N=\mathbf{S}_0^{-1}\mathbf{m}_0+\beta\boldsymbol{\Phi}^\top\mathbf{t}$
+  </div>
+  <div class="step">
+    $\boxed{\;\mathbf{m}_N=\mathbf{S}_N\big(\mathbf{S}_0^{-1}\mathbf{m}_0+\beta\boldsymbol{\Phi}^\top\mathbf{t}\big)\;}$
+  </div>
+</div>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #2 · 配平方——"把二次型对齐到标准高斯，读系数"</h4>
+  任何"高斯 × 高斯"或"高斯积分"问题都用这招：展开 → 收集 $\mathbf{w}^\top(\cdot)\mathbf{w}$ 和 $\mathbf{w}^\top(\cdot)$ → 对齐到 $-\frac{1}{2}\mathbf{w}^\top\boldsymbol{\Sigma}^{-1}\mathbf{w}+\mathbf{w}^\top\boldsymbol{\Sigma}^{-1}\boldsymbol{\mu}$ → 读出 $\boldsymbol{\Sigma}^{-1}$ 和 $\boldsymbol{\mu}$。
+  本课第 5 节边缘化、0010 课 EM 的 M 步、0011 课概率 PCA、0015 课变分推断的全高斯模型——<strong>全是这一招</strong>。
+  把它练成本能，后面省一半力气。
+</div>
+
+<div class="insight">
+  读这两个式子的物理意义：
+  <strong>精度相加</strong> $\mathbf{S}_N^{-1}=\mathbf{S}_0^{-1}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$——后验精度 = 先验精度 + 数据精度。
+  <strong>均值是精度加权的融合</strong>——先验均值和数据信息各按自己的精度加权后求和，再除以总精度。
+  为什么是精度相加不是协方差相加？因为高斯在<strong>指数</strong>上合并，指数上是精度（二次型）相加；
+  精度 = 信息量，信息可加；协方差是精度的逆，逆不可加。所以贝叶斯更新在<strong>精度域线性</strong>、协方差域非线性。
+  这是"信息滤波"（information filter）比协方差滤波好算的根源，也是 0008 课 SVM 对偶的同类现象。
+</div>
+
+<p>两个边界情形验证理解：</p>
+<ul>
+  <li><strong>无数据</strong>（$N=0$）：$\mathbf{S}_N=\mathbf{S}_0$，$\mathbf{m}_N=\mathbf{m}_0$——后验退回先验。✓</li>
+  <li><strong>无限宽先验</strong>（$\mathbf{S}_0^{-1}\to\mathbf{0}$）：$\mathbf{m}_N\to(\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top\mathbf{t}=\mathbf{w}_{\text{ML}}$——后验均值退回 MLE。✓</li>
+</ul>
+
+<p>MLE 是贝叶斯在"先验无信息"极限下的特例，MAP 是贝叶斯取后验众数。<strong>贝叶斯是更一般的框架，点估计是它的投影。</strong></p>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. MAP = 正则化：贝叶斯与频率派的接点</h2>
+
+<p>取零均值各向同性先验 $p(\mathbf{w}\mid\alpha)=\mathcal{N}(\mathbf{w}\mid\mathbf{0},\alpha^{-1}\mathbf{I})$，后验对数：</p>
+
+<div class="formula-block">
+  $$\log p(\mathbf{w}\mid\mathbf{t}) = -\frac{\beta}{2}\sum_n\{t_n-\mathbf{w}^\top\boldsymbol{\phi}_n\}^2 - \frac{\alpha}{2}\mathbf{w}^\top\mathbf{w} + \text{const}$$
+</div>
+
+<p>最大化它（取后验众数 MAP）等价于最小化 $\frac{\beta}{2}\sum\{\cdot\}^2+\frac{\alpha}{2}\|\mathbf{w}\|^2$——正是 Ridge，$\lambda=\alpha/\beta$。</p>
+
+<div class="insight">
+  <strong>Ridge 不是外加的技巧，是高斯先验的对数。</strong>正则强度 = 先验精度/噪声精度：
+  先验越紧（$\alpha$ 大）或噪声越大（$\beta$ 小）→ 强正则——"数据不可靠时更该听先验"。
+  Lasso 同理对应拉普拉斯先验。频率派正则化 = 贝叶斯 MAP，但 MAP 丢掉了后验形状。
+  <strong>要拿回不确定性，就得做完整贝叶斯（积分）。</strong>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 预测分布：边缘化 = 高斯卷积</h2>
+
+<p>对新输入 $\mathbf{x}_\ast$，预测分布把 $\mathbf{w}$ 积分掉：</p>
+
+<div class="formula-block">
+  $$p(t_\ast\mid\mathbf{x}_\ast,\mathcal{D}) = \int \underbrace{\mathcal{N}(t_\ast\mid\mathbf{w}^\top\boldsymbol{\phi}_\ast,\beta^{-1})}_{\text{似然，关于 }\mathbf{w}\text{ 是高斯}}\;\underbrace{\mathcal{N}(\mathbf{w}\mid\mathbf{m}_N,\mathbf{S}_N)}_{\text{后验}}\,d\mathbf{w}$$
+</div>
+
+<p>这是两个高斯的"卷积"（更准确说是一个高斯对另一个的边缘化）。用配平方（范式 #2）直接算，结果是高斯：</p>
+
+<div class="formula-block">
+  $$p(t_\ast\mid\mathbf{x}_\ast,\mathcal{D}) = \mathcal{N}\big(t_\ast\mid \mathbf{m}_N^\top\boldsymbol{\phi}_\ast,\; \beta^{-1}+\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast\big)$$
+</div>
+
+<div class="derivation">
+  <h4>推导 · 边缘化（范式 #2 再用一次）</h4>
+  <div class="step">被积指数：$-\frac{\beta}{2}(t_\ast-\mathbf{w}^\top\boldsymbol{\phi}_\ast)^2-\frac{1}{2}(\mathbf{w}-\mathbf{m}_N)^\top\mathbf{S}_N^{-1}(\mathbf{w}-\mathbf{m}_N)$</div>
+  <div class="step">把 $\mathbf{w}$ 当变量配平方：关于 $\mathbf{w}$ 的精度是 $\beta\boldsymbol{\phi}_\ast\boldsymbol{\phi}_\ast^\top+\mathbf{S}_N^{-1}$，配出 $\mathbf{w}$ 的二次型后积分掉（高斯积分=精度行列式开根号的倒数）。</div>
+  <div class="step">剩下的 $t_\ast$ 的二次型给出预测方差。用 Woodbury 恒等式把 $\mathbf{w}$ 积分后的余项化简，得 $\beta^{-1}+\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast$。</div>
+  <div class="step">均值由"高斯线性变换"直接读出：$\mathbb{E}[t_\ast]=\mathbb{E}[\mathbf{w}]^\top\boldsymbol{\phi}_\ast=\mathbf{m}_N^\top\boldsymbol{\phi}_\ast$。</div>
+</div>
+
+<div class="meta-box">
+  <h4>🔗 推导范式 #3 · 高斯边缘化 = "配平方 + Woodbury 恒等式"</h4>
+  "高斯在边缘化、条件化、线性变换下闭合"是整个贝叶斯高斯模型的基石。
+  条件分布 $\mathbf{x}_2\mid\mathbf{x}_1$ 的协方差 $\boldsymbol{\Sigma}_{22}-\boldsymbol{\Sigma}_{21}\boldsymbol{\Sigma}_{11}^{-1}\boldsymbol{\Sigma}_{12}$ 就是 Woodbury 的面孔。
+  本课、0011 概率 PCA、高斯过程、Kalman 滤波——<strong>全是这一组恒等式的不同代入</strong>。
+</div>
+
+<p>预测均值 $\mathbf{m}_N^\top\boldsymbol{\phi}_\ast$ 是后验均值代入。注意它<strong>不是</strong> $\mathbf{w}_{\text{MAP}}^\top\boldsymbol{\phi}_\ast$——这里高斯后验众数=均值所以数值相同，但概念上用的是后验均值，且方差完全不同（MAP 给不出方差）。</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 预测方差两项：噪声 + 参数不确定性</h2>
+
+<div class="formula-block">
+  $$\sigma_N^2(\mathbf{x}_\ast) = \underbrace{\frac{1}{\beta}}_{\text{观测噪声 (irreducible)}} + \underbrace{\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast}_{\text{参数不确定性 (依赖 }\mathbf{x}_\ast\text{)}}$$
+</div>
+
+<p>两项相加因为噪声与 $\mathbf{w}$ 独立、方差可加。但两项性质迥异：</p>
+<ul>
+  <li>第一项 $1/\beta$：<strong>irreducible</strong>——数据本身带的噪声，再多数据也消不掉，与 $\mathbf{x}_\ast$ 无关。</li>
+  <li>第二项 $\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast$：<strong>依赖 $\mathbf{x}_\ast$</strong>。在训练数据密集处，$\mathbf{S}_N$ 在那个方向上小，不确定性低；在外推/稀疏处，不确定性高。</li>
+</ul>
+
+<div class="insight">
+  这是贝叶斯相对点估计最实质的好处：<strong>不确定性随位置变化，且随数据增多自动收缩</strong>。
+  点估计给一条确定的线，贝叶斯给一族线（后验样本）加一个随位置变宽变窄的置信带。
+  PRML 图 3.8 把这个画得很清楚：数据点附近置信带窄，远离数据处置信带爆炸——
+  这正是"外推危险"的数学表达，而点估计完全看不到这个危险。
+</div>
+
+<p>两个极限：$N\to\infty$ 时 $\mathbf{S}_N\to\mathbf{0}$，第二项消失，只剩 $1/\beta$；$N=0$ 时 $\mathbf{S}_N=\mathbf{S}_0$，第二项最大。可证 $\sigma_{N+1}^2\leq\sigma_N^2$——<strong>不确定性只会减少不会增加，贝叶斯更新是"学习"的数学化身</strong>。</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 顺序学习与一致性：精度域的线性性</h2>
+
+<p>后验的递推结构天然支持顺序学习：第 $N$ 个点后的后验 $p(\mathbf{w}\mid\mathbf{t}_N)$ 直接当第 $N+1$ 个点的<strong>先验</strong>。新后验 $p(\mathbf{w}\mid\mathbf{t}_{N+1})\propto p(t_{N+1}\mid\mathbf{w})p(\mathbf{w}\mid\mathbf{t}_N)$，形式不变。</p>
+
+<p>这不是工程 trick，是贝叶斯定理的<strong>一致性</strong>：分批处理（先 $N$ 个再第 $N+1$ 个）和一次性处理全部 $N+1$ 个，得到完全相同的后验。根子在精度域的线性性——$\mathbf{S}_N^{-1}=\mathbf{S}_0^{-1}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 里每个数据点的贡献 $\beta\boldsymbol{\phi}_n\boldsymbol{\phi}_n^\top$ 在精度域<strong>可加且可交换</strong>，所以先后顺序不影响总和。频率派方法大多没这个性质——批量解和在线解往往不同。</p>
+
+<div class="meta-box">
+  <h4>🔗 联系 · Kalman 滤波 = "贝叶斯线性回归 + 时变参数"</h4>
+  把 $\mathbf{w}$ 换成随时间演化的状态 $\mathbf{x}_t$，加一个状态转移模型 $\mathbf{x}_t=\mathbf{A}\mathbf{x}_{t-1}+\text{噪声}$，
+  本课的"后验=先验被似然更新"就变成 Kalman 滤波的 predict-update 两步。
+  Kalman 的 Riccati 方程就是本课精度递推 $\mathbf{S}_N^{-1}=\mathbf{S}_0^{-1}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 的动态版。
+  <strong>同一套范式，静态版叫贝叶斯回归，动态版叫 Kalman 滤波。</strong>（量化里状态空间模型、做市商库存估计都靠它。）
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 回接与预告：KL 视角、高斯过程、Kalman</h2>
+
+<p><strong>基石 0001 §6。</strong> 0001 课说 MLE = 最小化 $\mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}})$。贝叶斯能接上：后验可以写成"先验被数据的 KL 修正"——</p>
+
+<div class="formula-block">
+  $$\log p(\mathbf{w}\mid\mathcal{D}) = \log p(\mathbf{w}) + \log p(\mathcal{D}\mid\mathbf{w}) - \log p(\mathcal{D})$$
+</div>
+
+<p>即 $\log\text{后验}=\log\text{先验}+\log\text{似然}-\text{const}$。似然项把先验往"解释数据好的 $\mathbf{w}$"方向推，推的力度由数据精度决定。这是 KL 视角的动态版：0001 讲的是"一步拟合到经验分布"，本课讲的是"持续地、带先验地修正信念"。</p>
+
+<p><strong>预告高斯过程（GP）。</strong> 本课对 $\mathbf{w}$ 积分得到 $t_\ast$ 的预测分布。若把"函数 $f(\mathbf{x})$"本身当随机对象，对 $\mathbf{w}$ 积分得到的 $f(\cdot)$ 的分布就是一个<strong>高斯过程</strong>——贝叶斯线性回归的函数空间视角。预测均值 $\mathbf{m}_N^\top\boldsymbol{\phi}_\ast$ 和方差 $\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast$ 都能重写成只含核函数 $k(\mathbf{x},\mathbf{x}')=\boldsymbol{\phi}(\mathbf{x})^\top\mathbf{S}_0\boldsymbol{\phi}(\mathbf{x}')$ 的形式——这正是 0006 课核方法的接点，也是 GP 的起点。本课是 GP 的特例（线性核），GP 是本课的无穷维推广。</p>
+
+<p><strong>预告 0003 边缘似然。</strong> 本课里 $\alpha,\beta$ 是<strong>给定</strong>的。若它们也要从数据学，就最大化<strong>边缘似然</strong> $p(\mathbf{t}\mid\alpha,\beta)=\int p(\mathbf{t}\mid\mathbf{w},\beta)p(\mathbf{w}\mid\alpha)\,d\mathbf{w}$——把 $\mathbf{w}$ 积分掉，用边缘似然选超参。这会自动实现奥卡姆剃刀（复杂模型概率摊太薄，边缘似然低），是下一课的主角。本课第 5 节的边缘化技巧，正是算这个积分的工具。</p>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 推导与演算</h2>
+
+<p>6 道题，难度递增。<strong>先自己做，做不出看提示，做完对解答。</strong>这些题考真推导，不是查上下文能答。题 5、6 是把本课的范式用到新场景——做出来说明你把"配平方 + 边缘化"内化了，而不只是会这一课。</p>
+
+<div class="problem">
+  <div class="ptitle">题 1 · 一维后验的配平方 <span class="plevel l1">L1 · 基础</span></div>
+  <div class="pbody">
+    一维 $y_n=wx_n+\varepsilon_n$，$\varepsilon_n\sim\mathcal{N}(0,\beta^{-1})$，先验 $p(w)=\mathcal{N}(w\mid0,\alpha^{-1})$。证明 $p(w\mid\mathbf{y})=\mathcal{N}(w\mid m_N,s_N)$ 并求 $m_N,s_N$。
+  </div>
+  <details><summary>提示</summary><div class="hint">写 $\log p(w\mid\mathbf{y})$ 到差常数，整理成 $-\frac{1}{2}(Aw^2-2Bw)$，配平方读出精度 $A$、均值 $B/A$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\log p = -\frac{\beta}{2}\sum(y_n-wx_n)^2-\frac{\alpha}{2}w^2+\text{const}$</div>
+    <div class="step">$= -\frac{1}{2}\big[(\alpha+\beta\sum x_n^2)w^2-2\beta\sum x_ny_n\,w\big]+\text{const}$</div>
+    <div class="step">$A=\alpha+\beta\sum x_n^2$，$B=\beta\sum x_ny_n$。故 $s_N^{-1}=A$，$m_N=B/A=\dfrac{\beta\sum x_ny_n}{\alpha+\beta\sum x_n^2}$。</div>
+    <div class="step">验证：$\alpha\to0$ 给一维 MLE $\frac{\sum x_ny_n}{\sum x_n^2}$；$N=0$ 给 $m_N=0,s_N=\alpha^{-1}$（退回先验）。✓</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 2 · 精度相加的来源（范式 #2） <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    从 $\log p(\mathbf{w}\mid\mathbf{t})=-\frac{\beta}{2}\|\mathbf{t}-\boldsymbol{\Phi}\mathbf{w}\|^2-\frac{1}{2}(\mathbf{w}-\mathbf{m}_0)^\top\mathbf{S}_0^{-1}(\mathbf{w}-\mathbf{m}_0)+\text{const}$ 用矩阵配平方推出 $\mathbf{S}_N^{-1}$ 和 $\mathbf{m}_N$。并解释：为什么是<strong>精度相加</strong>而非协方差相加？这个"精度域线性"性质在顺序学习里起什么作用？
+  </div>
+  <details><summary>提示</summary><div class="hint">展开 $\|\cdot\|^2$ 收集 $\mathbf{w}^\top(\cdot)\mathbf{w}$ 和 $\mathbf{w}^\top(\cdot)$，对齐标准高斯对数 $-\frac{1}{2}\mathbf{w}^\top\boldsymbol{\Sigma}^{-1}\mathbf{w}+\mathbf{w}^\top\boldsymbol{\Sigma}^{-1}\boldsymbol{\mu}$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\log p = -\frac{1}{2}\mathbf{w}^\top(\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}+\mathbf{S}_0^{-1})\mathbf{w}+\mathbf{w}^\top(\beta\boldsymbol{\Phi}^\top\mathbf{t}+\mathbf{S}_0^{-1}\mathbf{m}_0)+\text{const}$</div>
+    <div class="step">对比：$\mathbf{S}_N^{-1}=\mathbf{S}_0^{-1}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$，$\mathbf{m}_N=\mathbf{S}_N(\mathbf{S}_0^{-1}\mathbf{m}_0+\beta\boldsymbol{\Phi}^\top\mathbf{t})$。</div>
+    <div class="step"><strong>精度相加：</strong>高斯乘积在指数合并，指数上是精度（二次型）相加：$\exp(-\frac{1}{2}\mathbf{w}^\top\mathbf{A}\mathbf{w})\cdot\exp(-\frac{1}{2}\mathbf{w}^\top\mathbf{B}\mathbf{w})=\exp(-\frac{1}{2}\mathbf{w}^\top(\mathbf{A}+\mathbf{B})\mathbf{w})$。精度=信息量，信息可加；协方差是精度的逆，逆不可加。</div>
+    <div class="step"><strong>顺序学习：</strong>每个数据点贡献 $\beta\boldsymbol{\phi}_n\boldsymbol{\phi}_n^\top$ 到精度，可加可交换 → 分批=批量，先后无关。这就是第 7 节一致性的代数根源。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 3 · 预测方差两项（范式 #3 雏形） <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    $t_\ast=\mathbf{w}^\top\boldsymbol{\phi}_\ast+\varepsilon_\ast$，$\mathbf{w}\sim\mathcal{N}(\mathbf{m}_N,\mathbf{S}_N)$ 独立于 $\varepsilon_\ast\sim\mathcal{N}(0,\beta^{-1})$。用方差分解律推 $\sigma_N^2(\mathbf{x}_\ast)=\beta^{-1}+\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast$，并说明两项分别对应什么、为什么第二项依赖 $\mathbf{x}_\ast$ 而第一项不依赖。
+  </div>
+  <details><summary>提示</summary><div class="hint">$\operatorname{Var}(\mathbf{a}^\top\mathbf{X})=\mathbf{a}^\top\operatorname{Var}(\mathbf{X})\mathbf{a}$；独立故协方差为零。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$F=\mathbf{w}^\top\boldsymbol{\phi}_\ast$，$E=\varepsilon_\ast$，$t_\ast=F+E$。$\operatorname{Var}(F)=\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast$，$\operatorname{Var}(E)=\beta^{-1}$，$\operatorname{Cov}=0$。</div>
+    <div class="step">$\sigma_N^2=\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast+\beta^{-1}$。</div>
+    <div class="step">第二项 $\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast$ 是 $\mathbf{w}$ 沿 $\boldsymbol{\phi}_\ast$ 方向的方差，<strong>依赖 $\mathbf{x}_\ast$</strong>（通过 $\boldsymbol{\phi}_\ast$）——数据密集处 $\mathbf{S}_N$ 在该方向小，外推处大。第一项 $\beta^{-1}$ 是观测噪声，与 $\mathbf{x}_\ast$ 无关、irreducible。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 4 · MAP 退化为 Ridge <span class="plevel l2">L2 · 理解</span></div>
+  <div class="pbody">
+    从 $\mathbf{m}_N$ 出发，取 $\mathbf{m}_0=\mathbf{0},\mathbf{S}_0^{-1}=\alpha\mathbf{I}$，证 $\mathbf{m}_N=(\alpha\mathbf{I}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\beta\boldsymbol{\Phi}^\top\mathbf{t}$ 等于 Ridge 解，并给 $\lambda$。解释 $\lambda=\alpha/\beta$ 大意味着什么。
+  </div>
+  <details><summary>提示</summary><div class="hint">把 $\beta$ 吸进逆矩阵对比 $(\boldsymbol{\Phi}^\top\boldsymbol{\Phi}+\lambda\mathbf{I})^{-1}\boldsymbol{\Phi}^\top\mathbf{t}$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$\mathbf{m}_N=(\alpha\mathbf{I}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\beta\boldsymbol{\Phi}^\top\mathbf{t}=(\frac{\alpha}{\beta}\mathbf{I}+\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}\boldsymbol{\Phi}^\top\mathbf{t}$。</div>
+    <div class="step">对比 Ridge：$\lambda=\alpha/\beta$。比值大 = 先验紧或噪声大 → 强正则，更听先验。"数据不可靠时更该听先验"。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 5 · 把范式用到新场景：两个高斯相乘 <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    用配平方（范式 #2）证明：$\mathcal{N}(\mathbf{x}\mid\boldsymbol{\mu}_a,\boldsymbol{\Sigma}_a)\,\mathcal{N}(\mathbf{x}\mid\boldsymbol{\mu}_b,\boldsymbol{\Sigma}_b)=Z\,\mathcal{N}(\mathbf{x}\mid\boldsymbol{\mu}_c,\boldsymbol{\Sigma}_c)$，给出 $\boldsymbol{\Sigma}_c,\boldsymbol{\mu}_c,Z$。这是本课后验（似然×先验）和 0010 EM 的 M 步都要用的恒等式——做出来说明你掌握了范式而非记住了本课公式。
+  </div>
+  <details><summary>提示</summary><div class="hint">取对数，两个二次型相加，精度 $\boldsymbol{\Sigma}_c^{-1}=\boldsymbol{\Sigma}_a^{-1}+\boldsymbol{\Sigma}_b^{-1}$，配平方得均值。$Z$ 是与 $\mathbf{x}$ 无关的余项，用"配平方多出来的常数"读出，结果是 $Z=\mathcal{N}(\boldsymbol{\mu}_a\mid\boldsymbol{\mu}_b,\boldsymbol{\Sigma}_a+\boldsymbol{\Sigma}_b)$。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">取对数：$-\frac{1}{2}\mathbf{x}^\top(\boldsymbol{\Sigma}_a^{-1}+\boldsymbol{\Sigma}_b^{-1})\mathbf{x}+\mathbf{x}^\top(\boldsymbol{\Sigma}_a^{-1}\boldsymbol{\mu}_a+\boldsymbol{\Sigma}_b^{-1}\boldsymbol{\mu}_b)+\text{const}$。</div>
+    <div class="step">$\boldsymbol{\Sigma}_c^{-1}=\boldsymbol{\Sigma}_a^{-1}+\boldsymbol{\Sigma}_b^{-1}$，$\boldsymbol{\mu}_c=\boldsymbol{\Sigma}_c(\boldsymbol{\Sigma}_a^{-1}\boldsymbol{\mu}_a+\boldsymbol{\Sigma}_b^{-1}\boldsymbol{\mu}_b)$——精度加权平均。</div>
+    <div class="step">配平方多出的常数项（关于 $\mathbf{x}$ 是常数，但依赖 $\boldsymbol{\mu}_a,\boldsymbol{\mu}_b$）：$-\frac{1}{2}(\boldsymbol{\mu}_a-\boldsymbol{\mu}_b)^\top(\boldsymbol{\Sigma}_a+\boldsymbol{\Sigma}_b)^{-1}(\boldsymbol{\mu}_a-\boldsymbol{\mu}_b)$ 加归一化常数差。</div>
+    <div class="step">故 $Z=\mathcal{N}(\boldsymbol{\mu}_a\mid\boldsymbol{\mu}_b,\boldsymbol{\Sigma}_a+\boldsymbol{\Sigma}_b)$。<strong>读法：</strong>两个高斯乘积的归一化常数，等于"把一个均值当观测、另一个当先验"的边缘似然——这正是 0003 课边缘似然的雏形。范式 #2 一招三用：后验、乘积归一化、边缘似然。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">题 6 · 边缘似然与奥卡姆（范式 #3 + 预告 0003） <span class="plevel l3">L3 · 进阶</span></div>
+  <div class="pbody">
+    一维单点 $(x,t)$，$y=wx+\varepsilon$，$w\sim\mathcal{N}(0,\alpha^{-1})$，$\varepsilon\sim\mathcal{N}(0,\beta^{-1})$。用边缘化（范式 #3）算边缘似然 $p(t\mid x,\alpha)=\int p(t\mid x,w)p(w\mid\alpha)\,dw$（高斯，给均值方差）。分析 $\alpha\to0$ 和 $\alpha\to\infty$ 时它的行为，解释为什么边缘似然能自动罚过复杂模型——这是下一课的核心，做完会对 0003 有预期。
+  </div>
+  <details><summary>提示</summary><div class="hint">$t=wx+\varepsilon$ 是独立零均值高斯的线性组合，$t\sim\mathcal{N}(0,x^2\alpha^{-1}+\beta^{-1})$。看 $\alpha$ 两端方差和密度的行为。</div></details>
+  <details><summary>解答</summary><div class="sol">
+    <div class="step">$t=wx+\varepsilon$，$w,\varepsilon$ 独立零均值高斯 → $t$ 零均值高斯，$\operatorname{Var}(t)=x^2/\alpha+1/\beta$。</div>
+    <div class="step">$p(t\mid x,\alpha)=\mathcal{N}(t\mid0,x^2/\alpha+1/\beta)$。</div>
+    <div class="step">$\alpha\to\infty$（先验钉 $w=0$，最简单）：方差 $\to1/\beta$，$p\to\mathcal{N}(t\mid0,1/\beta)$——只能输出噪声水平预测。</div>
+    <div class="step">$\alpha\to0$（先验无限制，最复杂）：方差 $\to\infty$，$p\to0$ 对任何有限 $t$——太复杂把概率摊太薄，<strong>反而给数据低边缘似然</strong>。</div>
+    <div class="step"><strong>奥卡姆因子：</strong>边缘似然在"太简单（拟不合）"和"太复杂（摊太薄）"间取最大，自动实现复杂度惩罚，不需 CV。这是贝叶斯模型选择优于频率派 CV 的地方——0003 课展开。</div>
+  </div></details>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s10">10. 自测</h2>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q1 · 贝叶斯与频率派在"参数是什么"上的根本差别？为什么小样本时这个差别最明显？</div>
+  <details><summary>答案</summary><div class="sol">频率派：$\mathbf{w}$ 是固定真值，概率=长期频率，不确定性仅来自采样，置信区间有"重复采样"的频率解释（不能说"这一次罩住真值的概率"）。贝叶斯：$\mathbf{w}$ 是随机变量，概率=信念程度，后验区间直接是"给定这份数据的信念概率"。小样本时频率派只能靠渐近理论（大样本才有效），贝叶斯小样本就给有意义的不确定性。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q2 · 为什么是精度相加而非协方差相加？这个性质支撑了本课哪两件事？</div>
+  <details><summary>答案</summary><div class="sol">高斯乘积在指数合并，指数上精度（二次型）相加；精度=信息量可加，协方差是精度的逆不可加。支撑：(1) 后验更新 $\mathbf{S}_N^{-1}=\mathbf{S}_0^{-1}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 在精度域线性；(2) 顺序学习一致性——每点贡献可加可交换，分批=批量。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q3 · 预测方差第二项 $\boldsymbol{\phi}_\ast^\top\mathbf{S}_N\boldsymbol{\phi}_\ast$ 依赖 $\mathbf{x}_\ast$，第一项 $1/\beta$ 不依赖。这个"不确定性随位置变化"在实践上意味着什么？点估计为什么看不到？</div>
+  <details><summary>答案</summary><div class="sol">数据密集处置信带窄、外推处爆炸——"外推危险"的数学表达。点估计给一条确定线，没有置信带，完全看不到外推风险；贝叶斯显式给出"哪里可信、哪里不可信"。量化里这直接关系到"模型在没见过的市场状态下还能不能信"。</div></details>
+</div>
+
+<div class="problem" style="background:#fafaf7;">
+  <div class="ptitle">Q4 · 本课的三个范式（共轭、配平方、边缘化）分别会在后面哪几课复用？</div>
+  <details><summary>答案</summary><div class="sol">共轭（范式#1）：0004 指数族、0010 EM 的 M 步、0015 变分推断。配平方（范式#2）：0010 EM、0011 概率 PCA、0015 变分全高斯模型。边缘化+Woodbury（范式#3）：0011 概率 PCA、高斯过程、Kalman 滤波。三招贯穿后半本书——这就是为什么本课要练到本能。</div></details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 推荐主源阅读</h3>
+  <p style="margin-bottom:0.5rem;"><strong>PRML §3.3 贝叶斯线性回归</strong>——§3.3.1 参数分布（配平方）、§3.3.2 预测分布（边缘化与方差两项）。图 3.7（顺序学习）和图 3.8（不确定性随位置变化）必看。</p>
+  <p style="margin-bottom:0.5rem; font-size:0.9rem;"><strong>MML §9.3</strong>——§9.3.1 模型、§9.3.2 先验预测、§9.3.3 后验、§9.3.4 后验预测。矩阵推导和"分布 over 函数"视角最清楚，Woodbury 恒等式用得显式。</p>
+  <p style="margin-bottom:0; font-size:0.9rem;"><strong>PRML §2.3.2–2.3.3</strong>（高斯边缘化与条件化）——本课范式 #3 的母公式，建议对照读。</p>
+</div>
+
+<div class="reminder">
+  <h3>💬 有问题？</h3>
+  <p style="margin-bottom:0;">硬核在题 5、6——把范式用到新场景。题 5（两高斯相乘）和题 6（边缘似然）做出来，说明你掌握了"配平方+边缘化"这个贯穿全书的工具，而不只是会本课。卡住直接问。</p>
+</div>
+
+<div class="lesson-footer">
+  <a href="../reference/math-primer.html">📐 数学手册</a> ·
+  <a href="0001-probabilistic-linear-regression.html">← 0001 概率视角下的线性回归</a> ·
+  <a href="../reference/algorithm-cards.html">📇 参考手册</a> ·
+  下一课：<a href="0003-marginal-likelihood.html">0003 边缘似然与模型比较</a>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+});
+</script>
+
+
+<script src="../reference/popup-cards.js"></script>
+
+<template id="card-data-precision">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">概念</span><h3>精度矩阵</h3><span class="cc-aliases">Precision Matrix · 逆协方差</span></div>
+  <div class="cc-essence">协方差矩阵的逆：$\mathbf{S}^{-1}$。在贝叶斯更新中，<strong>精度相加</strong>（而非协方差相加）：$\mathbf{S}_N^{-1} = \mathbf{S}_0^{-1} + \beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$。</div>
+  <div class="cc-section"><h4>直觉</h4><p>协方差 = 不确定性（越大越不确定）；精度 = 确定性/信息量（越大越确定）。看到数据 → 精度增加 → 后验变窄。贝叶斯更新在精度域是<strong>加法</strong>——最简洁的形式。</p></div>
+  <div class="cc-connections"><span class="conn-badge">→ 0002 §7: 精度域的线性性</span></div>
+</div>
+</template>
+
+<template id="card-data-woodbury">
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">工具</span><h3>Woodbury 恒等式</h3><span class="cc-aliases">Matrix Inversion Lemma</span></div>
+  <div class="cc-essence">$(\mathbf{A}+\mathbf{U}\mathbf{C}\mathbf{V})^{-1} = \mathbf{A}^{-1} - \mathbf{A}^{-1}\mathbf{U}(\mathbf{C}^{-1}+\mathbf{V}\mathbf{A}^{-1}\mathbf{U})^{-1}\mathbf{V}\mathbf{A}^{-1}$。把"大矩阵求逆"变"小矩阵求逆"。</div>
+  <div class="cc-section"><h4>在贝叶斯里的角色</h4><p>预测分布需要 $(\mathbf{S}_0^{-1}+\beta\boldsymbol{\Phi}^\top\boldsymbol{\Phi})^{-1}$。直接求逆 $O(M^3)$；用 Woodbury 变成 $O(N^3)$（$N \ll M$ 时更快）。也是高斯过程、Kalman 滤波的数学基础。</p></div>
+</div>
+</template>
+
+</body>
+</html>

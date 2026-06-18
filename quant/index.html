@@ -11,15 +11,12 @@
   h1 { font-size: 2.4rem; font-weight: 700; margin-bottom: 0.2rem; letter-spacing: -0.02em; }
   h2 { font-size: 1.3rem; font-weight: 600; margin: 2.5rem 0 0.8rem; color: #2c2c2c; border-bottom: 1px solid #e0e0d8; padding-bottom: 0.4rem; }
   .subtitle { color: #888; font-size: 1rem; margin-bottom: 2.5rem; font-family: 'Inter', sans-serif; }
-
   .mission { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 6px; padding: 1.5rem 1.8rem; margin-bottom: 2.5rem; }
   .mission p { margin-bottom: 0.5rem; font-size: 0.95rem; }
-
   .phase { margin-bottom: 2rem; }
   .phase-header { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.8rem; }
   .phase-num { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #888; }
   .phase-title { font-weight: 600; color: #333; }
-
   .lesson-list { list-style: none; }
   .lesson-item { display: flex; align-items: baseline; gap: 0.8rem; padding: 0.65rem 0; border-bottom: 1px solid #f0f0e8; font-size: 0.95rem; }
   .lesson-item:last-child { border-bottom: none; }
@@ -28,28 +25,17 @@
   .lesson-item a:hover { border-bottom-color: #5577aa; color: #5577aa; }
   .lesson-desc { color: #888; font-size: 0.85rem; margin-left: auto; text-align: right; min-width: 12rem; }
   .lesson-item.done .lesson-num { color: #4a9; }
-  .lesson-item.done a { color: #444; }
-  .lesson-item.next .lesson-num { color: #e08830; font-weight: 600; }
-  .lesson-item.next a { color: #111; font-weight: 600; }
-  .lesson-item.future { opacity: 0.4; }
-  .lesson-item.future a { cursor: default; }
-  .lesson-item.future a:hover { border-bottom-color: transparent; color: #333; }
-
   .badge { font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.15em 0.5em; border-radius: 3px; }
   .badge-done { background: #e6f4ea; color: #3a7a3a; }
-  .badge-next { background: #fff3e0; color: #8b5a20; }
-  .badge-future { background: #f0f0f0; color: #aaa; }
-
   .ref-links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
   .ref-links a { color: #5577aa; text-decoration: none; font-size: 0.95rem; }
   .ref-links a:hover { text-decoration: underline; }
-
   .nav { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #e0e0d8; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #999; }
-
   .stats { display: flex; gap: 2rem; margin-bottom: 2rem; }
   .stat { text-align: center; }
   .stat-num { font-size: 2rem; font-weight: 700; font-family: 'Inter', sans-serif; color: #333; }
   .stat-label { font-size: 0.8rem; color: #888; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.04em; }
+  .finale { background: linear-gradient(135deg, #f0f8f0, #f5f9ff); border: 1px solid #c0d8c0; border-radius: 8px; padding: 1.5rem 1.8rem; margin: 2rem 0; text-align: center; }
 </style>
 </head>
 <body>
@@ -64,9 +50,14 @@
 </div>
 
 <div class="stats">
-  <div class="stat"><div class="stat-num">5</div><div class="stat-label">已完成</div></div>
-  <div class="stat"><div class="stat-num">9</div><div class="stat-label">计划中</div></div>
+  <div class="stat"><div class="stat-num">14</div><div class="stat-label">已完成</div></div>
+  <div class="stat"><div class="stat-num">0</div><div class="stat-label">剩余</div></div>
   <div class="stat"><div class="stat-num">14</div><div class="stat-label">总课程</div></div>
+</div>
+
+<div class="finale">
+  <p style="margin-bottom:0.3rem; font-weight:600; color:#2a6a2a;">🎓 全部 14 课完成</p>
+  <p style="font-size:0.9rem; color:#666; margin-bottom:0;">地基 5 课 · 工具 3 课 · 因子 4 课 · 进阶 2 课</p>
 </div>
 
 <!-- 第一阶段 -->
@@ -77,31 +68,11 @@
     <span class="badge badge-done">✅ 完成</span>
   </div>
   <ul class="lesson-list">
-    <li class="lesson-item done">
-      <span class="lesson-num">0001</span>
-      <a href="lessons/0001-financial-markets-basics.html">金融市场基础</a>
-      <span class="lesson-desc">一级/二级市场、订单簿、OHLCV</span>
-    </li>
-    <li class="lesson-item done">
-      <span class="lesson-num">0002</span>
-      <a href="lessons/0002-returns-and-risk.html">收益与风险</a>
-      <span class="lesson-desc">log return、波动率、夏普、最大回撤</span>
-    </li>
-    <li class="lesson-item done">
-      <span class="lesson-num">0003</span>
-      <a href="lessons/0003-nature-of-financial-data.html">金融数据的本性</a>
-      <span class="lesson-desc">肥尾、波动率聚集、相关性崩溃</span>
-    </li>
-    <li class="lesson-item done">
-      <span class="lesson-num">0004</span>
-      <a href="lessons/0004-time-series-basics.html">时间序列基础</a>
-      <span class="lesson-desc">自相关、趋势、平稳性 + 九大策略</span>
-    </li>
-    <li class="lesson-item done">
-      <span class="lesson-num">0005</span>
-      <a href="lessons/0005-probability-and-distributions.html">概率与分布</a>
-      <span class="lesson-desc">正态→对数正态→t→极值理论</span>
-    </li>
+    <li class="lesson-item done"><span class="lesson-num">0001</span><a href="lessons/0001-financial-markets-basics.html">金融市场基础</a><span class="lesson-desc">一级/二级市场、订单簿、OHLCV</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0002</span><a href="lessons/0002-returns-and-risk.html">收益与风险</a><span class="lesson-desc">log return、波动率、夏普、最大回撤</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0003</span><a href="lessons/0003-nature-of-financial-data.html">金融数据的本性</a><span class="lesson-desc">肥尾、波动率聚集、相关性崩溃</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0004</span><a href="lessons/0004-time-series-basics.html">时间序列基础</a><span class="lesson-desc">自相关、趋势、平稳性 + 九大策略</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0005</span><a href="lessons/0005-probability-and-distributions.html">概率与分布</a><span class="lesson-desc">正态→对数正态→t→极值理论</span></li>
   </ul>
 </div>
 
@@ -110,24 +81,12 @@
   <div class="phase-header">
     <span class="phase-num">第二阶段</span>
     <span class="phase-title">工具</span>
-    <span class="badge badge-next">→ 下一步</span>
+    <span class="badge badge-done">✅ 完成</span>
   </div>
   <ul class="lesson-list">
-    <li class="lesson-item next">
-      <span class="lesson-num">0006</span>
-      <a href="lessons/0006-linear-regression.html">线性回归——金融应用与陷阱</a>
-      <span class="lesson-desc">回归、多重共线性、异方差</span>
-    </li>
-    <li class="lesson-item future">
-      <span class="lesson-num">0007</span>
-      <a>组合理论——Markowitz 与超越</a>
-      <span class="lesson-desc">有效前沿、风险预算</span>
-    </li>
-    <li class="lesson-item future">
-      <span class="lesson-num">0008</span>
-      <a>回测方法论</a>
-      <span class="lesson-desc">过拟合、前视偏差、幸存者偏差</span>
-    </li>
+    <li class="lesson-item done"><span class="lesson-num">0006</span><a href="lessons/0006-linear-regression.html">线性回归——金融应用与陷阱</a><span class="lesson-desc">回归、多重共线性、异方差</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0007</span><a href="lessons/0007-portfolio-theory.html">组合理论——Markowitz 与超越</a><span class="lesson-desc">有效前沿、风险平价</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0008</span><a href="lessons/0008-backtesting.html">回测方法论</a><span class="lesson-desc">过拟合、前视偏差、幸存者偏差</span></li>
   </ul>
 </div>
 
@@ -136,29 +95,13 @@
   <div class="phase-header">
     <span class="phase-num">第三阶段</span>
     <span class="phase-title">因子与策略</span>
-    <span class="badge badge-future">待解锁</span>
+    <span class="badge badge-done">✅ 完成</span>
   </div>
   <ul class="lesson-list">
-    <li class="lesson-item future">
-      <span class="lesson-num">0009</span>
-      <a>因子基础——从 CAPM 到 Fama-French</a>
-      <span class="lesson-desc">因子模型、alpha vs beta</span>
-    </li>
-    <li class="lesson-item future">
-      <span class="lesson-num">0010</span>
-      <a>常见因子类型详解（上）</a>
-      <span class="lesson-desc">动量、价值、Carry</span>
-    </li>
-    <li class="lesson-item future">
-      <span class="lesson-num">0011</span>
-      <a>常见因子类型详解（下）</a>
-      <span class="lesson-desc">低波动、质量 + 币圈特有因子</span>
-    </li>
-    <li class="lesson-item future">
-      <span class="lesson-num">0012</span>
-      <a>多因子组合与因子择时</a>
-      <span class="lesson-desc">因子组合、动态权重</span>
-    </li>
+    <li class="lesson-item done"><span class="lesson-num">0009</span><a href="lessons/0009-factor-foundations.html">因子基础——从 CAPM 到 Fama-French</a><span class="lesson-desc">因子模型、alpha vs beta</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0010</span><a href="lessons/0010-factors-momentum-value-carry.html">常见因子（上）：动量、价值、Carry</a><span class="lesson-desc">动量、价值、Carry</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0011</span><a href="lessons/0011-factors-lowvol-quality-crypto.html">常见因子（下）+ 币圈特有</a><span class="lesson-desc">低波动、质量 + 币圈因子</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0012</span><a href="lessons/0012-multifactor-combination.html">多因子组合与因子择时</a><span class="lesson-desc">因子组合、动态权重</span></li>
   </ul>
 </div>
 
@@ -167,19 +110,11 @@
   <div class="phase-header">
     <span class="phase-num">第四阶段</span>
     <span class="phase-title">进阶</span>
-    <span class="badge badge-future">待解锁</span>
+    <span class="badge badge-done">✅ 完成</span>
   </div>
   <ul class="lesson-list">
-    <li class="lesson-item future">
-      <span class="lesson-num">0013</span>
-      <a>衍生品定价直觉——期货 → 期权</a>
-      <span class="lesson-desc">BS 模型、希腊字母</span>
-    </li>
-    <li class="lesson-item future">
-      <span class="lesson-num">0014</span>
-      <a>做市与微观结构</a>
-      <span class="lesson-desc">订单流、存货风险</span>
-    </li>
+    <li class="lesson-item done"><span class="lesson-num">0013</span><a href="lessons/0013-derivatives-pricing.html">衍生品定价——期货 → 期权</a><span class="lesson-desc">BS 模型、希腊字母</span></li>
+    <li class="lesson-item done"><span class="lesson-num">0014</span><a href="lessons/0014-market-making-microstructure.html">做市与微观结构</a><span class="lesson-desc">订单流、存货风险</span></li>
   </ul>
 </div>
 
@@ -193,8 +128,8 @@
 
 <div class="nav">
   教学空间：<code>~/lessons/quant/</code> &nbsp;|&nbsp;
-  已学 5 课 &nbsp;|&nbsp;
-  下一课：0006 · 线性回归
+  全部 14 课完成 🎓 &nbsp;|&nbsp;
+  下一步：选 2-3 个因子落地到自己的币圈策略
 </div>
 
 </body>
