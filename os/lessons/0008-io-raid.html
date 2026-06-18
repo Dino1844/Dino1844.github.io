@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0008 · I/O 子系统与存储层次</title>
+<script>window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, svg: { fontCache: 'global' }, startup: { typeset: false } };</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.35rem; color: #1a1a1a; } .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); } h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; } .toc a { color: var(--accent); text-decoration: none; }
+  .insight { background: var(--light-accent); border-left: 4px solid #d4a574; padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; } .insight::before { content: "💡 "; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; } .warning::before { content: "⚠️ "; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; } .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; } .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; }
+  .formula-block { text-align: center; margin: 1.4rem 0; } code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; } th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); } td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); }
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; } .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; } .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; } .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; } .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; } .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; } .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; } .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); } .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0008 · I/O 子系统与存储层次</h1>
+<div class="subtitle">CPU 和磁盘的速度差 6 个数量级——I/O 子系统的每一层设计都是为了隐藏这个差距。从中断/DMA 到 I/O 调度、到 RAID 的冗余算术、到存储层次全景 · 阅读时间 ~45 分钟</div>
+
+<div class="toc"><strong>目录</strong><br>
+  <a href="#s1">1. 速度鸿沟：6 个数量级</a><br>
+  <a href="#s2">2. 中断 · 轮询 · DMA</a><br>
+  <a href="#s3">3. I/O 调度：电梯与它的后代</a><br>
+  <a href="#s4">4. RAID：用冗余换可靠性</a><br>
+  <a href="#s5">5. 存储层次全景</a><br>
+  <a href="#s6">6. 推导与自测</a>
+</div>
+
+<p>0007 把文件系统跑在"磁盘"这个抽象上。这节课打开磁盘（和 SSD）下面是什么——从 I/O 子系统的软件栈到底层 RAID 的冗余算术，到从寄存器到磁带的完整速度谱。</p>
+
+<div class="retrieval"><h3>🔁 回忆</h3><ol>
+  <li>0007 §4：FFS 为什么按柱面组布局？这个优化在 SSD 上还有意义吗？</li>
+  <li>0004 §3：页替换中 D (Dirty) bit 的作用——脏页换出时要写回磁盘</li>
+  <li>基石 0001 §4.1：系统调用的开销——为什么 vDSO 把 `gettimeofday` 放用户态？</li>
+</ol></div>
+
+<h2 id="s1">1. 速度鸿沟：6 个数量级</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">根本约束</span><h3>存储层次速度谱</h3></div>
+<div class="cc-essence"><strong>CPU 0.3ns 一个 cycle。磁盘 10ms 一次 I/O。差了 30,000,000 倍。</strong>这就像你 1 秒能做完的事 vs 等一整年。I/O 子系统的全部设计都是为了<strong>让 CPU 不要等</strong>。</div>
+<div class="formula-block">
+  $$\begin{aligned}\text{L1 Cache} &\sim 0.5\text{ ns} \quad (1\times)\\\text{L2 Cache} &\sim 4\text{ ns} \quad (8\times)\\\text{RAM} &\sim 100\text{ ns} \quad (200\times)\\\text{SSD} &\sim 100\text{ }\mu\text{s} \quad (200{,}000\times)\\\text{HDD} &\sim 10\text{ ms} \quad (20{,}000{,}000\times)\end{aligned}$$
+</div></div>
+
+<h2 id="s2">2. 中断 · 轮询 · DMA</h2>
+<p>CPU 怎么知道 I/O 完成了？三种方式：</p>
+<ul>
+  <li><strong>轮询</strong>：CPU 反复检查设备状态寄存器——"好了吗？好了吗？"简单但浪费 CPU。适合<strong>I/O 极快且频繁</strong>的场景（如 10Gbps 网卡——等一个中断的时间数据已经到下一批了）。</li>
+  <li><strong>中断</strong>：设备完成 I/O → 发中断 → CPU 跳到 ISR（中断服务程序）。CPU 在 I/O 期间可以做别的事。适合<strong>I/O 慢</strong>的场景（磁盘 I/O ~ms 级）。</li>
+  <li><strong>DMA</strong>（Direct Memory Access）：CPU 编程 DMA 控制器（"从磁盘读 4KB 放到物理地址 0x12345000"）→ DMA 控制器自己完成数据传输 → 完成后发中断。CPU 只参与"发起"和"收尾"——数据传输由 DMA 包办。</li>
+</ul>
+
+<div class="insight"><strong>DMA 体现了范式 #6（HW-SW 协同）的极致。</strong>硬件（DMA 引擎）做它最擅长的事——按地址批量搬数据（快而蠢）。OS 做它最擅长的事——决定搬去哪、什么时候搬（慢而聪明）。</div>
+
+<h2 id="s3">3. I/O 调度：电梯与它的后代</h2>
+<p>和 CPU 调度（0002 §7）同一范式——机制是 I/O 请求队列，策略是怎么排序。</p>
+
+<div class="derivation"><h4>I/O 调度器演进</h4>
+<div class="step"><strong>电梯算法（Elevator）：</strong>磁头在一个方向扫——合并所有同一柱面的请求，到最远端再回头。简单有效——把随机 I/O 变成顺序 I/O。<span class="reason">问题：中间柱面的请求可能等很久（饥饿）。</span></div>
+<div class="step"><strong>预期调度（Anticipatory）：</strong>完成一个请求后<strong>等一小下</strong>（几 ms）——如果来了相邻的请求就合并，没来就移走。<span class="reason">利用空间局部性——程序经常连续读同一个文件。</span></div>
+<div class="step"><strong>CFQ（Completely Fair Queue）：</strong>每个进程一个 I/O 队列，按进程公平分配 I/O 带宽。<span class="reason">防止一个进程的大量随机 I/O 饿死其他进程。</span></div>
+<div class="step"><strong>Deadline：</strong>每个请求带 deadline——读请求通常 deadline 更紧（同步操作，有人在等），写请求可以放松（异步——write-back）。</div>
+<div class="step"><strong>SSD 时代：</strong>无 seek 时间——电梯不再有意义。NVMe 的多队列设计让每个 CPU 核有自己的提交队列——无需锁争用。用 noop/mq-deadline/Kyber（基于令牌桶的带宽控制）。</div>
+</div>
+
+<h2 id="s4">4. RAID：用冗余换可靠性</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">冗余</span><h3>RAID · Redundant Array of Independent Disks</h3></div>
+<div class="cc-essence"><strong>RAID 把多块磁盘组合成一块"逻辑盘"——不同 RAID 级别在性能、可靠性、空间效率之间做不同权衡。核心思想：用校验和（parity）代替完整镜像，节省空间。</strong></div>
+</div>
+
+<table>
+  <tr><th>级别</th><th>最少盘数</th><th>空间效率</th><th>容错</th><th>读性能</th><th>写性能</th></tr>
+  <tr><td>RAID 0</td><td>2</td><td>100%</td><td>0 块（坏了全丢）</td><td>N×</td><td>N×</td></tr>
+  <tr><td>RAID 1</td><td>2</td><td>50%</td><td>N-1 块</td><td>N×</td><td>1×</td></tr>
+  <tr><td>RAID 4</td><td>3</td><td>(N-1)/N</td><td>1 块</td><td>(N-1)×</td><td>校验盘瓶颈</td></tr>
+  <tr><td>RAID 5</td><td>3</td><td>(N-1)/N</td><td>1 块</td><td>N×</td><td>写放大 4×</td></tr>
+  <tr><td>RAID 6</td><td>4</td><td>(N-2)/N</td><td>2 块</td><td>N×</td><td>写放大 6×</td></tr>
+</table>
+
+<h3>RAID 5 写放大与 write hole</h3>
+<p>RAID 5 的 parity 计算公式：$P = D_0 \oplus D_1 \oplus D_2 \oplus D_3$（异或）。更新 $D_0$：</p>
+<ol>
+  <li>读旧 $D_0$ 和旧 $P$</li>
+  <li>计算新 $P' = P \oplus D_{0,old} \oplus D_{0,new}$</li>
+  <li>写新 $D_0$ 和新 $P'$（两次写 → 4 次 I/O：2 读 + 2 写）</li>
+</ol>
+<p><strong>RAID 5 write hole</strong>：如果在步骤 3 的两次写之间断电 → $D_0$ 是新值、$P'$ 是旧值 → parity 不一致。之后一个盘坏了 → 用错误的 parity 重建 → 数据损坏。解法：RAID 6（两个独立 parity）或在写前记录 stripe 的意图日志（类似文件系统 journal）。</p>
+
+<div class="warning"><strong>RAID 5 在现代大容量磁盘上已危险。</strong>16TB 盘 + 不可恢复读错误率 $10^{-15}$ → 重建一个盘时读取剩余数据（N-1 × 16TB）遇到一个不可恢复错误的概率 > 50%。如果 rebuild 中又坏一块 → 数据全丢。RAID 6（双冗余）是 2020s 的最低实践。</div>
+
+<h2 id="s5">5. 存储层次全景</h2>
+<p>把 OS 管的（RAM/SSD/HDD/swap）和硬件管的（L1/L2/L3 cache）拼在一起，就是完整的存储层次。每层是下一层的缓存——数据在层之间移动的规则就是 OS 和硬件各自的策略：</p>
+
+<div class="derivation"><h4>层间数据移动规则</h4>
+<div class="step">L1↔L2↔L3↔RAM：硬件自动——cache line 64B 为单位，LRU/伪 LRU 替换</div>
+<div class="step">RAM↔SSD/HDD：OS 管理——4KB 页为单位，swap/page cache 驱动，clock/LRU 替换</div>
+<div class="step">page cache↔文件系统：OS 管理——buffer/page cache，write-back（攒批）或 write-through（立即写）</div>
+</div>
+
+<div class="meta-box"><h4>范式 #2 · 缓存（存储层次版）</h4>
+<p>从寄存器到磁带，每一层都是下面一层的缓存。每一层都在用"更快但更小的介质"存"更慢但更大的介质"的热数据子集。<strong>局部性原理</strong>让这个金字塔立得起来——如果访问是均匀随机分布的，各级缓存全是废的。</p></div>
+
+<h2 id="s6">6. 推导与自测</h2>
+<div class="problem"><div class="ptitle">P1 · 速度鸿沟量化 <span class="plevel l1">L1</span></div><div class="pbody"><p>3GHz CPU 周期 0.33ns。RAM 延迟 100ns，SSD 延迟 100μs，HDD 延迟 10ms。CPU 每周期执行 1 条指令。在等 RAM/SSD/HDD 的一个 I/O 完成期间，CPU 可以执行多少条指令？（假设无超线程/乱序——简单模型）</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">RAM: 100ns / 0.33ns ≈ <strong>300 条指令</strong>。SSD: 100,000ns / 0.33ns ≈ <strong>300,000 条指令</strong>。HDD: 10,000,000ns / 0.33ns ≈ <strong>30,000,000 条指令</strong>。</div></div></details>
+</div>
+
+<div class="problem"><div class="ptitle">P2 · RAID 重建风险 <span class="plevel l2">L2</span></div><div class="pbody"><p>RAID 5，5 块 10TB 盘（总 40TB 可用）。单盘 URE（不可恢复读错误）率 $10^{-15}$。一块盘坏了，rebuild 需要读其余 4 块。计算 rebuild 中遇到至少一次 URE 的概率。如果用 RAID 6（双冗余），重建中遇到两次 URE 的概率大概多小？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">4 块 × 10TB = 40TB = 40 × 8 × $10^{12}$ bit = $3.2 \times 10^{14}$ bit。URE $10^{-15}$ → 每 $10^{15}$ bit 一个错误。$3.2 \times 10^{14} / 10^{15}$ ≈ <strong>32% 概率遇到至少 1 个 URE 在重建中</strong>。</div><div class="step">RAID 6：一次 URE 不影响重建（可纠正）。需要<strong>两次独立 URE</strong> → 概率 ≈ 0.32² ≈ <strong>10%</strong>（仍然是不可忽略的）。真正安全需要 RAID 6 + 定期 scrubbing（主动检测并修复静默错误）。</div></div></details>
+</div>
+
+<div class="problem"><div class="ptitle">P3 · 中断合并设计 <span class="plevel l3">L3</span></div><div class="pbody"><p>网卡接收数据包（每包 1500B）。10Gbps 链路 → 833,333 pps。如果每包一个中断 → 每秒 833,333 次中断。(a) 估算每次中断的代价（参考 0001 P1）——开销占 CPU 的百分比。(b) 设计中断合并方案——每 N 个包或每 T 微秒发一次中断。tradeoff 是什么？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) 每次中断 ~几百 cycles → ~0.1μs。833K × 0.1μs = ~83ms = <strong>8.3% CPU 在中断处理上</strong>。加上中断处理代码本身（分配 sk_buff、拷贝数据……）→ 可能 > 50%。</div><div class="step">(b) NAPI（Linux 的新 API）：收到第一个包 → 中断 → 中断处理函数 disable 中断、启动 poll → poll 循环收包直到队列空或 budget 用完 → re-enable 中断。合并后的开销：~1 次中断/每批。代价：延迟——包在网卡队列里等 poll。对吞吐型（下载文件）无所谓，对延迟敏感型（高频交易、在线游戏）可能不可接受。</div></div></details>
+</div>
+
+<div class="primary-source"><h3>📖 延伸阅读</h3><ul>
+  <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf">Ch 36 (I/O Devices)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf">Ch 37 (Hard Disk Drives)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-raid.pdf">Ch 38 (RAID)</a></li>
+  <li><strong>Linux</strong>：<code>block/</code> — I/O 调度器；<code>drivers/nvme/</code> — NVMe 驱动</li>
+</ul></div>
+
+<div class="reminder"><h3>🔄 间隔复习</h3><ul><li><strong>24h</strong>：RAID 5 的 write hole——画图解释为什么断电导致 parity 不一致</li><li><strong>72h</strong>：从寄存器到磁带的完整存储层次——每层的延迟和大小数量级</li></ul></div>
+
+<div class="lesson-footer"><p><a href="../index.html">🏠</a> · <a href="./0007-filesystem.html">← 0007</a> · <a href="./0009-vm-containers-security.html">0009 虚拟机·容器·安全 →</a></p></div>
+<script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
+</body>
+</html>

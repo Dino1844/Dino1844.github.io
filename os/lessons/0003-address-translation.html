@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0003 · 地址翻译与分页</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+  .insight { background: var(--light-accent); border-left: 4px solid #d4a574; padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .checkpoint { background: #f0f7ff; border: 1px solid #b8d4f0; border-radius: 8px; padding: 0.8rem 1.1rem; margin: 1.2rem 0; font-size: 0.92rem; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-section { margin-top: 0.7rem; }
+  .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0003 · 地址翻译与分页</h1>
+<div class="subtitle">每个进程以为自己独占 0x0→0xFFFF... 的地址空间——一个巨大的谎言，靠 MMU+页表+TLB 维持。从"为什么不能直接暴露物理地址"到四级页表的完整推导 · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 为什么虚拟化内存：保护 + 简便 + 能力</a><br>
+  <a href="#s2">2. 基址-界限：最简单的虚拟化</a><br>
+  <a href="#s3">3. 分段：基址-界限 × 3（代码·堆·栈）</a><br>
+  <a href="#s4">4. 分页：切碎内存，映射任意</a><br>
+  <a href="#s5">5. 页表的结构与 PTE 的每个 bit</a><br>
+  <a href="#s6">6. TLB：页表的缓存</a><br>
+  <a href="#s7">7. 多级页表：时间换空间</a><br>
+  <a href="#s8">8. 大页：TLB 不够用了</a><br>
+  <a href="#s9">9. 推导与自测</a>
+</div>
+
+<p>展开基石 0001 §2.2（内存幻象）。上一课 0002 讲了每个进程有自己的 PCB——PCB 里有一个指针 <code>mm_struct *mm</code>，指向的是<strong>页表</strong>。这节课打开页表，看虚拟地址怎么一步步翻译成物理地址。</p>
+
+<div class="retrieval">
+  <h3>🔁 回忆</h3>
+  <ol>
+    <li>基石 0001 §2.2：内存幻象的核心机制是什么？MMU 做什么？</li>
+    <li>0002 §2：PCB 中哪个字段和内存相关？上下文切换时哪个步骤和内存相关？</li>
+    <li>0002 §4.1：为什么上下文切换要写 CR3？写了 CR3 之后 TLB 怎么了？</li>
+  </ol>
+</div>
+
+<h2 id="s1">1. 为什么虚拟化内存</h2>
+
+<p>实际上只有一个物理内存（一堆 byte-addressable cell），但 OS 让每个进程以为自己有一整片连续的虚拟地址空间。为什么费这个劲？</p>
+
+<table>
+  <tr><th>理由</th><th>没有虚拟化会怎样</th></tr>
+  <tr><td><strong>保护</strong></td><td>进程 A 可以读写进程 B 的内存——读走密码、写坏数据</td></tr>
+  <tr><td><strong>简化编程模型</strong></td><td>每个程序需要知道自己的物理地址范围。链接器和加载器必须协商物理地址布局——换一个程序就要重新链接</td></tr>
+  <tr><td><strong>透明扩展</strong></td><td>不支持 swap——物理内存用完就真的完了；不支持 mmap——不能把文件映射到内存</td></tr>
+</table>
+
+<div class="insight">
+  <strong>虚拟内存不是"让内存变多"的魔术，而是"让每个进程有独立地址空间"的隔离墙。</strong>swap、mmap、COW 这些"超能力"都是隔离墙建好后才获得的附加馈赠。
+</div>
+
+<h2 id="s2">2. 基址-界限：最简单的虚拟化</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">机制</span><h3>基址-界限 · Base and Bounds</h3><span class="cc-aliases">Dynamic Relocation</span></div>
+  <div class="cc-essence"><strong>每个进程一对寄存器</strong>（base, bound）。每次访存：物理地址 = 虚拟地址 + base；如果虚拟地址 > bound → 异常。进程看到 [0, bound)，实际存在 [base, base+bound)。</div>
+  <div class="cc-section"><h4>优点与致命缺陷</h4>
+    <p>✅ 硬件极简（两个寄存器 + 一个加法器 + 一个比较器）。✅ 可重定位——加载时只需设 base = 分配的物理起始地址。</p>
+    <p>❌ <strong>内部碎片</strong>：进程的堆和栈之间的大量未用空间也占物理内存。❌ 不灵活——不能共享代码段（两个进程跑同一程序 → 各复制一份）。❌ 不能增长——栈爆了怎么办？</p>
+  </div>
+</div>
+
+<p>基址-界限的直接升级是<strong>三个 base/bound 对</strong>——代码段、堆、栈各一对。每一对覆盖地址空间的一个区域。这就是分段。</p>
+
+<h2 id="s3">3. 分段：基址-界限 × 3</h2>
+
+<div class="formula-block">
+  $$\text{segment} = \text{vaddr 的高 2 bit} \quad \text{offset} = \text{vaddr 的低位}$$
+  $$\text{phys} = \text{base}_{\text{segment}} + \text{offset}$$
+  $$\text{if offset} > \text{bound}_{\text{segment}} \rightarrow \text{segmentation fault}$$
+</div>
+
+<p>分段解决了"堆和栈之间的空间浪费"——每段独立分配物理内存。而且可以共享代码段（两个进程的代码段 base 指向同一物理区域）。</p>
+
+<p><strong>但分段引入了一个更严重的问题：外部碎片。</strong>物理内存变成一堆不同大小的段，空闲总空间够但没一块连续的能装下一个新段——就像停车场里到处都是空位但没有连续 3 个。这就是"内存碎片化"——和磁盘碎片同一原理。</p>
+
+<div class="checkpoint">
+  <strong>停下来想一想</strong>：为什么说"分段 = 每个段是一个基址-界限"？代码段的 bound = 代码段大小，堆段的 bound = 堆大小（可能增长）。栈段是反向增长的——所以栈段需要额外一个方向位（grows positive 或 grows negative）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 分页：切碎内存，映射任意</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag" style="background:#4a7bab;">核心机制</span><h3>分页 · Paging</h3><span class="cc-aliases">Page · Frame · Page Table</span></div>
+  <div class="cc-essence"><strong>把物理内存切成固定大小的帧（frame），把虚拟地址空间切成同样大小的页（page）。</strong>页可以映射到任意帧——不需要连续。物理内存的一堆碎片帧可以被拼成一个进程看到的"连续"虚拟空间。</div>
+  <div class="cc-section"><h4>为什么分页胜过分段</h4>
+    <ul>
+      <li><strong>消除外部碎片</strong>：所有帧一样大——永远能找到空的帧。</li>
+      <li><strong>灵活共享</strong>：两个进程可以把各自的虚拟页映射到同一物理帧——共享库、共享内存的物理基础。</li>
+      <li><strong>惰性分配</strong>：可以"虚拟页存在但没映射到物理帧"——访问时才分配（demand paging，0004 §2）。</li>
+    </ul>
+  </div>
+</div>
+
+<h3>4.1 地址翻译：从虚拟地址到物理地址</h3>
+
+<p>虚拟地址分为两部分：<strong>虚拟页号（VPN）</strong>和<strong>页内偏移（offset）</strong>。偏移直接复制到物理地址的低位——映射只关心页号。</p>
+
+<div class="formula-block">
+  $$\underbrace{|\quad\quad\text{VPN}\quad\quad|}_{\text{查页表}}\;\underbrace{|\;\text{offset}\;|}_{\text{直接复制}} \quad\xrightarrow{\text{页表}}\quad \underbrace{|\quad\quad\text{PFN}\quad\quad|}_{\text{物理帧号}}\;\underbrace{|\;\text{offset}\;|}_{\text{不变}}$$
+</div>
+
+<p>32 位地址空间，4KB 页（offset 12 bit），VPN 20 bit → 页表有 $2^{20} = 1,048,576$ 个条目。每个 PTE（page table entry）4 字节 → 一个进程的页表 = 4MB。100 个进程 = 400MB 光页表——这是分页的<strong>空间代价</strong>。</p>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 页表的结构与 PTE 的每个 bit</h2>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">数据结构</span><h3>PTE · Page Table Entry</h3><span class="cc-aliases">页表项</span></div>
+  <div class="cc-essence">一个 PTE 不只是"物理帧号"——它的每个 bit 都在控制硬件行为。理解每个 bit 的语义 = 理解 MMU 的全部功能。</div>
+  <div class="cc-section"><h4>x86-64 PTE 的关键 bit（64 bit 中低 52 bit 可用）</h4>
+    <table>
+      <tr><th>Bit</th><th>名称</th><th>含义</th></tr>
+      <tr><td>0</td><td><strong>P (Present)</strong></td><td>页在物理内存中吗？0 → 缺页异常。其余 51 bit 可被 OS 随意用（如存 swap 位置）</td></tr>
+      <tr><td>1</td><td><strong>R/W</strong></td><td>0 = 只读，1 = 可写。写只读页 → 异常。COW 靠这个 bit + 缺页处理实现（0004 §5）</td></tr>
+      <tr><td>2</td><td><strong>U/S</strong></td><td>0 = 内核页（CPL=0 才能访问），1 = 用户页。内核内存对用户态不可见</td></tr>
+      <tr><td>5</td><td><strong>A (Accessed)</strong></td><td>该页被访问过（硬件自动置 1）。页替换算法用它判断"热度"（0004）</td></tr>
+      <tr><td>6</td><td><strong>D (Dirty)</strong></td><td>该页被写过（硬件自动置 1）。换出时如果 D=1，必须写回磁盘；D=0 直接丢弃</td></tr>
+      <tr><td>8</td><td><strong>G (Global)</strong></td><td>全局页——CR3 写时不刷其 TLB 项（内核页用）</td></tr>
+      <tr><td>63</td><td><strong>XD (NX)</strong></td><td>禁止执行——防止在数据页上执行代码（栈溢出防护的基础）</td></tr>
+    </table>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 0004: P=0 触发缺页 → demand paging/swap/COW</span>
+    <span class="conn-badge">→ 0004: A/D bit = 页替换算法的数据来源</span>
+    <span class="conn-badge">→ 0009: NX bit = W^X = DEP 的硬件基础</span>
+  </div>
+</div>
+
+<p>一个非常巧妙的设计：<strong>Present bit = 0 时，其余 63 bit 由 OS 随意定义。</strong>Linux 把换出到 swap 的页的 swap 位置编码在这 63 bit 里——缺页处理程序可以直接从 PTE 里取出"去哪找回这页"。这让 swap 几乎零额外元数据开销。</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. TLB：页表的缓存</h2>
+
+<p>每次访存都要查页表 → 太慢。4 级页表一次翻译要 4 次内存访问（每级一次）→ 访存延迟 × 4。</p>
+
+<p>TLB（Translation Lookaside Buffer）是 MMU 里的一个小型硬件缓存：VPN → PFN 的直接映射。典型大小：L1 TLB 32–64 条目（数据 + 指令分开）、L2 TLB 512–2048 条目。</p>
+
+<div class="derivation">
+  <h4>TLB 命中 vs 未命中的完整路径</h4>
+  <div class="step"><strong>TLB 命中：</strong>虚拟地址 → MMU 查 TLB（VPN 匹配）→ 得到 PFN → 拼接 offset → 物理地址。延迟：<strong>~0.5–1 cycle</strong>（TLB 和 L1 cache 并行访问）。</div>
+  <div class="step"><strong>TLB 未命中：</strong>MMU 走页表——四级页表需要 4 次内存访问（每级读一个 PTE）。延迟：<strong>~40–100 cycles</strong>。如果页的 Present bit = 0 → 缺页异常 → OS 处理（可能涉及磁盘 I/O，~10ms）。</div>
+  <div class="reason">TLB 命中率通常 > 99.9%，因为空间局部性——程序访问的地址在短时间内聚集在少数几个页内。</div>
+</div>
+
+<h3>6.1 TLB 的关键问题：上下文切换时怎么办？</h3>
+
+<p>切换进程 = 切换页表。旧进程的 TLB 条目指向旧进程的物理页——新进程不能看。解法：</p>
+<ol>
+  <li><strong>全刷</strong>：写 CR3 时硬件自动刷全部 TLB（除了 G=1 的全局页）——简单但贵</li>
+  <li><strong>ASID</strong>（Address Space ID）：每个 TLB 条目带一个 ASID 标签——只匹配当前进程的 ASID。不用刷 TLB——切换 ASID 即可。ARM 和较新的 x86（PCID）支持</li>
+</ol>
+
+<div class="meta-box">
+  <h4>范式 #2 · 缓存（TLB 版）</h4>
+  <p><strong>为什么 TLB 可以很小但命中率极高：</strong>空间局部性——程序在短时间内访问的虚拟地址集中在一个很小的页集合里（代码在几个页内循环、数据在几个页内读写）。TLB 只存"最近用过的"几十到上千个 VPN→PFN 映射就够了。这是缓存能工作的根本原因——<strong>访问模式不是均匀分布的</strong>。</p>
+  <p><strong>还在哪里出现：</strong>buffer cache（0007）、dentry cache（0007）、CPU cache（0008）</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 多级页表：时间换空间</h2>
+
+<p>回到 §4.1 的问题：32-bit 地址 + 4KB 页 = 4MB 的页表。64-bit 呢？4KB 页 + 48-bit 虚拟地址 = VPN 36 bit → $2^{36} = 68\text{B}$ PTE → 全映射需要 $68\text{B} \times 8\text{B} = 512\text{GB}$ 光页表。不可能。</p>
+
+<p>但实际进程不会用完整个 48-bit 地址空间——大部分 VPN 没映射。多级页表的思路：<strong>不为"没在用"的区域分配页表</strong>——只分配有映射的子树。</p>
+
+<div class="concept-card">
+  <div class="cc-header"><span class="cc-tag">核心</span><h3>四级页表 · 4-Level Page Table</h3></div>
+  <div class="cc-essence"><strong>48 位虚拟地址切成 5 段：</strong>PGD(9) | PUD(9) | PMD(9) | PTE(9) | offset(12)。PGD 是根（每个进程一个 4KB 页），只有 512 个 8B 条目——每个条目指向一个 PUD 页或为空（表示这 512GB 区域未映射）。空条目 = 不占内存。</div>
+  <div class="cc-section"><h4>地址分解</h4>
+    <div class="formula-block">
+      $$\underbrace{|\text{PGD}|}_{9\text{ bit}}\;\underbrace{|\text{PUD}|}_{9}\;\underbrace{|\text{PMD}|}_{9}\;\underbrace{|\text{PTE}|}_{9}\;\underbrace{|\text{offset}|}_{12}$$
+    </div>
+    <p>每级索引 512 个条目（9 bit）。512 × 8B = 4KB — 每级页表刚好一页。</p>
+  </div>
+</div>
+
+<div class="derivation">
+  <h4>四级页表翻译的完整 walk</h4>
+  <div class="step"><strong>① 读 CR3 → PGD 物理地址。</strong>以 VA 的 PGD 索引（bit 47:39）查 PGD 表的第 i 项。如果该项 P=0 → 缺页（这 512GB 区域还没映射）。</div>
+  <div class="step"><strong>② PGD[i] → PUD 物理地址。</strong>以 VA 的 PUD 索引（bit 38:30）查 PUD 表的第 j 项。P=0 → 缺页。</div>
+  <div class="step"><strong>③ PUD[j] → PMD 物理地址。</strong>以 VA 的 PMD 索引（bit 29:21）查 PMD 表。P=0 → 缺页。</div>
+  <div class="step"><strong>④ PMD[k] → PTE 物理地址。</strong>以 VA 的 PTE 索引（bit 20:12）查最终 PTE。P=0 → 缺页。P=1 → 取出 PFN。</div>
+  <div class="step"><strong>⑤ 物理地址 = PFN × 4096 + offset（bit 11:0）。</strong>TLB 缓存这整条链的结果。</div>
+</div>
+
+<p>为什么是四级？48 bit 虚拟地址，minus 12 bit offset = 36 bit VPN。36/9 = 4 级。如果 57-bit（5-level paging，Intel 新增）：minus 12 = 45，45/9 = 5 级。Linux 的 `CONFIG_5LEVEL_PAGING` 支持这个。</p>
+
+<p><strong>多级页表是"空间换时间（TLB miss 走多级）"。TLB 是"用硬件缓存再把时间换回来"。</strong>这是 OS 设计里反复出现的 tradeoff 螺旋。</p>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 大页：TLB 不够用了</h2>
+
+<p>4KB 页 × 64-entry TLB → 覆盖 256KB 地址空间。数据库、JVM、ML 训练的内存 footprint 是 GB 级——TLB miss 会非常多。</p>
+
+<p><strong>大页（Huge Page）</strong>：2MB 或 1GB 的页。2MB 页 → offset 21 bit，页表少一级（PMD 直接指向 2MB 帧）。1GB 页 → offset 30 bit，页表少两级。TLB 覆盖面积暴涨 512×。</p>
+
+<p>代价：内部碎片——一个 2MB 页即使只用了 4KB 也占整个 2MB。而且大页分配需要物理内存有连续的 2MB/1GB 区域——内存碎片化时做不到。</p>
+
+<div class="checkpoint">
+  <strong>停下来想一想</strong>：为什么 Linux 用 THP（Transparent Huge Page）而非让应用显式申请？因为应用不知道自己会访问多少内存。THP 在后台尝试把连续的 512 个 4KB 页合并为一个 2MB 大页——对应用透明。但合并可能失败（内存碎片化），而且合并过程本身消耗 CPU（khugepaged 线程）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 推导与自测</h2>
+
+<div class="problem">
+  <div class="ptitle">P1 · 页表大小计算 <span class="plevel l1">L1 基础</span></div>
+  <div class="pbody"><p>32-bit VA，4KB 页，每 PTE 4 字节。(a) VPN 多少 bit？页表有多少 PTE？(b) 页表占多大内存？(c) 如果进程只用前 64MB 和后 64MB（共 128MB 有效映射），在单级页表 vs 两级页表（每级 10 bit VPN）下，页表的总内存占用各多少？</p></div>
+  <details><summary>▸ 解答</summary><div class="sol">
+    <div class="step">(a) offset = 12 bit → VPN = 32-12 = <strong>20 bit</strong>。PTE 总数 = $2^{20} = 1,048,576$。</div>
+    <div class="step">(b) 1,048,576 × 4B = <strong>4MB</strong>。</div>
+    <div class="step">(c) <strong>单级</strong>：即使只用 128MB，全表仍需要 4MB（所有 VPN 的 PTE 必须存在——即使大部分 Present=0）。</div>
+    <div class="step"><strong>两级</strong>（10+10）：第一级（页目录）有 $2^{10}=1024$ 个 PDE（4KB）。前 64MB = VA 0x0000_0000 到 0x03FF_FFFF → 第一级索引 [0..63]。后 64MB 在 VA 高区。用户只需 64 + 64 = 128 个 PDE（指向 128 个第二级页表）→ 第一级 4KB + 128 × 4KB ≈ <strong>516KB</strong>。相比 4MB 节省 ~8×。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P2 · TLB 命中率与覆盖面积 <span class="plevel l2">L2 理解</span></div>
+  <div class="pbody"><p>L1 TLB 64 条目，L2 TLB 1536 条目，页大小 4KB。(a) 各能覆盖多大虚拟地址空间？(b) 一个程序的工作集是 8MB（代码+数据），TLB 能覆盖吗？如果用 2MB 大页呢？(c) 为什么 TLB 不做得和大页一样大（如 10,000 条目）？</p></div>
+  <details><summary>▸ 解答</summary><div class="sol">
+    <div class="step">(a) L1 TLB: 64 × 4KB = <strong>256KB</strong>。L2 TLB: 1536 × 4KB = <strong>6MB</strong>。</div>
+    <div class="step">(b) 8MB > 6MB → 即使 L2 TLB 全用上也不够覆盖 → 会发生 TLB miss。如果用 2MB 大页：L1 TLB 64 × 2MB = <strong>128MB</strong>——绰绰有余。</div>
+    <div class="step">(c) TLB 是<strong>全相联</strong>（fully-associative）或<strong>高组相联</strong>的硬件结构。每个条目都有一个比较器同时比较 VPN——64 条目 = 64 个比较器并行工作。10000 条目 = 10000 个比较器 → 面积和功耗爆炸。而且 TLB 在 L1 cache 的关键路径上——慢了会拖慢所有访存。所以用"小 L1 + 大 L2"两层结构，再加大页来提升覆盖。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P3 · 追踪一次 TLB miss + 页表 walk <span class="plevel l2">L2 理解</span></div>
+  <div class="pbody"><p>虚拟地址 0x00007F4A3B1C2000（48-bit），4KB 页，四级页表。(a) 分解为 PGD/PUD/PMD/PTE 索引 + offset。(b) 写出硬件从 CR3 到物理地址的完整查找序列。如果 PUD 项 Present=0，在哪个索引处发生缺页？</p></div>
+  <details><summary>▸ 解答</summary><div class="sol">
+    <div class="step">0x00007F4A3B1C2000 二进制：0000 0000 0000 0000 0111 1111 0100 1010 0011 1011 0001 1100 0010 0000 0000 0000</div>
+    <div class="step">PGD(47:39) = 000000000 = <strong>0</strong> · PUD(38:30) = 000 0111 111 = <strong>63</strong> · PMD(29:21) = 1 0100 1010 = <strong>330</strong> · PTE(20:12) = 0011 1011 00 = <strong>236</strong> · offset(11:0) = 01 1100 0010 0000 0000 0000 → 不用管具体值</div>
+    <div class="step">① CR3 → PGD 物理地址。读 PGD[0] → PUD 物理地址。② 读 PUD[63]。如果 Present=0 → <strong>在此缺页</strong>。③ 如果 Present=1 → 读 PMD[330]。④ 读 PTE[236] → 得到 PFN。⑤ 物理地址 = PFN × 4096 + offset。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P4 · Meltdown 与页表隔离 <span class="plevel l3">L3 进阶</span></div>
+  <div class="pbody"><p>2018 年的 Meltdown 漏洞利用了"内核内存映射在用户页表中（只是 U/S=0 标记为不可访问）"这一事实。攻击者可以训练 CPU 的<strong>推测执行</strong>在权限检查前就读取内核内存。(a) 为什么内核内存一开始会映射在用户页表中？(b) KPTI（Kernel Page Table Isolation）怎么修复它——代价是什么？(c) 这和本课学的哪个机制（上下文切换时的高开销操作）直接相关？</p></div>
+  <details><summary>▸ 提示</summary><div class="hint">(a) 映射内核内存到每个进程的页表避免了上下文切换时刷 TLB——内核的 TLB 项标了 G（Global）bit，切换进程时不刷。(b) KPTI 把内核页表从用户页表中移除——用户态页表只映射极少量"进入内核所必须"的代码。(c) 代价：每次系统调用都要切换页表（用户页表 → 内核页表），付出 CR3 写 + TLB 刷新的代价。</div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P5 · 逆向设计——如果物理地址和虚拟地址一样大 <span class="plevel l3">L3 进阶</span></div>
+  <div class="pbody"><p>假设你设计一种新型 CPU，物理地址和虚拟地址都是 64 bit 全宽（而非 x86-64 的 48 bit 虚拟+52 bit 物理），页大小 4KB。需要多少级页表？每级 VPN 建议多少 bit？每级页表多大？如果物理内存只有 16GB，页表浪费多少？</p></div>
+  <details><summary>▸ 提示</summary><div class="hint">VPN = 64-12 = 52 bit。每级 9 bit → 52/9 ≈ 5.78 → 需要 6 级。但最后一级不全（52-5×9=7 bit）。每级 512 条目 × 8B = 4KB 刚好一页。</div></details>
+</div>
+
+<div class="primary-source">
+  <h3>📖 延伸阅读</h3>
+  <ul>
+    <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-mechanism.pdf">Ch 15 (Address Translation)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-segmentation.pdf">Ch 16 (Segmentation)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf">Ch 18 (Paging Introduction)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-tlbs.pdf">Ch 19 (TLBs)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-smalltables.pdf">Ch 20 (Multi-level Page Tables)</a></li>
+    <li><strong>xv6</strong>：<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/vm.c">kernel/vm.c</a> — walk、kvmmap、mappages</li>
+    <li><strong>Linux</strong>：<code>arch/x86/mm/</code> — 页表操作、<code>include/asm-generic/pgtable.h</code></li>
+  </ul>
+</div>
+
+<div class="reminder">
+  <h3>🔄 间隔复习</h3>
+  <ul><li><strong>24h</strong>：闭眼画出四级页表的翻译路径</li><li><strong>72h</strong>：说出 PTE 的 P/RW/U/A/D/XD bit 各做什么</li><li><strong>7d</strong>：解释 TLB 为什么命中率高 + 为什么不能很大 + Meltdown 怎么利用推测执行绕过页表保护</li></ul>
+</div>
+
+<div class="lesson-footer">
+  <p><a href="../index.html">🏠 课程首页</a> · <a href="./0002-processes.html">← 0002 进程与调度</a> · <a href="./0004-page-replacement.html">0004 页替换与完整内存系统 →</a></p>
+  <p style="margin-top:0.5rem;">基石（Hub）：0001 §2.2（内存幻象）· 范式 #1（间接层·页表）· #2（缓存·TLB）· #6（HW-SW·MMU+页表）</p>
+</div>
+<script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
+</body>
+</html>

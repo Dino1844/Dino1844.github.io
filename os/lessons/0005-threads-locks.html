@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0005 · 线程·锁·信号量</title>
+<script>
+window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, svg: { fontCache: 'global' }, startup: { typeset: false } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.35rem; color: #1a1a1a; } .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); } h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; } .toc a { color: var(--accent); text-decoration: none; }
+  .insight { background: var(--light-accent); border-left: 4px solid #d4a574; padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; } .insight::before { content: "💡 "; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; } .warning::before { content: "⚠️ "; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; } .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .checkpoint { background: #f0f7ff; border: 1px solid #b8d4f0; border-radius: 8px; padding: 0.8rem 1.1rem; margin: 1.2rem 0; font-size: 0.92rem; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; } .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; } .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; }
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; } th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); } td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; } .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; } .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; } .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; } .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; } .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; } .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); } .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; } .concept-card .cc-section { margin-top: 0.7rem; } .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; } .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; } .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); } .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0005 · 线程·锁·信号量</h1>
+<div class="subtitle">并发不是"多个程序同时跑"，而是"中断随时随地可能插入"。从线程与进程的区别到 CAS 造锁再到信号量解生产者-消费者——并发编程的第一套工具 · 阅读时间 ~50 分钟</div>
+
+<div class="toc"><strong>目录</strong><br>
+  <a href="#s1">1. 线程 vs 进程：共享什么、不共享什么</a><br>
+  <a href="#s2">2. 竞态条件：原子性的幻觉</a><br>
+  <a href="#s3">3. 锁的硬件基础：从关中断到 CAS</a><br>
+  <a href="#s4">4. 自旋锁 → mutex：从忙等到休眠</a><br>
+  <a href="#s5">5. 信号量与生产者-消费者</a><br>
+  <a href="#s6">6. 推导与自测</a>
+</div>
+
+<p>展开基石 0001 §5（并发作为根本挑战）。前三课 CPU/内存虚拟化都在<strong>隔离</strong>进程，这课打开"当隔离被故意打破时会发生什么"。线程故意共享地址空间——好处是通信极快（直接读写变量），代价是竞态条件。</p>
+
+<div class="retrieval"><h3>🔁 回忆</h3><ol>
+  <li>基石 0001 §5：为什么单核也需要锁？</li>
+  <li>0002 §2：上下文切换时线程切换和进程切换有什么区别？（提示：CR3）</li>
+  <li>0001 P3：两个线程同时改 `balance`，最终值有几种可能？</li>
+</ol></div>
+
+<h2 id="s1">1. 线程 vs 进程：共享什么、不共享什么</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">核心</span><h3>线程 · Thread</h3></div>
+<div class="cc-essence"><strong>一个进程可以有多个线程。线程共享</strong>：地址空间（代码+数据+堆）、文件描述符表、信号处理。<strong>线程独立拥有</strong>：PC（执行到哪）、寄存器、栈（每个线程有自己的栈）、线程 ID。</div>
+<div class="cc-section"><h4>维恩图</h4>
+<table><tr><th></th><th>进程（一个进程一个线程）</th><th>多线程（同一进程）</th></tr>
+<tr><td>地址空间</td><td>独立</td><td><strong>共享</strong></td></tr>
+<tr><td>文件描述符</td><td>独立（fork 复制）</td><td><strong>共享</strong></td></tr>
+<tr><td>上下文切换代价</td><td>贵（切换页表 = 写 CR3 = TLB 刷）</td><td><strong>便宜</strong>（不写 CR3、TLB 可保留）</td></tr>
+</table>
+</div></div>
+
+<h2 id="s2">2. 竞态条件：原子性的幻觉</h2>
+<p>0001 P3 的 `balance = balance + 100` ——在 x86 上是三条指令：`mov eax, [balance]`; `add eax, 100`; `mov [balance], eax`。如果两个线程交错这三条 → 结果不确定。这不是"编译器的问题"——这是硬件指令级的事实。</p>
+
+<p><strong>临界区（Critical Section）</strong>：访问共享数据的代码段——同一时刻最多一个线程在其中。解法 = <strong>互斥</strong>（Mutual Exclusion）。互斥的三个要求：正确性（最多一个在临界区）、公平性（有机会进去）、性能（不空耗 CPU）。</p>
+
+<h2 id="s3">3. 锁的硬件基础：从关中断到 CAS</h2>
+<div class="derivation"><h4>锁实现技术演进</h4>
+<div class="step"><strong>① 关中断（单核·最简单）：</strong>进入临界区前 `cli`（关中断），出去后 `sti`（开中断）。在单核上，只要没中断就不会有人抢 CPU → 不会有线程切换 → 临界区自然互斥。<span class="reason">缺点：(a) 关中断期间所有 I/O 中断都丢失；(b) 用户态程序不能关中断（特权指令）；(c) 多核上没用——另一个核上的线程不受影响。</span></div>
+<div class="step"><strong>② Test-and-Set（硬件原子指令）：</strong>`TAS(lock_addr)` 原子地返回旧值、写入 1。如果旧值 0 → 拿到锁；旧值 1 → 锁被占——自旋重试。</div>
+<div class="step"><strong>③ Compare-and-Swap（CAS）——更强的原子指令：</strong>`CAS(addr, expected, new)` → if *addr == expected → *addr = new, return true; else return false。<strong>CAS 比 TAS 更通用</strong>——它能做的不只是 0/1 flag：无锁栈、无锁队列、原子计数器都靠 CAS。</div>
+</div>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>锁本身的实现需要原子指令——但谁来保护原子指令？答案：硬件。`LOCK` 前缀（x86）锁住总线或 cache line——在这个原子操作完成前，其他核不能访问同一 cache line。这是范式 #6（HW-SW 协同）的极致——原子指令是硬件给的、锁是软件造的。</div>
+
+<h2 id="s4">4. 自旋锁 → mutex：从忙等到休眠</h2>
+<p><strong>自旋锁（Spin Lock）</strong>：拿不到锁就一直在循环里 CAS——"忙等"。适合临界区极短（几 ns）的场景（内核里常见）。不适合用户态——如果持锁的线程被切走（时间片到），等锁的线程会空转整个时间片。</p>
+<p><strong>互斥锁（Mutex）</strong>：拿不到锁 → 把自己放入等待队列 → 调 `schedule()` 让出 CPU。持锁线程 unlock 时唤醒等待队列中的一个线程。适合临界区可能较长（μs–ms）的场景。</p>
+
+<div class="meta-box"><h4>范式 #6 · HW-SW 协同（锁版）</h4>
+<p>硬件提供 `LOCK CMPXCHG`（CAS）——一个可以原子地"比较并交换"的指令。软件用它构建自旋锁、mutex、信号量、RCU。硬件不决定临界区多长——那是软件的权力。硬件只管"这个 8-byte 操作不会被打断"。</p></div>
+
+<h2 id="s5">5. 信号量与生产者-消费者</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">同步原语</span><h3>信号量 · Semaphore</h3></div>
+<div class="cc-essence"><strong>一个信号量 = 一个整数 + 一个等待队列 + 两个原子操作：</strong>`sem_wait()` ("P"): 如果 count > 0 → count--; 否则 → 睡眠等待。`sem_post()` ("V"): 如果有人在等 → 唤醒一个; 否则 → count++。</div>
+</div>
+
+<p><strong>二值信号量（count=1）= 互斥锁。</strong>但信号量更强大的是<strong>计数信号量</strong>——控制"最多 N 个线程同时访问资源"。</p>
+<p><strong>生产者-消费者问题（Bounded Buffer）</strong>：一个或多个生产者线程向有界缓冲区放数据，消费者线程取数据。解：</p>
+<ul><li>`sem empty(N)` — 缓冲区空位数（初值 N = buffer size）</li>
+<li>`sem full(0)` — 缓冲区已有数据数（初值 0）</li>
+<li>`mutex lock` — 保护缓冲区内部数据结构</li></ul>
+<p>生产者：`sem_wait(empty); lock(mutex); 放入; unlock(mutex); sem_post(full);`</p>
+<p>消费者：`sem_wait(full); lock(mutex); 取出; unlock(mutex); sem_post(empty);`</p>
+<p><strong>两个信号量各管一个条件</strong>（有空位吗？有数据吗？），互斥锁管缓冲区内部的原子性。三个原语，解一家族问题。</p>
+
+<div class="warning"><strong>信号量易错。</strong>如果生产者顺序写成 `lock(mutex); sem_wait(empty);` → 缓冲区满了 → sem_wait 睡眠 → <strong>持锁睡觉 → 死锁</strong>（消费者需要锁才能取数据 → `sem_post(empty)` 但拿不到锁）。这个错误非常常见——因为它看起来"只是顺序不同"。</div>
+
+<h2 id="s6">6. 推导与自测</h2>
+<div class="problem"><div class="ptitle">P1 · CAS 实现自旋锁 <span class="plevel l1">L1</span></div><div class="pbody"><p>用 C 伪代码和 CAS 实现 `spin_lock(lock)` 和 `spin_unlock(lock)`。</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">`spin_lock(int *lock) { while (CAS(lock, 0, 1) == false); }` — 原子检查 lock 是否为 0，是 → 设为 1 返回 true（拿到锁）；否 → 返回 false 继续循环。</div><div class="step">`spin_unlock(int *lock) { *lock = 0; }` — 释放不需要原子（只有持锁者会写）。</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P2 · 生产者-消费者死锁分析 <span class="plevel l2">L2</span></div><div class="pbody"><p>分析：如果 mutex lock 放在 sem_wait(empty) 之前，在 buf 满时会发生什么？画出线程状态。</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">生产者获锁 → sem_wait(empty) buf 满 count=0 → 睡眠。消费者需要获锁才能取数据 → 但锁被睡眠的生产者持着 → <strong>死锁</strong>。</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P3 · Linux futex <span class="plevel l3">L3</span></div><div class="pbody"><p>Linux 的 futex（fast userspace mutex）是 mutex 的高效实现——它在无竞争时不陷入内核。(a) futex 怎么知道有没有竞争？(b) 为什么"无竞争走用户态、有竞争才走内核"能大幅减少系统调用的次数？(c) 这体现了哪个设计范式？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) futex 在用户态用原子 CAS 尝试拿锁。如果 CAS 成功 → 没人竞争 → 直接从用户态返回（零系统调用）。CAS 失败 → 有人持锁 → 调 `futex(FUTEX_WAIT)` 陷入内核睡眠。(b) 大多数 mutex 的持锁时间极短、竞争极罕见——99%+ 的 lock/unlock 可以在用户态完成。(c) <strong>范式 #6（HW-SW 协同）</strong>：硬件给 CAS（用户态快速路径），软件在竞争时才用内核机制（休眠/唤醒）。</div></div></details></div>
+
+<div class="primary-source"><h3>📖 延伸阅读</h3><ul>
+  <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf">Ch 26 (Concurrency & Threads)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks.pdf">Ch 28 (Locks)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-sema.pdf">Ch 31 (Semaphores)</a></li>
+  <li><strong>xv6</strong>：<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/spinlock.c">kernel/spinlock.c</a>、<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/sleeplock.c">kernel/sleeplock.c</a></li>
+</ul></div>
+
+<div class="reminder"><h3>🔄 间隔复习</h3><ul><li><strong>24h</strong>：CAS vs TAS 的区别——CAS 为什么更通用？</li><li><strong>72h</strong>：生产者-消费者的三个信号量用法——为什么顺序不能换？</li></ul></div>
+
+<div class="lesson-footer"><p><a href="../index.html">🏠</a> · <a href="./0004-page-replacement.html">← 0004</a> · <a href="./0006-monitors-deadlock.html">0006 管程·死锁·无锁 →</a></p><p>基石：0001 §5（并发挑战）· 范式 #6（CAS+锁）</p></div>
+<script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
+</body>
+</html>

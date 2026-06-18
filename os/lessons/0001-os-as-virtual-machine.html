@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0001 · 操作系统作为虚拟机器</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+
+  .example-box { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.3rem 0; }
+  .example-box h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+
+  .checkpoint { background: #f0f7ff; border: 1px solid #b8d4f0; border-radius: 8px; padding: 0.8rem 1.1rem; margin: 1.2rem 0; font-size: 0.92rem; }
+  .checkpoint strong { color: #2d5f8a; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem summary:hover { color: #4a2a10; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .sol .step { margin: 0.4rem 0; }
+  .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .quiz { margin: 2rem 0; }
+  .quiz-question { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin-bottom: 1rem; }
+  .quiz-question h4 { font-size: 1rem; margin-bottom: 0.8rem; color: #1a1a1a; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.45rem; }
+  .quiz-option { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.5rem 0.7rem; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: background 0.12s; }
+  .quiz-option:hover { background: var(--light-accent); }
+  .quiz-option input { margin-top: 0.25rem; }
+  .quiz-option label { cursor: pointer; flex: 1; }
+  .quiz-feedback { font-size: 0.9rem; margin-top: 0.7rem; padding: 0.6rem 0.8rem; border-radius: 5px; display: none; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb { background: #d8f3dc; color: var(--correct); }
+  .quiz-feedback.incorrect-fb { background: #ffd7d7; color: var(--incorrect); }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .primary-source h3 { margin-top: 0; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-section { margin-top: 0.7rem; }
+  .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; }
+  .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; }
+  .concept-card .cc-formula { text-align: center; margin: 0.5rem 0; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+
+  .cr { color: var(--accent); border-bottom: 1px dashed var(--accent); cursor: pointer; transition: background 0.12s; }
+  .cr:hover { background: var(--light-accent); border-radius: 2px; }
+  .card-popup { position: fixed; z-index: 9999; width: 400px; max-height: 480px; overflow-y: auto; background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); padding: 0; display: none; font-size: 0.88rem; line-height: 1.55; }
+  .card-popup.show { display: block; }
+  .card-popup .concept-card { margin: 0; border: none; border-radius: 0; box-shadow: none; padding: 1rem 1.2rem; }
+  .card-popup .concept-card:hover { box-shadow: none; }
+  @media (max-width: 450px) { .card-popup { width: 95vw; left: 2.5vw !important; } }
+
+  /* syscall animation */
+  .syscall-viz { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; text-align: center; user-select: none; }
+  .syscall-viz .sc-controls { margin-bottom: 1rem; }
+  .syscall-viz button { font-family: 'Inter',sans-serif; font-size: 0.88rem; padding: 0.5rem 1.2rem; border: 1px solid var(--accent); background: var(--light-accent); color: var(--accent); border-radius: 6px; cursor: pointer; margin: 0 0.3rem; transition: all 0.15s; }
+  .syscall-viz button:hover { background: var(--accent); color: white; }
+  .syscall-viz button:active { transform: scale(0.97); }
+  .syscall-viz button.step-btn { background: #2d4a8a; border-color: #2d4a8a; color: white; }
+  .syscall-viz button.step-btn:hover { background: #1a3060; }
+  .sc-stage { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0; }
+  .sc-box { border: 2px solid var(--border); border-radius: 8px; padding: 0.7rem 1rem; font-size: 0.85rem; background: #fafaf7; min-width: 100px; transition: all 0.3s; }
+  .sc-box.active { border-color: var(--accent); background: var(--light-accent); box-shadow: 0 0 12px rgba(107,66,38,0.2); }
+  .sc-box.kernel { background: #fff8f0; border-color: #e09f3e; }
+  .sc-box.kernel.active { border-color: #c44d4d; background: #fff0e8; box-shadow: 0 0 12px rgba(196,77,77,0.25); }
+  .sc-arrow { font-size: 1.3rem; color: var(--muted); }
+  .sc-desc { font-size: 0.88rem; color: var(--muted); margin-top: 0.8rem; line-height: 1.5; min-height: 2.5rem; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0001 · 操作系统作为虚拟机器</h1>
+<div class="subtitle">从"硬件只有一台、进程都想独占"这个矛盾出发，推出 OS 整个设计逻辑——三条幻象、机制/策略分离、保护模型、并发挑战、六大概述范式 · 阅读时间 ~45 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 故事的起点：一个根本矛盾</a><br>
+  <a href="#s2">2. 三条幻象：OS 制造的三个"谎言"</a><br>
+  <a href="#s3">3. 机制/策略分离：OS 设计第一原则</a><br>
+  <a href="#s4">4. 保护模型：幻象需要围墙</a><br>
+  <a href="#s5">5. 并发作为根本挑战：幻象的裂缝</a><br>
+  <a href="#s6">6. 六大设计范式：OS 的"元技巧"</a><br>
+  <a href="#s7">7. 自测</a>
+</div>
+
+<p>
+  大多数人学操作系统是从"进程是什么""虚拟内存是什么"开始——
+  背一堆概念，不知道它们为什么存在。这节课<strong>反过来</strong>：从"硬件只有一台物理机"
+  这个事实出发，推出 OS 必须创造的三个"谎言"（幻象），以及维持这些谎言所需的
+  全部设计原则。
+</p>
+
+<p>
+  这就像 ML 0001 从"噪声是高斯分布"这一个假设推出整条损失→解→几何→代价→信息论的链。这里从一个矛盾出发推出整条 OS 设计链。<strong>每步是上步的必然结果，没有跳跃。</strong>
+</p>
+
+<div class="insight">
+  <strong>本课是全书公理集，不是线性链的第一环。</strong>
+  后续课程在五条路径上展开本课的各个推论，引用本课时是<strong>回到公理</strong>而非"上一课"。
+</div>
+
+<table style="width:100%; border-collapse:collapse; margin:1.3rem 0; font-size:0.9rem;">
+  <thead><tr style="border-bottom:2px solid var(--border);">
+    <th style="text-align:left; padding:0.45rem 0.7rem; width:5rem;">本课节</th>
+    <th style="text-align:left; padding:0.45rem 0.7rem;">建立的公理/对象</th>
+    <th style="text-align:left; padding:0.45rem 0.7rem; width:2.5rem;">路径</th>
+    <th style="text-align:left; padding:0.45rem 0.7rem;">展开它的后续课</th>
+  </tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.7rem;"><strong>§1–2</strong></td><td style="padding:0.4rem 0.7rem;">根本矛盾 → 三条幻象（CPU/内存/I/O 虚拟化）</td><td style="padding:0.4rem 0.7rem; font-size:0.82rem;">A,B,D</td><td style="padding:0.4rem 0.7rem; font-size:0.84rem;">0002 进程·调度 · 0003 地址翻译 · 0007 inode</td></tr>
+    <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.7rem;"><strong>§3</strong></td><td style="padding:0.4rem 0.7rem;">机制/策略分离——OS 设计第一原则</td><td style="padding:0.4rem 0.7rem; font-size:0.82rem;">A,B,D</td><td style="padding:0.4rem 0.7rem; font-size:0.84rem;">0002 调度策略 · 0004 替换策略 · 0008 I/O调度</td></tr>
+    <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.7rem;"><strong>§4</strong></td><td style="padding:0.4rem 0.7rem;">保护模型：用户态/内核态 + 系统调用（受控网关）</td><td style="padding:0.4rem 0.7rem; font-size:0.82rem;">全部</td><td style="padding:0.4rem 0.7rem; font-size:0.84rem;">0002 trap机制 · 0009 hypervisor · 0009 内存安全</td></tr>
+    <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.7rem;"><strong>§5</strong></td><td style="padding:0.4rem 0.7rem;">并发作为根本挑战：中断随时到来</td><td style="padding:0.4rem 0.7rem; font-size:0.82rem;">C</td><td style="padding:0.4rem 0.7rem; font-size:0.84rem;">0005 竞态·锁 · 0006 死锁·无锁</td></tr>
+    <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.7rem;"><strong>§6</strong></td><td style="padding:0.4rem 0.7rem;">六大设计范式预览</td><td style="padding:0.4rem 0.7rem; font-size:0.82rem;">全部</td><td style="padding:0.4rem 0.7rem; font-size:0.84rem;">全书各课 .meta-box 标注</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <p style="margin-bottom:0.5rem;">先从记忆里调取以下内容。费力回忆本身就在加强记忆：</p>
+  <ol style="margin-bottom:0.5rem;">
+    <li>你在 Linux 上运行 <code>./a.out</code> 时，谁决定它什么时候开始跑？它跑的时候能直接访问物理内存地址 0x1000 吗？为什么？</li>
+    <li>一个程序写 <code>fprintf(f, "hello")</code>，数据怎么到硬盘上的？中间经过了几层？</li>
+    <li>两个终端同时编辑同一个文件会发生什么？谁在管理"同时"？</li>
+    <li>你打开 100 个 Chrome 标签页，物理内存只有 16G，为什么没崩？</li>
+  </ol>
+  <p style="font-size:0.85rem; color:var(--muted); margin:0.5rem 0 0;">这些直觉就是 OS 要回答的。想不起来的就是今天要补的缺口。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 故事的起点：一个根本矛盾</h2>
+
+<p>
+  一台计算机有一块物理 CPU、一块物理内存、一块物理磁盘。但你打开 100 个程序，
+  每个程序都以为自己独占整台机器——<code>printf("%p", &x)</code> 打印出来的地址
+  和其他程序的不冲突，<code>while(1)</code> 不会永远霸占 CPU，文件保存在"桌面"上
+  而不是柱面 372 扇区 18。
+</p>
+
+<p>把硬件直接暴露给程序，会立刻撞上三堵墙：</p>
+
+<div class="derivation">
+  <h4>硬件裸用的问题</h4>
+  <table>
+    <tr><th style="width:5rem;">资源</th><th>问题</th><th>后果</th></tr>
+    <tr><td><strong>CPU</strong></td><td>只有一个/几个核，所有程序都要跑</td><td>没有调度 → 一个死循环霸占一切；没有抢占 → 一个程序可以永远不让出 CPU</td></tr>
+    <tr><td><strong>内存</strong></td><td>物理上只有一块连续空间</td><td>程序 A 可能读到程序 B 的密码；程序链接的地址可能冲突；碎片让 4G 空闲但装不下一个 2G 程序</td></tr>
+    <tr><td><strong>磁盘</strong></td><td>物理上是一堆扇区，数据分布无规则</td><td>用户需要记住"我的 data 在柱面 57 扇区 1082"；误写一个扇区可以毁掉整个文件系统</td></tr>
+  </table>
+</div>
+
+<p>OS 的存在就是为了解决这三个问题——它不是"计算机的附加组件"，而是<strong>计算机不可用的前提</strong>。没有 OS，硬件只是一堆硅。</p>
+
+<p>而解决这三个问题的策略，出奇地统一：</p>
+
+<div class="formula-block">
+  $$\text{OS 的策略} = \text{在硬件之上加一层间接，制造三个"幻象"}$$
+</div>
+
+<div class="insight">
+  <strong>OS 不暴露硬件，OS 暴露幻象。</strong>
+  给每个进程一个虚拟 CPU、一片虚拟地址空间、一套虚拟文件系统。
+  三个幻象各自需要：一个数据结构记录"虚拟 ↔ 物理"的映射，一套规则规定"何时切映射"。
+  这样想 OS 的话，后面所有课都是一个套路的展开。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 三条幻象：OS 制造的三个"谎言"</h2>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag">核心隐喻</span>
+    <h3>操作系统作为虚拟机器</h3>
+    <span class="cc-aliases">Virtual Machine · Illusionist</span>
+  </div>
+  <div class="cc-essence">
+    <strong>本质：</strong>OS = 一个把一台物理机映射成 N 台虚拟机的程序。每个进程活在它自己的虚拟机里——有自己的虚拟 CPU（时间片）、虚拟内存（地址空间）、虚拟磁盘（文件系统）。进程永远不会"看见"真实硬件。
+  </div>
+  <div class="cc-section">
+    <h4>三条幻象对应的问题和解法</h4>
+    <table>
+      <tr><th>幻象</th><th>解决什么问题</th><th>核心机制</th><th>展开于</th></tr>
+      <tr><td><strong>CPU 虚拟化</strong></td><td>每个进程以为独占 CPU</td><td>上下文切换 + 调度</td><td>0002</td></tr>
+      <tr><td><strong>内存虚拟化</strong></td><td>每个进程以为独占 0x0 → 0xFFFF…</td><td>页表 + TLB + 缺页处理</td><td>0003, 0004</td></tr>
+      <tr><td><strong>I/O 虚拟化</strong></td><td>每个进程以为有一棵整洁的文件树</td><td>inode + 文件描述符 + 块层</td><td>0007, 0008</td></tr>
+    </table>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 0002: CPU 幻象的具体机制</span>
+    <span class="conn-badge">→ 0003: 内存幻象的具体机制</span>
+    <span class="conn-badge">→ 0007: I/O 幻象的具体机制</span>
+  </div>
+</div>
+
+<h3>2.1 CPU 虚拟化：时分复用制造的幻象</h3>
+
+<p>
+  物理上只有 $N$ 个核，但有 $M \gg N$ 个进程想跑。OS 的解法是<strong>时分复用</strong>——
+  为每个进程分配一小段时间片（time slice），时间到了就切走。
+</p>
+
+<p>切换的频率是多少？以 Linux CFS 为例：</p>
+<ul>
+  <li>典型时间片：1–20ms（取决于 `sched_latency` 和进程数）</li>
+  <li>上下文切换开销：~1–10μs（保存/恢复寄存器、切换页表、刷新 TLB 的部分内容）</li>
+  <li>开销占比：通常 < 0.1%（1μs / 1000μs = 0.1%）——小而可接受的代价</li>
+</ul>
+
+<p>从进程视角，它不知道也不关心自己什么时候被切走——它只看到自己的指令一条条执行。这就是 CPU 幻象。</p>
+
+<div class="checkpoint">
+  <strong>停下来想一想</strong>：如果上下文切换的开销是 10μs、时间片是 1ms，那么 CPU 用于"切换"而非"干活"的比例是多少？如果把时间片缩到 10μs 会怎样？
+</div>
+
+<h3>2.2 内存虚拟化：地址翻译制造的幻象</h3>
+
+<p>
+  每个进程的地址都从 0x0 开始（严格说是从 ELF 加载地址开始），
+  仿佛整片物理内存都是它的。但实际上：
+</p>
+
+<ul>
+  <li>物理内存是所有进程共享的——OS 把物理页框（frame）分配给各进程的虚拟页</li>
+  <li>每个进程有自己的<strong>页表</strong>——虚拟页号 → 物理帧号的映射字典</li>
+  <li>CPU 里的 <strong>MMU（Memory Management Unit）</strong> 在每次访存时自动查页表翻译地址</li>
+  <li>进程 A 的 0x7fff0000 和进程 B 的 0x7fff0000 映射到完全不同的物理地址——隔离由此而生</li>
+</ul>
+
+<div class="formula-block">
+  $$\underbrace{\text{虚拟地址}}_{\text{进程看到的}} \;\xrightarrow{\text{MMU + 页表}}\; \underbrace{\text{物理地址}}_{\text{硬件用的}}$$
+</div>
+
+<p>这个映射不仅隔离进程，还带来了三个超级能力——后面 0003–0004 会深入：</p>
+<ol>
+  <li><strong>按需调页</strong>（demand paging）：不到用时不给物理帧——可以跑比物理内存大的程序</li>
+  <li><strong>写时复制</strong>（copy-on-write）：`fork()` 不真的复制——父子共享页直到有人写</li>
+  <li><strong>内存映射文件</strong>（mmap）：把文件映射到虚拟地址——read/write 退化为指针操作</li>
+</ol>
+
+<h3>2.3 I/O 虚拟化：文件抽象制造的幻象</h3>
+
+<p>
+  硬盘是柱面/磁头/扇区的几何结构，SSD 是块/页/擦除单元的半导体迷宫。
+  但程序看到的是 <code>/home/user/report.txt</code>——一棵目录树，每个文件可读可写可定位。
+</p>
+
+<p>这个幻象的核心机制是层层抽象：</p>
+
+<div class="derivation">
+  <h4>I/O 虚拟化的抽象层次（从高到低）</h4>
+  <div class="step">
+    <strong>文件描述符</strong>（fd）——进程看到的整数句柄（0 = stdin, 1 = stdout, 2 = stderr）
+    <span class="reason">内核为每个进程维护一个打开文件表 `files_struct`，fd 是数组下标</span>
+  </div>
+  <div class="step">
+    <strong>inode</strong>——文件的"身份证"，包含权限/大小/数据块指针，唯独没有文件名
+    <span class="reason">文件名存在目录项（dentry）里——目录本质是"名字→inode号"的映射表</span>
+  </div>
+  <div class="step">
+    <strong>块层</strong>（block layer）——把 inode 的块号翻译成设备 I/O 请求
+    <span class="reason">合并相邻请求、排序以减少磁头移动（电梯算法）</span>
+  </div>
+  <div class="step">
+    <strong>设备驱动</strong>——把 I/O 请求翻译成硬件寄存器操作
+    <span class="reason">驱动是唯一知道硬件具体协议的代码</span>
+  </div>
+</div>
+
+<p>这一套抽象让"把 `fd` 改成指向另一个文件"成为一个原子操作（`dup2`），让网络 socket 和普通文件可以统一用 `read`/`write`（Unix 的"一切皆文件"哲学）。</p>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 机制/策略分离：OS 设计第一原则</h2>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag" style="background:#4a7bab;">第一原则</span>
+    <h3>机制与策略分离 · Separation of Mechanism and Policy</h3>
+    <span class="cc-aliases">Mechanism/Policy Split</span>
+  </div>
+  <div class="cc-essence">
+    <strong>本质：</strong>"怎么做"（机制）和"选哪个"（策略）解耦。机制留在内核（因为需要特权指令），策略可以根据场景换——不必改内核代码。
+  </div>
+  <div class="cc-section">
+    <h4>OS 中反复出现的例子</h4>
+    <table>
+      <tr><th>领域</th><th>机制（内核提供）</th><th>策略（可换）</th><th>课次</th></tr>
+      <tr><td>CPU 调度</td><td>上下文切换、就绪队列</td><td>哪个进程得到 CPU、多长时间</td><td>0002</td></tr>
+      <tr><td>页替换</td><td>缺页中断、页表操作</td><td>换出哪一页（LRU? 时钟?）</td><td>0004</td></tr>
+      <tr><td>I/O 调度</td><td>请求队列、DMA 发起</td><td>请求的先后顺序</td><td>0008</td></tr>
+      <tr><td>文件系统</td><td>inode 操作、块分配</td><td>布局策略（ext4? btrfs?）</td><td>0007</td></tr>
+    </table>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 0002: 调度策略可换不改机制</span>
+    <span class="conn-badge">→ 0004: clock vs LRU 都是同一个缺页机制上的策略</span>
+    <span class="conn-badge">→ 0008: elevator vs deadline 都是同一个请求队列机制</span>
+  </div>
+</div>
+
+<p>
+  这个原则为什么是"第一"？因为 OS 是长期运行的基础设施——内核一旦写定，上层应用千变万化。
+  如果每次换个调度算法都要改内核代码，OS 就没法稳定。机制/策略分离让内核提供<strong>稳定基元</strong>（上下文切换、页表操作、I/O 请求），让策略作为<strong>可替换模块</strong>存在。
+</p>
+
+<p>一个经典反例：早期 Unix 的调度器直接把优先级算法硬编码在内核里，后来要换 CFS 时不得不大规模重构。而 Linux 2.6+ 的调度类（scheduling class）设计——`SCHED_NORMAL`（CFS）、`SCHED_FIFO`、`SCHED_RR`、`SCHED_DEADLINE` 等并存——正是机制/策略分离的胜利。</p>
+
+<div class="meta-box">
+  <h4>范式 #5 · 机制/策略分离</h4>
+  <p><strong>这一招为什么管用：</strong>把"必然的代价"（上下文切换需要修改硬件状态、缺页需要操纵页表——非特权指令不可）和"可变的选择"（谁先跑、谁被换出——无绝对对错）分开。内核付代价，用户做选择。</p>
+  <p><strong>还在哪里出现：</strong>调度（0002）、页替换（0004）、I/O 调度（0008）、安全策略（0009 的 seL4 capability）</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 保护模型：幻象需要围墙</h2>
+
+<p>
+  三条幻象有一个前提：<strong>进程不能戳破别人的幻象</strong>。进程 A 不能改进程 B 的页表，
+  不能直接写硬盘绕过文件系统，不能让 CPU 永远不切走。
+</p>
+
+<p>OS 用硬件支持的两级特权来实现这个隔离：</p>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag">硬件基础</span>
+    <h3>用户态与内核态 · User Mode vs Kernel Mode</h3>
+    <span class="cc-aliases">Ring 3 vs Ring 0 · CPL · 特权级</span>
+  </div>
+  <div class="cc-essence">
+    <strong>本质：</strong>CPU 在某个寄存器里存了当前特权级（x86: CPL，存在 CS 寄存器的低 2 bit）。某些指令（`lgdt`、`lidt`、`hlt`、`in`/`out`、改 CR3……）只在 Ring 0 可用。用户态代码执行这些指令 → CPU 抛异常。
+  </div>
+  <div class="cc-section">
+    <h4>两种态的对比</h4>
+    <table>
+      <tr><th></th><th>用户态（Ring 3）</th><th>内核态（Ring 0）</th></tr>
+      <tr><td>能访问的内存</td><td>自己的虚拟地址空间</td><td>全部物理内存 + 所有进程的页表</td></tr>
+      <tr><td>能执行的指令</td><td>普通运算/访存/系统调用</td><td>特权指令（I/O、MMU 配置、中断控制）</td></tr>
+      <tr><td>运行什么代码</td><td>应用程序</td><td>OS 内核</td></tr>
+      <tr><td>出错了怎么办</td><td>进程被杀（segfault）</td><td>内核 panic（整机重启）</td></tr>
+    </table>
+  </div>
+</div>
+
+<h3>4.1 系统调用：从 Ring 3 进入 Ring 0 的唯一合法入口</h3>
+
+<p>用户程序需要 I/O、分配内存、创建进程——这些都要内核帮忙。但用户程序不能随便跳到内核态（否则保护形同虚设）。OS 的设计是：</p>
+
+<ul>
+  <li>内核事先在<strong>中断描述符表</strong>（IDT / Interrupt Descriptor Table）里注册好各系统调用的入口地址</li>
+  <li>用户程序执行 <code>syscall</code>（x86-64）或 <code>int 0x80</code>（x86 旧版）——触发<strong>软件中断</strong></li>
+  <li>CPU 硬件自动：切换到 Ring 0、保存用户态寄存器到内核栈、跳到 IDT 里注册的入口</li>
+  <li>内核处理完，执行 <code>sysret</code>（或 <code>iret</code>）恢复用户态继续执行</li>
+</ul>
+
+<div class="syscall-viz" id="sc-viz">
+  <div class="sc-controls">
+    <button class="step-btn" onclick="scStep(1)">▶ 用户态调用</button>
+    <button class="step-btn" onclick="scStep(2)">▶ 陷入内核</button>
+    <button class="step-btn" onclick="scStep(3)">▶ 内核处理</button>
+    <button class="step-btn" onclick="scStep(4)">▶ 返回用户态</button>
+    <button onclick="scReset()" style="font-size:0.8rem;">↺ 重置</button>
+  </div>
+  <div class="sc-stage">
+    <div class="sc-box" id="sc-user">🏠 用户态<br><span style="font-size:0.75rem;color:var(--muted);">Ring 3</span></div>
+    <div class="sc-arrow">→</div>
+    <div class="sc-box kernel" id="sc-kernel">🔐 内核态<br><span style="font-size:0.75rem;color:#e09f3e;">Ring 0</span></div>
+  </div>
+  <div class="sc-desc" id="sc-desc">点击上方按钮，追踪一次 <code>read(fd, buf, 100)</code> 系统调用的完整路径</div>
+</div>
+<script>
+(function(){
+  var desc = document.getElementById('sc-desc');
+  var userB = document.getElementById('sc-user');
+  var kernB = document.getElementById('sc-kernel');
+  var steps = {
+    1: { desc: '<strong>① 用户态：</strong>程序调用 <code>read(fd, buf, 100)</code> → libc 把参数装入寄存器（x86-64: <code>rax=0</code> 即 read 的调用号, <code>rdi=fd</code>, <code>rsi=buf</code>, <code>rdx=100</code>）→ 执行 <code>syscall</code> 指令', user: true, kernel: false },
+    2: { desc: '<strong>② 硬件自动：</strong>CPU 读 <code>MSR_LSTAR</code> 寄存器获知内核入口地址 → 切换到 Ring 0 → 把用户态 RIP/RFLAGS 压入内核栈 → 跳转到 <code>entry_SYSCALL_64</code>（Linux 的系统调用总入口）', user: false, kernel: true },
+    3: { desc: '<strong>③ 内核处理：</strong><code>entry_SYSCALL_64</code> → 保存全部寄存器 → <code>do_syscall_64</code> 查 <code>sys_call_table[0]</code>（即 <code>sys_read</code>）→ <code>ksys_read(fd, buf, 100)</code> → 从 <code>fd</code> 查到 <code>file</code> 结构 → 查 <code>inode</code> → <code>ext4_file_read_iter</code> → 块层 → 驱动 → 数据拷入 <code>buf</code>（0009 会完整追踪全程）', user: false, kernel: true },
+    4: { desc: '<strong>④ 返回：</strong>内核执行 <code>sysretq</code> → CPU 自动切回 Ring 3、恢复用户态 RIP/RFLAGS、从内核栈弹出 → 用户程序继续执行 <code>read</code> 的下一条指令，<code>rax</code> 里是实际读到的字节数', user: true, kernel: false }
+  };
+  window.scStep = function(n){
+    var s = steps[n];
+    desc.innerHTML = s.desc;
+    if (s.user) userB.classList.add('active'); else userB.classList.remove('active');
+    if (s.kernel) kernB.classList.add('active'); else kernB.classList.remove('active');
+  };
+  window.scReset = function(){
+    desc.innerHTML = '点击上方按钮，追踪一次 <code>read(fd, buf, 100)</code> 系统调用的完整路径';
+    userB.classList.remove('active');
+    kernB.classList.remove('active');
+  };
+})();
+</script>
+
+<div class="warning">
+  <strong>系统调用 ≠ 普通函数调用。</strong>普通函数调用只是 `call` 指令（改 RIP + 压栈），几十个 CPU 周期。系统调用涉及 Ring 切换、寄存器全保存、页表切换（可能）、TLB 刷新（可能），代价 100–1000+ 周期。这就是为什么 <code>gettimeofday</code> 这类高频调用在 Linux 上通过 <strong>vDSO</strong>（虚拟动态共享对象）映射到用户态——避免真的陷入内核。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 并发作为根本挑战：幻象的裂缝</h2>
+
+<p>
+  三条幻象都假设了某种"原子性"——上下文切换应该对进程透明。
+  但现实是 OS 本身就是一个<strong>并发系统</strong>：中断随时到来，多个进程同时在跑（多核），
+  OS 内核代码本身也可能被中断打断。
+</p>
+
+<p>这就是 OS 设计和应用程序设计最大的不同：</p>
+
+<div class="insight">
+  <strong>应用程序假设自己控制一切。OS 内核不能做这个假设。</strong>
+  CPU 在任何时刻都可能触发中断，跳到中断处理程序——而中断处理程序可能修改
+  正在被当前代码访问的数据结构。<strong>并发不是"我选择用多线程"的设计决定——它是物理事实。</strong>
+</div>
+
+<h3>5.1 中断：并发的物理根源</h3>
+
+<p>一个典型场景：内核正在遍历进程链表（`for (p = procs; p; p = p->next)`），时钟中断来了：</p>
+
+<ol>
+  <li>CPU 暂停当前内核代码</li>
+  <li>跳到时钟中断处理程序 → 发现当前进程时间片用完了 → 调用 `scheduler()`</li>
+  <li>`scheduler()` 修改进程链表（把一个进程移到队尾）</li>
+  <li>中断返回 → 原来的遍历代码继续跑——但链表已经被改了！`p->next` 可能指向被移除的节点</li>
+</ol>
+
+<p>这就是<strong>竞态条件</strong>（race condition）的根源。解决方法（锁、信号量、RCU）在 0005–0006 展开。</p>
+
+<h3>5.2 并发倒逼的设计决策</h3>
+
+<p>正是因为并发是物理事实，OS 设计中有很多看似奇怪的选择其实是为了并发正确性：</p>
+
+<ul>
+  <li><strong>为什么 `fork()` 不真的复制全部内存？</strong>不只因为慢——复制过程中中断可能改原进程的内存，导致复制版不一致。COW 用只读共享 + 缺页时复制来保证原子性（0004）。</li>
+  <li><strong>为什么内核栈通常很小（Linux 默认 16KB）？</strong>不只是省内存——每进程有自己的内核栈，中断处理复用被中断进程的内核栈。栈小了上下文切换快。</li>
+  <li><strong>为什么系统调用中一般不能 sleep？</strong>持锁时睡眠 = 死锁邀请函。`copy_to_user` 可能因缺页而阻塞——这是内核里少数可以合法睡眠的地方，但它不持锁。</li>
+</ul>
+
+<div class="checkpoint">
+  <strong>停下来想一想</strong>：单核 CPU 上需要锁吗？时钟中断不能打断当前指令，但可以打断两条指令之间。所以单核也需要锁——只是锁的方式不同（关中断就够了，不需要原子指令）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 六大设计范式：OS 的"元技巧"</h2>
+
+<p>
+  ML 课程有"推导范式"——配平方、Jensen、Woodbury、拉格朗日对偶。
+  OS 也有自己的"设计范式"——理解这些范式，你就不是学"100 个机制"而是学"6 个想法在不同场景的 100 次应用"。
+  本课给出全景，后续每课在 `.meta-box` 中标注"范式 #N"。
+</p>
+
+<div class="meta-box">
+  <h4>范式 #1 · 间接层（Indirection）</h4>
+  <p><strong>一句话：</strong>"任何计算机科学问题都可以加一个间接层解决——除了间接层太多的问题。"在硬件和程序之间插一层映射，解耦"程序看到的东西"和"物理存在的东西"。</p>
+  <p><strong>OS 中的体现：</strong>虚拟地址（映射到物理帧）、文件描述符（映射到 inode）、inode 号（映射到数据块）、进程 ID（映射到 PCB）、socket（映射到网络连接）。</p>
+  <p><strong>出现的课：</strong>0001（本课）、0003（页表）、0007（inode）、0009（容器的 namespace 隔离）</p>
+</div>
+
+<div class="meta-box">
+  <h4>范式 #2 · 缓存（Caching）</h4>
+  <p><strong>一句话：</strong>"刚用过的东西很可能马上再用。"在快速介质上存慢速介质的子集，用局部性原理让大多数访问命中缓存。</p>
+  <p><strong>OS 中的体现：</strong>TLB（页表缓存）、buffer cache（磁盘块缓存）、dentry cache（目录项缓存）、inode cache、CPU cache（硬件但 OS 配合——调度时考虑 cache affinity）。</p>
+  <p><strong>出现的课：</strong>0003（TLB）、0007（buffer cache）、0008（存储层次就是缓存层次）</p>
+</div>
+
+<div class="meta-box">
+  <h4>范式 #3 · 惰性求值（Lazy Evaluation）</h4>
+  <p><strong>一句话：</strong>"不到非做不可就先不做。"推迟工作到真正需要时，用"不做"换取性能。</p>
+  <p><strong>OS 中的体现：</strong>按需调页（不真的分物理帧直到访问）、写时复制（不真的复制直到写入）、惰性分配（`malloc(1GB)` 不真的给物理内存直到用到）、RCU（不真的释放旧版本直到所有读者完成）。</p>
+  <p><strong>出现的课：</strong>0004（COW、demand paging）、0006（RCU）、0007（COW 文件系统）</p>
+</div>
+
+<div class="meta-box">
+  <h4>范式 #4 · 批处理（Batching）</h4>
+  <p><strong>一句话：</strong>"把小的攒成大的，一次搞定均摊开销。"利用固定开销可以被均摊的性质。</p>
+  <p><strong>OS 中的体现：</strong>I/O 合并（电梯算法把相邻请求合并成一次磁盘操作）、中断合并（网卡攒多个包再中断一次）、组调度（把一组线程一起调度减少切换次数）、写回缓存（攒多个写操作一次刷盘）。</p>
+  <p><strong>出现的课：</strong>0002（组调度）、0008（I/O 合并、中断合并）</p>
+</div>
+
+<div class="meta-box">
+  <h4>范式 #5 · 机制/策略分离（Mechanism/Policy Split）</h4>
+  <p><strong>一句话：</strong>"怎么做"和"选哪个"解耦。已在 §3 详述。</p>
+  <p><strong>出现的课：</strong>0002（调度）、0004（页替换）、0008（I/O 调度）、0009（seL4 capability 访问控制）</p>
+</div>
+
+<div class="meta-box">
+  <h4>范式 #6 · 硬件-软件协同（HW-SW Co-design）</h4>
+  <p><strong>一句话：</strong>硬件提供"又快又蠢"的基元，软件用这些基元构建"慢但聪明"的策略。硬件只做非它不可的事——剩下的留给 OS。</p>
+  <p><strong>OS 中的体现：</strong>MMU 只管页表翻译（硬件不决定换哪页——那是 OS 的策略）、原子指令给 CAS（硬件不决定临界区多长——那是软件的权力）、中断控制器只管分发中断（不决定优先级——那是 OS 的策略）。CPU 给 Ring 0/3、页表结构、中断机制——OS 用它们构建整个幻象世界。</p>
+  <p><strong>出现的课：</strong>0002（中断+上下文切换）、0003（MMU+页表）、0005（CAS+锁）、0010（VMX/SVM 虚拟化扩展）</p>
+</div>
+
+<p>
+  这六个范式不是彼此独立的——它们在每个 OS 子系统中同时出现。
+  以<strong>页表</strong>为例：它是间接层（范式 #1，虚拟→物理），它背后有 TLB（范式 #2，缓存），
+  缺页处理是惰性求值（范式 #3），TLB shootdown 是批量（范式 #4），
+  页替换算法是机制/策略分离（范式 #5），MMU 硬件和 OS 的配合是 HW-SW 协同（范式 #6）。
+  六个范式在同一机制上的六重奏——这就是操作系统之美。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 自测</h2>
+
+<div class="quiz">
+  <div class="quiz-question" id="q1">
+    <h4>Q1 · 三条幻象共同依赖的基础设施是什么？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q1" value="a" onchange="checkQ('q1','a',false)"><label>A. CPU 的多核架构</label></div>
+      <div class="quiz-option"><input type="radio" name="q1" value="b" onchange="checkQ('q1','b',true)"><label>B. 间接层——虚拟地址、文件描述符、进程状态</label></div>
+      <div class="quiz-option"><input type="radio" name="q1" value="c" onchange="checkQ('q1','c',false)"><label>C. 硬盘的存储能力</label></div>
+      <div class="quiz-option"><input type="radio" name="q1" value="d" onchange="checkQ('q1','d',false)"><label>D. 网络协议栈</label></div>
+    </div>
+    <div class="quiz-feedback correct-fb" id="q1-correct"><strong>✓ 正确。</strong>三条幻象（CPU/内存/I/O）都是通过间接层实现的：CPU 幻象靠进程状态和调度（间接使用物理 CPU）、内存幻象靠页表（虚拟地址映射到物理地址）、I/O 幻象靠文件描述符和 inode（文件名映射到磁盘块）。间接层是全书第一范式。</div>
+    <div class="quiz-feedback incorrect-fb" id="q1-incorrect"><strong>✗ 再想想。</strong>提示：哪样东西让 CPU 虚拟化、内存虚拟化和 I/O 虚拟化都有了可能？</div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <h4>Q2 · 机制/策略分离的核心价值是什么？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q2" value="a" onchange="checkQ('q2','a',false)"><label>A. 让内核代码更短</label></div>
+      <div class="quiz-option"><input type="radio" name="q2" value="b" onchange="checkQ('q2','b',false)"><label>B. 让用户程序可以绕过内核</label></div>
+      <div class="quiz-option"><input type="radio" name="q2" value="c" onchange="checkQ('q2','c',true)"><label>C. 让内核稳定提供基元，策略可以随场景更换而不改内核</label></div>
+      <div class="quiz-option"><input type="radio" name="q2" value="d" onchange="checkQ('q2','d',false)"><label>D. 让硬件更快</label></div>
+    </div>
+    <div class="quiz-feedback correct-fb" id="q2-correct"><strong>✓ 正确。</strong>内核是长期运行的基础设施，不能因策略变化而频繁改动。机制/策略分离让内核提供"怎么做"的稳定基元（上下文切换、页表操作），策略作为可替换模块存在。Linux 的调度类（CFS/RT/DEADLINE 共存）是典范。</div>
+    <div class="quiz-feedback incorrect-fb" id="q2-incorrect"><strong>✗ 再想想。</strong>提示：OS 内核写完了就不能随便改，但调度偏好因人而异。</div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <h4>Q3 · 为什么单核 CPU 也需要锁？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q3" value="a" onchange="checkQ('q3','a',false)"><label>A. 不需要——单核上代码是顺序执行的</label></div>
+      <div class="quiz-option"><input type="radio" name="q3" value="b" onchange="checkQ('q3','b',true)"><label>B. 需要——中断可以打断两条指令之间，修改共享数据</label></div>
+      <div class="quiz-option"><input type="radio" name="q3" value="c" onchange="checkQ('q3','c',false)"><label>C. 需要——因为编译器可能重排指令</label></div>
+      <div class="quiz-option"><input type="radio" name="q3" value="d" onchange="checkQ('q3','d',false)"><label>D. 不需要——中断处理程序不能访问内核数据</label></div>
+    </div>
+    <div class="quiz-feedback correct-fb" id="q3-correct"><strong>✓ 正确。</strong>单核上时钟中断可以在任意两条指令之间到来。如果内核正在修改进程链表而中断处理程序也修改它，就会产生竞态条件。单核的解法是关中断（禁用中断），但这只对单核有效——多核还需要原子指令。</div>
+    <div class="quiz-feedback incorrect-fb" id="q3-incorrect"><strong>✗ 再想想。</strong>提示：中断什么时候可以发生？被打断的代码执行到一半会怎样？</div>
+  </div>
+
+  <div class="quiz-question" id="q4">
+    <h4>Q4 · 以下哪项不是系统调用？</h4>
+    <div class="quiz-options">
+      <div class="quiz-option"><input type="radio" name="q4" value="a" onchange="checkQ('q4','a',false)"><label>A. read(fd, buf, n)</label></div>
+      <div class="quiz-option"><input type="radio" name="q4" value="b" onchange="checkQ('q4','b',false)"><label>B. fork()</label></div>
+      <div class="quiz-option"><input type="radio" name="q4" value="c" onchange="checkQ('q4','c',false)"><label>C. mmap(addr, len, prot, flags, fd, off)</label></div>
+      <div class="quiz-option"><input type="radio" name="q4" value="d" onchange="checkQ('q4','d',true)"><label>D. printf("hello")</label></div>
+    </div>
+    <div class="quiz-feedback correct-fb" id="q4-correct"><strong>✓ 正确。</strong>`printf` 是 libc 库函数，不是系统调用。它内部会调用 `write`（这才是系统调用），但 `printf` 本身只在用户态运行——做格式化、缓冲等工作。类似地，`malloc` 也不是系统调用——它管理用户态堆，只在不够时调 `brk`/`mmap`。</div>
+    <div class="quiz-feedback incorrect-fb" id="q4-incorrect"><strong>✗ 再想想。</strong>提示：这个函数在格式化字符串——格式化发生在哪一层？</div>
+  </div>
+</div>
+
+<p style="font-size:0.85rem; color:var(--muted);">以上 4 题考的是概念理解而非记忆。如果有答错的，不要只是"记住正确答案"——回到对应节重新走一遍逻辑链，理解错在哪里。</p>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导/追踪题</h2>
+
+<div class="problem">
+  <div class="ptitle">P1 · 上下文切换代价估算 <span class="plevel l1">L1 基础</span></div>
+  <div class="pbody">
+    <p>假设一次上下文切换需要保存/恢复 40 个通用寄存器（每寄存器 8 字节）、切换页表（写 CR3 寄存器 ~200 cycles）、TLB 部分刷新（~100 cycles 额外开销）。CPU 频率 3 GHz，时间片 2 ms。</p>
+    <p>（a）计算一次上下文切换需要的总 cycles 数（假设每条寄存器 save/restore 指令 1 cycle，load + store = 2 cycles per register）。</p>
+    <p>（b）上下文切换开销占 CPU 时间的百分比。</p>
+    <p>（c）如果缩短时间片到 0.1 ms 以改善响应时间，开销占比变为多少？这意味着什么？</p>
+  </div>
+  <details><summary>▸ 提示</summary>
+    <div class="hint">(a) 寄存器 save（load 从寄存器到内存）+ restore（store 从内存到寄存器）= 2 × 40 = 80 cycles。加上 CR3 写 200 + TLB 100 = 380 cycles。@ 3 GHz, 1 cycle = 1/3 ns。(b) 380 / (2ms 中的 cycles) × 100%。(c) 重新计算并思考：时间片能不能无限缩小？</div>
+  </details>
+  <details><summary>▸ 完整解答</summary>
+    <div class="sol">
+      <div class="step">(a) 寄存器 40 个 × 2（save + restore）= 80 cycles。CR3 写 = 200 cycles。TLB 刷新开销 ≈ 100 cycles。总计 ≈ <strong>380 cycles</strong>。@ 3 GHz，380 cycles = 380/3 ns ≈ <strong>127 ns</strong>。<span class="reason">实际 Linux 上下文切换约 1–5 μs，因为还有 cache 污染、调度算法决策、FPU/向量寄存器保存等额外开销。这里只估了最基础的。</span></div>
+      <div class="step">(b) 2ms = 2,000,000 ns = 6,000,000 cycles @ 3 GHz。开销占比 = 380 / 6,000,000 ≈ <strong>0.0063%</strong>。<span class="reason">几乎为零——这也是为什么 OS 可以安心用时分复用。</span></div>
+      <div class="step">(c) 0.1 ms = 100,000 ns = 300,000 cycles。开销占比 = 380 / 300,000 ≈ <strong>0.127%</strong>。仍然很小，但趋势明确：时间片越来越小 → 开销比例越来越大 → 系统越来越"忙着切换而非干活"。这就是为什么时间片有个下限（Linux 默认最小粒度约 1ms）。<span class="reason">范式 #4（批处理）的体现——时间片太小 = 批太小 = 固定开销不能被均摊。</span></div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P2 · 设计一个 FIFO 页替换器 <span class="plevel l1">L1 基础</span></div>
+  <div class="pbody">
+    <p>给定物理内存 3 帧（frame），页引用串：1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5。用 FIFO 替换策略，按步骤列出每次访问后的内存状态，统计缺页次数。（此题为 0004 预热）</p>
+  </div>
+  <details><summary>▸ 提示</summary>
+    <div class="hint">维护一个队列。当需要替换时，换出队头（最早进来的）。每步问自己：这页已经在内存里了吗？在 → 命中，不动队列。不在 → 缺页，加入队列队尾，如果满了则弹出队头。</div>
+  </details>
+  <details><summary>▸ 完整解答</summary>
+    <div class="sol">
+      <div class="step">初始：[]（空）</div>
+      <div class="step">1: [1] ← 缺页（1）</div>
+      <div class="step">2: [1,2] ← 缺页（2）</div>
+      <div class="step">3: [1,2,3] ← 缺页（3）</div>
+      <div class="step">4: [2,3,4] ← 缺页（4）换出 1</div>
+      <div class="step">1: [3,4,1] ← 缺页（5）换出 2</div>
+      <div class="step">2: [4,1,2] ← 缺页（6）换出 3</div>
+      <div class="step">5: [1,2,5] ← 缺页（7）换出 4</div>
+      <div class="step">1: [1,2,5] ← 命中</div>
+      <div class="step">2: [1,2,5] ← 命中</div>
+      <div class="step">3: [2,5,3] ← 缺页（8）换出 1</div>
+      <div class="step">4: [5,3,4] ← 缺页（9）换出 2</div>
+      <div class="step">5: [5,3,4] ← 命中</div>
+      <div class="step"><strong>共 9 次缺页。12 次访问中 3 次命中，命中率仅 25%。</strong>注意：如果给 4 帧而非 3 帧，FIFO 反而可能有更多缺页——这是著名的 Belady 异常（0004 §3 详讲）。</div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P3 · 伪代码中的竞态条件 <span class="plevel l2">L2 理解</span></div>
+  <div class="pbody">
+    <p>两个线程并发执行以下伪代码（`balance` 初始为 1000）：</p>
+    <pre style="background:var(--code-bg);padding:0.8rem;border-radius:6px;font-size:0.88rem;">Thread A:                          Thread B:
+1:  r1 = balance                    1:  r2 = balance
+2:  r1 = r1 + 100                   2:  r2 = r2 - 50
+3:  balance = r1                    3:  balance = r2</pre>
+    <p>（a）列出至少 3 种不同的最终 `balance` 值以及对应的指令交错顺序。</p>
+    <p>（b）要使最终值正确（1050），需要怎么约束指令交错顺序？这个约束在真实硬件上能自动满足吗？</p>
+    <p>（c）如果用 x86 的 `LOCK XADD` 指令替换这三步，能解决吗？代价是什么？</p>
+  </div>
+  <details><summary>▸ 提示</summary>
+    <div class="hint">(a) 两个线程各自有 3 条指令，总共 6 条。但它们是流水线式的——试列出 A 先完整执行、B 先完整执行、A 和 B 在第一条和第二条之间交错的情况。(b) 正确结果要求 A 的读-改-写完整发生在 B 的读-改-写之前或之后——即两个临界区不重叠。(c) LOCK XADD 把"读-改-写"变成一个不可分割的原子操作。</div>
+  </details>
+  <details><summary>▸ 完整解答</summary>
+    <div class="sol">
+      <div class="step"><strong>(a) 三种结果：</strong></div>
+      <div class="step">1050（正确）：A 完整执行（1000→1100），然后 B 完整执行（1100→1050）。或反过来 B 完整执行（1000→950），然后 A 完整执行（950→1050）。<span class="reason">两个临界区不重叠。</span></div>
+      <div class="step">1100（丢失 B 的 -50）：A1→A2→B1→B2→A3→B3。A 读到 1000 并算好 1100，B 读到 1000 并算好 950。A 先写 1100，然后 B 写 950 覆盖了 A 的写入，但 B 是基于 1000 算的 950——A 的 +100 丢失。<span class="reason">最终是 B 的写入赢——但 B 是基于"旧值"1000 算的。</span></div>
+      <div class="step">950（丢失 A 的 +100）：B1→B2→B3→A1→A2→A3，或 A1→B1→B2→B3→A2→A3（A 读到 1000 时 B 还没写但 A 写完 B 已覆盖）。<span class="reason">最终 A 写 1100 覆盖 B 的 950 但 A 基于旧值 1000。</span></div>
+      <div class="step"><strong>(b)</strong> 正确结果要求 A 的三步完整发生在 B 的三步之前或之后——即 A 的读和 B 的写之间没有交错。真实硬件无法自动满足——中断随时到来，多核上线程真的在同时执行。这正是"临界区"概念的动机（0005）。</div>
+      <div class="step"><strong>(c)</strong> `LOCK XADD balance, 100` 能解决——它把读-改-写变成一个不可分割的总线事务。代价：(i) 锁总线或锁 cache line（其他核不能同时访问）；(ii) 只能做简单运算（加法），不能像上面那样做任意复杂操作。更复杂的临界区需要锁（0005 §3-4）。</div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P4 · 间接层的代价 <span class="plevel l2">L2 理解</span></div>
+  <div class="pbody">
+    <p>范式 #1（间接层）是全书最核心的设计模式。但它不是免费的。</p>
+    <p>（a）举出至少两个"间接层增加了延迟"的具体例子，量化估算增加的延迟量级（大概数量级即可）。</p>
+    <p>（b）举出至少一个"间接层增加了空间开销"的例子。</p>
+    <p>（c）为什么 OS 仍然选择加间接层而非直接暴露硬件？——从"灵活性和性能的 tradeoff"角度回答。</p>
+  </div>
+  <details><summary>▸ 提示</summary>
+    <div class="hint">(a) 每次访存都要经过页表翻译——这是间接层。TLB 是缓解但未命中时多花 ~10-100 cycles。(b) 页表本身占内存——一个 4KB 页表可映射 2MB（二级）或 1GB（三级）。(c) 如果每个程序直接用物理地址——那换一个程序就必须重新链接？多程序怎么共存？</div>
+  </details>
+  <details><summary>▸ 完整解答</summary>
+    <div class="sol">
+      <div class="step"><strong>(a) 两个增加延迟的例子：</strong></div>
+      <div class="step">① <strong>页表翻译。</strong>每次访存都要先查页表。TLB 命中 → ~0.5-1 cycle 额外延迟（TLB 和 L1 cache 并行访问）。TLB 未命中 → 需要走页表（PMH/page miss handler）：二级页表 ~10 cycles，四级页表 ~40-100 cycles。极端情况（缺页）→ 磁盘 I/O ~10ms。TLB 命中率通常 > 99.9%，所以平均额外延迟很小（~1-2 cycles），但未命中路径很贵。<span class="reason">如果没有虚拟内存（所有地址都是物理地址），每次访存就是 0 cycle 翻译开销——但丧失了隔离和所有内存虚拟化能力。</span></div>
+      <div class="step">② <strong>文件系统路径解析。</strong>`open("/a/b/c/d/file")` 内核需要逐级查找：读 inode of "/" → 在目录块里找 "a" 的 inode 号 → 读 a 的 inode → 找 "b" 的 inode 号 → ... 每一步都可能触发磁盘 I/O。无缓存时是 ~5 × 10ms = 50ms。dentry cache 把常用目录项缓存在内存里——大部分 `open` 不需要任何磁盘 I/O。<span class="reason">如果没有目录树（所有文件用扇区号访问），用户需要记住每个文件的物理位置。</span></div>
+      <div class="step"><strong>(b) 空间开销：</strong>页表本身占内存。每个进程有自己的四级页表：PGD（1页=4KB）→ PUD（1页=4KB）→ PMD（1页=4KB）→ PTE（每 2MB 区域需要 1 页 PTE）。一个 128TB 虚拟地址空间的进程完整页表需要 ~256GB……但实际通过"惰性分配"和"大页"只需几百 KB 到几十 MB。</div>
+      <div class="step"><strong>(c) OS 选择间接层而非直接暴露的原因：</strong>直接暴露物理硬件 = 没有隔离（A 能读写 B 的内存）、没有灵活性（换一个文件系统需要改所有程序）、没有可移植性（程序绑定到特定硬件配置）。间接层的延迟和空间代价可以通过缓存（范式 #2）和惰性求值（范式 #3）来缓解——大部分时间你感受不到。但间接层带来的隔离和灵活性是物理硬件不可能给的。<strong>OS 的设计哲学不是"消除间接层的代价"，而是"让代价小到不可感知，换来不可替代的能力"。</strong></div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P5 · 机制/策略分离的反例分析 <span class="plevel l3">L3 进阶</span></div>
+  <div class="pbody">
+    <p>考虑 Linux 的 OOM Killer（Out-Of-Memory Killer）——当系统内存耗尽时，内核选择一个进程杀掉以回收内存。</p>
+    <p>（a）分析当前 OOM Killer 的设计：机制是什么？策略是什么？它们分离了吗？</p>
+    <p>（b）如果让你严格遵守机制/策略分离原则重新设计 OOM Killer，你会怎么拆分？用户态需要什么信息来做决策？</p>
+    <p>（c）这个案例揭示了机制/策略分离的什么局限？什么情况下把策略放在内核里反而更好？</p>
+  </div>
+  <details><summary>▸ 提示</summary>
+    <div class="hint">(a) Linux OOM Killer 的策略是用启发式打分（`oom_badness()`）选择受害者——策略在内核里。(b) 内核可以提供"哪些进程用了多少内存"的信息和"请杀掉 PID X"的接口，让用户态守护进程做决策。(c) 但是——如果系统内存已经没了，用户态守护进程自己也可能被换出或无法分配内存来运行。这时候谁来杀？</div>
+  </details>
+  <details><summary>▸ 完整解答</summary>
+    <div class="sol">
+      <div class="step"><strong>(a) 当前的机制/策略混合：</strong>机制——内核检测到内存分配失败后进入 OOM 路径（`out_of_memory()`），遍历进程打分（`oom_badness()`），发送 SIGKILL。策略——打分函数 `oom_badness()` 的逻辑：看 RSS、看 swap 使用、看 `oom_score_adj`（用户可调）、优先杀子进程多的、`CAP_SYS_ADMIN` 的进程打折扣……策略硬编码在内核里。而且打分逻辑的版本间变化很大——这正是策略不该在内核里的信号。</div>
+      <div class="step"><strong>(b) 严格分离的设计：</strong>机制（内核提供）：(i) 触发条件——内存分配失败时暂停分配者，不杀任何进程；(ii) 信息接口——`/proc/oom/candidates` 列出所有进程及其内存统计；(iii) 操作接口——`/proc/oom/kill` 接受 PID，内核杀掉该进程。策略（用户态守护进程 oomd）：读候选列表 → 按自己策略打分 → 选最低分的杀。这样不同的工作负载可以用完全不同的 OOM 策略而不改内核。</div>
+      <div class="step"><strong>(c) 这个案例揭示的局限：</strong>当系统已内存耗尽——用户态守护进程需要分配内存来运行（读 /proc 需要分配 buffer、做决策需要栈空间），但这正是问题所在：<strong>没有内存了</strong>。而且如果守护进程被换出——换入需要内存。如果 OOM 由死锁引起且守护进程被牵连——它永远无法做出决策。这是 <strong>emergency path 悖论</strong>：当系统在最坏情况下，机制/策略分离的"用户态做策略"恰恰不可用。<br><br>所以 OOM Killer 的策略确实部分留在内核里——不是违反原则，而是<strong>紧急情况下你不能信任用户态</strong>。类似的例子还有内核 panic 处理——不能依赖用户态。机制/策略分离是指导原则而非教条，紧急路径是合法的例外。</div>
+    </div>
+  </details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P6 · 设计一个微缩 OS <span class="plevel l3">L3 进阶</span></div>
+  <div class="pbody">
+    <p>本课建立了 OS 的六大范式。现在把它们用到极致：</p>
+    <p>设计一个极简 OS，它只跑一种程序——每秒从传感器读一个数，和上一个数比较，如果差值大于阈值就报警。这个 OS 必须提供：(i) 虚拟 CPU（让程序以为独占 CPU），(ii) 虚拟内存（保护内核不被程序破坏），(iii) 虚拟 I/O（程序通过文件接口读写传感器数据）。</p>
+    <p>（a）用六大范式逐一分析：这个极简 OS 中哪些范式必须实现？哪些可以省略？</p>
+    <p>（b）画出程序发起一次 `read(sensor_fd)` 到数据返回的完整代码路径——从用户态到内核态再到硬件再返回。</p>
+    <p>（c）如果这个 OS 要支持两个程序同时跑（一个读传感器、一个写日志），你需要增加哪些机制？哪些范式从"可选"变成"必须"？</p>
+  </div>
+  <details><summary>▸ 提示</summary>
+    <div class="hint">(a) 范式 #1（间接层）是三条幻象的基础——必须。范式 #2（缓存）：只有一个程序，缓存可能不需要。范式 #5（机制/策略分离）：只有一个程序 = 只有一个调度策略（"总是跑它"），不需要分离。(b) 类比本课 §4.1 的系统调用追踪，但简化——没有 VFS 层，直接读传感器。(c) 两个程序 = 需要调度、需要内存隔离（两个地址空间）、需要 I/O 互斥（传感器是共享资源）。</div>
+  </details>
+  <details><summary>▸ 完整解答</summary>
+    <div class="sol">
+      <div class="step"><strong>(a) 范式分析：</strong></div>
+      <div class="step"><strong>范式 #1（间接层）——必须。</strong>虚拟 CPU：进程状态结构（PCB）记录"程序当前执行到哪"，时钟中断到来时保存上下文。虚拟内存：至少一个简单的页表（或者基址-界限寄存器），让程序不能写内核内存。虚拟 I/O：文件描述符映射到传感器设备。</div>
+      <div class="step"><strong>范式 #2（缓存）——可省略。</strong>单程序场景，缓存不会提升性能（没有竞争），反而增加复杂度。但如果传感器读数很慢且程序可能多次读同一数据块，一个简单的 buffer cache 可以避免重复硬件读取。</div>
+      <div class="step"><strong>范式 #3（惰性求值）——可省略大部分。</strong>单程序不需要 COW。但按需调页可能有用——如果程序代码很大（不用一次全加载到内存）。</div>
+      <div class="step"><strong>范式 #4（批处理）——可省略。</strong>没有多个 I/O 请求可以合并。</div>
+      <div class="step"><strong>范式 #5（机制/策略分离）——可省略。</strong>只有一个程序 = 调度策略"总是跑它"，不需要替换。但把上下文切换机制和"下一个跑谁"分开的代码结构仍然有利于后面扩展。</div>
+      <div class="step"><strong>范式 #6（HW-SW 协同）——必须。</strong>需要时钟硬件发中断（实现 CPU 虚拟化）、需要 MMU 或至少 MPU（内存保护单元——ARM Cortex-M 的轻量版）、需要中断控制器区分传感器中断和时钟中断。</div>
+      <div class="step"><strong>(b) read(sensor_fd) 的代码路径：</strong></div>
+      <div class="step">用户态：`read(3, buf, 8)` → libc → `syscall` → 硬件切换 Ring、压栈、跳 `trap_handler`</div>
+      <div class="step">内核 `trap_handler`：保存寄存器 → 查系统调用表 [`SYS_read`] → `sys_read(fd=3, buf, 8)`</div>
+      <div class="step">`sys_read`：从 `current->files[3]` 找到 `file` 结构 → `file->f_op->read`（传感器驱动）</div>
+      <div class="step">传感器驱动：写传感器 I/O 端口（触发 ADC 转换）→ 忙等待或睡眠等中断 → 传感器中断返回数据 → 驱动把数据 `copy_to_user(buf)`</div>
+      <div class="step">返回：`sys_read` 返回实际字节数 → `trap_handler` 恢复寄存器 → `sysret` → 用户态继续</div>
+      <div class="step"><strong>(c) 支持两个程序需要增加的：</strong></div>
+      <div class="step"><strong>调度器（0002 的内容）——范式 #5 从可选变必须。</strong>需要决定谁跑、跑多久。最简单的：RR（轮流，各跑一个时间片）。需要两个 PCB。</div>
+      <div class="step"><strong>两个独立的页表（0003）——范式 #1 扩展到第二个程序。</strong>上下文切换时必须切换页表（写 CR3），这让切换代价显著增加。</div>
+      <div class="step"><strong>I/O 互斥（0005）——当一个传感器被两个程序共享时的新问题。</strong>读传感器的程序不能被打断（否则读数不一致）——需要一个锁。这是并发从"不存在"变为"核心问题"的时刻。</div>
+      <div class="step"><strong>范式 #2（缓存）从可选变推荐：</strong>两个程序可能竞争传感器——缓存最近一次读数避免重复硬件访问。</div>
+      <div class="step"><strong>总结：</strong>一个单程序 OS ≈ 硬件裸跑加一点点保护。多程序 OS 才是"真正的 OS"——六大范式全部从可选升级为必须。第二条路径（并发 0005-0006）此时从"理论上的挑战"变为"实际的必须品"。</div>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<div class="primary-source">
+  <h3>📖 延伸阅读</h3>
+  <ul>
+    <li><strong>OSTEP</strong>（Three Easy Pieces）：
+      <a href="https://pages.cs.wisc.edu/~remzi/OSTEP/intro.pdf">Chapter 1–2（Introduction）</a>——"虚拟化、并发、持久化"三卷的结构说明；
+      <a href="https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf">Chapter 4（The Abstraction: The Process）</a>——进程抽象；
+      <a href="https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf">Chapter 6（Mechanism: Limited Direct Execution）</a>——系统调用和上下文切换的机制</li>
+    <li><strong>xv6 Book</strong>：
+      <a href="https://pdos.csail.mit.edu/6.S081/2024/xv6/book-riscv-rev4.pdf">Chapter 1（Operating system organization）</a>——完整的系统调用追踪（从用户态到驱动返回）</li>
+    <li><strong>CSAPP</strong>：
+      Chapter 8（Exceptional Control Flow）§8.1——中断和系统调用的硬件机制全景</li>
+    <li><strong>扩展思考</strong>：David Wheeler 的经典名言 "Any problem in computer science can be solved with another layer of indirection" ——后半句 "…except for the problem of too many layers of indirection" 恰恰是 OS 设计的核心权衡</li>
+  </ul>
+</div>
+
+<div class="reminder">
+  <h3>🔄 间隔复习提醒</h3>
+  <p>本课建立了 OS 全部基石概念。建议在以下时间点复述本课的逻辑链（看自己能否不看屏幕讲出来）：</p>
+  <ul>
+    <li><strong>24 小时后</strong>：复述三条幻象各是什么、机制/策略分离为什么是第一原则</li>
+    <li><strong>72 小时后</strong>：复述六大范式并各举一例</li>
+    <li><strong>7 天后</strong>：复述系统调用的完整追踪路径，以及并发为什么是物理事实（单核需要锁吗？）</li>
+  </ul>
+  <p style="margin-top:0.5rem;">如果哪次复述中卡住了——回到对应节重读。不要在"已经模糊"的状态下进入 0002。</p>
+</div>
+
+<div class="lesson-footer">
+  <p>
+    <a href="../index.html">🏠 课程首页</a> ·
+    下一课：<a href="./0002-processes.html">0002 进程与 CPU 调度 →</a>
+  </p>
+  <p style="margin-top:0.5rem;">
+    基石（Hub）：本课 · 路径 A（CPU）→ 0002 · 路径 B（内存）→ 0003 · 路径 C（并发）→ 0005 · 路径 D（持久化）→ 0007
+  </p>
+  <p style="margin-top:0.5rem;font-size:0.82rem;">最后更新：2026-06-19</p>
+</div>
+
+<script src="../reference/popup-cards.js"></script>
+<script>
+// Inline quiz logic
+function checkQ(qid, ans, correct){
+  var q = document.getElementById(qid);
+  q.querySelectorAll('.quiz-option').forEach(function(o){ o.style.border = '1px solid transparent'; });
+  if (correct) {
+    q.classList.add('correct');
+    q.classList.remove('incorrect');
+    document.getElementById(qid+'-correct').classList.add('show');
+    document.getElementById(qid+'-incorrect').classList.remove('show');
+  } else {
+    q.classList.add('incorrect');
+    q.classList.remove('correct');
+    document.getElementById(qid+'-incorrect').classList.add('show');
+    document.getElementById(qid+'-correct').classList.remove('show');
+  }
+}
+</script>
+<script>
+window.MathJax.startup.promise.then(function(){
+  MathJax.typesetPromise();
+});
+</script>
+</body>
+</html>

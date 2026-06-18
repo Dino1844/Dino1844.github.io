@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0002 · 进程与 CPU 调度</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6;
+    --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --highlight: #fff3cd;
+    --insight-border: #d4a574; --correct: #2d6a4f; --incorrect: #c1121f;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; }
+  .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
+  h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { font-weight: 700; } em { font-style: italic; }
+
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
+  .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+  .insight { background: var(--light-accent); border-left: 4px solid var(--insight-border); padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  .warning::before { content: "⚠️ "; font-style: normal; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; }
+  .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .checkpoint { background: #f0f7ff; border: 1px solid #b8d4f0; border-radius: 8px; padding: 0.8rem 1.1rem; margin: 1.2rem 0; font-size: 0.92rem; }
+  .checkpoint strong { color: #2d5f8a; }
+
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; }
+  .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .derivation .step { margin: 0.5rem 0; }
+  .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+  .formula-block { text-align: center; margin: 1.4rem 0; }
+
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; }
+  .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; }
+  .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; }
+  .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; }
+  .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); }
+  .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; }
+  .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-section { margin-top: 0.7rem; }
+  .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; }
+  .en { color: var(--muted); font-size: 0.88em; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0002 · 进程与 CPU 调度</h1>
+<div class="subtitle">进程是 OS 的第一公民——从 PCB 到状态机到上下文切换，再到"下一个跑谁"这个调度问题。整条链：PCB 是"谁在跑"的记录，调度是"为什么是它在跑"的理由 · 阅读时间 ~50 分钟</div>
+
+<div class="toc">
+  <strong>目录</strong><br>
+  <a href="#s1">1. 从幻象到机制：CPU 虚拟化的实际做法</a><br>
+  <a href="#s2">2. PCB：进程的灵魂容器</a><br>
+  <a href="#s3">3. 进程状态机：三态 → 五态 → Linux 实际</a><br>
+  <a href="#s4">4. 上下文切换：保存一个世界，恢复另一个世界</a><br>
+  <a href="#s5">5. fork + exec：进程如何诞生</a><br>
+  <a href="#s6">6. 调度指标：周转时间 vs 响应时间——鱼与熊掌</a><br>
+  <a href="#s7">7. 调度算法演进链</a><br>
+  <a href="#s8">8. CFS：Linux 的实际选择</a><br>
+  <a href="#s9">9. 推导与自测</a>
+</div>
+
+<p>
+  基石 0001 建立了 CPU 幻象——每个进程以为独占 CPU。这节课把这个幻象的<strong>具体机制</strong>打开：
+  OS 用什么数据结构记录"谁在跑"（PCB）、怎么在进程间切换（上下文切换）、
+  以及怎么决定"下一个该跑谁"（调度）。这是两条交织的线——机制线（怎么切）和策略线（选谁切），
+  合在一起才构成 CPU 虚拟化的完整故事。
+</p>
+
+<div class="insight">
+  <strong>本课展开基石 0001 §1（CPU 幻象）、§3（机制/策略分离）、§4（陷入内核的 trap 机制）。</strong>
+  进程 = OS 的第一公民。理解了进程如何被表征和切换，后面内存虚拟化（给谁映射什么页表）、
+  并发（谁和谁竞争锁）、持久化（谁打开了什么文件）都有基准参照。
+</div>
+
+<!-- ============================================================ -->
+<div class="retrieval">
+  <h3>🔁 回忆 · 激活已有知识</h3>
+  <ol>
+    <li>基石 0001 §2.1：CPU 幻象靠什么实现？时间片大概多长？</li>
+    <li>基石 0001 §3：机制/策略分离是什么意思？CPU 调度中"机制"是什么、"策略"是什么？</li>
+    <li>基石 0001 §4：系统调用如何从用户态进入内核态？指令叫什么？</li>
+    <li>你的直觉：一个"公平"的调度器应该有什么性质？让每个进程跑同样长的时间就是公平吗？</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 从幻象到机制：CPU 虚拟化的实际做法</h2>
+
+<p>回顾 0001 的结论：CPU 虚拟化 = 时分复用 + 上下文切换。现在把这个一句话方案展开为实际机制：</p>
+
+<div class="derivation">
+  <h4>CPU 虚拟化的实际循环</h4>
+  <div class="step"><strong>① 调度</strong>（scheduler 选下一个跑谁）→ <strong>② 上下文切换</strong>（保存当前进程状态，恢复下一个进程状态）→ <strong>③ 运行</strong>（进程在 CPU 上执行直到时间片用完或主动让出）→ <strong>④ 中断</strong>（时钟中断到来，CPU 回到内核态）→ 回到 ①</div>
+  <div class="reason">这个循环每 ~1-20ms 发生一次。从进程视角，它在③阶段永远看不到①②④——这就是幻象。</div>
+</div>
+
+<p>实现这个循环需要三个关键数据结构和一个硬件机制：</p>
+<ul>
+  <li><strong>PCB</strong>（Process Control Block）——每个进程的"档案袋"，存它在③阶段中间被暂停时的全部状态</li>
+  <li><strong>就绪队列</strong>（ready queue）——等 CPU 的进程排在这里，调度器从里面选</li>
+  <li><strong>等待队列</strong>（wait queue）——等 I/O 的进程睡在这里，I/O 完成后被唤醒移到就绪队列</li>
+  <li><strong>时钟中断</strong>——硬件定时器周期性发中断，给 OS 一个"强制夺回 CPU"的机会</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. PCB：进程的灵魂容器</h2>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag">核心数据结构</span>
+    <h3>PCB · Process Control Block</h3>
+    <span class="cc-aliases">task_struct · 进程控制块</span>
+  </div>
+  <div class="cc-essence">
+    <strong>本质：</strong>进程不在 CPU 上跑的时候，它的全部"存在状态"都存这个结构体里。OS 通过 PCB 知道：这个进程执行到哪了、它的地址空间长什么样、它打开了哪些文件、它在等什么。
+  </div>
+  <div class="cc-section">
+    <h4>PCB 包含什么（Linux task_struct 的关键字段）</h4>
+    <table>
+      <tr><th>类别</th><th>关键字段</th><th>作用</th></tr>
+      <tr><td><strong>CPU 状态</strong></td><td>上下文（寄存器快照）、<code>state</code>（运行/就绪/阻塞…）、<code>prio</code>（优先级）</td><td>切换时保存/恢复；调度器据此选谁跑</td></tr>
+      <tr><td><strong>内存</strong></td><td><code>mm_struct *mm</code>（指向页表根 + VMA 链表）</td><td>切换进程 = 切换页表（写 CR3）</td></tr>
+      <tr><td><strong>文件</strong></td><td><code>files_struct *files</code>（打开文件表）</td><td>fd → file → inode 的根</td></tr>
+      <tr><td><strong>身份</strong></td><td><code>pid</code>、<code>tgid</code>、<code>cred</code>（UID/GID/capability）</td><td>权限检查靠这些</td></tr>
+      <tr><td><strong>关系</strong></td><td><code>parent</code>、<code>children</code>、<code>sibling</code> 链表指针</td><td>进程树就是一棵通过这些指针串起来的 task_struct 树</td></tr>
+    </table>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 0003: mm_struct 指向的页表是内存幻象的核心</span>
+    <span class="conn-badge">→ 0007: files_struct 是 I/O 幻象的核心</span>
+    <span class="conn-badge">→ 0009: 容器的 pid namespace 让同一 task_struct 在不同 namespace 中看到不同 pid</span>
+  </div>
+</div>
+
+<p>PCB 的重量级程度可以从一个数字感受：Linux `task_struct` 在 64 位系统上约 7–8 KB（含内嵌的 `thread_struct`）。一个系统有几千个进程，PCB 总内存约几十 MB——在 16GB 内存的机器上 < 0.5%。这个代价换来的是：上下文切换时只需保存 ~40 个通用寄存器和 ~200 bytes 的特殊寄存器状态——比 PCB 本身小一个数量级。</p>
+
+<div class="warning">
+  <strong>PCB 是内核数据结构——在用户态不可见。</strong>你在用户态看到的是 <code>/proc/PID/status</code> 这类文本化导出。真正的 <code>task_struct</code> 在内核堆上分配（通过 slab allocator 的 <code>task_struct_cache</code>），由内核独占访问。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 进程状态机：三态 → 五态 → Linux 实际</h2>
+
+<p>一个进程从生到死，在几种状态之间跳。这是 OS 里最简单的状态机，但所有的调度和同步都建立在这台状态机上。</p>
+
+<div class="formula-block">
+  <strong>三态模型（最简版）</strong><br>
+  Running（运行中） ↔ Ready（就绪·等 CPU） ↔ Blocked（阻塞·等 I/O）
+</div>
+
+<p>补充两个状态就是经典的五态模型：</p>
+<ul>
+  <li><strong>New</strong>（新建）：`fork()` 刚返回，PCB 已分配但还没上就绪队列</li>
+  <li><strong>Ready</strong>（就绪）：可以跑，等调度器选中</li>
+  <li><strong>Running</strong>（运行）：正在 CPU 上执行</li>
+  <li><strong>Blocked</strong>（阻塞）：在等某个事件（I/O 完成、锁释放、信号……）——不等就不上就绪队列</li>
+  <li><strong>Terminated</strong>（终止）：`exit()` 已调用，等待父进程 `wait()` 回收（僵尸状态）</li>
+</ul>
+
+<p>Linux 实际的状态更细——`TASK_RUNNING`（含就绪和运行中，因为从调度器视角没区别——都是"可以跑"）、`TASK_INTERRUPTIBLE`（可被信号唤醒的睡眠）、`TASK_UNINTERRUPTIBLE`（不可被信号唤醒——等磁盘 I/O 的典型状态，`ps` 里看到 `D` 状态就是这个）、`TASK_STOPPED`（被 SIGSTOP 暂停）、`TASK_ZOMBIE`（僵尸——已死但 PCB 还在等 `wait()`）、`TASK_DEAD`（PCB 可释放）。</p>
+
+<p>一条关键规则：<strong>只有 Running → Ready 是内核（调度器）主动切的；其他的状态转换全部由进程自己发起</strong>（主动调 `sleep`/`read`/`exit`）。唯一的例外是时钟中断——它不改变进程状态（进程还在 Running，只是 OS 决定该换人了——它被放回 Ready 队列，仍然"可以跑"）。</p>
+
+<div class="checkpoint">
+  <strong>停下来想一想</strong>：僵尸进程（ZOMBIE）为什么存在？父进程需要用 <code>wait()</code> 获取子进程的退出状态（exit code）。如果子进程死后 PCB 立即释放，这个信息就丢了。所以子进程变成僵尸——留一个"壳"等父进程来收尸。父进程如果永远不 `wait()`，僵尸就永远在——这就是"孤儿进程被 init 收养"的重要性（init 会定期 `wait()` 清理）。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. 上下文切换：保存一个世界，恢复另一个世界</h2>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag">机制</span>
+    <h3>上下文切换 · Context Switch</h3>
+    <span class="cc-aliases">进程切换 · 调度切换</span>
+  </div>
+  <div class="cc-essence">
+    <strong>本质：</strong>暂停进程 A → 把它的寄存器/程序计数器/栈指针/页表指针存到 A 的 PCB → 从 B 的 PCB 恢复这些东西 → 让 CPU 继续跑 B。CPU 不知道也不关心它在跑哪个进程——上下文切换让 CPU "失忆"然后"植入另一个记忆"。
+  </div>
+  <div class="cc-section">
+    <h4>切换的完整步骤（x86-64 Linux）</h4>
+    <div class="derivation">
+      <div class="step"><strong>① 进入内核</strong>：时钟中断到来（或进程主动调 `sched_yield`/`read`）→ 硬件自动压栈 RIP/CS/RFLAGS/RSP/SS → 跳中断处理程序 `entry_INT`</div>
+      <div class="step"><strong>② 保存上下文</strong>：`entry_INT` 用 `push`/`mov` 把通用寄存器（rax, rbx, ..., r15）存入内核栈 → 内核栈的顶部形成 `pt_regs` 结构</div>
+      <div class="step"><strong>③ 调度</strong>：内核调用 `schedule()` → 选 next → 调 `context_switch()`</div>
+      <div class="step"><strong>④ 切换内存</strong>：`switch_mm()` — 把 next 的页表根地址写入 CR3（如果 next 和 prev 是不同进程）<span class="reason">页表切换是最贵的——CR3 写会使 TLB 中非全局页全部失效。这就是"上下文切换刷新 TLB"的来源。</span></div>
+      <div class="step"><strong>⑤ 切换 CPU 上下文</strong>：`switch_to()` — 保存 prev 的 rsp/rbp/其他 callee-saved 寄存器 → 恢复 next 的这些寄存器 → 改 `current` 宏指向 next 的 PCB</div>
+      <div class="step"><strong>⑥ 返回</strong>：沿中断返回路径 `iretq` → 硬件从内核栈弹出 next 的 RIP/CS/RFLAGS/RSP/SS → 用户态继续执行 next</div>
+    </div>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 0003: CR3 写 = 切换页表根</span>
+    <span class="conn-badge">→ 0005: 线程切换 = 不写 CR3（线程共享 mm）</span>
+  </div>
+</div>
+
+<h3>4.1 上下文切换的代价</h3>
+
+<p>从 0001 P1 我们估算了一次上下文切换约 380 cycles 的"硬开销"（寄存器 + CR3 + TLB）。但真实代价远不止这些——还有<strong>间接代价</strong>：</p>
+
+<ul>
+  <li><strong>Cache 污染</strong>：新进程的数据和指令不在 L1/L2/L3 cache 里。刚切换后的几万个 cycle 都在"预热"——从内存/远端 cache 拉数据。这个代价 10–100× 于硬开销。</li>
+  <li><strong>TLB 刷新</strong>：如果两个进程不共享页表（绝大多数情况），CR3 写会使 TLB 中非全局页全部失效。重新填充 TLB 需要额外的 PMH（Page Miss Handler）遍历页表。</li>
+  <li><strong>分支预测器刷新</strong>：现代 CPU 的分支预测器包含"全局历史"——跨进程不共享，切换等于重置。</li>
+</ul>
+
+<div class="insight">
+  <strong>这就是为什么调度器要在"频繁切换 = 响应快"和"少切换 = 吞吐高"之间权衡。</strong>
+  如果每秒切换 1000 次（~1ms 时间片），间接代价让 CPU 可能损失 10–30% 的有效工作时间。
+  但如果不切——一个进程霸占 CPU——"响应时间"就是无限的。这就是 §6 的"鱼与熊掌"。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. fork + exec：进程如何诞生</h2>
+
+<p>进程不是无中生有的。Unix 的经典设计——`fork()` 创建，`exec()` 变身：</p>
+
+<div class="derivation">
+  <h4>fork() 的内核执行路径</h4>
+  <div class="step"><strong>① 用户调用 fork()</strong>：libc 发起 `sys_clone`（Linux 上 fork 是 clone 的特例）</div>
+  <div class="step"><strong>② 内核分配新 PCB</strong>：从 `task_struct_cache` slab 分配新的 `task_struct`；分配新 pid（`alloc_pid()`）</div>
+  <div class="step"><strong>③ 复制父进程的上下文</strong>：`copy_thread()` 复制寄存器快照（子进程的 `rax` 被设为 0 —— 这是子进程看到 fork 返回 0 的原因）；`copy_mm()` 复制 `mm_struct` 和页表——但<strong>不是深拷贝</strong>：父子共享页表项（只读），标记 COW（0004 §5 详讲）</div>
+  <div class="step"><strong>④ 复制文件描述符表</strong>：`copy_files()` —— 子进程自动继承父进程所有打开的文件（fd 0/1/2 有了来源）</div>
+  <div class="step"><strong>⑤ 子进程上就绪队列</strong>：调度器可以在父进程返回前先调度子进程——所以 fork 后父子执行顺序不确定</div>
+</div>
+
+<p>`exec()` 则是另一回事：它不创建新进程——它<strong>替换当前进程的全部内容</strong>（代码段、数据段、堆、栈、页表），但保留 pid、fd 表、一些信号设置。这就是"shell 启动命令"的方式：`shell fork → 子进程 exec → shell wait`。</p>
+
+<div class="meta-box">
+  <h4>范式 #5 · 机制/策略分离（调度版）</h4>
+  <p><strong>机制：</strong>上下文切换（保存/恢复寄存器 + 切换页表 + 切换内核栈）。这是内核必须做的——因为涉及更改 CPU 状态（写 CR3、改 MSR）。</p>
+  <p><strong>策略：</strong>选哪个进程作为"next"。这是可替换的——CFS、实时调度类、用户态调度框架（sched_ext）都可以实现不同的选择逻辑。</p>
+  <p><strong>Linux 的调度类（scheduling class）设计：</strong><code>struct sched_class</code> 定义了一组函数指针（`enqueue_task`、`dequeue_task`、`pick_next_task`……），CFS/RT/Deadline/Idle 各提供一套实现。换策略 = 换函数指针表——不碰上下文切换机制。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 调度指标：周转时间 vs 响应时间——鱼与熊掌</h2>
+
+<p>有了 PCB 和上下文切换的机制，问题变成：就绪队列里有几十个进程，选哪个？</p>
+
+<p>两个根本指标——<strong>它们天然矛盾</strong>：</p>
+
+<div class="formula-block">
+  $$T_{\text{turnaround}} = T_{\text{completion}} - T_{\text{arrival}} \quad\text{（周转时间：从到达到完成）}$$
+  $$T_{\text{response}} = T_{\text{firstrun}} - T_{\text{arrival}} \quad\text{（响应时间：从到达到第一次上 CPU）}$$
+</div>
+
+<p><strong>周转时间</strong>关心吞吐量——批量任务（编译、科学计算、渲染）越快完成越好。<strong>响应时间</strong>关心交互——键盘敲了、鼠标点了、屏幕要立刻有反应。</p>
+
+<ul>
+  <li>优化周转时间 → 偏向少切换、让短任务先跑（不浪费 CPU 在切换上）</li>
+  <li>优化响应时间 → 偏向频繁切换、别让任何任务等太久</li>
+  <li>你不可能同时最小化两者——一个调度器在某个指标上好，另一个指标就牺牲</li>
+</ul>
+
+<div class="checkpoint">
+  <strong>停下来想一想</strong>：一个极端——不切换（一个进程跑完再跑下一个），周转时间最优（零切换开销），响应时间最差（最后一个进程等前面全部跑完）。另一个极端——每 1μs 切一次，响应时间最优，但 380 cycles 切换开销 vs 3000 cycles（1μs @ 3GHz）= ~13% 的 CPU 在切换上。真实的调度器活在两者之间。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 调度算法演进链</h2>
+
+<p>这条演进链的每一步都是"前一个算法有什么问题 → 加一条规则 → 新问题 → 再加一条"。读这条链的关键不是背算法名，是理解每条规则<strong>为什么必然出现</strong>。</p>
+
+<h3>7.1 FIFO（First In, First Out）</h3>
+<p>就绪队列一个队列，先来的先跑，跑完再下一个。优点：简单。缺点：<strong>护航效应</strong>（convoy effect）——一个长任务（跑 100s）先到，后面 100 个短任务（各跑 0.1s）全得等它。平均周转时间 = 50s（而非 0.55s）。</p>
+
+<h3>7.2 SJF（Shortest Job First）→ STCF（Shortest Time-to-Completion First）</h3>
+<p>SJF：知道每个任务要跑多久的情况下，先跑最短的。解决了护航效应——短任务不用等长任务。但<strong>非抢占</strong>——短任务到达时如果长任务正在跑，短任务还是要等。</p>
+<p>STCF：加抢占——有新任务到达时，比较新任务和当前任务的剩余时间，谁短谁先跑。<strong>这是最优的</strong>（对平均周转时间）。但它有一个致命假设：<strong>OS 知道每个任务要跑多久</strong>——这在现实中不成立。你不知道用户下一个 `ls` 还是 `make -j64`。</p>
+
+<h3>7.3 RR（Round Robin）</h3>
+<p>给每个任务一个固定时间片（time quantum），轮流转。解决了<strong>响应时间</strong>——每个任务最多等 (N-1) × quantum 就能上 CPU。但牺牲了周转时间——本来 0.1s 就能跑完的短任务被切成 100 × 1ms 的碎段，每次切换都付出代价。</p>
+<p>RR 有一个<strong>决定性的参数</strong>：quantum 长度。太短 → 切换开销占比太高。太长 → 退化为 FIFO（响应差）。通常 1–20ms。</p>
+
+<div class="formula-block">
+  $$T_{\text{response, RR}} \leq (N-1) \times q \quad \text{（$N$ 个进程，时间片 $q$）}$$
+</div>
+
+<h3>7.4 MLFQ（Multi-Level Feedback Queue）——这几条规则的集大成者</h3>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag" style="background:#4a7bab;">经典算法</span>
+    <h3>MLFQ · 多级反馈队列</h3>
+    <span class="cc-aliases">Multi-Level Feedback Queue</span>
+  </div>
+  <div class="cc-essence">
+    <strong>本质：</strong>用"过去的 CPU 使用量"预测"未来的 CPU 需求"——不需要提前知道任务跑多久。交互型进程（用 I/O 多 = CPU 用得少）自动获得高优先级，批处理型进程（霸占 CPU）自动降级。
+  </div>
+  <div class="cc-section">
+    <h4>规则（简化为四条）</h4>
+    <ol>
+      <li><strong>规则 1</strong>：如果 Priority(A) > Priority(B)，A 先跑。多级队列 = 多个就绪队列，每个有自己的优先级。</li>
+      <li><strong>规则 2</strong>：如果 Priority(A) == Priority(B)，它们 RR 轮流跑（各跑一个时间片）。</li>
+      <li><strong>规则 3</strong>：新进程从最高优先级开始（给它"自证是交互进程"的机会）。</li>
+      <li><strong>规则 4</strong>：一个进程用完了当前优先级的时间配额 → 降级（优先级 -1，配额重置）。如果它主动放弃 CPU（等 I/O）→ 保持在当前优先级。</li>
+    </ol>
+    <p><strong>4a（防 starvation）</strong>：定期把所有进程提升回最高优先级（priority boost）——防止交互进程变多后批处理进程永远饿死。</p>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ 规则 1-2 是机制/策略分离</span>
+    <span class="conn-badge">→ 规则 4 用过去行为预测未来——这是调度里"无先知"约束下的核心技巧</span>
+  </div>
+</div>
+
+<p>MLFQ 之美在于：它不需要预言（不需要知道任务跑多久），但它<strong>自适应</strong>——交互型进程自动留在高优先级（响应快），批处理型自动降级（但不饿死因为有 periodic boost）。四条规则，每条都是针对前一条的漏洞而加的。这模式的"自修正"是 OS 设计中的普遍主题。</p>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. CFS：Linux 的实际选择</h2>
+
+<p>MLFQ 是启发式的——规则 4a（多久 boost 一次？多少配额降级？）靠调参。Linux 要的是<strong>有原则的公平</strong>——CFS（Completely Fair Scheduler）从 2007 年起是 Linux 的默认调度器。</p>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag">Linux 实现</span>
+    <h3>CFS · Completely Fair Scheduler</h3>
+    <span class="cc-aliases">完全公平调度器</span>
+  </div>
+  <div class="cc-essence">
+    <strong>本质：</strong>不是"每个进程跑一样长"，而是"每个进程获得的 CPU 时间比例相同"。用红黑树维护进程按 <code>vruntime</code> 的排序——<code>vruntime</code> 最小的进程最"亏欠"CPU，调度器永远选它。
+  </div>
+  <div class="cc-section">
+    <h4>vruntime：CFS 的核心</h4>
+    <div class="formula-block">
+      $$\text{vruntime} \mathrel{+}= \frac{\text{实际运行时间} \times \text{weight}_{\text{nice}=0}}{\text{weight}_{\text{当前 nice}}}$$
+    </div>
+    <p>nice 值 -20（最高优先级）→ weight 88761 → vruntime 增长很慢（"这进程应该多分 CPU"）</p>
+    <p>nice 值 +19（最低优先级）→ weight 15 → vruntime 增长很快（"它已经拿了够多 CPU 了"）</p>
+    <p><strong>红黑树</strong>：所有可运行的进程按 vruntime 排序。`pick_next_task` = 取树最左节点（vruntime 最小）。`enqueue`/`dequeue` = 红黑树插入/删除 O(log N)。</p>
+  </div>
+</div>
+
+<p>CFS 和 MLFQ 相比是一个哲学转向：MLFQ 试图<strong>猜</strong>谁是交互型、谁是批处理型。CFS 不猜——它只保证<strong>公平</strong>。交互型进程自然占用 CPU 少（因为总是在等 I/O），所以它们的 vruntime 天然低，自然被优先调度——效果和 MLFQ 的高优先级一样，但不需要规则 3、4、4a。</p>
+
+<p>CFS 的时间片不是固定的——`sched_latency`（默认 6ms）除以就绪进程数。2 个进程 = 各 3ms，100 个进程 = 各 60μs。但时间片有下限：`min_granularity`（默认 0.75ms）——即使有 1000 个进程，也不会给各 6μs（切换开销会成为主导）。</p>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. 推导与自测</h2>
+
+<div class="problem">
+  <div class="ptitle">P1 · 护航效应定量分析 <span class="plevel l1">L1 基础</span></div>
+  <div class="pbody"><p>3 个任务同时到达（t=0）：A 需 100s、B 需 10s、C 需 1s。用 FIFO（A→B→C），计算每个任务的周转时间和平均周转时间。然后假设它们以最优顺序（SJF）运行，重新计算。量化"护航效应"的代价。</p></div>
+  <details><summary>▸ 解答</summary><div class="sol">
+    <div class="step"><strong>FIFO (A→B→C)：</strong>A: T_turn = 100s。B: 100+10 = 110s。C: 110+1 = 111s。平均 = (100+110+111)/3 = <strong>107s</strong></div>
+    <div class="step"><strong>SJF (C→B→A)：</strong>C: T_turn = 1s。B: 1+10 = 11s。A: 11+100 = 111s。平均 = (1+11+111)/3 = <strong>41s</strong></div>
+    <div class="step">护航效应让平均周转时间膨胀了 <strong>2.6 倍</strong>（107/41）。C（最短任务）等了 110s 才完成——而它只需要 1s。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P2 · MLFQ 规则推演 <span class="plevel l2">L2 理解</span></div>
+  <div class="pbody">
+    <p>一个 MLFQ 有 3 级队列（Q2 最高、Q0 最低），每级时间配额 10ms。两个进程：A（长批处理，一直要 CPU），B（交互型：跑 1ms CPU → 等 15ms I/O → 循环）。</p>
+    <p>追踪前 200ms 两个进程在哪个队列、何时跑。I/O 完成时 B 回到哪个队列？为什么这条规则是必要的？（如果 I/O 完成回到 B 当前队列而非最高队列会怎样？）</p>
+  </div>
+  <details><summary>▸ 提示</summary><div class="hint">MLFQ 规则 4：如果进程主动让出 CPU（等 I/O）→ 保持当前优先级（不降级）。I/O 完成 = 进程回到就绪态 = 放回原优先级队列。思考：如果 I/O 完成后降级，交互型进程能保持高响应吗？</div></details>
+  <details><summary>▸ 解答</summary><div class="sol">
+    <div class="step"><strong>前 200ms 追踪：</strong></div>
+    <div class="step">t=0: A、B 都在 Q2。调度器选 A（假设先到达），A 跑满 10ms → 降级到 Q1。</div>
+    <div class="step">t=10: B 在 Q2 跑 1ms 后发起 I/O → 离开 CPU。A 在 Q1 继续跑。</div>
+    <div class="step">t=25: B 的 I/O 完成 → B 回到 Q2（规则 4：等 I/O 不降级）。B 优先级更高 → 抢占 A。B 再跑 1ms → 再等 I/O。</div>
+    <div class="step">这个模式持续：B 以 1ms:15ms 的比例用 CPU，vruntime/配额消耗极慢，永远在 Q2。A 在 B 等 I/O 的间隙跑，但每 10ms 降一级直到 Q0。</div>
+    <div class="step"><strong>如果 B 在 I/O 完成后降级：</strong>B 跑 1ms 后就降级到 Q1 → 再跑 1ms → Q0 → B 降到和 A 同级 → 每次 B 从 I/O 回来都要等 A 跑完 10ms → B 的响应时间从 <1ms 变成 ~10ms。交互型体验彻底完蛋。这就是<strong>为什么规则 4 说"等 I/O 不降级"</strong>——它是交互型进程的"免死金牌"。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P3 · CFS vruntime 推导 <span class="plevel l2">L2 理解</span></div>
+  <div class="pbody">
+    <p>两个 CPU-bound 进程 P1（nice=0，weight=1024）和 P2（nice=5，weight=335）。目标延迟 6ms。</p>
+    <p>（a）两个进程各自获得的时间片长度是多少？（b）在同一段实际时间 Δt 内，P1 和 P2 的 vruntime 增长量之比是多少？（c）为什么 vruntime 用"实际时间 × weight_nice0 / weight"而非"实际时间 × (weight / weight_nice0)"？后者会让 nice 值高的进程 vruntime 增长更慢——那不是对的吗？（提示：vruntime 越小越优先）</p>
+  </div>
+  <details><summary>▸ 解答</summary><div class="sol">
+    <div class="step"><strong>(a) 时间片：</strong>总 weight = 1024 + 335 = 1359。P1 得 6ms × 1024/1359 ≈ <strong>4.52ms</strong>。P2 得 6ms × 335/1359 ≈ <strong>1.48ms</strong>。</div>
+    <div class="step"><strong>(b) vruntime 增长比：</strong>P1: Δvruntime = Δt_actual × 1024/1024 = Δt_actual。P2: Δvruntime = Δt_actual × 1024/335 ≈ Δt_actual × 3.06。<strong>P2 的 vruntime 增长是 P1 的 ~3 倍。</strong></div>
+    <div class="step"><strong>(c) 为什么是 weight_0/weight 而非 weight/weight_0：</strong>P2（nice=5）的 weight < weight_0，所以 weight_0/weight_2 > 1，P2 的 vruntime <strong>增长更快</strong>。意味着 P2 在红黑树中"变大的更快"→ 排在更右 → 被选中的机会更少。这正是"nice 值高 = 少分 CPU"的正确语义。如果反过来（weight/weight_0），P2 的 vruntime 增长更慢 → P2 永远在树最左 → P2 获得最多 CPU——nice 语义反了。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P4 · fork 后的执行顺序 <span class="plevel l2">L2 理解</span></div>
+  <div class="pbody">
+    <p>`fork()` 返回后，父进程和子进程谁先跑？查阅资料后回答：Linux 历史上为什么子进程先跑（child-runs-first）？这个策略后来为什么被废弃？现在 Linux 的做法是什么？（提示：COW、`exec`、`vfork` 的语义）</p>
+  </div>
+  <details><summary>▸ 解答</summary><div class="sol">
+    <div class="step"><strong>历史上子进程先跑（child-runs-first）：</strong>理由——`fork` 后通常紧跟着 `exec`。如果子进程先跑 → 子进程立刻 `exec` → 在 `exec` 中由于 COW 会触发大量缺页（因为 `exec` 会替换地址空间）→ 但此时父进程还没开始——避免了"父子都在跑 → 都在触发 COW 缺页 → 两者都缺页→换入→写出"的浪费。</div>
+    <div class="step"><strong>为什么被废弃：</strong>子进程先跑是一个<strong>启发式</strong>——如果子进程不 `exec` 而是修改共享数据（如 shell 重定向管道），子进程的 COW 缺页会让父进程后续访问时也要等待缺页处理——没有好到哪去。而且现代 `fork` 已经很高效（COW + 惰性复制），强制子进程先跑反而可能让子进程等父进程完成某些设置（如信号处理、文件描述符重定向）。</div>
+    <div class="step"><strong>现在 Linux 的做法：</strong>不强制。父进程继续跑（parent-runs-first 变为默认，因为 TLB/cache 还是热的——"刚 fork 完还带着父进程的缓存状态"）。但实际上不保证——多核上父子可能在两个核上同时跑。`vfork` 是特殊变体（父进程阻塞直到子进程 `exec` 或 `exit`，用于 shell 的经典 `fork+exec` 模式）。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P5 · 设计一个分层调度器 <span class="plevel l3">L3 进阶</span></div>
+  <div class="pbody">
+    <p>假设你要为以下场景设计一个调度器：一台机器同时服务 (i) 实时视频编码（不能掉帧，每帧有 deadline），(ii) 交互式 shell， (iii) 背景机器学习训练（CPU-bound，无 deadline）。</p>
+    <p>（a）用机制/策略分离原则，设计一个分层调度方案。内核提供什么机制？每层的策略是什么？</p>
+    <p>（b）你的方案中，如果一个实时任务 miss 了它的 deadline，调度器应该做什么？为什么不能简单地"让它继续跑"？</p>
+  </div>
+  <details><summary>▸ 提示</summary><div class="hint">(a) Linux 的调度类（sched_class）就是分层设计——`stop` > `deadline` > `RT` > `CFS` > `idle`。每个类内部有自己的策略，类之间严格按优先级。(b) 参考 EDF（Earliest Deadline First）的带宽预留机制——如果任务总是 miss deadline，说明它声明的 CPU 需求不够，继续让它跑会饿死其他任务。</div></details>
+  <details><summary>▸ 解答</summary><div class="sol">
+    <div class="step"><strong>(a) 分层调度方案：</strong></div>
+    <div class="step"><strong>内核机制：</strong>调度类框架（`struct sched_class` 的 `pick_next_task` / `enqueue` / `dequeue`）。运行队列（`struct rq`）按 CPU 核组织——每个核独立调度（减少锁竞争）。</div>
+    <div class="step"><strong>第 1 层——实时类（Deadline scheduler）：</strong>为视频编码任务预留 CPU 带宽（如每 16.67ms 需要 5ms CPU = 30% 带宽）。使用 EDF 或 CBS（Constant Bandwidth Server）算法——接受准入控制（任务声明需求，内核确认有余量才接受）。</div>
+    <div class="step"><strong>第 2 层——交互类（CFS）：</strong>所有非实时任务用 CFS。但 CFS 只能拿到实时类用剩的 CPU 时间。</div>
+    <div class="step"><strong>第 3 层——后台类（CFS 低 nice 或 idle 类）：</strong>ML 训练任务设为高 nice 值（如 +19）——当没有其他任务可跑时才跑。</div>
+    <div class="step"><strong>(b) miss deadline 的处理：</strong>不能简单地让它继续跑——因为它可能"永远 miss deadline且跑不完"。CBS 的做法：任务 miss deadline → 补给它一个新的 deadline（推迟到 t+period）和新的 budget。但如果一个任务反复 miss → 说明它声明的 CPU 需求低估了 → 应该被节流（throttle）或拒绝服务，以免饿死其他实时任务。这就是<strong>准入控制</strong>的重要性——实时调度不是"硬抢先就行"，而是"每个任务的声明可验证，预算不能超"。实现 0009 中容器的 cpu cgroup 就是这个思想的扩展。</div>
+  </div></details>
+</div>
+
+<div class="problem">
+  <div class="ptitle">P6 · 无干扰 CPU 虚拟化 <span class="plevel l3">L3 进阶</span></div>
+  <div class="pbody">
+    <p>云服务商（AWS/Google Cloud）卖的是"虚拟 CPU"（vCPU）——实际上是一个 hypervisor 给虚拟机分配的 CPU 时间片。</p>
+    <p>（a）如果一台物理机有 32 核，但卖了 64 个 vCPU（每 VM 4 vCPU × 16 VM = 64），这是怎么实现的？有什么风险？</p>
+    <p>（b）设计一个方案：让 VM-A（买了 4 vCPU）和 VM-B（买了 4 vCPU）在同一台 8 核物理机上，VM-A 的 4 个 vCPU 不应该被 VM-B 的负载影响（"无干扰"）。你需要什么调度机制？和 0002 的 CFS 有什么异同？</p>
+  </div>
+  <details><summary>▸ 提示</summary><div class="hint">(a) 超额分配（overcommitment）——大多数 VM 不是 100% CPU 占用。但如果它们同时满载→物理 CPU 不够=vCPU 得不到承诺的时间片。(b) 需要物理 CPU 的 pinning + 按 VM 的 CPU 时间会计。CFS 公平在进程级，但你需要公平在 VM 级——每个 VM 获得其购买的 CPU 比例，不管内部多少进程。</div></details>
+</div>
+
+<div class="primary-source">
+  <h3>📖 延伸阅读</h3>
+  <ul>
+    <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf">Ch 4 (Processes)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf">Ch 5 (Process API)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf">Ch 6 (Mechanism: LDE)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf">Ch 7 (Scheduling Intro)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf">Ch 8 (MLFQ)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-lottery.pdf">Ch 9 (Proportional Share)</a></li>
+    <li><strong>xv6</strong>：<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/proc.c">kernel/proc.c</a> — 进程管理（allocproc、scheduler、fork、exit）</li>
+    <li><strong>Linux</strong>：<a href="https://elixir.bootlin.com/linux/latest/source/kernel/sched/fair.c">kernel/sched/fair.c</a> — CFS 完整实现</li>
+  </ul>
+</div>
+
+<div class="reminder">
+  <h3>🔄 间隔复习提醒</h3>
+  <ul>
+    <li><strong>24h 后</strong>：不看屏幕画出进程状态机的五态和转换条件</li>
+    <li><strong>72h 后</strong>：复述 MLFQ 的四条规则 + 每条为什么必要</li>
+    <li><strong>7d 后</strong>：解释 CFS 的 vruntime 公式——为什么乘的是 weight_0/weight？</li>
+  </ul>
+</div>
+
+<div class="lesson-footer">
+  <p>
+    <a href="../index.html">🏠 课程首页</a> ·
+    <a href="./0001-os-as-virtual-machine.html">← 0001 虚拟机器</a> ·
+    <a href="./0003-address-translation.html">0003 地址翻译与分页 →</a>
+  </p>
+  <p style="margin-top:0.5rem;">基石（Hub）：0001 §1（CPU 幻象）· 0001 §3（机制/策略分离）· 0001 §4（系统调用·trap）</p>
+</div>
+
+<script>
+window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });
+</script>
+</body>
+</html>

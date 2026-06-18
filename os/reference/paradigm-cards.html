@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>六大范式速查卡 · OS Course</title>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; font-size: 16px; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  .subtitle { color: var(--muted); margin-bottom: 2rem; }
+  .card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; page-break-inside: avoid; }
+  .card h2 { font-size: 1.2rem; color: #2d4a8a; margin-bottom: 0.3rem; }
+  .card .num { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .card .oneliner { font-weight: 700; margin: 0.5rem 0 0.8rem; }
+  .card .examples { font-size: 0.92rem; color: var(--muted); }
+  .card .examples strong { color: var(--text); }
+  .card .lessons { margin-top: 0.5rem; font-size: 0.85rem; color: var(--accent); }
+  @media print { body { font-size: 12px; } .card { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<h1>📋 六大范式速查卡</h1>
+<p class="subtitle">OS 的"元技巧"——六种想法在全书100次应用。理解范式=学6个想法而非100个孤立机制。</p>
+
+<div class="card">
+  <div class="num">范式 #1</div>
+  <h2>间接层 · Indirection</h2>
+  <div class="oneliner">"加一层映射解耦——程序看到的和物理存在的之间插一层翻译。"</div>
+  <div class="examples">
+    <strong>页表</strong>（虚拟地址→物理帧 · 0003）、<strong>文件描述符</strong>（整数→file结构→inode · 0007）、<strong>inode号</strong>（文件名→inode→数据块 · 0007）、<strong>PID namespace</strong>（容器内PID→宿主PID · 0009）、<strong>进程</strong>（PCB把硬件CPU抽象成虚拟CPU · 0002）
+  </div>
+  <div class="lessons">贯穿：0001, 0003, 0005, 0007, 0008, 0009</div>
+</div>
+
+<div class="card">
+  <div class="num">范式 #2</div>
+  <h2>缓存 · Caching</h2>
+  <div class="oneliner">"刚用过的东西很可能马上再用——把热数据存在快介质上。"</div>
+  <div class="examples">
+    <strong>TLB</strong>（页表缓存 · 0003）、<strong>page cache</strong>（文件数据缓存 · 0007/0009）、<strong>dentry cache</strong>（目录项缓存 · 0007）、<strong>inode cache</strong>（0007）、<strong>CPU cache</strong>（硬件·调度器配合——cache affinity · 0002）
+  </div>
+  <div class="lessons">贯穿：0002, 0003, 0007, 0008</div>
+</div>
+
+<div class="card">
+  <div class="num">范式 #3</div>
+  <h2>惰性求值 · Lazy Evaluation</h2>
+  <div class="oneliner">"不到非做不可就先不做——用'不做'换性能。"</div>
+  <div class="examples">
+    <strong>按需调页</strong>（不到访问不给帧 · 0004）、<strong>COW</strong>（fork不真复制·文件系统COW·0004/0007）、<strong>RCU</strong>（旧版本不立即释放·0006）、<strong>overlayfs</strong>（容器镜像层·改时才复制·0009）、<strong>惰性slab分配</strong>（内核对象缓存不预分配）
+  </div>
+  <div class="lessons">贯穿：0004, 0006, 0007, 0009</div>
+</div>
+
+<div class="card">
+  <div class="num">范式 #4</div>
+  <h2>批处理 · Batching</h2>
+  <div class="oneliner">"把小的攒成大的一次搞定——均摊固定开销。"</div>
+  <div class="examples">
+    <strong>I/O合并</strong>（电梯算法·0008）、<strong>中断合并</strong>（NAPI·攒多包再中断·0008）、<strong>组调度</strong>（一起调度减少切换·0002）、<strong>日志</strong>（多块修改合并为一次顺序写·0007）、<strong>write-back缓存</strong>（攒多写一次刷盘·0008）
+  </div>
+  <div class="lessons">贯穿：0002, 0007, 0008</div>
+</div>
+
+<div class="card">
+  <div class="num">范式 #5</div>
+  <h2>机制/策略分离 · Mechanism/Policy Split</h2>
+  <div class="oneliner">""怎么做"和"选哪个"解耦——内核付机制代价，用户做策略选择。"</div>
+  <div class="examples">
+    <strong>调度</strong>（上下文切换是机制·选谁是策略·0002）、<strong>页替换</strong>（缺页处理是机制·Clock vs LRU是策略·0004）、<strong>I/O调度</strong>（请求队列是机制·elevator vs deadline是策略·0008）、<strong>seL4 capability</strong>（capability空间是机制·谁授cap是策略·0009）
+  </div>
+  <div class="lessons">贯穿：0001, 0002, 0004, 0008, 0009</div>
+</div>
+
+<div class="card">
+  <div class="num">范式 #6</div>
+  <h2>硬件-软件协同 · HW-SW Co-design</h2>
+  <div class="oneliner">"硬件给又快又蠢的基元，软件用它们构建慢但聪明的策略。"</div>
+  <div class="examples">
+    <strong>MMU+页表</strong>（硬件走页表·OS定映射·0003）、<strong>原子指令+锁</strong>（CPU给CAS·OS造mutex·0005）、<strong>中断+上下文切换</strong>（中断给CPU夺回机制·OS定调度·0002）、<strong>VMX/SVM+hypervisor</strong>（CPU给nested paging·hypervisor定映射·0009）、<strong>DMA</strong>（DMA引擎搬数据·OS定搬去哪·0008）
+  </div>
+  <div class="lessons">贯穿：0002, 0003, 0005, 0008, 0009</div>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">打印版本——A4 双栏建议。每个范式 = 一个 insight，不是一个需要背诵的定义。</p>
+</body>
+</html>

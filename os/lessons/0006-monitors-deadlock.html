@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0006 · 管程·死锁·无锁</title>
+<script>window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, svg: { fontCache: 'global' }, startup: { typeset: false } };</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.35rem; color: #1a1a1a; } .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); } h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; } .toc a { color: var(--accent); text-decoration: none; }
+  .insight { background: var(--light-accent); border-left: 4px solid #d4a574; padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; } .insight::before { content: "💡 "; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; } .warning::before { content: "⚠️ "; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; } .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .checkpoint { background: #f0f7ff; border: 1px solid #b8d4f0; border-radius: 8px; padding: 0.8rem 1.1rem; margin: 1.2rem 0; font-size: 0.92rem; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; } .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; } .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; }
+  .formula-block { text-align: center; margin: 1.4rem 0; } code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; } th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); } td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); }
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; } .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; } .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; } .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; } .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; } .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; } .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); } .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; } .concept-card .cc-section { margin-top: 0.7rem; } .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; } .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; } .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); } .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0006 · 管程·死锁·无锁</h1>
+<div class="subtitle">信号量太底层易出错——管程提供结构化并发；死锁是四个条件的逻辑必然；无锁编程用 CAS 绕开锁本身——并发工具的第二代 · 阅读时间 ~50 分钟</div>
+
+<div class="toc"><strong>目录</strong><br>
+  <a href="#s1">1. 管程与条件变量</a><br>
+  <a href="#s2">2. 死锁：四个必要条件的逻辑必然性</a><br>
+  <a href="#s3">3. 银行家算法与死锁应对</a><br>
+  <a href="#s4">4. 无锁编程：CAS 构建栈</a><br>
+  <a href="#s5">5. RCU：读端零开销的魔法</a><br>
+  <a href="#s6">6. 推导与自测</a>
+</div>
+
+<p>上一课 0005 给了锁和信号量——它们是并发原语的"汇编层"。这节课讲更高层的抽象（管程）以及要避免的灾难（死锁）以及终极武器（无锁）。</p>
+
+<div class="retrieval"><h3>🔁 回忆</h3><ol>
+  <li>0005 §5：信号量解生产者-消费者——`sem_wait(full)` 和 `sem_wait(empty)` 的语义是什么？</li>
+  <li>0005 §4：自旋锁 vs mutex——什么场景用哪个？</li>
+  <li>持锁睡眠会导致什么？（提示：0005 §5 的 warning）</li>
+</ol></div>
+
+<h2 id="s1">1. 管程与条件变量</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">同步原语</span><h3>管程 · Monitor</h3></div>
+<div class="cc-essence"><strong>一个管程 = 一个互斥锁 + 0 或多个条件变量 + 一组过程。</strong>编译器/运行时保证：同一时刻最多一个线程在管程的某个过程中。管程把锁的 acquire/release 隐藏起来——程序员只写"条件不满足就 wait"，不用管锁。</div>
+<div class="cc-section"><h4>条件变量（Condition Variable）</h4>
+<p><strong>wait()</strong>：原子地释放锁 + 让当前线程睡眠。<strong>signal()</strong>：唤醒一个在 wait 的线程。</p>
+<p><strong>Mesa 语义</strong>（Java/Pthread）：signal 只建议"条件可能变了"，被唤醒者必须<strong>重新检查</strong>条件（while 而非 if）。<strong>Hoare 语义</strong>（理论）：signal 立即把 CPU 让给被唤醒者——唤醒者不用重检查。后者理论上更优雅但实现极难——所有实际系统都用 Mesa。</p>
+</div></div>
+
+<p><strong>读者-写者问题</strong>用管程：读者可以同时读（共享锁），写者独占。条件变量 `okToRead` 和 `okToWrite` 协调等待者。这个问题的"饥饿"变体揭示了调度公平是并发原语之上的额外要求——锁本身不保证"先等的先进"。</p>
+
+<h2 id="s2">2. 死锁：四个必要条件的逻辑必然性</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">灾难</span><h3>死锁 · Deadlock</h3></div>
+<div class="cc-essence"><strong>四个条件全部满足 → 死锁必然发生。</strong>缺一不可——这就是死锁应对的逻辑基础：<strong>打破任何一个条件即可预防死锁。</strong></div>
+<div class="cc-section"><h4>四个必要条件</h4>
+<ol><li><strong>互斥</strong>：资源不能同时被多个线程使用</li><li><strong>持有并等待</strong>：持有一个资源的同时等待另一个</li><li><strong>不可抢占</strong>：不能强行抢走别人持有的资源</li><li><strong>循环等待</strong>：A 等 B，B 等 C，...，Z 等 A——资源分配图中有环</li></ol>
+</div></div>
+
+<div class="insight"><strong>打破任何一个条件就可以预防死锁。</strong>打破条件 1（互斥）→ 无锁数据结构（CAS 造的无锁栈不持锁——没有"互斥"这回事）。打破条件 2（持有并等待）→ 一次性申请所有需要的锁。打破条件 3（不可抢占）→ 拿不到锁就释放已持锁（`try_lock` + 回退）。打破条件 4（循环等待）→ 按固定顺序加锁（所有代码先锁 A 再锁 B——永远不会形成环）。</div>
+
+<h2 id="s3">3. 银行家算法与死锁应对</h2>
+<p><strong>银行家算法（Banker's Algorithm）</strong>——死锁<strong>避免</strong>（avoidance，有别于预防 prevention）：系统跟踪每个线程的"最大资源需求"和"当前持有"，在每次分配前判断"分完后还存在一个安全序列（所有线程都能完成）吗？"如果不存在 → 不让分——即使资源空闲。</p>
+<p>实际上很少用——因为需要提前知道最大需求（和 STCF 调度一样不现实）。更实用的做法是预防 + 检测恢复（周期性检查资源分配图是否有环 → 有环就杀一个线程释放资源）。</p>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>数据库系统经常检测到死锁后回滚一个事务——为什么 OS 很少用检测恢复？因为数据库事务可以回滚（undo log），OS 线程很难"回滚"——它已经做了副作用（写了 pipe、发了网络包、改了共享内存）。</div>
+
+<h2 id="s4">4. 无锁编程：CAS 构建栈</h2>
+<p>锁有代价：持锁线程被切走 → 等锁线程全部空转/阻塞 → 优先反转 → 死锁可能。无锁（lock-free）数据结构用 CAS 避免所有这些问题。</p>
+
+<div class="derivation"><h4>CAS 构建无锁栈（Treiber Stack）</h4>
+<div class="step"><strong>push(node)：</strong>do { node->next = top; } while (!CAS(&top, node->next, node));<span class="reason">"把新节点的 next 设为当前 top，然后 CAS 尝试把 top 改成新节点——如果这期间 top 被别人改了，重试。"</span></div>
+<div class="step"><strong>pop()：</strong>do { node = top; if (node==NULL) return NULL; next = node->next; } while (!CAS(&top, node, next)); return node;<span class="reason">"读 top → 读它的 next → CAS(top, old_top, next)。如果 CAS 失败——重试。"</span></div>
+<div class="step">关键：<strong>没有"锁"，没有"临界区"</strong>——CAS 失败就 retry。retry 次数 = 竞争度——低竞争时几乎总是一次成功。</div>
+</div>
+
+<div class="meta-box"><h4>范式 #3 · 惰性求值（无锁版）</h4>
+<p>无锁 = 乐观并发控制（optimistic concurrency）——"假设没有冲突，先去做了，如果冲突就重试"。这是惰性求值的并发版：不做冲突预防（锁），冲突发生了才补救（retry）。数据库的 OCC（乐观并发控制）也是同样的思路。</p></div>
+
+<h2 id="s5">5. RCU：读端零开销的魔法</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag" style="background:#c44d4d;">无锁</span><h3>RCU · Read-Copy-Update</h3></div>
+<div class="cc-essence"><strong>对于"读极多、写极少"的数据（路由表、文件系统目录缓存……），RCU 让读端完全不拿锁、不写共享变量、不需要原子操作——零开销。</strong></div>
+<div class="cc-section"><h4>三步流程</h4>
+<ol><li><strong>Copy</strong>：写者复制数据结构，在副本上修改</li><li><strong>Update</strong>：原子指针 `rcu_assign_pointer` 把全局指针从旧版切到新版</li><li><strong>Reclaim</strong>：等所有已存在的读者都结束后（通过 `synchronize_rcu` 或宽限期回调），释放旧版内存</li></ol>
+</div></div>
+
+<p><strong>怎么知道"所有读者都结束了"？</strong>RCU 利用了 OS 的一个事实：<strong>上下文切换点 = 读者的结束点</strong>。Linux 内核中，读者在 RCU 读临界区中不能睡眠（不能调 `schedule()`）。所以：只要每个 CPU 都经历了一次上下文切换，该 CPU 上所有 RCU 读者都已结束。`synchronize_rcu` = 等所有 CPU 都经历过一次 quiescent state（通常是上下文切换）。</p>
+
+<div class="insight"><strong>RCU 是惰性求值（范式 #3）在并发中的终极应用。</strong>写者不改原数据——它造一份新的，然后"切指针"这个 O(1) 原子操作完成更新。旧数据的回收推迟到"确定没人看了"——可能是几 ms 到几秒后。这期间新旧版本同时存在——空间换并发。</div>
+
+<h2 id="s6">6. 推导与自测</h2>
+<div class="problem"><div class="ptitle">P1 · 死锁四条件分析 <span class="plevel l1">L1</span></div><div class="pbody"><p>两个线程各持一个锁等对方另一个锁——经典死锁。逐一确认四个条件是否满足。如果改成 `try_lock` + 失败就释放已有锁，打破了哪个条件？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">① 互斥 ✓（锁不能共享）。② 持有并等待 ✓（各持一把等另一把）。③ 不可抢占 ✓（不能夺锁）。④ 循环等待 ✓（A 等 B，B 等 A）。`try_lock` + 释放 = 打破<strong>条件 3（不可抢占）</strong>——主动放弃自己持有的锁，让等待链断开。</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P2 · 银行家算法推演 <span class="plevel l2">L2</span></div><div class="pbody"><p>系统 12 单位资源。P1（max=10, held=5）、P2（max=4, held=2）、P3（max=9, held=2）。当前分配后剩余 3 单位。问：当前状态安全吗？如果 P2 再申请 1 单位，能分配吗？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">当前：剩余 3。P1 need 5（不可满足）、P2 need 2（可满足）→ 先给 P2 完成释放 4 → 剩余 7 → P3 need 7 可满足 → P3 释放 9 → 剩余 16 → P1 need 5 可满足。<strong>安全序列 P2→P3→P1 = 安全。</strong></div><div class="step">P2 再申请 1 → P2 held=3, need=1, 剩余 2。检查：P2 need 1 可满足 → P2 完成释放 4 → 剩余 6 → P3 need 7 不可满足 → P1 need 5 可满足 → P1 释放 10 → 剩余 16 → P3 need 7 可满足。<strong>安全序列 P2→P1→P3 = 安全。可以分配。</strong></div></div></details></div>
+
+<div class="problem"><div class="ptitle">P3 · RCU vs 读写锁 <span class="plevel l3">L3</span></div><div class="pbody"><p>比较 RCU 和读写锁（rwlock）在读极多写极少的场景。(a) rwlock 的读端需要什么原子操作？RCU 呢？(b) 在读者有 10000 个、每秒 100 万次读、写者每秒 1 次的场景下，估算 rwlock 和 RCU 的性能差异。(c) 写者较多（每秒 1000 次）时 RCU 有什么问题？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) rwlock 读端：获取读锁（原子递减 reader count）→ 读 → 释放读锁（原子递增）。两次原子操作每次 ~几十 cycle。RCU 读端：`rcu_read_lock()` + 读 + `rcu_read_unlock()`——在 x86 上这两个函数是<strong>空操作</strong>（只禁止抢占——不写任何共享变量）。零原子操作。(b) rwlock 读者：2×1M×30 cycles = 60M cycles/s；RCU 读者：0。写者 1 次/s 的 `synchronize_rcu` 等所有 CPU 经历一次 quiescent state——~几到几十 ms——可以接受。(c) 写者多 → 每次写都要等所有 CPU 进 quiescent state → 延迟高。而且旧版本在 grace period 期间不能释放 → 内存积压。RCU 不适合写密集型。</div></div></details></div>
+
+<div class="primary-source"><h3>📖 延伸阅读</h3><ul>
+  <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-cv.pdf">Ch 30 (Condition Variables)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-deadlock.pdf">Ch 32 (Deadlock)</a></li>
+  <li><strong>Linux</strong>：<a href="https://www.kernel.org/doc/html/latest/RCU/">RCU Documentation</a> — Paul McKenney 的 RCU 详解</li>
+</ul></div>
+
+<div class="reminder"><h3>🔄 间隔复习</h3><ul><li><strong>24h</strong>：Mesa vs Hoare 条件变量语义——为什么 Java 用 `while` 而非 `if` 检查条件？</li><li><strong>72h</strong>：RCU 三步——怎么知道"所有读者都结束了"？</li></ul></div>
+
+<div class="lesson-footer"><p><a href="../index.html">🏠</a> · <a href="./0005-threads-locks.html">← 0005</a> · <a href="./0007-filesystem.html">0007 文件系统 →</a></p></div>
+<script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
+</body>
+</html>

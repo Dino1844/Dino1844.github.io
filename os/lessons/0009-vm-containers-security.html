@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0009 · 虚拟机·容器·安全·Linux 深潜</title>
+<script>window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, svg: { fontCache: 'global' }, startup: { typeset: false } };</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.35rem; color: #1a1a1a; } .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); } h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; } .toc a { color: var(--accent); text-decoration: none; }
+  .insight { background: var(--light-accent); border-left: 4px solid #d4a574; padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; } .insight::before { content: "💡 "; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; } .warning::before { content: "⚠️ "; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; } .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; } .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; }
+  .formula-block { text-align: center; margin: 1.4rem 0; } code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; } th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); } td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); }
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; } .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; } .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; } .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; } .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; } .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; } .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; } .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); } .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0009 · 虚拟机·容器·安全·Linux 深潜</h1>
+<div class="subtitle">压轴课——将前 8 课所有概念汇聚到一次 `read()` 系统调用的完整追踪上。从虚拟化和容器的隔离本质，到 OS 安全攻防链，到 Linux 内核数据结构的全景图谱 · 阅读时间 ~55 分钟</div>
+
+<div class="toc"><strong>目录</strong><br>
+  <a href="#s1">1. 虚拟机：在 OS 之下再造 OS</a><br>
+  <a href="#s2">2. 容器："容器是进程，VM 是机器"</a><br>
+  <a href="#s3">3. 微内核 vs 宏内核</a><br>
+  <a href="#s4">4. OS 安全：内存破坏的攻与防</a><br>
+  <a href="#s5">5. Linux 内核数据结构全景</a><br>
+  <a href="#s6">6. 一次 read() 的完整代码路径</a><br>
+  <a href="#s7">7. 推导与自测</a>
+</div>
+
+<p>0001–0008 讲清了 OS 的核心机制——进程、内存、并发、文件、I/O。这课是<strong>压轴合龙</strong>：把概念串成一次系统调用的完整路径，并展示 OS 前沿——虚拟化、容器、安全。读完这课，你应该能在脑中从 `read()` 一路追踪到 DMA 控制器。</p>
+
+<div class="retrieval"><h3>🔁 回忆（全课程）</h3><ol>
+  <li>0002 §2：PCB (`task_struct`) 有哪些关键字段？它如何指向内存和文件？</li>
+  <li>0003 §7：四级页表的翻译路径——每一步读什么？</li>
+  <li>0005 §2：`syscall` 指令做了什么？（CR8/EFER、Ring 切换、压栈……）</li>
+  <li>0006 §5：RCU 怎么知道"所有读者都结束了"？（上下文切换 = quiescent state）</li>
+  <li>0007 §1：inode 里没有文件名——文件名在哪？</li>
+  <li>0008 §2：DMA 的三个阶段——CPU 编程 → DMA 搬运 → 中断通知</li>
+</ol></div>
+
+<h2 id="s1">1. 虚拟机：在 OS 之下再造 OS</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">虚拟化</span><h3>Hypervisor · VMM</h3></div>
+<div class="cc-essence"><strong>OS 在硬件之上造幻象（进程）。Hypervisor 在硬件之上造幻象的幻象——让多个 OS 以为自己独占整台物理机。</strong></div>
+<div class="cc-section"><h4>Type-1 vs Type-2</h4>
+<p><strong>Type-1（裸金属）</strong>：Hypervisor 直接跑在硬件上（KVM、Xen、VMware ESXi）。<strong>Type-2（宿主）</strong>：Hypervisor 跑在宿主 OS 上（VirtualBox、VMware Workstation）。</p>
+</div></div>
+
+<h3>Trap-and-Emulate → 硬件辅助虚拟化</h3>
+<p>CPU 虚拟化的原始方案：guest OS 跑在 Ring 1（或 Ring 3），它的特权指令（如 `cli`）会 trap 到 Ring 0 的 hypervisor。Hypervisor 模拟这条指令的效果——修改虚拟机的虚拟中断状态而不是物理中断。但 x86 早期不支持——某些特权指令在非 Ring 0 执行时<strong>静默失败</strong>而非 trap（x86 的虚拟化漏洞）。</p>
+<p><strong>硬件辅助虚拟化</strong>（Intel VT-x / AMD-V）：CPU 加了 VMX root mode（hypervisor）和 VMX non-root mode（guest）。Guest 的特权指令直接在 non-root 模式下执行——但受 VMCS（VM Control Structure）配置的控制。哪些事件导致 <strong>VM Exit</strong>（回到 hypervisor）由 hypervisor 编程。</p>
+<p><strong>内存虚拟化——嵌套页表</strong>：Guest 有自己的页表（GVA → GPA）。Hypervisor 有另一套页表（GPA → HPA）——<strong>EPT</strong>（Extended Page Table，Intel）/ <strong>NPT</strong>（Nested Page Table，AMD）。硬件在一次 TLB walk 中同时走两套页表——GVA → GPA → HPA——慢了但不需要 hypervisor 介入。</p>
+
+<h2 id="s2">2. 容器："容器是进程，VM 是机器"</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">隔离</span><h3>容器 · Container</h3></div>
+<div class="cc-essence"><strong>容器不是虚拟化——它是"加了围墙的进程"。两个机制：namespaces（限制你能看见什么）+ cgroups（限制你能用多少）。没有 hypervisor，没有嵌套页表，没有额外的内核——所有容器共享宿主内核。</strong></div>
+</div>
+
+<table><tr><th></th><th>VM</th><th>容器</th></tr>
+<tr><td>隔离层</td><td>Hypervisor + 嵌套页表</td><td>Namespace + cgroup</td></tr>
+<tr><td>启动时间</td><td>秒级（boot guest kernel）</td><td>毫秒级（clone + 设 namespace）</td></tr>
+<tr><td>内存开销</td><td>每个 VM 一个内核（~100MB+）</td><td>共享内核（容器镜像 ~几 MB+ 应用）</td></tr>
+<tr><td>安全隔离</td><td>强（独立内核 = 攻击面小但非零）</td><td>弱（共享内核 = 内核漏洞可逃逸）</td></tr>
+</table>
+
+<p><strong>Namespaces</strong>：PID namespace（容器内看到自己的 PID 1）、Mount namespace（自己的文件系统树）、Network namespace（自己的网卡/IP/路由表）、UTS namespace（自己的 hostname）、IPC namespace（自己的信号量/消息队列）、User namespace（容器内 root ≠ 物理 root）、Cgroup namespace（自己的资源限制视图）。</p>
+<p><strong>Cgroups（v2）</strong>：分层控制——每个 controller（cpu、memory、io、pids……）设使用上限。Memory cgroup 设 `memory.max`——超了就 OOM kill 或不分配。CPU cgroup 设 `cpu.weight`——CFS 按 weight 分配 CPU 给各 cgroup（类似 0002 CFS 的 weight 机制但跨进程组）。</p>
+
+<div class="checkpoint"><strong>停下来想一想</strong>：Docker 镜像的"层"是怎么实现的？答案是 <strong>overlayfs</strong>——一个 COW 联合文件系统。Base 层（如 ubuntu:22.04）只读，上面叠加多个只读层（每步 RUN），最顶端是可写层。修改文件 → COW 复制到可写层。这和一个文件的完整复制相比，节省了 99% 的空间和传输——范式 #3（惰性求值）从内存 COW（0004）回到了文件系统。</div>
+
+<h2 id="s3">3. 微内核 vs 宏内核</h2>
+<p>Linux 是<strong>宏内核</strong>（monolithic kernel）：所有核心服务（调度、内存管理、文件系统、网络栈、驱动）都在一个地址空间里——函数调用就能通信。快但脆——一个驱动崩了整机 panic。</p>
+<p><strong>微内核</strong>（microkernel）：内核只保留最少的——IPC、地址空间管理、线程调度。文件系统、驱动、网络栈全部是用户态进程——通过 IPC 通信。代表：Minix、L4、seL4。<strong>seL4 是整个内核被形式化验证过的</strong>（用 Isabelle/HOL 证明了 C 代码实现符合抽象规范——没有缓冲区溢出、没有 NULL 指针解引用）。</p>
+<p>微内核的生命线是<strong>IPC 性能</strong>——如果一次跨进程调用比宏内核的函数调用慢 100×，所有"安全"收益都被性能代价淹没。L4 通过极度优化的 IPC（寄存器传参、避免多余拷贝、scheduling donating——被调用者优先继承调用者的时间片）把 IPC 成本压到 ~100 cycles。</p>
+
+<h2 id="s4">4. OS 安全：内存破坏的攻与防</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">安全</span><h3>内存破坏攻防链</h3></div>
+<div class="cc-essence"><strong>从栈溢出到 ROP 到现代防御的演进——每一步防御都是针对上一步攻击的必然回应。</strong></div>
+<div class="cc-section"><h4>攻击演进</h4>
+<ol>
+  <li><strong>栈溢出（1988 Morris Worm）</strong>：`gets(buf)` 溢出 → 覆盖返回地址 → 跳到 shellcode（栈上的机器码）</li>
+  <li><strong>ROP（Return-Oriented Programming）</strong>：NX bit 让栈不可执行 → 攻击者用 `ret` 链条（gadget），在已有代码里找以 `ret` 结尾的指令片段——跳来跳去拼出攻击语义</li>
+  <li><strong>return-to-libc</strong>：直接跳到 libc 的 `system()`——不需要自己写代码</li>
+</ol>
+<h4>防御演进</h4>
+<ol>
+  <li><strong>Stack Canary</strong>：函数入口在返回地址和局部变量之间放一个随机值。返回前检查——被覆盖 = 异常。绕过：泄露 canary（format string 漏洞读栈）。</li>
+  <li><strong>NX/DEP</strong>（PTE 的 XD bit——0003 §5）：栈页不可执行。绕过：ROP（不执行栈上的代码——用已有的代码）。</li>
+  <li><strong>ASLR</strong>（地址空间布局随机化）：每次启动程序，栈/堆/库的基地址随机化。gadget 地址不可预测。绕过：泄露一个地址 → 算出其他地址。</li>
+  <li><strong>CFI</strong>（控制流完整性）：编译器在每个间接跳转前插入检查——目标地址必须在合法集合里。绕过：更复杂的 gadget——但大幅提高攻击成本。</li>
+</ol>
+</div></div>
+
+<p><strong>RowHammer</strong>：硬件层的安全问题。反复读(activate+precharge)某一 DRAM 行 → 相邻行的电容泄漏 → bit 翻转。这意味着<strong>用户态代码可以在没有访存权限的情况下翻转内核页的 bit</strong>——打破所有软件层的防御。修复：DRAM 刷新率提升（性能代价）或 ECC 内存（贵）。RowHammer 提醒我们：<strong>OS 的安全金字塔最底层是硬件——硬件层的漏洞无法被任何软件防御完全挡住。</strong></p>
+
+<h2 id="s5">5. Linux 内核数据结构全景</h2>
+<p>把前 8 课分散讲的数据结构串成一张图——从 `task_struct` 到一切：</p>
+
+<div class="derivation"><h4>task_struct → 整个进程世界的指针</h4>
+<div class="step"><strong>task_struct</strong>（每进程一个）—`mm`→ <strong>mm_struct</strong>（地址空间）—`pgd`→ <strong>四级页表根</strong>（PGD 物理地址 → 写入 CR3）—`mmap`→ <strong>vm_area_struct 链表</strong>（每个 VMA 描述一个已映射区域——代码段/堆/栈/mmap 文件）。</div>
+<div class="step"><strong>mm_struct</strong>—`mmap`→ VMA 链表。`/proc/PID/maps` 就是遍历这链表生成的。<span class="reason">0004 缺页处理中，内核检查出错的 VA 是否在任何 VMA 范围内——不在 → SIGSEGV。</span></div>
+<div class="step"><strong>task_struct</strong>—`files`→ <strong>files_struct</strong>（打开文件表）—`fdtable`→ <strong>file** 数组</strong>。`fd=3` → `fdt->fd[3]` → <strong>struct file</strong>（当前文件位置、访问模式）—`f_inode`→ <strong>inode</strong>（文件元数据 + 数据块指针）。<span class="reason">0007 的 inode 在这里被引用。</span></div>
+<div class="step"><strong>task_struct</strong>—`tasks`→ 链入<strong>全局进程链表</strong>（所有 task_struct 串在一起——`ps aux` 遍历这条链表）。—`parent`/`children`→ <strong>进程树</strong>（`pstree` 命令的图形）。</div>
+<div class="step"><strong>task_struct</strong>—`sched_entity`→ <strong>CFS 的 vruntime + 红黑树节点</strong>（0002 §8）。—`stack`→ 指向<strong>内核栈</strong>（16KB，底部有 `thread_info`）。</div>
+</div>
+
+<p>遍历一次：`task_struct.mm.pgd → CR3 → 四级页表 → 该进程所有虚拟页的物理映射` 和 `task_struct.files.fdtable.fd[3].f_inode → inode 数据块 → 磁盘`——同一个进程 P 同时持有"内存世界"和"文件世界"的根指针。这就是 OS 的数据结构之美。</p>
+
+<h2 id="s6">6. 一次 read() 的完整代码路径</h2>
+<p>我们现在有足够的知识去追踪一次 `read(fd, buf, 100)` 从用户态到硬件到返回的完整路径。这是全书知识的综合运用。</p>
+
+<div class="derivation"><h4>read(fd, buf, 100) 的完整代码路径</h4>
+<div class="step"><strong>① 用户态准备：</strong>libc `read()` → 设 `rax=SYS_read`(0), `rdi=fd`, `rsi=buf`, `rdx=100` → `syscall`。总开销 ~几十 cycles。</div>
+<div class="step"><strong>② 硬件陷入内核（0001 §4.1, 0002 §4）：</strong>`syscall` → CPU 读 MSR_LSTAR → 跳 `entry_SYSCALL_64` → 硬件自动：切 Ring 0、压栈用户态 RIP/RFLAGS、加载内核栈。<span class="reason">~100-200 cycles。</span></div>
+<div class="step"><strong>③ 内核系统调用分发：</strong>`entry_SYSCALL_64` → 保存所有通用寄存器（SAVE_ALL）→ `do_syscall_64(regs)` → `regs->ax = sys_call_table[__NR_read](regs)` → 调 `ksys_read(fd, buf, 100)`。</div>
+<div class="step"><strong>④ VFS 层（0007 §3）：</strong>`ksys_read` → `fdget(fd)` → `current->files->fdt->fd[fd]` → 得 `struct file *f` → `f->f_op->read`（可能是 `ext4_file_read_iter`）→ `f->f_pos`（读起始位置）。<span class="reason">如果 fd 不存在 → 返回 -EBADF。</span></div>
+<div class="step"><strong>⑤ 文件系统层（0007 §1–§2）：</strong>`ext4_file_read_iter` → 将 (f_pos, 100 bytes) 翻译为 (inode 逻辑块号, 块内偏移) → 查 inode 的多级索引 → 得物理块号。</div>
+<div class="step"><strong>⑥ Page Cache 检查（范式 #2 缓存）：</strong>物理块号 → 查 page cache（address_space->i_pages radix tree）。如果在缓存 → 直接 `copy_to_user(buf, page+offset, 100)` → 跳步 ⑨。<span class="reason">缓存命中 = 无磁盘 I/O。这是"快速路径"——大部分 read 走这。</span></div>
+<div class="step"><strong>⑦ 块层（0008 §3）：</strong>缓存未命中 → 构造 `struct bio`（块 I/O 请求）→ `submit_bio` → 经 I/O 调度器（可能合并相邻请求）→ 入块设备队列。</div>
+<div class="step"><strong>⑧ 驱动 + DMA（0008 §2）：</strong>NVMe 驱动 → 构建 submission queue entry（SQE）→ ring doorbell（写设备寄存器通知有新请求）→ NVMe 控制器从 SQ 取 SQE → DMA 从磁盘读数据到内存物理页 → 完成后写 completion queue entry（CQE）+ 发 MSI-X 中断。<span class="reason">CPU 在这期间可以跑别的进程——这是异步 I/O 的基底。</span></div>
+<div class="step"><strong>⑨ 中断处理 + 完成：</strong>中断 → `nvme_irq` → 读 CQE → 唤醒等待线程（`bio_endio`）→ 数据已在 page cache → `copy_to_user(buf, page+offset, 100)` → 更新 `f_pos += 100`。<span class="reason">`copy_to_user` 检查 buf 是否在用户态可写地址——如果用户传了一个内核地址 → 返回 -EFAULT。</span></div>
+<div class="step"><strong>⑩ 返回用户态：</strong>`sysretq` → 恢复用户态 RIP/RFLAGS → 读到的字节数在 `rax`。总延迟：缓存命中 ~1μs，SSD ~100μs，HDD ~10ms。</div>
+</div>
+
+<div class="insight"><strong>这就是操作系统之美。</strong>10 步，涉及 0001–0008 的全部核心概念。每一步都是前面机制的具体化。如果你能不看屏幕在脑中走完这 10 步，这个课程就已经达到了它的目标。</div>
+
+<h2 id="s7">7. 推导与自测</h2>
+<div class="problem"><div class="ptitle">P1 · VM vs 容器安全 <span class="plevel l2">L2</span></div><div class="pbody"><p>(a) 攻击者通过内核漏洞拿到了宿主机的 root shell。他能看到容器 A 里的进程的内存吗？容器 B 呢？(b) 如果宿主机跑的是 KVM 虚拟机而非容器，攻击者能从宿主机 root 看到 VM 里的内存吗（无额外漏洞）？(c) 这两种场景揭示了 VM 和容器的什么根本安全差异？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) 宿主机 root → 可以 `nsenter` 进入任意 namespace → 可以看到所有容器的进程、内存、文件。因为容器共享内核——宿主机 root 即是所有 namespace 的 root。(b) KVM 中 guest 的内存在 hypervisor 视角是普通用户态进程的内存——但 EPT/NPT 是独立的页表。宿主机 root 可以读 `/proc/PID/mem` 或 `/dev/mem` 但 guest 的物理内存被映射在 QEMU 进程的虚拟地址空间中——直接读 QEMU 进程内存是可以的（除非额外保护如 AMD SEV 内存加密）。(c) VM 隔离强但非绝对——hypervisor 层的漏洞可打破隔离。容器根本依赖于"内核没有漏洞"这个假设——共享内核意味着一个内核漏洞可以打破所有容器的隔离。</div></div></details>
+</div>
+
+<div class="problem"><div class="ptitle">P2 · 系统调用追踪 <span class="plevel l3">L3</span></div><div class="pbody"><p>从头默写一次 `read(fd, buf, 100)` 的 10 步路径——不查任何资料。包括：每一步涉及的数据结构、trap 机制、VFS 查找、page cache、块层、DMA。</p></div></div>
+
+<div class="primary-source"><h3>📖 延伸阅读</h3><ul>
+  <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vmm-intro.pdf">Virtualization Appendix</a></li>
+  <li><strong>xv6</strong>：启动路径 <a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/entry.S">kernel/entry.S</a> → <a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/start.c">kernel/start.c</a> → <a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/main.c">kernel/main.c</a></li>
+  <li><strong>Linux</strong>：`arch/x86/entry/entry_64.S` — entry_SYSCALL_64；`fs/read_write.c` — ksys_read</li>
+  <li><strong>LWN</strong>：<a href="https://lwn.net/Articles/531114/">Namespaces series</a> — 各 namespace 的实现细节</li>
+</ul></div>
+
+<div class="reminder"><h3>🔄 课程终结复习</h3>
+<p>你现在应该可以：(1) 复述三条幻象及各自实现机制；(2) 画出四级页表翻译的完整路径；(3) 解释 COW 如何让 `fork+exec` 几乎零成本；(4) 用六个范式解释 OS 中任何新机制；(5) 像 §6 那样追踪一次系统调用。</p>
+<p>如果任何一条做不到——回到对应课重读关键节。不要模糊地"有印象"。要能不看屏幕讲出来。</p>
+</div>
+
+<div class="lesson-footer">
+  <p><a href="../index.html">🏠 课程首页</a> · <a href="./0008-io-raid.html">← 0008 I/O·RAID</a></p>
+  <p style="margin-top:0.5rem;">全书基石：0001 · 本课回接全部 0001–0008 · 课程完结</p>
+</div>
+<script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
+</body>
+</html>

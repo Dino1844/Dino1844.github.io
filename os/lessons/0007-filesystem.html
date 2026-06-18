@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0007 · 文件系统：inode → 日志 → COW</title>
+<script>window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, svg: { fontCache: 'global' }, startup: { typeset: false } };</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.35rem; color: #1a1a1a; } .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); } h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; } .toc a { color: var(--accent); text-decoration: none; }
+  .insight { background: var(--light-accent); border-left: 4px solid #d4a574; padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; } .insight::before { content: "💡 "; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; } .warning::before { content: "⚠️ "; }
+  .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; } .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .checkpoint { background: #f0f7ff; border: 1px solid #b8d4f0; border-radius: 8px; padding: 0.8rem 1.1rem; margin: 1.2rem 0; font-size: 0.92rem; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; } .derivation h4 { font-size: 0.88rem; color: var(--muted); } .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; }
+  .formula-block { text-align: center; margin: 1.4rem 0; } code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; } th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); } td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); }
+  .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; } .retrieval h3 { margin-top: 0; color: #2d4a8a; }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; } .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; } .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; } .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; } .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; } .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); } .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; } .concept-card .cc-section { margin-top: 0.7rem; } .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; } .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; } .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); } .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
+</style>
+</head>
+<body>
+
+<h1>Lesson 0007 · 文件系统：inode → 日志 → COW</h1>
+<div class="subtitle">文件是 I/O 的虚拟化——inode 是整个故事的第一因。从 inode 的多级索引到 FFS 的柱面组优化，再到崩溃一致性问题和日志/COW 两种解法 · 阅读时间 ~50 分钟</div>
+
+<div class="toc"><strong>目录</strong><br>
+  <a href="#s1">1. inode：文件的"身份证"</a><br>
+  <a href="#s2">2. 多级索引：小文件快、大文件支持</a><br>
+  <a href="#s3">3. 目录 = 名字到 inode 号的映射</a><br>
+  <a href="#s4">4. FFS：为磁盘几何优化的文件系统</a><br>
+  <a href="#s5">5. 崩溃一致性：写一半断电怎么办</a><br>
+  <a href="#s6">6. 日志与 COW：两种解法</a><br>
+  <a href="#s7">7. 推导与自测</a>
+</div>
+
+<p>展开基石 0001 §2.3（I/O 幻象）。前两课讲完了"数据在内存里怎么管"，这课讲"数据怎么在磁盘上活下来"。文件系统的核心问题是：<strong>inode 作为文件的一切元数据的容器，在崩溃后必须保持一致。</strong></p>
+
+<div class="retrieval"><h3>🔁 回忆</h3><ol>
+  <li>基石 0001 §2.3：I/O 虚拟化的抽象层次从高到低是什么？（fd → inode → 块层 → 驱动）</li>
+  <li>0002 §2：PCB 的 `files_struct *files` 指向什么？</li>
+  <li>0004 §5：COW 在内存管理中的应用——和文件系统的 COW 有什么哲学上的共通？</li>
+</ol></div>
+
+<h2 id="s1">1. inode：文件的"身份证"</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">核心</span><h3>inode · Index Node</h3></div>
+<div class="cc-essence"><strong>inode 包含关于一个文件的一切——除了文件名和文件内容。</strong>权限（rwx）、所有者（uid/gid）、大小、时间戳（atime/mtime/ctime）、数据块指针数组——都在 inode 里。文件名<strong>不</strong>在 inode 里——它存在目录项里。</div>
+<div class="cc-section"><h4>为什么文件名不存 inode</h4>
+<p>因为一个文件可以有多个名字（硬链接）。`ln file file2` → file 和 file2 指向<strong>同一个 inode</strong>——inode 里的 link count 从 1 变成 2。`rm file` → link count 降到 1（文件还在）。`rm file2` → 0 → 文件真正删除（inode 和数据块全部释放）。硬链接让"文件名只是一个指向 inode 的指针"变得具体。</p>
+</div>
+<div class="cc-connections"><span class="conn-badge">范式 #1（间接层）：inode 号是文件名到数据块的间接层</span></div></div>
+
+<h2 id="s2">2. 多级索引：小文件快、大文件支持</h2>
+<p>inode 里的数据块指针数组大小固定（ext4: 15 个指针，60 字节）。15 个指针怎么指向几百 GB 的文件？<strong>多级索引</strong>：</p>
+<ul>
+  <li>前 12 个：<strong>直接指针</strong>——直接指向数据块。4KB/块 × 12 = <strong>48KB</strong>（~大多数文件）</li>
+  <li>第 13 个：<strong>间接指针</strong>——指向一个装满指针的块（1024 个指针 × 4KB = <strong>4MB</strong>）</li>
+  <li>第 14 个：<strong>双间接</strong>——指向的块里每个指针指向一个间接块（1024² × 4KB ≈ <strong>4GB</strong>）</li>
+  <li>第 15 个：<strong>三间接</strong>——1024³ × 4KB ≈ <strong>4TB</strong></li>
+</ul>
+<p>效果：小文件（<48KB）→ 前 12 个直接指针就够了——一次磁盘访问（inode 本身）。大文件才触达间接块。这是<strong>常见情况优化</strong>——大多数文件是小文件（代码、配置、.txt），少数大文件（视频、数据库）付出间接块的开销。范式 #2（缓存）进一步加持：inode 本身在 inode cache 中，热文件的直接指针几乎不需要磁盘 I/O。</p>
+
+<h2 id="s3">3. 目录 = 名字到 inode 号的映射</h2>
+<p>目录也是文件——它的"数据"是一个表：(name, inode_number) 对。`ls -i` 显示 inode 号。`open("/dir/file")` 的内核流程：读 "/" 的 inode（inode 2——root inode）→ 在数据块里找 "dir" → 得到 inode 号 → 读 dir 的 inode → 在数据块里找 "file" → 得到 file 的 inode → 返回 file 的 inode。每一步都可能触发磁盘 I/O——dentry cache（目录项缓存）把常用路径缓存在内存里，让大部分 `open` 不需要磁盘 I/O。</p>
+
+<h2 id="s4">4. FFS：为磁盘几何优化的文件系统</h2>
+<p>FFS（Fast File System）的核心思想：<strong>把相关的数据放在磁盘上相近的位置</strong>——减少磁头移动（seek）。</p>
+<ul>
+  <li><strong>柱面组</strong>（cylinder group）：磁盘分成多个柱面组，每个组有自己的 inode 区和数据块区</li>
+  <li><strong>目录放一起</strong>：同一目录下的文件 inode 在同一个柱面组——`ls -l` 不需要跨组 seek</li>
+  <li><strong>大文件跨组</strong>：避免一个大文件吃光一个柱面组的空间，把别的文件挤到别的组强制 seek</li>
+</ul>
+<p>SSD 时代 FFS 的 seek 优化不再重要（无机械结构），但<strong>数据局部性</strong>仍然重要——同一目录的文件更可能一起被读取（空间局部性 → read-ahead 更有效）。</p>
+
+<h2 id="s5">5. 崩溃一致性：写一半断电怎么办</h2>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">核心问题</span><h3>崩溃一致性 · Crash Consistency</h3></div>
+<div class="cc-essence"><strong>文件系统的很多操作需要更新多个磁盘块</strong>（inode bitmap、inode、数据 bitmap、数据块——四个位置）。如果在四个更新之间断电 → 磁盘上的数据结构不一致。</strong></div>
+</div>
+
+<p>经典问题：创建一个文件。需要：(1) 在 inode bitmap 标记 inode 已用；(2) 初始化 inode；(3) 在数据 bitmap 标记数据块已用；(4) 把 (name, inode#) 写入目录。如果顺序是 1→2→4→3，在 4 和 3 之间断电 → 目录指向 inode，inode 看起来 OK（bitmap 标记了），但 inode 指向的数据块 bitmap 说"这个块是空的"——这之后如果另一个分配把这个块给了别的文件 → <strong>两个文件指向同一数据块</strong>（数据损坏）。</p>
+
+<div class="derivation"><h4>fsck（文件系统检查）</h4>
+<div class="step">在挂载（mount）文件系统时扫描所有 inode 和 bitmap——修复不一致。例如：inode 标记已用但 bitmap 说未用 → 把 bitmap 改回来。数据块 bitmap 标记已用但没有任何 inode 指向它 → 释放。</div>
+<div class="reason"><strong>问题：</strong>fsck 需要扫描整个文件系统——对 TB 级磁盘可能需要几分钟到几十分钟。不可接受。</div></div>
+
+<h2 id="s6">6. 日志与 COW：两种解法</h2>
+
+<h3>6.1 日志（Journaling）——ext3/ext4 的答案</h3>
+<div class="derivation"><h4>日志的三步</h4>
+<div class="step"><strong>① 写日志</strong>（journal write）：把要改的所有块的旧内容+新内容写到日志区（磁盘上预留的连续区域——顺序写、快！）</div>
+<div class="step"><strong>② 提交日志</strong>（journal commit）：写一个 commit 记录——"以上日志内容已完整"</div>
+<div class="step"><strong>③ 检查点</strong>（checkpoint）：把日志里的新内容写到文件系统的实际位置（随机写）</div>
+<div class="step"><strong>恢复</strong>：重启后检查日志——有 commit 的 → 重放（replay）；没有 commit 的 → 丢弃（没影响原始数据）</div>
+</div>
+
+<p><strong>ext4 的 data=ordered 模式（默认）</strong>：元数据写日志，数据直接写原位置——但在元数据提交前数据必须先到位。"元数据永远不会指向未写入的数据"——最严重的崩溃一致性错误（上面的"两个文件指同一块"）被消除了。</p>
+
+<div class="meta-box"><h4>范式 #4 · 批处理（日志版）</h4>
+<p>日志把多次随机写（改 bitmap + inode + 目录）合并成一次顺序写（日志追加）。顺序写比随机写快 ~10×（HDD 无 seek，SSD 无 4KB 随机写开销）。然后 checkpointer 在空闲时把日志批量写回原位置。批处理让"最重要的操作"（日志提交 = 顺序写）成为瓶颈路径上最快的操作。</p></div>
+
+<h3>6.2 COW（Copy-on-Write）——ZFS/Btrfs 的答案</h3>
+<p>和内存 COW（0004 §5）同一哲学——<strong>从不原地覆写</strong>：</p>
+<ol>
+  <li>要改一个块 → 把新内容写到<strong>一个新的空闲块</strong></li>
+  <li>更新指向它的上一层块 → 也写到新块 → 递归到根</li>
+  <li>最后<strong>原子地切换根指针</strong>（uberblock）</li>
+</ol>
+<p>效果：崩溃后 → 旧树完全无损（因为根指针还是旧的）。新的 uberblock 有校验和——不完整的新树直接被忽略。而且旧树天然是 snapshot——时间和空间开销几乎为零。</p>
+
+<div class="insight"><strong>日志 vs COW 是两种哲学：</strong>日志 = "坏了能修好"（事后恢复），COW = "永远不会坏"（事前防止）。日志的瓶颈在 checkpoint（随机写回到原位置），COW 的瓶颈在碎片化（树永远在长——inode 和数据块不在一起了）。没有银弹。</div>
+
+<h2 id="s7">7. 推导与自测</h2>
+<div class="problem"><div class="ptitle">P1 · inode 指针覆盖范围 <span class="plevel l1">L1</span></div><div class="pbody"><p>4KB 块、4 字节指针。计算直接（12 个）、单间接、双间接、三间接各能覆盖的最大文件大小。</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">直接：12 × 4KB = <strong>48KB</strong>。单间接：1024 × 4KB = <strong>4MB</strong>。双间接：1024² × 4KB = <strong>4GB</strong>。三间接：1024³ × 4KB = <strong>4TB</strong>。<strong>合计 ≈ 4TB + 4GB + 4MB + 48KB。</strong></div></div></details></div>
+
+<div class="problem"><div class="ptitle">P2 · 崩溃场景分析 <span class="plevel l2">L2</span></div><div class="pbody"><p>(a) 删除一个文件的磁盘更新包括哪些块？(b) 如果先删目录项再释放 inode，中间断电 → 有什么问题？(c) 如果先释放 inode 再删目录项呢？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) 更新目录数据块（移除 name→inode 条目）、更新 inode bitmap（标记释放）、(可选) 更新数据 bitmap（释放数据块）、(可选) 更新 inode（link count--，如果为 0 才真正释放）。</div><div class="step">(b) 目录项先删 → 目录里没有文件了 → 但 inode 还标记为使用中 → <strong>空间泄漏</strong>（inode 和数据块被标记占用但无文件指向它——永远无法再被使用）。</div><div class="step">(c) inode 先释放 → 新文件可能被分配到这个 inode → 但目录项还指向这个 inode → <strong>旧路径指向新文件</strong>（安全灾难）。</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P3 · COW vs 日志 <span class="plevel l3">L3</span></div><div class="pbody"><p>考虑一个数据库的随机读写负载（1000 次/s 随机 4KB 写）。分别分析日志文件系统和 COW 文件系统的：写放大倍数、碎片化趋势、snapshot 开销。</p></div></div>
+
+<div class="primary-source"><h3>📖 延伸阅读</h3><ul>
+  <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf">Ch 39 (Files & Directories)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf">Ch 40 (File System Implementation)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-ffs.pdf">Ch 41 (FFS)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf">Ch 42 (Crash Consistency: Journaling)</a></li>
+  <li><strong>xv6</strong>：<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/fs.c">kernel/fs.c</a> — inode、directory、block allocator</li>
+</ul></div>
+
+<div class="reminder"><h3>🔄 间隔复习</h3><ul><li><strong>24h</strong>：多级索引——12 直接 + 3 间接 = 覆盖多大文件？</li><li><strong>72h</strong>：硬链接为什么 `rm` 删的是链接不是文件？（link count）</li><li><strong>7d</strong>：崩溃一致性——新创文件涉及哪四个更新？断电在各步之间各有什么后果？</li></ul></div>
+
+<div class="lesson-footer"><p><a href="../index.html">🏠</a> · <a href="./0006-monitors-deadlock.html">← 0006</a> · <a href="./0008-io-raid.html">0008 I/O·RAID →</a></p><p>基石：0001 §2.3（I/O 幻象）· 范式 #1（inode 间接层）· #3（COW）· #4（日志批处理）</p></div>
+<script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>操作系统 · OS Course</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Serif 4', Georgia, 'Noto Serif CJK SC', serif; font-size: 18px; line-height: 1.7; color: #1a1a1a; background: #fdfdfb; max-width: 760px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+  h1 { font-size: 2.6rem; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  .subtitle { color: #999; font-size: 1rem; margin-bottom: 3rem; font-family: 'Inter', sans-serif; }
+  .track { background: #fafaf8; border: 1px solid #e8e8e0; border-radius: 8px; padding: 1.8rem 2rem; margin-bottom: 1.5rem; transition: border-color 0.2s, box-shadow 0.2s; }
+  .track:hover { border-color: #5577aa; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .track-header { display: flex; align-items: baseline; gap: 0.8rem; margin-bottom: 0.5rem; }
+  .track-icon { font-size: 1.6rem; }
+  .track-name { font-size: 1.35rem; font-weight: 700; color: #222; }
+  .track-desc { color: #666; font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .track-meta { font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #aaa; }
+  .lesson-list { margin-top: 1.5rem; }
+  .lesson-item { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.4rem; font-size: 0.92rem; }
+  .lesson-num { font-family: 'Inter', sans-serif; font-weight: 600; color: #5577aa; min-width: 2.8rem; }
+  .lesson-item a { color: #2c2c2c; text-decoration: none; }
+  .lesson-item a:hover { text-decoration: underline; color: #5577aa; }
+  .lesson-item .en { color: #aaa; font-size: 0.82rem; margin-left: 0.3rem; }
+  .phase-title { font-size: 0.85rem; font-weight: 600; color: #999; margin: 1rem 0 0.3rem; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+</style>
+</head>
+<body>
+
+<h1>💻 操作系统</h1>
+<p class="subtitle">从三条幻象到一次 read() 的完整代码路径——机制·并发·持久化·安全</p>
+
+<div class="track">
+  <div class="track-header">
+    <span class="track-icon">📘</span>
+    <span class="track-name">操作系统：机制与设计哲学</span>
+  </div>
+  <div class="track-desc">以 OSTEP 为主线，xv6 为代码验证，六大概述范式贯穿全书。从"进程是 CPU 的幻象"到"一次 read() 从用户态到 DMA 的完整追踪"。中文教学，关键术语保留英文。</div>
+  <div class="track-meta">9 课 · 约 7.5 小时总阅读量</div>
+
+  <div class="lesson-list">
+    <div class="phase-title">Hub · 公理集</div>
+    <div class="lesson-item"><span class="lesson-num">0001</span><a href="./lessons/0001-os-as-virtual-machine.html">操作系统作为虚拟机器</a><span class="en">三条幻象·机制/策略分离·保护模型·六大范式</span></div>
+
+    <div class="phase-title">阶段一 · CPU 虚拟化</div>
+    <div class="lesson-item"><span class="lesson-num">0002</span><a href="./lessons/0002-processes.html">进程与 CPU 调度</a><span class="en">PCB·状态机·上下文切换·FIFO→MLFQ→CFS</span></div>
+
+    <div class="phase-title">阶段二 · 内存虚拟化</div>
+    <div class="lesson-item"><span class="lesson-num">0003</span><a href="./lessons/0003-address-translation.html">地址翻译与分页</a><span class="en">基址-界限→分段→分页·TLB·四级页表</span></div>
+    <div class="lesson-item"><span class="lesson-num">0004</span><a href="./lessons/0004-page-replacement.html">页替换与完整内存系统</a><span class="en">按需调页·Clock算法·抖动·COW·swap·mmap</span></div>
+
+    <div class="phase-title">阶段三 · 并发</div>
+    <div class="lesson-item"><span class="lesson-num">0005</span><a href="./lessons/0005-threads-locks.html">线程·锁·信号量</a><span class="en">竞态条件·自旋锁→mutex·CAS·生产者-消费者</span></div>
+    <div class="lesson-item"><span class="lesson-num">0006</span><a href="./lessons/0006-monitors-deadlock.html">管程·死锁·无锁</a><span class="en">条件变量·四条件·银行家·无锁栈·RCU</span></div>
+
+    <div class="phase-title">阶段四 · 持久化</div>
+    <div class="lesson-item"><span class="lesson-num">0007</span><a href="./lessons/0007-filesystem.html">文件系统：inode→日志→COW</a><span class="en">多级索引·硬链接·FFS·崩溃一致性·ext4·ZFS</span></div>
+    <div class="lesson-item"><span class="lesson-num">0008</span><a href="./lessons/0008-io-raid.html">I/O 子系统与存储层次</a><span class="en">中断·DMA·I/O调度·RAID 0→6·速度谱</span></div>
+
+    <div class="phase-title">阶段五 · 系统纵深</div>
+    <div class="lesson-item"><span class="lesson-num">0009</span><a href="./lessons/0009-vm-containers-security.html">虚拟机·容器·安全·Linux 深潜</a><span class="en">Hypervisor·namespaces/cgroups·ROP→CFI·一次 read() 完整追踪</span></div>
+  </div>
+</div>
+
+<div class="track" style="border-color:#d4a574;">
+  <div class="track-header"><span class="track-icon">🧭</span><span class="track-name">参考文档</span></div>
+  <div class="track-desc">六大概述范式卡片 · 核心数据结构速查</div>
+  <div class="lesson-list">
+    <div class="lesson-item"><span class="lesson-num">📋</span><a href="./reference/paradigm-cards.html">六大范式速查卡</a><span class="en">间接·缓存·惰性·批处理·机制/策略分离·HW-SW协同</span></div>
+    <div class="lesson-item"><span class="lesson-num">🗂</span><a href="./reference/data-structures.html">核心数据结构速查</a><span class="en">task_struct·mm_struct·inode·PTE·files_struct</span></div>
+  </div>
+</div>
+
+<div class="track" style="border-color:#e09f3e; background:#fffdf5;">
+  <div class="track-header"><span class="track-icon">📖</span><span class="track-name">课程文件</span></div>
+  <div class="lesson-list">
+    <div class="lesson-item"><span class="lesson-num">🎯</span><a href="./MISSION.md">MISSION.md</a><span class="en">课程使命——Why·Success·Constraints·Out of scope</span></div>
+    <div class="lesson-item"><span class="lesson-num">📝</span><a href="./NOTES.md">NOTES.md</a><span class="en">课程路线图·用户偏好·教学节奏</span></div>
+    <div class="lesson-item"><span class="lesson-num">📚</span><a href="./RESOURCES.md">RESOURCES.md</a><span class="en">教材·补充资源·社区</span></div>
+  </div>
+</div>
+
+</body>
+</html>

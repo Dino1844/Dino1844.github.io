@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>核心数据结构速查 · OS Course</title>
+<style>
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; font-size: 16px; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; } .subtitle { color: var(--muted); margin-bottom: 2rem; }
+  .ds { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .ds h2 { font-size: 1.15rem; color: #1a1a1a; margin-bottom: 0.2rem; }
+  .ds .alias { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.5rem; }
+  .ds .role { font-weight: 600; margin-bottom: 0.6rem; }
+  .ds table { border-collapse: collapse; width: 100%; font-size: 0.88rem; margin: 0.5rem 0; }
+  .ds th { text-align: left; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--border); color: var(--accent); }
+  .ds td { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ds .lesson-ref { font-size: 0.8rem; color: var(--accent); margin-top: 0.5rem; }
+  code { background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 2px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.88em; }
+  @media print { body { font-size: 11px; } .ds { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<h1>🗂 核心数据结构速查</h1>
+<p class="subtitle">OS 中反复出现的结构体——它们在内存中的组织方式决定了所有机制的行为。每个结构体的关键字段 + 指针关系 + 对应课次。</p>
+
+<div class="ds">
+  <h2>task_struct · 进程控制块</h2>
+  <div class="alias">PCB · Process Descriptor · include/linux/sched.h</div>
+  <div class="role">一个进程的全部存在状态——不在 CPU 上跑时的"灵魂容器"。</div>
+  <table>
+    <tr><th style="width:6rem;">类别</th><th>关键字段</th><th>指向什么</th><th>课</th></tr>
+    <tr><td>CPU状态</td><td><code>thread_struct</code></td><td>寄存器快照（上下文切换保存/恢复）</td><td>0002</td></tr>
+    <tr><td>状态</td><td><code>state</code>, <code>prio</code></td><td>TASK_RUNNING/INTERRUPTIBLE/UNINTERRUPTIBLE/ZOMBIE</td><td>0002</td></tr>
+    <tr><td>内存</td><td><code>mm_struct *mm</code></td><td>页表根(pgd) + VMA链表(mmap)</td><td>0003</td></tr>
+    <tr><td>文件</td><td><code>files_struct *files</code></td><td>打开文件表(fdtable) → file结构数组</td><td>0007</td></tr>
+    <tr><td>调度</td><td><code>sched_entity se</code></td><td>vruntime + 红黑树节点</td><td>0002</td></tr>
+    <tr><td>关系</td><td><code>parent</code>, <code>children</code></td><td>进程树（父→子链表）</td><td>0002</td></tr>
+    <tr><td>身份</td><td><code>pid</code>, <code>tgid</code>, <code>cred</code></td><td>PID namespace里看到的pid; capability</td><td>0009</td></tr>
+  </table>
+  <div class="lesson-ref">主要课次：0002, 0009</div>
+</div>
+
+<div class="ds">
+  <h2>mm_struct · 内存描述符</h2>
+  <div class="alias">Memory Descriptor · include/linux/mm_types.h</div>
+  <div class="role">一个进程的完整地址空间描述——从"虚拟地址→物理地址"的根页表到"哪些区域已映射"的VMA链表。</div>
+  <table>
+    <tr><th>字段</th><th>指向什么</th><th>课</th></tr>
+    <tr><td><code>pgd_t *pgd</code></td><td>四级页表根（PGD）——写入CR3的值</td><td>0003</td></tr>
+    <tr><td><code>vm_area_struct *mmap</code></td><td>VMA链表头——每个节点描述一个已映射区域</td><td>0004</td></tr>
+    <tr><td><code>rb_root mm_rb</code></td><td>红黑树索引VMA——快速查找VA所属VMA</td><td>0004</td></tr>
+    <tr><td><code>start_code</code>, <code>end_code</code></td><td>代码段边界</td><td>0003</td></tr>
+    <tr><td><code>start_stack</code></td><td>栈起始地址</td><td>0003</td></tr>
+    <tr><td><code>total_vm</code></td><td>总虚拟页数</td><td>0004</td></tr>
+  </table>
+  <div class="lesson-ref">主要课次：0003, 0004</div>
+</div>
+
+<div class="ds">
+  <h2>PTE · 页表项</h2>
+  <div class="alias">Page Table Entry · 64-bit (x86-64)</div>
+  <div class="role">一个PTE把一个虚拟页映射到一个物理帧——每个bit控制硬件行为。</div>
+  <table>
+    <tr><th>Bit</th><th>名称</th><th>语义</th><th>课</th></tr>
+    <tr><td>0</td><td>P (Present)</td><td>0→缺页·1→页在内存</td><td>0003,0004</td></tr>
+    <tr><td>1</td><td>R/W</td><td>0→只读·1→可写·COW用此bit</td><td>0003,0004</td></tr>
+    <tr><td>2</td><td>U/S</td><td>0→仅内核可访·1→用户可访</td><td>0003</td></tr>
+    <tr><td>5</td><td>A (Accessed)</td><td>硬件自动置1—页替换判断热度</td><td>0004</td></tr>
+    <tr><td>6</td><td>D (Dirty)</td><td>被写过—换出须写回磁盘</td><td>0004</td></tr>
+    <tr><td>8</td><td>G (Global)</td><td>CR3写时不刷TLB—内核页用</td><td>0003</td></tr>
+    <tr><td>63</td><td>XD (NX)</td><td>禁止执行—DEP的硬件基础</td><td>0003,0009</td></tr>
+  </table>
+  <div class="lesson-ref">主要课次：0003, 0004, 0009</div>
+</div>
+
+<div class="ds">
+  <h2>inode · 索引节点</h2>
+  <div class="alias">Index Node · include/linux/fs.h</div>
+  <div class="role">一个文件的一切元数据——除了文件名。</div>
+  <table>
+    <tr><th>字段</th><th>含义</th><th>课</th></tr>
+    <tr><td><code>i_mode</code></td><td>文件类型+权限(rwx)</td><td>0007</td></tr>
+    <tr><td><code>i_uid</code>, <code>i_gid</code></td><td>所有者</td><td>0007</td></tr>
+    <tr><td><code>i_size</code></td><td>文件大小(字节)</td><td>0007</td></tr>
+    <tr><td><code>i_blocks</code></td><td>占用的512B扇区数</td><td>0007</td></tr>
+    <tr><td><code>i_block[15]</code></td><td>12直接+1间接+1双间接+1三间接</td><td>0007</td></tr>
+    <tr><td><code>i_nlink</code></td><td>硬链接计数—0则删除</td><td>0007</td></tr>
+    <tr><td><code>i_atime/mtime/ctime</code></td><td>访问/修改/状态变更时间</td><td>0007</td></tr>
+  </table>
+  <div class="lesson-ref">主要课次：0007</div>
+</div>
+
+<div class="ds">
+  <h2>files_struct + file · 打开文件</h2>
+  <div class="alias">Open File Table · include/linux/fdtable.h</div>
+  <div class="role">fd→file→inode的翻译链——"fd=3是什么意思"的答案。</div>
+  <table>
+    <tr><th>结构</th><th>关键字段</th><th>语义</th><th>课</th></tr>
+    <tr><td><code>files_struct</code></td><td><code>fdtable fdtab</code></td><td>fd数组—fd是下标</td><td>0007</td></tr>
+    <tr><td><code>file</code></td><td><code>f_inode</code></td><td>指向文件的inode</td><td>0007</td></tr>
+    <tr><td><code>file</code></td><td><code>f_pos</code></td><td>当前读/写位置(lseek改这个)</td><td>0007</td></tr>
+    <tr><td><code>file</code></td><td><code>f_op</code></td><td>函数指针表(read/write/llseek)</td><td>0007</td></tr>
+    <tr><td><code>file</code></td><td><code>f_mode</code></td><td>O_RDONLY/O_WRONLY/O_RDWR</td><td>0007</td></tr>
+  </table>
+  <div class="lesson-ref">主要课次：0007, 0009</div>
+</div>
+
+<p style="margin-top:2rem; font-size:0.85rem; color:var(--muted);">这些结构体是前8课机制的具体化。建议在纸上画出它们之间的指针关系——可视化之后记忆深得多。</p>
+
+</body>
+</html>
