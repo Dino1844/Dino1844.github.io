@@ -171,7 +171,8 @@ window.MathJax = {
   <a href="#s4">4. 解的几何：正交投影</a><br>
   <a href="#s5">5. 解的代价：σ² 被低估，过拟合</a><br>
   <a href="#s6">6. 解的意义：MLE 即最小化 KL 散度</a><br>
-  <a href="#s7">7. 自测</a>
+  <a href="#s7">7. 推广：指数族与 GLM——一个假设统一所有损失</a><br>
+  <a href="#s8">8. 推导与自测</a>
 </div>
 
 <p>
@@ -610,7 +611,81 @@ window.MathJax = {
 <p>方向不能反：是 $\mathrm{KL}(\widehat{p}_{\text{data}}\|p_{\mathbf{w}})$，不是 $\mathrm{KL}(p_{\mathbf{w}}\|\widehat{p}_{\text{data}})$。反向要求 $\widehat{p}_{\text{data}}$ 处处非零，但经验分布是离散的、对连续数据无意义。这就是为什么分类用前向 KL（交叉熵）而非反向——前向 KL 对"模型没给数据足够概率"施重罚，正是我们想要的。</p>
 
 <!-- ============================================================ -->
-<h2 id="s7">7. 推导与自测</h2>
+<h2 id="s7">7. 推广：指数族与 GLM——一个假设统一所有损失</h2>
+
+<p>
+  到此为止只讲了一种噪声：高斯。但回头看 §1 那句"<strong>换噪声分布就换一切</strong>"——
+  它指向一个更大的结构。把高斯、Bernoulli、Poisson、指数、Gamma……这些看似不相干的分布
+  写成<strong>同一种形式</strong>，损失、激活函数、方差就全部从这一个形式里掉出来。
+  这就是<strong>指数族</strong>（exponential family），而"<strong>广义线性模型</strong>"（GLM）是它配上线性自然参数假设的产物。
+</p>
+
+<div class="concept-card">
+  <div class="cc-header">
+    <span class="cc-tag" style="background:#7a4a8b;">指数族</span>
+    <h3>指数族 · Exponential Family</h3>
+    <span class="cc-aliases">统一参数化 · 自然参数</span>
+  </div>
+  <div class="cc-essence">
+    <strong>数学本质：</strong>能写成 $p(y\mid\eta)=h(y)\exp\!\big(\eta\,T(y)-A(\eta)\big)$ 的分布构成一个族。
+    $\eta$ 叫<strong>自然参数</strong>，$T(y)$ 叫<strong>充分统计量</strong>，$A(\eta)$ 叫<strong>对数配分函数</strong>（保证归一化）。
+  </div>
+  <div class="cc-section">
+    <h4>三个成员对照</h4>
+    <table style="font-size:0.88rem;">
+      <tr><th>分布</th><th>自然参数 $\eta$</th><th>$A(\eta)$</th><th>均值 $\mu=A'(\eta)$</th></tr>
+      <tr><td>高斯（$\sigma^2$ 固定）</td><td>$w/\sigma^2$</td><td>$\eta^2\sigma^2/2$</td><td>$\eta\sigma^2$</td></tr>
+      <tr><td>Bernoulli</td><td>$\log\frac{\phi}{1-\phi}$</td><td>$\log(1+e^\eta)$</td><td>$\sigma(\eta)$（sigmoid）</td></tr>
+      <tr><td>Poisson</td><td>$\log\lambda$</td><td>$e^\eta$</td><td>$e^\eta$</td></tr>
+    </table>
+  </div>
+  <div class="cc-section">
+    <h4>为什么这个形式重要</h4>
+    <ul>
+      <li><strong>均值 = $A'(\eta)$，方差 = $A''(\eta)$。</strong>对 $A$ 求导就拿到均值和方差——一个函数编码了分布的矩。</li>
+      <li><strong>MLE 即矩匹配。</strong>令 $\eta$ 线性依赖输入 $\eta=\mathbf{w}^\top\boldsymbol\phi(\mathbf{x})$，对数似然对 $\mathbf{w}$ 求梯度令为零，得 $\boldsymbol\Phi^\top\boldsymbol\mu(\mathbf{w})=\boldsymbol\Phi^\top\mathbf{y}$——<em>模型充分统计量的期望匹配数据的充分统计量</em>。高斯时这就是正规方程。</li>
+      <li><strong>充分统计量维度固定 → 共轭先验存在。</strong>这是 0009 指数族与共轭先验的入口。</li>
+    </ul>
+  </div>
+  <div class="cc-connections">
+    <span class="conn-badge">→ §3: 高斯时退化为正规方程</span>
+    <span class="conn-badge">→ 0004: 逻辑回归 = Bernoulli + 线性 $\eta$</span>
+    <span class="conn-badge">→ 0009: 指数族 + 共轭先验讲到底</span>
+  </div>
+</div>
+
+<p>把 Bernoulli 代进指数族看一遍——这是 Q6 考察的推导，也是逻辑回归的真正起源：</p>
+
+<div class="derivation">
+  <h4>从 Bernoulli 到 sigmoid</h4>
+  <div class="step">
+    $p(y\mid\phi)=\phi^y(1-\phi)^{1-y}=\exp\!\big(y\log\phi+(1-y)\log(1-\phi)\big)$
+    <span class="reason">Bernoulli 写成指数形式</span>
+  </div>
+  <div class="step">
+    $=\exp\!\Big(y\underbrace{\log\frac{\phi}{1-\phi}}_{\eta}+\log(1-\phi)\Big)$
+    <span class="reason">凑出自然参数 $\eta=\log(\phi/(1-\phi))$（logit）</span>
+  </div>
+  <div class="step">
+    反解 $\phi$：$\eta=\log\frac{\phi}{1-\phi}\Rightarrow\phi=\frac{1}{1+e^{-\eta}}=\sigma(\eta)$
+    <span class="reason">logit 的反函数就是 sigmoid</span>
+  </div>
+  <div class="step">
+    配上 GLM 假设 $\eta=\mathbf{w}^\top\boldsymbol\phi(\mathbf{x})$，得 $\mathbb{E}[y\mid\mathbf{x}]=\phi=\sigma(\mathbf{w}^\top\boldsymbol\phi(\mathbf{x}))$
+    <span class="reason">sigmoid 不是设计的，是 Bernoulli + 线性自然参数的必然</span>
+  </div>
+</div>
+
+<div class="insight">
+  <strong>平方损失来自高斯，交叉熵来自 Bernoulli，Poisson 回归来自 Poisson——它们都是同一个模板的实例。</strong>
+  模板就是指数族 + $\eta=\mathbf{w}^\top\boldsymbol\phi(\mathbf{x})$。换分布只换三样东西：损失（$-A(\eta)+\eta T(y)$）、激活函数（$A'(\eta)$ 的反函数）、方差函数（$A''(\eta)$）。
+  这就是 GLM 的"配方"。0004 逻辑回归会把这个配方完整跑一遍（含 IRLS——非线性时的"正规方程"）。
+</div>
+
+<p>本课到此为止。指数族的完整理论（共轭先验、充分统计量、信息几何里 $A(\eta)$ 是势函数、Fisher 度量 $=A''(\eta)$）留给 0009；这里只建立<strong>直觉</strong>：你已经在 §1–§6 见过这个统一结构的第一个成员（高斯），其余成员是同构的。</p>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 推导与自测</h2>
 
 <div class="problem">
   <div class="ptitle">L1 · 从拉普拉斯噪声推出 L1 损失 <span class="plevel l1">L1</span></div>
@@ -747,9 +822,9 @@ window.MathJax = {
 <div class="reminder">
   <h3>💬 有问题？</h3>
   <p style="margin-bottom:0;">
-    这课是一条逻辑链：假设 → 损失 → 解 → 几何 → 代价 → 信息论 → 贝叶斯 → GLM。
+    这课是一条逻辑链：假设 → 损失 → 解 → 几何 → 代价 → 信息论 → 指数族/GLM。
     任一环卡住，整条链就断了——<strong>直接问我</strong>。
-    特别是第 4 节（投影几何）、第 6 节（KL 视角）、第 8 节（GLM），它们是"会算"到"懂为什么"的关键跃迁。
+    特别是第 4 节（投影几何）、第 6 节（KL 视角）、第 7 节（指数族与 GLM），它们是"会算"到"懂为什么"的关键跃迁。
     解释不清楚是我的责任，不是你的。
   </p>
 </div>

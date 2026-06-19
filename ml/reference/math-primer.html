@@ -108,6 +108,13 @@ window.MathJax = {
   <a href="#expectation">· 期望 Expectation</a><br>
   <a href="#variance">· 方差与协方差 Variance &amp; Covariance</a><br>
   <a href="#kl">· KL 散度 KL Divergence</a><br>
+  <a href="#sec-info">信息论</a><br>
+  <a href="#self-info">· 自信息 Self-Information</a><br>
+  <a href="#entropy-info">· 熵 Entropy</a><br>
+  <a href="#cross-entropy">· 交叉熵 Cross-Entropy</a><br>
+  <a href="#kl-decomp">· KL = 交叉熵 − 熵（推导）</a><br>
+  <a href="#cond-entropy">· 条件熵 Conditional Entropy</a><br>
+  <a href="#mutual-info">· 互信息 Mutual Information</a><br>
   <a href="#sec-geom">几何（概念层）</a><br>
   <a href="#metric">· 黎曼度量 Riemannian Metric</a><br>
   <a href="#manifold">· 流形 Manifold</a><br>
@@ -602,6 +609,135 @@ window.MathJax = {
   <p class="used-in">
     KL 二阶展开 = Fisher 度量 (L0019 §3.2)；VAE 的 ELBO (算法卡片·VAE)
   </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec-info">信息论</h2>
+
+<p style="font-size:0.92rem; color:var(--muted); margin-bottom:1rem;">
+  信息论把"信息量"变成可计算的数。核心一条链：<strong>自信息 → 熵 → 交叉熵 → KL</strong>。
+  所有损失函数（平方、交叉熵、对比学习 InfoNCE）都从这条链上长出来。
+</p>
+
+<!-- Self-information -->
+<div class="concept" id="self-info">
+  <span class="tag tag-prob">概率</span>
+  <h4>自信息 Self-Information — $I(x)=-\log p(x)$</h4>
+  <p class="def">一个具体事件 $x$ 发生所携带的"惊讶程度"。概率越低，信息越大。</p>
+  <div class="formula-block">
+    $$I(x) = -\log p(x) \quad (\text{单位：nats，取 }\log_e;\ \text{bits 则取 }\log_2)$$
+  </div>
+  <p class="intuition">
+    为什么是 $-\log p$？三条要求唯一确定这个形式：(1) 越罕见越惊讶 → $p\downarrow$ 时 $I\uparrow$；(2) 必然事件不让人惊讶 → $p=1\Rightarrow I=0$；(3) <strong>独立事件信息可加</strong> → $I(x,y)=I(x)+I(y)$。把乘法变加法的连续函数只有 $\log$。
+  </p>
+  <div class="example">
+    公平骰子掷出 6：$I=-\log_2(1/6)=\log_2 6\approx 2.58$ bits。掷出 1～6 任一个（必然）：$I=-\log_2 1=0$。两次独立掷出 6：$I=2\log_2 6\approx 5.17$ bits（可加）。
+  </div>
+  <p class="used-in">熵、交叉熵、KL 的基本积木</p>
+</div>
+
+<!-- Entropy (info section) -->
+<div class="concept" id="entropy-info">
+  <span class="tag tag-prob">概率</span>
+  <h4>熵 Entropy — $H(p)=\mathbb{E}_p[I(x)]=-\mathbb{E}_p[\log p]$</h4>
+  <p class="def">分布 $p$ 下<strong>自信息的期望</strong>——"平均惊讶程度"，即描述该分布一个样本平均需要多少比特。</p>
+  <div class="formula-block">
+    $$H(p) = -\sum_k p_k \log p_k \quad\text{（离散）};\qquad H(p)=-\int p(x)\log p(x)\,dx \quad\text{（连续，微分熵）}$$
+  </div>
+  <p class="intuition">
+    $H$ 大 = 不确定性高 = 难预测。两点分布 $p=0.5$ 时 $H=\log 2$ 最大（最不确定）；$p=0$ 或 $1$ 时 $H=0$（完全确定）。给定方差时<strong>高斯微分熵最大</strong>——这是 0001 §1 取高斯噪声的"最大熵"理由。
+  </p>
+  <div class="example">
+    公平骰子：$H=-\sum_{k=1}^6 \tfrac16\log_2\tfrac16=\log_2 6\approx 2.58$ bits。偏骰子（六面概率 $0.5,0.1,0.1,0.1,0.1,0.1$）：$H\approx 2.16$ bits &lt; 2.58——偏向降低了不确定性。
+  </div>
+  <p class="used-in"><a href="../lessons/0001-probabilistic-linear-regression.html#s1">0001 §1 最大熵原理</a> · 决策树分裂准则 · 0018 score matching</p>
+</div>
+
+<!-- Cross-entropy -->
+<div class="concept" id="cross-entropy">
+  <span class="tag tag-prob">概率</span>
+  <h4>交叉熵 Cross-Entropy — $H(p,q)=-\mathbb{E}_p[\log q]$</h4>
+  <p class="def">"真实分布是 $p$，但你用 $q$ 的编码方案"时的<strong>平均编码长度</strong>。$q$ 给真实事件 $x$ 的概率越低，$-\log q(x)$ 越大——编码越冗长。</p>
+  <div class="formula-block">
+    $$H(p,q) = -\sum_k p_k \log q_k$$
+  </div>
+  <p class="intuition">
+    注意期望对 $p$ 取（真实分布生成数据），$\log$ 里是 $q$（你的模型）。只有 $q=p$ 时编码最优，此时 $H(p,p)=H(p)$。$q\neq p$ 时 $H(p,q)>H(p)$——用错编码必然多花比特。
+  </p>
+  <div class="example">
+    真实 $p=(0.9,0.1)$，模型 $q=(0.5,0.5)$：$H(p,q)=-0.9\log_2 0.5-0.1\log_2 0.5=1$ bit。而 $H(p)=-0.9\log_2 0.9-0.1\log_2 0.1\approx 0.47$ bit。多花的 $1-0.47=0.53$ bit 就是 KL 散度。
+  </div>
+  <p class="used-in"><a href="../lessons/0009-logistic-regression.html#s2">0009 §2 二分类交叉熵</a> · 深度学习分类损失</p>
+</div>
+
+<!-- KL = Cross-entropy - Entropy (with derivation) -->
+<div class="concept" id="kl-decomp">
+  <span class="tag tag-prob">概率</span>
+  <h4>KL = 交叉熵 − 熵（完整推导）</h4>
+  <p class="def">核心恒等式：$D_{\text{KL}}(p\|q)=H(p,q)-H(p)\geq 0$。下面从定义一步步推。</p>
+
+  <h4 style="margin-top:0.8rem;">起点：KL 的定义</h4>
+  <div class="formula-block">
+    $$D_{\text{KL}}(p\|q) = \mathbb{E}_{p}\!\left[\log\frac{p(x)}{q(x)}\right] = \sum_k p_k \log\frac{p_k}{q_k}$$
+  </div>
+
+  <h4>第一步：把 $\log\frac{p}{q}$ 拆成 $\log p - \log q$</h4>
+  <div class="formula-block">
+    $$D_{\text{KL}}(p\|q) = \sum_k p_k \big(\log p_k - \log q_k\big) = \sum_k p_k \log p_k - \sum_k p_k \log q_k$$
+  </div>
+  <p class="intuition">$\log$ 把商变差。期望是线性的，可以拆成两项分别求和。</p>
+
+  <h4>第二步：认出两项各是什么</h4>
+  <ul style="font-size:0.92rem; margin:0.5rem 0;">
+    <li>第二项 $-\sum_k p_k\log q_k$ 正是<strong>交叉熵</strong> $H(p,q)$（定义里本就带负号）。</li>
+    <li>第一项 $\sum_k p_k\log p_k$ 前面加个负号就是熵：$\sum_k p_k\log p_k = -H(p)$。</li>
+  </ul>
+
+  <h4>第三步：代回去</h4>
+  <div class="formula-block">
+    $$\boxed{\;D_{\text{KL}}(p\|q) = \underbrace{-\sum_k p_k\log q_k}_{H(p,q)} \;-\; \underbrace{\Big(-\sum_k p_k\log p_k\Big)}_{H(p)} = H(p,q) - H(p)\;}$$
+  </div>
+
+  <h4>第四步：为什么 $\geq 0$（Gibbs 不等式）</h4>
+  <p style="font-size:0.92rem;">用 $-\log t \geq 1-t$（$\log$ 的切线，凸性，等号在 $t=1$）：</p>
+  <div class="formula-block">
+    $$D_{\text{KL}}(p\|q)=\sum_k p_k\log\frac{p_k}{q_k}=-\sum_k p_k\log\frac{q_k}{p_k}\;\geq\;-\sum_k p_k\Big(1-\frac{q_k}{p_k}\Big)=-\sum_k p_k+\sum_k q_k = -1+1=0$$
+  </div>
+  <p class="intuition">等号成立当且仅当 $q_k/p_k=1$ 即 $p=q$ 处处。所以 KL 是两个分布差距的"距离"——虽非对称、不满足三角不等式，但非负且只在相等时为零。</p>
+
+  <h4 style="margin-top:0.8rem;">关键推论：为什么训练只优化交叉熵</h4>
+  <p style="font-size:0.92rem;">
+    当真实分布 $p=\widehat{p}_{\text{data}}$ 固定（数据集给定），$H(p)$ 是与模型 $q$ 无关的常数。于是
+    $$\arg\min_q D_{\text{KL}}(p\|q)=\arg\min_q H(p,q)$$
+    <strong>最小化 KL ⟺ 最小化交叉熵 ⟺ 最大化似然</strong>（0001 §6）。这就是深度学习用交叉熵损失而非直接用 KL 的原因——少算一个常数项，结果一样。
+  </p>
+  <p class="used-in"><a href="../lessons/0001-probabilistic-linear-regression.html#s6">0001 §6 MLE=min KL</a> · <a href="../lessons/0010-mixture-models-em.html#s4">0010 §4 ELBO</a> · <a href="../lessons/0015-variational-inference.html#s2">0015 §2</a></p>
+</div>
+
+<!-- Conditional entropy -->
+<div class="concept" id="cond-entropy">
+  <span class="tag tag-prob">概率</span>
+  <h4>条件熵 Conditional Entropy — $H(Y\mid X)$</h4>
+  <p class="def">已知 $X$ 后 $Y$ 还剩多少不确定性：$H(Y\mid X)=\mathbb{E}_{x}\big[H(Y\mid X=x)\big]$。</p>
+  <div class="formula-block">
+    $$H(Y\mid X) = -\sum_x p(x)\sum_y p(y\mid x)\log p(y\mid x) = H(X,Y)-H(X)$$
+  </div>
+  <p class="intuition">信息永远不增：知道更多只会减少不确定性，$H(Y\mid X)\leq H(Y)$。差值 $H(Y)-H(Y\mid X)$ 就是 $X$ 提供关于 $Y$ 的信息量——互信息。</p>
+  <div class="example">链式法则：$H(X,Y)=H(X)+H(Y\mid X)$。先编码 $X$（花 $H(X)$），再在已知 $X$ 下编码 $Y$（花 $H(Y\mid X)$）。</div>
+  <p class="used-in">决策树（信息增益 = 互信息）· 0010 EM 的隐变量</p>
+</div>
+
+<!-- Mutual information -->
+<div class="concept" id="mutual-info">
+  <span class="tag tag-prob">概率</span>
+  <h4>互信息 Mutual Information — $I(X;Y)$</h4>
+  <p class="def">$X$ 和 $Y$ 互相提供的信息量。三种等价形式：</p>
+  <div class="formula-block">
+    $$I(X;Y)=H(Y)-H(Y\mid X)=H(X)-H(X\mid Y)=D_{\text{KL}}\big(p(x,y)\,\|\,p(x)p(y)\big)\geq 0$$
+  </div>
+  <p class="intuition">第三种形式最透：$I(X;Y)$ 是"<strong>联合分布</strong>"与"<strong>假设独立时的乘积分布</strong>"的 KL 散度。$X,Y$ 独立 ⟺ 联合=乘积 ⟺ $I=0$。互信息直接量度"偏离独立多远"——比相关系数强，能抓住非线性依赖。</p>
+  <div class="example">决策树分裂选最大信息增益的特征 = 选让 $H(Y\mid X)$ 最小 = 选与 $Y$ 互信息最大的 $X$。InfoNCE 对比学习损失是互信息的下界估计。</div>
+  <p class="used-in">决策树 · 特征选择 · 对比学习 InfoNCE · 0019 信息几何</p>
 </div>
 
 <!-- ============================================================ -->
