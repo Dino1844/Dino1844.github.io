@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0008 · 柏拉图 vs 韩非子</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --text-light: #5c5c5c;
+    --accent: #8b4513; --accent-dim: #a0522d; --border: #d4c5b2; --card-bg: #f8f5f0;
+    --history: #8b4513; --economics: #2d6a4f; --politics: #1a659e; --philosophy: #7b2d8b;
+    --highlight: #fef3c7; --correct: #2d6a4f; --incorrect: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Serif SC', 'SimSun', serif; background: var(--bg); color: var(--text); line-height: 1.85; max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 1.02rem; }
+  h1 { font-size: 1.8rem; font-weight: 700; margin: 2rem 0 0.6rem; letter-spacing: 0.02em; line-height: 1.3; }
+  h2 { font-size: 1.25rem; font-weight: 600; margin: 2.6rem 0 0.7rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+  p { margin: 0.9rem 0; } li { margin: 0.4rem 0; }
+  a { color: var(--accent-dim); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); } strong { font-weight: 600; }
+  .meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-light); margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .meta .tag { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 3px; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; color: white; }
+  .meta .synthesis-badge { background: var(--accent); color: white; padding: 0.15rem 0.55rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; }
+  .tag-history { background: var(--history); } .tag-economics { background: var(--economics); } .tag-politics { background: var(--politics); } .tag-philosophy { background: var(--philosophy); }
+  .hook { background: var(--highlight); border-left: 4px solid var(--accent); padding: 1.3rem 1.5rem; margin: 1.5rem 0; font-size: 1.02rem; border-radius: 0 6px 6px 0; }
+  blockquote { border-left: 3px solid var(--border); padding: 0.6rem 1.2rem; margin: 1.2rem 0; color: var(--text-light); background: var(--card-bg); border-radius: 0 4px 4px 0; font-size: 0.96rem; }
+  blockquote.important { border-left-color: var(--accent); background: var(--highlight); color: var(--text); }
+  table { width: 100%; border-collapse: collapse; margin: 1.3rem 0; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; font-size: 0.82rem; letter-spacing: 0.03em; color: var(--text-light); }
+  tr:hover td { background: #fef9f0; }
+  .thinker-card { background: var(--card-bg); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; border-top: 3px solid var(--philosophy); }
+  .thinker-card .tk-label { font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--philosophy); margin-bottom: 0.3rem; }
+  .thinker-card h3 { margin-top: 0; }
+  .concept-box { border: 2px solid var(--accent); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 2rem 0; background: var(--card-bg); }
+  .concept-box .concept-name { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem; }
+  .concept-box h3 { margin-top: 0; }
+  .quiz-section { margin: 2rem 0; }
+  .quiz-question { background: var(--card-bg); border-radius: 6px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; }
+  .quiz-question .q-num { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.3rem; }
+  .quiz-question .q-text { font-weight: 600; margin-bottom: 0.9rem; font-size: 1.02rem; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz-option { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; transition: background 0.12s, border-color 0.12s; font-size: 0.93rem; }
+  .quiz-option:hover { background: #fdf5e8; }
+  .quiz-option.selected { border-color: var(--accent); background: var(--highlight); }
+  .quiz-option.correct { border-color: var(--correct) !important; background: #e8f5e9 !important; }
+  .quiz-option.incorrect { border-color: var(--incorrect) !important; background: #fdecea !important; }
+  .quiz-feedback { margin-top: 0.7rem; font-size: 0.9rem; display: none; padding: 0.7rem 0.9rem; border-radius: 4px; line-height: 1.7; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.fb-correct { background: #e8f5e9; color: #1b5e20; }
+  .quiz-feedback.fb-incorrect { background: #fdecea; color: #b71c1c; }
+  .exercise { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .exercise h3 { margin-top: 0; }
+  .exercise textarea { width: 100%; min-height: 110px; margin: 0.8rem 0; padding: 0.6rem; font-family: inherit; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px; background: white; resize: vertical; line-height: 1.7; }
+  .exercise .hint { font-size: 0.84rem; color: var(--text-light); font-style: italic; }
+  .lesson-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.87rem; color: var(--text-light); }
+  .lesson-footer .links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
+  .lens-header { display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+  .lens-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  @media (max-width: 600px) { body { padding: 1.5rem 1rem 4rem; font-size: 0.98rem; } h1 { font-size: 1.4rem; } }
+  @media print { body { max-width: 100%; padding: 1rem; font-size: 10pt; } }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <span>📅 Lesson 0008 · L8</span>
+  <span>⏱ ~30 分钟</span>
+  <span><span class="synthesis-badge">PHASE 2 综合</span></span>
+  <span><span class="tag tag-philosophy">哲学</span> <span class="tag tag-politics">政治</span> <span class="tag tag-history">历史</span></span>
+  <span>🔗 <a href="../reference/glossary.html">术语表</a></span>
+</div>
+
+<h1>柏拉图 vs 韩非子</h1>
+<p style="font-size:1.05rem;color:var(--text-light);margin-top:-0.2rem;">
+  两种「好国家」的回答——以及 Phase 2 的综汇：轴心突破的政治哲学分化
+</p>
+
+<div class="hook">
+  <strong>两个看似相似的敌人。</strong>柏拉图（前 428–348）和韩非子（约前 280–233）相隔百年、相距万里、互不知晓。但他们对民主/民众政治的厌恶惊人地相似：<br><br>
+
+  柏拉图：民主是「不必要的欲望」主导的混乱，必然滑向僭主；统治需要专门知识，应交给「哲人王」。<br>
+  韩非子：民智不可用，「民固服于势」；统治靠法术势，无需道德说教，交给掌握赏罚之柄的君主。<br><br>
+
+  两人都反民主、都精英主义、都把统治视为需要专门能力的事业、都认为坏政体败坏人。<strong>从这些相似看，他们几乎是同一类型的思想家。</strong><br><br>
+
+  但他们的<strong>根本差异</strong>更深：柏拉图的「好国家」以<strong>理念/德性/教育</strong>为核心，是规范性建构；韩非子的「好国家」以<strong>法术势/赏罚/制度</strong>为核心，是工具性技术。柏拉图要培养哲人王，韩非子要设计制度使中常之君也能高效统治。柏拉图谈「应当」，韩非子谈「如何」。<br><br>
+
+  <em>这个差异不是个人偏好——它反映两个轴心文明（L5）的不同制度化路径（L6/L7），并预示了西方承柏拉图、中华承韩非子（作为「里」）的长程分化。本课是 Phase 2 的综汇：把 L5–L7 的轴心突破分析收束于两个文本的并置比较。</em>
+</div>
+
+<!-- ====== PART 1: PLATO ====== -->
+<h2>1. 柏拉图《理想国》：哲人王与理念国</h2>
+
+<div class="thinker-card">
+  <div class="tk-label">核心问题</div>
+  <h3>正义是什么？什么样的城邦能实现正义？</h3>
+  <p>《理想国》（Politeia，约前 375）以「什么是正义」开篇，但迅速从个人正义扩展到<strong>城邦正义</strong>——柏拉图的洞见是：城邦是个人灵魂的「放大版」，正义在城邦和个人灵魂中结构相同。这是 L6 讲过的「政体-灵魂对应」的奠基性表述。</p>
+</div>
+
+<h3>灵魂三分与城邦三分</h3>
+
+<p>柏拉图论证灵魂分为三部分，对应城邦三个阶层：</p>
+
+<table>
+  <tr><th>灵魂部分</th><th>德性</th><th>城邦阶层</th><th>职能</th></tr>
+  <tr><td>理性 (logistikon)</td><td>智慧</td><td>哲人王</td><td>统治</td></tr>
+  <tr><td>激情 (thumos)</td><td>勇敢</td><td>护卫者（武士）</td><td>保卫</td></tr>
+  <tr><td>欲望 (epithumia)</td><td>节制</td><td>生产者</td><td>生产</td></tr>
+</table>
+
+<p>正义就是<strong>各部分各司其职、互不僭越</strong>——灵魂中理性统治欲望，城邦中哲人王统治生产者。这个「各司其职」的正义观深刻而争议：它把正义定义为<strong>一种秩序状态</strong>而非（如现代）一种分配规则或程序公平。在这个框架下，民主（让欲望部分统治）本质上是不正义——因为它违反了灵魂和城邦的正确秩序。</p>
+
+<h3>哲人王论证</h3>
+
+<p>柏拉图最著名的政治主张——「除非哲人成为王，或王成为哲人，城邦的灾难不会停止」。论证逻辑：</p>
+<ol>
+  <li><strong>统治需要 epistēmē（真知）：</strong>治国如航海、治病，需要关于「善的理念」的真正知识，而非意见（doxa）。</li>
+  <li><strong>只有哲人有 epistēmē：</strong>经洞穴比喻论证，只有走出洞穴见到理念世界的哲人才能认识真正的善，其他人只见影子。</li>
+  <li><strong>因此只有哲人能正当统治：</strong>统治的资格来自知识，而非血统、财富或人数。</li>
+</ol>
+
+<p>这个论证是<strong>彻底反民主</strong>的——它把政治权威建立在<strong>知识差异</strong>上，且这种差异是哲学性的、不可通过教育或选举弥合的（普通人永远在洞穴中）。柏拉图把 L4 的规范性权力推到极致：统治的正当性来自对「善」的真知，这是一种纯粹的规范基础。</p>
+
+<h3>政体衰败序列</h3>
+
+<p>《理想国》第八卷给出政体衰败的动力学——每种政体包含自身衰败的种子：</p>
+<ol>
+  <li><strong>哲人王政体（理想）</strong>→ 贵族政体（次优）</li>
+  <li>→ <strong>荣誉政体</strong>（timocracy，尚武争荣，理性退、激情长）</li>
+  <li>→ <strong>寡头政体</strong>（爱财，激情退、欲望长，贫富分化）</li>
+  <li>→ <strong>民主政体</strong>（一切欲望平等，无序自由）</li>
+  <li>→ <strong>僭主政体</strong>（民主的混乱中渴望强人，强人成僭主）</li>
+</ol>
+
+<p>衰败的机制是<strong>灵魂类型的退化</strong>——每一政体培养一种灵魂类型，而这种灵魂类型的内在缺陷使政体滑向下一阶段。这是 L6 讲过的「民主→僭主」论证的完整序列。注意衰败是<strong>单向的</strong>——一旦退化难以恢复，除非通过哲人教育的彻底重塑。</p>
+
+<h3>柏拉图方案的内在张力</h3>
+
+<p>《理想国》是规范性建构，但它有几个深刻的内在张力，这些张力不是疏漏而是柏拉图主动暴露的：</p>
+<ul>
+  <li><strong>哲人王的教育几乎不可能：</strong>需数十年严格训练（数学、几何、辩证法），且要「回到洞穴」统治——但见过理念世界的哲人为何愿意回到洞穴？柏拉图用「强制」回答（哲人有义务回去），但这与哲人自愿追求善矛盾。</li>
+  <li><strong>「高贵的谎言」：</strong>柏拉图建议用「金属神话」（金银铜铁注入不同人灵魂）说服大众接受阶层分工。这是<strong>规范性权力的自觉使用</strong>——柏拉图明知哲人王的正当性来自知识，但承认知识论证对大众无效，需用神话维持秩序。这是 L4 三维权力（偏好塑造）的哲学自觉。</li>
+  <li><strong>理想与现实的差距：</strong>柏拉图自己承认理想国可能从未实现（《理想国》第九卷）——它是「天上的范式」，用作评判现实的尺度而非实现的目标。这使《理想国》既是政治方案又是政治批判：用理想评判现实城邦的败坏。</li>
+</ul>
+
+<!-- ====== PART 2: HANFEIZI ====== -->
+<h2>2. 韩非子：法术势与制度国</h2>
+
+<div class="thinker-card">
+  <div class="tk-label">核心问题</div>
+  <h3>君主如何保住权力并使国家强大？</h3>
+  <p>韩非子不问「什么是正义」——这是他与柏拉图最根本的差异。他问的是<strong>「如何」</strong>：如何让君主不被篡、臣下不乱、国家能战能富。这是一个<strong>去规范化的政治技术学</strong>。问题决定了答案的形态。</p>
+</div>
+
+<h3>法术势三位一体</h3>
+
+<p>韩非子集法家三派之大成：</p>
+<ul>
+  <li><strong>法（商鞅）：</strong>公开、严明、统一的赏罚规则。「法者，编著之图籍，设之于官府，而布之于百姓者也」。法是面向官民的<strong>明规则</strong>。</li>
+  <li><strong>术（申不害）：</strong>君主驾驭臣下的<strong>隐秘技术</strong>——「术者，藏之于胸中，以偶众端而潜御群臣者也」。形名参同（考核言行是否一致）、因任授官、防微杜渐。术是面向臣下的<strong>暗技术</strong>。</li>
+  <li><strong>势（慎到）：</strong>君主的<strong>制度性权威地位</strong>——权势权重，不靠个人贤德而靠位置。「贤智未足服众，而势位足以屈贤」。势是统治的<strong>基础</strong>。</li>
+</ul>
+
+<p>三者关系：势是基础（有位才有权），法是明面（治民），术是暗面（治臣）。韩非子的核心洞见是<strong>三者缺一不可</strong>——有法无术则臣下篡权，有术无法则民无所措，有法术无势则君主无以行法术。</p>
+
+<h3>人性不可改，只能利用</h3>
+
+<p>韩非子接受荀子性恶但走得更远——人性<strong>不可改</strong>，只能<strong>利用</strong>：</p>
+<blockquote>
+  「民之性，饥而求食，劳而求佚，苦而求乐，辱而求荣。此民之情也。」<br>
+  <span style="font-size:0.85rem;">— 韩非子</span>
+</blockquote>
+<p>既然人趋利避害，就<strong>设计赏罚使趋利避害服务于国家目标</strong>。赏只与耕战挂钩（「壹赏」），罚对一切非耕战行为（「商工之民」「学者」「言谈者」）。这是把 L4 的经济性权力（利益驱动）推到极致——且完全取消规范维度（不试图使人向善，只使趋利方向对齐国家目标）。</p>
+
+<h3>「民固服于势」——对民智的彻底不信任</h3>
+
+<p>韩非子对民众政治能力的判断比柏拉图更彻底：</p>
+<blockquote>
+  「民智之不可用，犹婴儿之心也……婴儿不知犯其所小苦，而求其所大乐。民亦不知犯其所小苦，而求其所大乐。」<br>
+  <span style="font-size:0.85rem;">— 韩非子</span>
+</blockquote>
+<p>民众像婴儿——不知道忍受小苦以求大乐（如忍受严法以得国家强大）。因此<strong>统治者不应顺从民意，而应强加对民众长期有利但他们自己认识不到的东西</strong>。这是 L4 三维权力（偏好塑造/越过偏好）的自觉论证——且比柏拉图更赤裸：柏拉图用「高贵的谎言」包装，韩非子直言「民智不可用」。</p>
+
+<h3>中常之君也能统治</h3>
+
+<p>韩非子最实用的洞见——与柏拉图形成最尖锐对比：</p>
+<blockquote class="important">
+  「夫良马固车，使中手御之，追疾致远，可以及也……恃势而不恃信，使法而不使智。」<br>
+  <span style="font-size:0.85rem;">— 韩非子</span>
+</blockquote>
+<p>柏拉图的哲人王需数十年哲学教育，且即使如此仍可能不愿统治。韩非子的方案<strong>不依赖圣君</strong>——只要制度（法术势）设计得当，<strong>中常之君</strong>也能高效统治。这是规范性方案（依赖统治者德性/知识）vs 工具性方案（依赖制度设计）的根本差异。韩非子抓住了柏拉图的最大弱点：哲人王太稀缺，现实中等不到。制度则可复制、可持续。</p>
+
+<!-- ====== PART 3: COMPARISON ====== -->
+<h2>3. 共同点与根本差异</h2>
+
+<h3>惊人的共同点</h3>
+
+<table>
+  <tr><th>维度</th><th>柏拉图</th><th>韩非子</th></tr>
+  <tr><td>反民主</td><td>民主=欲望主导→僭主</td><td>民智不可用，民固服于势</td></tr>
+  <tr><td>精英主义</td><td>哲人王（知识精英）</td><td>君主+法术官僚（权力精英）</td></tr>
+  <tr><td>统治需专门能力</td><td>epistēmē（真知）</td><td>法术势（技术）</td></tr>
+  <tr><td>政体-灵魂/人性关联</td><td>坏政体败坏灵魂</td><td>人性不可改，制度利用人性</td></tr>
+  <tr><td>三维权力的自觉</td><td>「高贵的谎言」塑造偏好</td><td>「民智不可用」越过偏好</td></tr>
+  <tr><td>对现世政体的批判</td><td>雅典民主</td><td>战国乱政+儒墨空谈</td></tr>
+</table>
+
+<p>这些共同点不是巧合——它们反映两个轴心突破<strong>共享的结构</strong>（L5）：都把政治对象化为问题，都解放批判性个体（哲人/法术之士），都设定超越标准（理念/道-势）批判现世，都产生反思性。反民主/精英主义是这个共享结构在政治维度的<strong>共同倾向</strong>——轴心突破的政治哲学大多反民主，因为民主是「未反思的多数统治」而轴心突破恰恰是反思的产物。</p>
+
+<h3>根本差异</h3>
+
+<table>
+  <tr><th>维度</th><th>柏拉图</th><th>韩非子</th></tr>
+  <tr>
+    <td><strong>问题的性质</strong></td>
+    <td>规范性：什么是正义？应当如何？</td>
+    <td>工具性：如何保权强国？</td>
+  </tr>
+  <tr>
+    <td><strong>统治的根据</strong></td>
+    <td>知识/德性（哲人王）</td>
+    <td>制度/位置（法术势）</td>
+  </tr>
+  <tr>
+    <td><strong>对统治者的要求</strong></td>
+    <td>极高（哲人，数十年教育）</td>
+    <td>中常即可（制度托底）</td>
+  </tr>
+  <tr>
+    <td><strong>核心机制</strong></td>
+    <td>教育塑造灵魂</td>
+    <td>赏罚利用人性</td>
+  </tr>
+  <tr>
+    <td><strong>权力的主要维度（L4）</strong></td>
+    <td>规范权力（真知/德性）</td>
+    <td>强制+经济权力（赏罚）</td>
+  </tr>
+  <tr>
+    <td><strong>正当性叙事</strong></td>
+    <td>知识/善的理念（哲学性）</td>
+    <td>无正当性叙事（去规范化）</td>
+  </tr>
+  <tr>
+    <td><strong>理想 vs 现实</strong></td>
+    <td>理想国可能不实现，作评判尺度</td>
+    <td>方案可立即实施（秦验证）</td>
+  </tr>
+  <tr>
+    <td><strong>对人性</strong></td>
+    <td>可教化向善（教育塑造）</td>
+    <td>不可改，只能利用</td>
+  </tr>
+  <tr>
+    <td><strong>方案的可复制性</strong></td>
+    <td>低（哲人王稀缺）</td>
+    <td>高（制度可推广）</td>
+  </tr>
+</table>
+
+<p>最深的差异是<strong>问题的性质</strong>：柏拉图问「应当」（normative），韩非子问「如何」（instrumental）。这个差异向下贯穿一切——统治根据、统治者要求、核心机制、权力维度、正当性叙事、理想/现实、人性观、可复制性，全部由这个根差异派生。</p>
+
+<p>用 L4 的话说：柏拉图把<strong>规范权力</strong>推到极致（统治正当性来自对善的真知），韩非子把<strong>强制+经济权力</strong>推到极致且<strong>放弃规范权力</strong>。这是 IEMP 三源配置的根本不同——而 L7 已显示，这个不同正是儒/法分歧的极致化，且预示了中华「儒表法里」（韩非子作里）的长程结构。</p>
+
+<!-- ====== PART 4: WHY DIVERGE ====== -->
+<h2>4. 为什么分化？轴心突破的制度化路径</h2>
+
+<p>两人的差异不是个人天赋——它反映两个轴心文明的不同<strong>制度化路径</strong>，而这些路径由 L3 的路径依赖锁定。</p>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--history);"></span>
+  <span style="font-weight:600;color:var(--history);">历史条件：</span>
+  <span>柏拉图写作于雅典民主衰败期（伯罗奔尼撒战败后），面对的是<strong>民主的自我毁灭</strong>——他的问题是「民主为何失败、何为替代」。韩非子写作于战国末期，面对的是<strong>五百年的乱政竞争</strong>——他的问题是「如何强国胜出、终止乱局」。不同的问题场产生不同的提问方式：柏拉图问正义（反思民主的规范基础），韩非子问强国（应对竞争的工具需求）。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--politics);"></span>
+  <span style="font-weight:600;color:var(--politics);">规模与政体：</span>
+  <span>雅典 polis 小规模（L6）使「教育塑造公民灵魂」可行——面对面共同体中哲人教育有现实路径。战国向大一统演化（L7），大规模使「教育塑造灵魂」不可行——你无法教育数千万臣民，只能靠制度（法术势）远程运作。规模差异使规范性方案在希腊可行、在中国不可行，工具性方案在中国必要、在希腊不必要。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--philosophy);"></span>
+  <span style="font-weight:600;color:var(--philosophy);">超越原则的性质：</span>
+  <span>希腊的超越是<strong>理念/逻各斯</strong>——认知性的、可被哲学教育接近的真知。中国的超越是<strong>道/天</strong>——更偏实践性、且与「势」的张力（L7 余英时）使思想家转向「如何使势合道」的工具问题。理念鼓励规范性建构（接近善的理念），道势张力鼓励工具性设计（使权力运作符合道）。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--economics);"></span>
+  <span style="font-weight:600;color:var(--economics);">竞争压力：</span>
+  <span>希腊城邦间竞争存在但烈度低于战国总体战。战国的生存竞争（L1 蒂利逻辑）使「强国」成为压倒一切的目标，规范性考量被工具性考量挤出——韩非子明确说「言先王之仁义者，皆乱法者也」。希腊的竞争烈度允许规范性方案存留（柏拉图可以谈理想国而不被淘汰）。</span>
+</div>
+
+<p>合起来：历史条件（问题场）+ 规模（可行性）+ 超越性质（理论倾向）+ 竞争压力（选择压力）共同把两个轴心突破推向不同的制度化路径。这些条件不是偶然——它们由更深的地理/历史结构（L1 的六大原生国家分化）决定，且被 L3 路径依赖锁定。这就是 L5「轴心时代预示长程分化」的具体兑现：分化在轴心突破时已埋下，在柏拉图 vs 韩非子的对比中清晰可见。</p>
+
+<!-- ====== PART 5: RECEPTION AND LONG-RUN ====== -->
+<h2>5. 接受史：西方承柏拉图，中华承韩非子（里）</h2>
+
+<p>两个方案的后世命运，完美印证了 L3 的路径依赖——最初的差异被锁定并放大。</p>
+
+<h3>柏拉图在西方</h3>
+
+<p>柏拉图成为西方政治哲学的<strong>奠基性源头</strong>：</p>
+<ul>
+  <li>新柏拉图主义 → 基督教神学（奥古斯丁把柏拉图理念世界重新解释为上帝的心智）→「两城论」（上帝之城vs地上之城）。</li>
+  <li>哲人王理想 → 中世纪「哲人-王」理想化为教皇/基督教君主 → 近代「开明专制」。</li>
+  <li>政体-灵魂对应 → 马基雅维利（反转）、霍布斯、卢梭都回应柏拉图。</li>
+  <li>《理想国》作为「理想评判现实」的方法 → 乌托邦传统（莫尔、康帕内拉）→ 规范政治哲学（罗尔斯《正义论》明确承柏拉图）。</li>
+</ul>
+
+<p>但西方<strong>没有照搬柏拉图</strong>——它承柏拉图的规范性姿态（政治哲学问「应当」），但拒绝了哲人王（转向混合政体、法治、代议民主）。西方从柏拉图继承的是<strong>问题的提法</strong>（规范性）而非具体方案。这个「承问题不承方案」是西方政治哲学的主流姿态。</p>
+
+<h3>韩非子在中华</h3>
+
+<p>韩非子的命运更复杂——表面上他被<strong>排斥</strong>（秦速亡的锅、儒家正统的贬抑），实质上他被<strong>继承为「里」</strong>：</p>
+<ul>
+  <li>汉儒表法里（L7）：制度内核（郡县/官僚/赏罚/中央集权）全承韩非子，只是用儒家话语包装。</li>
+  <li>此后两千年，中华帝国的实际治理始终是韩非子式的——强国家能力、官僚控制、赏罚驱动、君主权术。儒家是表，韩非子是里。</li>
+  <li>历代帝王「阳儒阴法」：公开崇儒（科举考经义），实际用法（帝王术、考核、连坐）。汉宣帝「霸王道杂之」是自觉的承认。</li>
+</ul>
+
+<p>中华<strong>承韩非子的方案</strong>（工具性制度）但<strong>不承其问题</strong>（去规范化）——因为去规范化使统治无正当性叙事（秦速亡教训）。中华的解决方案是「韩非子的里 + 儒家的表」——用儒家规范性叙事包装韩非子工具性制度。这与西方「承柏拉图的问题不承方案」形成精确的<strong>镜像</strong>。</p>
+
+<blockquote class="important">
+  <strong>精确的镜像：</strong><br>
+  西方：承柏拉图的<strong>问题</strong>（规范性：应当如何）+ 拒柏拉图的<strong>方案</strong>（哲人王）→ 走向混合政体/法治/代议民主<br>
+  中华：承韩非子的<strong>方案</strong>（工具性：法术势制度）+ 拒韩非子的<strong>问题</strong>（去规范化）→ 加儒家正当性外衣（儒表法里）<br><br>
+
+  两个文明各取一半，但取的是<strong>不同的</strong>一半——西方取柏拉图的规范姿态，中华取韩非子的工具方案。这个镜像不是偶然，它反映两个轴心突破在「问题-方案」空间中的不同位置，以及各自路径依赖的锁定。
+</blockquote>
+
+<!-- ====== PART 6: SYNTHESIS ====== -->
+<h2>6. 综汇：Phase 2 收束</h2>
+
+<p>本课是 Phase 2 的综合课。把 L5–L7 的轴心突破分析收束于两个文本的并置，我们得到一个完整的图景：</p>
+
+<ol>
+  <li><strong>轴心突破（L5）</strong>在四个文明独立发生，共享超越-现世分离、个体觉醒、普遍主义、反思性的结构。</li>
+  <li><strong>政治制度化（L6/L7）</strong>把突破转化为具体政体：希腊→直接民主（逻各斯的政治化），中国→儒法国家（道势张力的制度化）。</li>
+  <li><strong>政治哲学（本课）</strong>把政体反思为问题：柏拉图反思民主→规范性方案，韩非子反思乱政→工具性方案。</li>
+  <li><strong>接受史</strong>把方案锁定为长程结构：西方承柏拉图问题→混合政体，中华承韩非子方案→儒表法里。</li>
+</ol>
+
+<p>这条链条从 L5 到本课，展示了跨学科思想体系的样子：<strong>一个轴心事件（L5）→ 不同的制度化（L6/L7）→ 不同的政治哲学（本课）→ 不同的长程政体（接受史）</strong>。每一步都建立在前步之上，且每一步都同时动用四个学科——历史（条件/接受史）、政治（制度/权力）、哲学（规范/工具）、经济（规模/竞争）。这是 Phase 1 工具箱（L1–L4）的第一次完整应用。</p>
+
+<div class="concept-box">
+  <div class="concept-name">🧠 可带走的概念工具</div>
+  <h3>「问题-方案」分析：诊断任何政治哲学</h3>
+  <p>柏拉图 vs 韩非子的比较给了我们一个分析任何政治哲学的工具——把它定位在「问题-方案」空间中：</p>
+  <ol>
+    <li><strong>问题的性质：</strong>规范性（应当如何）还是工具性（如何运作）？这是最根本的定位。</li>
+    <li><strong>方案的核心机制：</strong>教育/德性（规范权力）还是制度/赏罚（强制+经济权力）？</li>
+    <li><strong>对统治者的要求：</strong>极高（依赖圣君/哲人）还是中常即可（制度托底）？</li>
+    <li><strong>理想 vs 现实：</strong>方案是理想评判尺度还是可立即实施？</li>
+    <li><strong>承问题还是承方案：</strong>后世继承的是提问方式还是具体制度？</li>
+  </ol>
+  <p>用这个工具定位：</p>
+  <ul>
+    <li>马基雅维利：工具性问题 + 制度/权术方案 + 中常君主 + 可实施 → 承韩非子一脉（尽管独立发现）</li>
+    <li>罗尔斯：规范性问题 + 制度/程序方案 + 不依赖圣君 + 理想评判 → 承柏拉图问题、拒哲人王方案</li>
+    <li>毛的「继续革命」：规范性问题 + 教育/运动方案 + 依赖领袖魅力 + 理想导向 → 柏拉图式规范+卡里斯马</li>
+  </ul>
+  <p style="margin-bottom:0;">这个定位工具在后续课程反复使用：L15（启蒙）、L19（三种现代性方案）、L22（中国改革）、L24（民粹）。</p>
+</div>
+
+<!-- ====== PART 7: EXERCISES ====== -->
+<h2>7. 练习与思考</h2>
+
+<div class="quiz-section">
+
+  <div class="quiz-question" id="q1">
+    <div class="q-num">练习 1 · 根本差异</div>
+    <div class="q-text">柏拉图与韩非子最根本的差异是？</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option" data-answer="wrong">柏拉图是民主派，韩非子是专制派</div>
+      <div class="quiz-option" data-answer="best">问题的性质：柏拉图问规范性「应当如何」（正义是什么），韩非子问工具性「如何运作」（如何保权强国）。这个根差异向下贯穿统治根据、机制、权力维度、正当性叙事等一切</div>
+      <div class="quiz-option" data-answer="wrong">柏拉图早，韩非子晚</div>
+      <div class="quiz-option" data-answer="wrong">柏拉图是西方，韩非子是东方</div>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <div class="q-num">练习 2 · 共同点</div>
+    <div class="q-text">柏拉图和韩非子都反民主。这个共同倾向的深层原因是？</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option" data-answer="wrong">两人都是贵族出身，本能反民主</div>
+      <div class="quiz-option" data-answer="best">轴心突破（L5）的本质是反思性——把政治对象化为问题、解放批判性个体；而民主是「未反思的多数统治」，与反思性对立。轴心突破的政治哲学大多反民主，是共享结构的共同倾向，非个人偏好</div>
+      <div class="quiz-option" data-answer="wrong">古代人都反民主</div>
+      <div class="quiz-option" data-answer="wrong">民主在古代总是失败</div>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <div class="q-num">练习 3 · 哲人王 vs 中常之君</div>
+    <div class="q-text">柏拉图要哲人王（数十年教育），韩非子说中常之君即可（制度托底）。这个差异的实质是？</div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option" data-answer="wrong">柏拉图要求太高，不现实</div>
+      <div class="quiz-option" data-answer="best">规范性方案 vs 工具性方案的根本差异：柏拉图把统治正当性放在统治者个人（知识/德性），需极高统治者；韩非子把统治效能放在制度（法术势），统治者只需中常。前者依赖稀缺个人，后者可复制可持续——这是两方案最深的方法论分歧</div>
+      <div class="quiz-option" data-answer="wrong">韩非子不重视统治者素质</div>
+      <div class="quiz-option" data-answer="wrong">两者其实一致，只是表述不同</div>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q4">
+    <div class="q-num">练习 4 · 接受史镜像</div>
+    <div class="q-text">西方承柏拉图、中华承韩非子（里），但各自只承一半。这个「精确镜像」是？</div>
+    <div class="quiz-options" id="q4-opts">
+      <div class="quiz-option" data-answer="wrong">西方和中华都全盘继承各自的思想家</div>
+      <div class="quiz-option" data-answer="best">西方承柏拉图的问题（规范性姿态）但拒其方案（哲人王）→ 混合政体/法治；中华承韩非子的方案（工具性制度）但拒其问题（去规范化）→ 加儒家正当性外衣。各取一半，取的是不同的一半——反映两文明在「问题-方案」空间的不同位置</div>
+      <div class="quiz-option" data-answer="wrong">西方承方案拒问题，中华承问题拒方案</div>
+      <div class="quiz-option" data-answer="wrong">两者都承问题承方案</div>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q5">
+    <div class="q-num">练习 5 · 综合应用</div>
+    <div class="q-text">用「问题-方案」分析定位马基雅维利《君主论》。最准确的判断是？</div>
+    <div class="quiz-options" id="q5-opts">
+      <div class="quiz-option" data-answer="wrong">马基雅维利承柏拉图，是规范性政治哲学</div>
+      <div class="quiz-option" data-answer="best">马基雅维利承韩非子一脉（尽管独立发现）：工具性问题（君主如何保权）+ 制度/权术方案 + 中常君主即可 + 可立即实施。与柏拉图的规范性姿态根本不同。但马基雅维利在西方语境中是异类——西方主流承柏拉图问题，马基雅维利是西方内部的「韩非子式」偏离</div>
+      <div class="quiz-option" data-answer="wrong">马基雅维利自成一派，与两人都无关</div>
+      <div class="quiz-option" data-answer="wrong">马基雅维利是柏拉图和韩非子的综合</div>
+    </div>
+    <div class="quiz-feedback" id="q5-fb"></div>
+  </div>
+
+</div>
+
+<div class="exercise">
+  <h3>✏️ 「问题-方案」定位练习（开放，10 分钟）</h3>
+  <p>选一个你熟悉的政治思想家或运动——可以是西方的（洛克、卢梭、马克思、哈耶克、罗尔斯、施密特），可以是中国的（孟子、董仲舒、黄宗羲、近代某家），也可以是当代的某思潮。用「问题-方案」五问定位：</p>
+  <ol style="margin-left:1.5rem;">
+    <li>问题性质（规范性/工具性）</li>
+    <li>方案核心机制（教育/制度）</li>
+    <li>对统治者要求（极高/中常）</li>
+    <li>理想 vs 现实</li>
+    <li>承问题还是承方案（与柏拉图/韩非子谱系的关系）</li>
+  </ol>
+  <textarea placeholder="选择对象：……&#10;&#10;1. 问题性质：……&#10;2. 方案机制：……&#10;3. 统治者要求：……&#10;4. 理想/现实：……&#10;5. 谱系定位：……&#10;&#10;你的洞察：……"></textarea>
+  <p class="hint">💡 把定位发给 Claude——我会回应你忽略的维度、挑战你的谱系判断、补充文本证据。这是 Phase 2 综合课的核心练习：把两个文本的比较转化为可定位任何政治哲学的工具。</p>
+</div>
+
+<!-- ====== FURTHER READING ====== -->
+<h2>8. 推荐阅读</h2>
+
+<div style="background:var(--card-bg);border-radius:6px;padding:1.3rem 1.5rem;margin:1.2rem 0;">
+  <p style="font-weight:600;margin-top:0;">📖 主读</p>
+  <p style="margin-bottom:0.3rem;"><strong>柏拉图 —《理想国》第二、三、四、八、九卷</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">灵魂三分、哲人王、政体衰败序列的核心文本。有多个中译本（郭斌和/张竹明、王太庆等）。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>韩非子 —《韩非子》选篇：《五蠹》《显学》《定法》《难一》</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">法术势、性恶、民智不可用的核心文本。冷峻清晰，建议读原文而非只读介绍。</p>
+
+  <p style="font-weight:600;margin-top:1rem;">📖 辅读</p>
+  <p style="margin-bottom:0.3rem;"><strong>Leo Strauss —《自然权利与历史》或《关于马基雅维利的思考》</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">施特劳斯学派对「古今之争」的论述——把柏拉图/古典政治哲学 vs 现代政治哲学（从马基雅维利开始）的区分作为核心。与本课的「问题-方案」分析有共鸣，但施特劳斯更强调古今之别而非东西之别。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>许倬云 —《万古江河》或《中国古代社会史论》</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:0;">把中国政治思想放在制度史中理解——儒表法里的具体运作。连接本课与 L10。</p>
+</div>
+
+<!-- ====== CROSS-REFERENCES ====== -->
+<h2>9. 关联与展望</h2>
+<ul style="font-size:0.92rem;">
+  <li><strong>L5 回扣：</strong>本课是 L5 轴心时代命题的具体兑现——两个轴子政治哲学的并置比较，展示共同结构+具体差异。</li>
+  <li><strong>L6 回扣：</strong>柏拉图对民主的批评在 L6 已讲；本课把它与韩非子并置，揭示反民主是轴心突破的共同倾向。</li>
+  <li><strong>L7 回扣：</strong>韩非子在 L7 已讲；本课把它与柏拉图并置，揭示儒表法里（韩非子作里）的谱系定位。</li>
+  <li><strong>L4 回扣：</strong>柏拉图=规范权力极致，韩非子=强制+经济权力极致+放弃规范——IEMP 三源配置的根本不同。</li>
+  <li><strong>L3 回扣：</strong>接受史的镜像（西方承问题、中华承方案）是路径依赖的典型案例——初始差异锁定并放大两千年。</li>
+  <li><strong>Phase 2 闭合：</strong>本课是 Phase 2 综合课——L5–L7 的轴心突破分析收束于两个文本的并置，形成「轴心事件→制度化→政治哲学→长程政体」的完整链条。Phase 1 工具箱的第一次完整应用。</li>
+  <li><strong>L10 中华帝国：</strong>儒表法里（本课的接受史）是 L10 王朝周期律的合法性结构。</li>
+  <li><strong>L15 启蒙：</strong>启蒙承柏拉图问题（规范性）但拒哲人王——本课的西方接受史在 L15 展开。</li>
+  <li><strong>L19 三种现代性：</strong>规范性 vs 工具性的张力在 20 世纪三种方案中重现——本课的「问题-方案」分析是 L19 的工具。</li>
+  <li><strong>L22 中国改革：</strong>当代中国的「表里结构」是儒表法里的现代变体——本课的镜像分析在 L22 应用。</li>
+</ul>
+
+<div class="lesson-footer">
+  <p>🎯 本课服务于你的 <a href="../MISSION.md">MISSION</a>：<em>构建跨学科理解框架。</em>这是 Phase 2 的综合课——把 L5–L7 的轴心突破分析收束于两个文本的并置，形成从轴心事件到长程政体的完整链条。完成本课意味着 Phase 2（轴心时代）结束。</p>
+  <p>💬 你更同情柏拉图还是韩非子？「承问题不承方案」的镜像你觉得公平吗？「问题-方案」定位练习中你的判断有犹豫？<strong>直接问 Claude。</strong></p>
+  <div class="links">
+    <span><a href="./0007-warring-states.html">← L7 战国百家</a></span>
+    <span><a href="#" style="color:var(--text-light);">L9 罗马兴衰 →</a>（Phase 3 开始，即将推出）</span>
+    <span><a href="../reference/glossary.html">📚 术语表</a></span>
+    <span><a href="../index.html">↑ 课程路径</a></span>
+  </div>
+</div>
+
+<script>
+(function() {
+  function setup(qId) {
+    const opts = document.querySelectorAll('#' + qId + '-opts .quiz-option');
+    const fb = document.getElementById(qId + '-fb');
+    opts.forEach(o => {
+      o.addEventListener('click', function() {
+        opts.forEach(x => { x.classList.remove('selected', 'correct', 'incorrect'); });
+        o.classList.add('selected');
+        const ans = o.dataset.answer;
+        if (ans === 'correct' || ans === 'best') {
+          o.classList.add('correct');
+          fb.className = 'quiz-feedback show fb-correct';
+          if (qId === 'q1') fb.innerHTML = '✅ <strong>正确。</strong>问题的性质是根差异——规范性 vs 工具性。这个差异向下贯穿一切：统治根据、机制、权力维度、正当性叙事、理想/现实、可复制性。其他差异（哲人王vs中常君、教育vs制度等）都是这个根差异的派生。识别根差异而非停留在派生差异，是本课的核心训练。';
+          else if (qId === 'q2') fb.innerHTML = '✅ <strong>正确。</strong>这是 L5 轴心突破的深层洞察——反民主不是个人偏好，而是轴心突破（反思性）与民主（未反思的多数统治）的结构性对立。这解释了为什么轴心时代的政治哲学<strong>普遍</strong>反民主（柏拉图、韩非子、甚至儒家对「民」的态度也非民主）——这是共享结构的必然倾向，不是巧合。';
+          else if (qId === 'q3') fb.innerHTML = '✅ <strong>正确。</strong>这是规范性 vs 工具性方案最尖锐的方法论差异。柏拉图把统治正当性放在<strong>个人</strong>（知识/德性），需极高统治者且不可复制；韩非子把统治效能放在<strong>制度</strong>（法术势），统治者中常即可且可复制。这个差异至今是政治设计的核心张力——「等圣君」vs「制度托底」是所有政体设计的选择。';
+          else if (qId === 'q4') fb.innerHTML = '✅ <strong>正确。</strong>这个镜像是本课最深的洞察——两个文明各取一半，取的是<strong>不同的一半</strong>。西方取柏拉图的规范姿态（问「应当」）但拒哲人王（转向混合政体）；中华取韩非子的工具方案（法术势制度）但拒去规范化（加儒家外衣）。这个镜像不是偶然——它反映两文明在「问题-方案」空间的不同位置，且被路径依赖锁定。';
+          else if (qId === 'q5') fb.innerHTML = '✅ <strong>正确。</strong>马基雅维利是西方内部的「韩非子式」偏离——工具性问题、权术方案、中常君主、可实施。这解释了为什么马基雅维利在西方传统中长期被污名化（他偏离了西方主流的柏拉图式规范姿态）。但正是这个偏离开启了现代政治哲学（施特劳斯所谓「古今之争」的起点）——现代政治哲学从马基雅维利开始工具化，是西方内部的「韩非子化」。这个洞察将在 L15 展开。';
+        } else {
+          o.classList.add('incorrect');
+          fb.className = 'quiz-feedback show fb-incorrect';
+          if (qId === 'q1') {
+            if (o.textContent.includes('民主派')) fb.innerHTML = '❌ 柏拉图强烈反民主（《理想国》第八卷的整个论证）——这是 L6 已讲的核心。把他说成民主派是严重误读。';
+            else if (o.textContent.includes('早晚')) fb.innerHTML = '❌ 时间差异是事实但不是「最根本」差异——根本差异在问题性质，时间差异只是表面条件。';
+            else fb.innerHTML = '❌ 东西方是地理标签，不是差异的<strong>内容</strong>。根本差异在问题性质（规范性vs工具性），地理只是这个差异的承载位置。把差异归为东西方 misses 实质。';
+          } else if (qId === 'q2') {
+            if (o.textContent.includes('贵族')) fb.innerHTML = '❌ 柏拉图是贵族出身，但韩非子是韩国宗室——两人都是精英出身。但把反民主归为出身 misses 结构性原因。且轴心时代许多反民主思想家非贵族（如许多 sophist）。';
+            else if (o.textContent.includes('古代人')) fb.innerHTML = '❌ 古代并非所有人都反民主——雅典民主有大量辩护者（如伯里克利葬礼演说、部分 sophist），且许多前轴心文明不反民主（因为未把民主对象化为问题）。反民主是<strong>轴心突破</strong>的倾向，不是「古代」的倾向。';
+            else fb.innerHTML = '❌ 民主在古代并非「总是失败」——雅典民主运作了约两个世纪，且其失败有具体条件（伯罗奔尼撒战争、帝国过度扩张），非民主内在必然。把反民主归为「民主总失败」既不符史实也 misses 轴心突破的结构性原因。';
+          } else if (qId === 'q3') {
+            if (o.textContent.includes('不现实')) fb.innerHTML = '❌ 「不现实」是浅表判断——柏拉图自己承认理想国可能不实现（它作评判尺度）。更深的是方法论：把统治正当性放个人 vs 放制度，这是两种根本不同的政治设计思路，「现实与否」只是其表现之一。';
+            else if (o.textContent.includes('不重视')) fb.innerHTML = '❌ 韩非子重视统治者素质——他要求君主「不任智不任贤」（不凭个人智贤而凭制度），这恰恰是对统治者素质的<strong>另一种</strong>要求（克制个人干预、让制度运作）。不是「不重视」，是「以制度替代个人素质」。';
+            else fb.innerHTML = '❌ 两者<strong>不一致</strong>——规范性 vs 工具性是根本不同的方法论。把差异归为「表述不同」misses 整个本课的核心：问题性质的根本分歧及其长程后果。';
+          } else if (qId === 'q4') {
+            if (o.textContent.includes('全盘')) fb.innerHTML = '❌ 两者都<strong>没有</strong>全盘继承——西方拒哲人王方案，中华拒韩非子的去规范化问题。全盘继承是误读。镜像的精确性恰在「各取一半」。';
+            else if (o.textContent.includes('西方承方案')) fb.innerHTML = '❌ 方向反了——西方承柏拉图的<strong>问题</strong>（规范姿态）拒方案（哲人王）；中华承韩非子的<strong>方案</strong>（制度）拒问题（去规范化）。正确镜像见正确答案。';
+            else fb.innerHTML = '❌ 两者都<strong>没有</strong>同时承问题承方案——西方拒哲人王方案，中华拒韩非子问题。各取一半（不同的一半）才是精确镜像。';
+          } else if (qId === 'q5') {
+            if (o.textContent.includes('承柏拉图')) fb.innerHTML = '❌ 马基雅维利根本<strong>不承</strong>柏拉图的规范性姿态——他明确把政治从道德/规范中分离（「君主论」的奠基性举动）。这是他对西方传统的偏离，也是他「韩非子式」的原因。';
+            else if (o.textContent.includes('自成一派')) fb.innerHTML = '❌ 马基雅维利虽独特，但可定位——他的工具性问题+权术方案+中常君主+可实施，明确承韩非子一脉（尽管独立发现）。说「自成派无关」放弃了比较分析的价值。';
+            else fb.innerHTML = '❌ 马基雅维利不是柏拉图和韩非子的「综合」——他明确拒柏拉图的规范性姿态，纯粹走工具性路线。综合会保留两方要素，马基雅维利只取工具性一侧。';
+          }
+        }
+      });
+    });
+  }
+  ['q1','q2','q3','q4','q5'].forEach(setup);
+})();
+</script>
+
+</body>
+</html>

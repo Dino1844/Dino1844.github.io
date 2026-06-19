@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0006 · 古希腊城邦</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --text-light: #5c5c5c;
+    --accent: #8b4513; --accent-dim: #a0522d; --border: #d4c5b2; --card-bg: #f8f5f0;
+    --history: #8b4513; --economics: #2d6a4f; --politics: #1a659e; --philosophy: #7b2d8b;
+    --highlight: #fef3c7; --correct: #2d6a4f; --incorrect: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Serif SC', 'SimSun', serif; background: var(--bg); color: var(--text); line-height: 1.85; max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 1.02rem; }
+  h1 { font-size: 1.8rem; font-weight: 700; margin: 2rem 0 0.6rem; letter-spacing: 0.02em; line-height: 1.3; }
+  h2 { font-size: 1.25rem; font-weight: 600; margin: 2.6rem 0 0.7rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+  p { margin: 0.9rem 0; } li { margin: 0.4rem 0; }
+  a { color: var(--accent-dim); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); } strong { font-weight: 600; }
+  .meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-light); margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .meta .tag { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 3px; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; color: white; }
+  .tag-history { background: var(--history); } .tag-economics { background: var(--economics); } .tag-politics { background: var(--politics); } .tag-philosophy { background: var(--philosophy); }
+  .hook { background: var(--highlight); border-left: 4px solid var(--accent); padding: 1.3rem 1.5rem; margin: 1.5rem 0; font-size: 1.02rem; border-radius: 0 6px 6px 0; }
+  blockquote { border-left: 3px solid var(--border); padding: 0.6rem 1.2rem; margin: 1.2rem 0; color: var(--text-light); background: var(--card-bg); border-radius: 0 4px 4px 0; font-size: 0.96rem; }
+  blockquote.important { border-left-color: var(--accent); background: var(--highlight); color: var(--text); }
+  table { width: 100%; border-collapse: collapse; margin: 1.3rem 0; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; font-size: 0.82rem; letter-spacing: 0.03em; color: var(--text-light); }
+  tr:hover td { background: #fef9f0; }
+  .stage-card { background: var(--card-bg); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; border-top: 3px solid var(--politics); }
+  .stage-card .sc-label { font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--politics); margin-bottom: 0.3rem; }
+  .stage-card h3 { margin-top: 0; }
+  .concept-box { border: 2px solid var(--accent); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 2rem 0; background: var(--card-bg); }
+  .concept-box .concept-name { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem; }
+  .concept-box h3 { margin-top: 0; }
+  .quiz-section { margin: 2rem 0; }
+  .quiz-question { background: var(--card-bg); border-radius: 6px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; }
+  .quiz-question .q-num { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.3rem; }
+  .quiz-question .q-text { font-weight: 600; margin-bottom: 0.9rem; font-size: 1.02rem; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz-option { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; transition: background 0.12s, border-color 0.12s; font-size: 0.93rem; }
+  .quiz-option:hover { background: #fdf5e8; }
+  .quiz-option.selected { border-color: var(--accent); background: var(--highlight); }
+  .quiz-option.correct { border-color: var(--correct) !important; background: #e8f5e9 !important; }
+  .quiz-option.incorrect { border-color: var(--incorrect) !important; background: #fdecea !important; }
+  .quiz-feedback { margin-top: 0.7rem; font-size: 0.9rem; display: none; padding: 0.7rem 0.9rem; border-radius: 4px; line-height: 1.7; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.fb-correct { background: #e8f5e9; color: #1b5e20; }
+  .quiz-feedback.fb-incorrect { background: #fdecea; color: #b71c1c; }
+  .exercise { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .exercise h3 { margin-top: 0; }
+  .exercise textarea { width: 100%; min-height: 110px; margin: 0.8rem 0; padding: 0.6rem; font-family: inherit; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px; background: white; resize: vertical; line-height: 1.7; }
+  .exercise .hint { font-size: 0.84rem; color: var(--text-light); font-style: italic; }
+  .lesson-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.87rem; color: var(--text-light); }
+  .lesson-footer .links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
+  .lens-header { display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+  .lens-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  @media (max-width: 600px) { body { padding: 1.5rem 1rem 4rem; font-size: 0.98rem; } h1 { font-size: 1.4rem; } }
+  @media print { body { max-width: 100%; padding: 1rem; font-size: 10pt; } }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <span>📅 Lesson 0006 · L6</span>
+  <span>⏱ ~30 分钟</span>
+  <span><span class="tag tag-politics">政治</span> <span class="tag tag-history">历史</span> <span class="tag tag-philosophy">哲学</span></span>
+  <span>🔗 <a href="../reference/glossary.html">术语表</a></span>
+</div>
+
+<h1>古希腊城邦</h1>
+<p style="font-size:1.05rem;color:var(--text-light);margin-top:-0.2rem;">
+  民主实验的成就与局限——以及一个被反复讲述却被反复误读的故事
+</p>
+
+<div class="hook">
+  <strong>一个常被简化的事实。</strong>「古希腊发明了民主」——这是西方公民教育的标准叙事。它对，但只对了一小半。<br><br>
+
+  雅典民主存在了约<strong>两个世纪</strong>（前 508–322），其间大部分时候<strong>不到 15% 的居民</strong>有政治权利。妇女、奴隶（占人口约三分之一）、外邦人（metoikoi）全部被排除。最「民主」的时期（伯里克利时代）恰恰是雅典<strong>最专横地对待盟邦</strong>的时期——民主在内部靠帝国财富供养。<br><br>
+
+  而雅典只是<strong>一千多个希腊城邦中的一个</strong>。大多数城邦不是民主制——斯巴达是混合军国主义宪政，科林斯是寡头制，底比斯是寡头制。希腊人自己把政体分为民主/寡头/混合/僭主/王制五种，民主只是其中之一，且备受争议。<br><br>
+
+  <em>本课要做的，是把「希腊民主」从一个庆祝性的口号还原为一个具体的、有条件的、有争议的、有成就也有深刻局限的政治实验——然后用 L1–L5 的框架分析它。</em>
+</div>
+
+<!-- ====== PART 1: POLIS ====== -->
+<h2>1. 城邦（polis）：一个难以翻译的概念</h2>
+
+<p>理解希腊政治，必须先理解 <strong>polis</strong>。中文常译「城邦」，但这误导——polis 不是「一座城市」（那只是 asty），而是<strong>「一个由公民组成的政治共同体」</strong>。一个 polis 可以没有城市（斯巴达就没有城墙），但不能没有<strong>公民体</strong>（politeuma）。</p>
+
+<p>polis 的关键特征：</p>
+<ul>
+  <li><strong>小规模：</strong>典型 polis 几千人到几万人，公民体通常几百到几千。雅典是异常（公民约 3–5 万）。这个小规模是希腊政治一切可能性的前提——直接民主只能在小共同体运作。</li>
+  <li><strong>面对面：</strong>公民彼此认识，公共事务在广场（agora）当面讨论决定。政治是<strong>可见的、直接的、具身的</strong>——与现代代议制的抽象、远距离、中介化形成根本对比。</li>
+  <li><strong>公私未严格分化：</strong>polis 是公民的「共同生活」（synoikismos），不是服务于私人目的的工具。亚里士多德的名言「人是 polis 的动物」不是说人喜欢城市，而是说人只有在 polis 这种共同体中才能实现人的本质。</li>
+  <li><strong>政体（politeia）即生活形式：</strong>对希腊人，政体不只是治理结构，它<strong>塑造公民的灵魂</strong>。民主制培养一种人格，寡头制培养另一种。柏拉图《理想国》的核心论证就是：政体与灵魂类型对应，坏政体败坏好灵魂。这个「政体-灵魂」关联是希腊政治思想的标志，将在 L8 深入。</li>
+</ul>
+
+<p>polis 的诞生本身值得注意。约前 800 年，希腊从青铜时代崩溃的废墟中重新组织起来，但<strong>没有重建迈锡尼式的王制</strong>——而是形成了 polis。为什么？一个主流解释：希腊地理（山地分割、海岸曲折、岛屿众多）使任何单一政权难以统一，小共同体成为自然单位；加上青铜时代崩溃的创伤使王权正当性破产，贵族共和成为默认。这是 L3 的路径依赖的一个案例——地理 + 历史偶然把希腊锁定在 polis 路径上。</p>
+
+<!-- ====== PART 2: ATHENIAN DEMOCRACY EVOLUTION ====== -->
+<h2>2. 雅典民主的演化：三步走</h2>
+
+<p>雅典民主不是一次性建立的，而是经过三个关键改革逐步展开。每一步都回应一个具体危机，且每一步都<strong>把更多人群纳入政治</strong>——这是雅典民主化的内在逻辑。</p>
+
+<div class="stage-card">
+  <div class="sc-label">第一步 · 梭伦改革（前 594）</div>
+  <h3>经济解绑 + 按财产分级</h3>
+  <p><strong>危机：</strong>前 7 世纪，雅典小农普遍因债务沦为「六一汉」（hektēmoroi）——把自己收成的六分之一交给债主，实际上接近农奴。大量公民因债务沦为奴隶，社会濒临内战。</p>
+  <p><strong>梭伦的改革：</strong>(1) <strong>解除债务</strong>（seisachtheia，「 shaking off burdens」）——废除所有债务，禁止以人身担保借贷（禁止债务奴隶制）。这是经济权力的重新分配。(2) <strong>按财产而非血统把公民分为四级</strong>——最低级（thētes）也能参加公民大会和陪审法庭，只是不能任高级官职。</p>
+  <p><strong>意义：</strong>梭伦没有建立民主，但他<strong>把政治资格从血统改为财产</strong>，并废除了债务奴隶制——为民主扫除了经济基础障碍。这是关键节点上的一次松动。</p>
+</div>
+
+<div class="stage-card">
+  <div class="sc-label">第二步 · 克里斯提尼改革（前 508）</div>
+  <h3>打破部落 + 建立地域公民</h3>
+  <p><strong>危机：</strong>梭伦之后雅典经历僭主统治（前 546–510），僭主被推翻后贵族派系斗争激烈，传统四个血缘部落（phylai）是派系斗争的组织基础。</p>
+  <p><strong>克里斯提尼的改革：</strong>(1) <strong>把血缘部落重组为十个地域部落</strong>——每个部落由沿海、城市、内陆三部分拼成，故意打散血缘和地域派系。(2) <strong>建立五百人议事会</strong>，每部落抽签产生 50 人。(3) <strong>陶片放逐法</strong>（ostracism）——公民每年可投票放逐一人六年，作为防止僭主复辟的安全阀。</p>
+  <p><strong>意义：</strong>克里斯提尼把政治身份从<strong>血缘</strong>转为<strong>地域</strong>——「雅典人」不再由「生于哪个家族」定义，而由「住在哪个 deme」定义。这是民主的真正诞生：政治共同体对所有人（公民意义上）开放。</p>
+</div>
+
+<div class="stage-card">
+  <div class="sc-label">第三步 · 伯里克利时代（前 461–429）</div>
+  <h3>民主的深化 + 帝国的悖论</h3>
+  <p><strong>伯里克利的改革：</strong>(1) <strong>公职津贴</strong>（misthophoria）——给担任公职和陪审员的公民发工资，使穷人也能脱产参与政治（否则只有富人才负担得起时间）。(2) <strong>公民权收紧</strong>（前 451）——只有父母双方都是雅典人才是公民（此前只需父亲）。这看似矛盾：民主深化的同时公民资格收紧——因为帝国带来的财富使公民权变得有价值，需要保护。</p>
+  <p><strong>帝国的悖论：</strong>雅典的「黄金时代」民主靠<strong>提洛同盟</strong>的贡金供养。同盟本是抗波斯的自愿联合，但雅典逐渐把它变成帝国——盟邦的贡金、法庭强制管辖、雅典驻军。伯里克利时代的公职津贴、公共建筑（帕特农神庙）、文化繁荣，相当部分由帝国财富支撑。<strong>内部民主 + 外部帝国</strong>的并存是雅典最深刻的张力——也是后世所有「民主帝国」（包括当代）的原型。</p>
+</div>
+
+<!-- ====== PART 3: INSTITUTIONS ====== -->
+<h2>3. 民主的制度细节</h2>
+
+<p>雅典民主的具体运作常被抽象赞美掩盖。看清制度细节，才能理解它真正是什么。</p>
+
+<table>
+  <tr><th>机构</th><th>构成</th><th>职能</th><th>频率</th></tr>
+  <tr>
+    <td><strong>公民大会</strong>（Ekklesia）</td>
+    <td>全体公民（约 6000 实际出席）</td>
+    <td>最高决策：宣战、立法、条约、重大财政</td>
+    <td>每年约 40 次</td>
+  </tr>
+  <tr>
+    <td><strong>五百人议事会</strong>（Boulē）</td>
+    <td>500 人，抽签产生，任期一年</td>
+    <td>准备大会议程、日常行政、外交</td>
+    <td>常设</td>
+  </tr>
+  <tr>
+    <td><strong>陪审法庭</strong>（Dikastēria）</td>
+    <td>每次 201–1501 人，抽签产生</td>
+    <td>审判、审查公职、违宪审查</td>
+    <td>几乎每日</td>
+  </tr>
+  <tr>
+    <td><strong>十将军</strong>（Stratēgoi）</td>
+    <td>10 人，<strong>选举</strong>产生，可连任</td>
+    <td>军事指挥（唯一非抽签的高职）</td>
+    <td>每年</td>
+  </tr>
+  <tr>
+    <td><strong>陶片放逐</strong>（Ostracism）</td>
+    <td>全体公民投票</td>
+    <td>放逐可能成为僭主者 6 年</td>
+    <td>每年一次（如有需要）</td>
+  </tr>
+</table>
+
+<h3>抽签（sortition）——被遗忘的民主核心</h3>
+
+<p>雅典民主最反现代直觉的特征：绝大多数公职由<strong>抽签</strong>产生，而非选举。议事会、陪审员、大部分官职都是抽签。唯一选举产生的是十将军（需要专业军事能力，且可连任）。</p>
+
+<p>为什么抽签？雅典人的理由深刻：<strong>选举是贵族制的逻辑</strong>——它选出「最优秀的人」，但「最优秀」总倾向于有钱有闲有名望的人，久而久之政权落入精英。抽签才是<strong>民主的逻辑</strong>——它假定任何公民都有资格担任公职，且抽签使结果真正反映公民体的构成。亚里士多德在《政治学》明确说：「抽签是民主的，选举是贵族的。」</p>
+
+<p>这是一个被现代民主完全遗忘的维度。现代代议制把「民主」等同于「选举」，但雅典人会把选举-rich 的体制归为<strong>寡头制</strong>。近年在政治理论中复兴的「抽签民主」（sortition democracy，如 Callenbach & Phillips 的《公民立法》、当代的 sortition 运动）正是回到这一雅典直觉——我们会在 L24 评估它对当代民主衰落的诊断。</p>
+
+<h3>谁被排除</h3>
+
+<p>雅典民主的「直接」是真实的，但它的「民主」是有限的。被排除的人群：</p>
+<ul>
+  <li><strong>妇女（约 50% 自由人口）：</strong>无政治权、不能拥有财产（通过监护人）、不能独立出庭。雅典妇女的地位在希腊世界中属较低端（斯巴达妇女自由得多）。</li>
+  <li><strong>奴隶（约 30–40% 总人口）：</strong>无任何政治权。雅典奴隶来源多样（战俘、家生、弃婴、外邦购买），部分经济独立（手工业奴隶），但法律上完全是物。</li>
+  <li><strong>外邦人（metoikoi）：</strong>自由人但非雅典血统，居雅典经商或务工。交特别税，无政治权，不能拥有土地。雅典的繁荣很大程度靠外邦人（商业、手工业、文化），但他们政治上完全无权。</li>
+  <li><strong>盟邦公民：</strong>提洛同盟的「盟邦」在伯里克利时代实质是臣民——向雅典纳贡、受雅典法庭管辖、无对外政策权。</li>
+</ul>
+
+<p>合起来：雅典「民主」覆盖的人口大约是<strong>10–15% 的居民</strong>。这不是说雅典民主不值一提——它在公民内部确实极其民主，是历史上少有的真正直接民主。但「希腊发明民主」这个叙事必须加上：「一种建立在大量排斥之上的、公民体内部的直接民主」。</p>
+
+<!-- ====== PART 4: CRITICS ====== -->
+<h2>4. 希腊人自己对民主的批评</h2>
+
+<p>最深刻的民主批评不是来自外人，而是来自<strong>希腊人自己</strong>——而且是在民主最辉煌的时代。这是轴心突破的标志：把自身制度对象化为可批判的问题。</p>
+
+<div class="stage-card" style="border-top-color:var(--philosophy);">
+  <div class="sc-label" style="color:var(--philosophy);">柏拉图的批评（前 4 世纪）</div>
+  <h3>民主 = 混乱的自由 → 暴政</h3>
+  <p>柏拉图在《理想国》第八卷对民主的攻击是哲学史上最系统的反民主论证。核心逻辑：</p>
+  <ol>
+    <li><strong>民主的灵魂类型是「不必要的欲望」主导</strong>——民主把平等给予一切欲望（吃喝、哲学、政治都一样「好」），使人无法区分高贵与低劣。</li>
+    <li><strong>民主的「过度自由」必然滑向僭主制</strong>——当一切平等、一切许可，秩序瓦解；民众在混乱中渴望一个「强人」恢复秩序；强人一旦掌权就成为僭主。柏拉图称民主和僭主制是「孪生」——民主包含僭主的种子。</li>
+    <li><strong>统治需要专门知识（epistēmē）</strong>——就像航海需要舵手、治病需要医生，治国需要哲人。民主让无知者决定一切，等于让乘客投票选舵手——必然触礁。</li>
+  </ol>
+  <p>柏拉图的批评有明显的偏见（他站在哲人/贵族立场），但他抓住了民主的<strong>真实脆弱性</strong>：自由与秩序的张力、平等与卓越的张力、多数的无知与决策质量的张力。这些不是诡辩——它们在伯罗奔尼撒战争后期雅典的实史中得到了印证（民众被煽动家误导、西西里远征的灾难性决策、三十僭主的短暂复辟）。</p>
+</div>
+
+<div class="stage-card" style="border-top-color:var(--philosophy);">
+  <div class="sc-label" style="color:var(--philosophy);">亚里士多德的平衡观（前 4 世纪）</div>
+  <h3>民主的缺陷与「混合政体」的处方</h3>
+  <p>亚里士多德比柏拉图温和，但也批评民主。在《政治学》中他把民主制（多数穷人统治为自己利益）列为「偏离」政体之一（相对于「正确」政体）。他的核心担忧是<strong>多数暴政</strong>——穷人多数通过投票没收富人财产，使政治沦为合法的掠夺。</p>
+  <p>亚里士多德的处方是<strong>混合政体</strong>（politeia）——结合民主（多数的力量）、寡头（财富的能力）、贵族（德性的智慧）三要素，使三者相互制衡。这个「混合」思想深远影响了后来的罗马共和（L9）、波利比乌斯、马基雅维利、美国宪法（L4 扩展）。现代宪政民主本质上是亚里士多德混合政体的实现——它<strong>不是</strong>雅典式纯粹民主，而是民主要素 + 寡头要素 + 贵族要素的混合。</p>
+  <p>这是一个关键澄清：当现代人把「民主」归功于希腊时，他们说的其实是<strong>亚里士多德式混合政体</strong>，而非雅典式直接民主。雅典直接民主在西方传统中一直被视为反面教材（从柏拉图到美国国父），直到 19 世纪才被浪漫化重新发现。</p>
+</div>
+
+<!-- ====== PART 5: SPARTA AND END ====== -->
+<h2>5. 斯巴达与城邦的终结</h2>
+
+<h3>斯巴达：民主的反面，而非简单的「坏」</h3>
+
+<p>斯巴达常被当作雅典的对立面——军国主义、封闭、僵化。这有道理但过于简单。斯巴达是一个<strong>精心设计的混合宪政</strong>（双王+长老会+公民大会+监察官），被波利比乌斯和后来的混合政体理论家视为典范。它的妇女地位远高于雅典（可拥有土地、参与体育、公开发言）。它的<strong>平等主义</strong>（公民内部的「同侪」society）在某种意义上比雅典更彻底——公民不炫富、不竞奢，共餐制（syssitia）使生活高度同质。</p>
+
+<p>斯巴达的真正问题不是「不民主」，而是<strong>制度僵化</strong>——它把前 8 世纪的一次制度设计（传说为吕库古）冻结为永恒，拒绝任何变革。人口萎缩（公民从前 7 世纪的约 8000 衰到前 4 世纪的约 1000）而制度不调整，最终丧失活力。用 L3 的话说：斯巴达是<strong>路径依赖的极端案例</strong>——制度锁定到一个如此完美的形态，以至于无法适应任何变化。这是传统型权威（L2）的典型命运：高度稳定，但面对新条件僵化。</p>
+
+<h3>城邦的终结</h3>
+
+<p>希腊城邦时代在前 4 世纪走向终结。原因不是单一，而是结构性的：</p>
+<ul>
+  <li><strong>规模悖论：</strong>城邦的小规模是其政治形式的前提，但小规模使其在军事上无法抵抗大王国。马其顿的菲利普和亚历山大用<strong>国家化的军事机器</strong>（L1 蒂利逻辑的产物）碾压了城邦的公民军。前 338 喀罗尼亚战役，雅典-底比斯联军败于马其顿，城邦政治独立实质终结。</li>
+  <li><strong>内部撕裂：</strong>伯罗奔尼撒战争（前 431–404，雅典 vs 斯巴达）27 年的内战耗尽城邦元气，民主派与寡头派的互屠使政治传统破产。</li>
+  <li><strong>经济基础变化：</strong>希腊化时代跨区域贸易和王国经济使城邦的自足经济过时——城邦不再是经济单位，政治独立失去物质基础。</li>
+</ul>
+
+<p>城邦的终结留下一个深远的问题：<strong>polis 的政治形式（小规模直接民主）是否只能在 polis 的规模上运作？</strong>如果政治共同体必然走向大规模（王国、帝国、民族国家），那么雅典式民主是否注定是历史的局部？这个问题在 L9（罗马）、L4 扩展（美国建国）、L24（当代民主）会反复回来——它是民主理论的核心张力。</p>
+
+<!-- ====== PART 6: SYNTHESIS ====== -->
+<h2>6. 综汇：用 L1–L5 框架分析雅典民主</h2>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--philosophy);"></span>
+  <span style="font-weight:600;color:var(--philosophy);">轴心突破的制度化（L5）：</span>
+  <span>雅典民主是希腊轴心突破（逻各斯）的<strong>政治制度化</strong>——「理性论证对所有人开放」转化为「政治决策对所有人开放」。公民大会的辩论文化、陪审法庭的论证程序、政治诉讼中的修辞训练，都是逻各斯在政治中的运作。这是轴心突破不仅停留在思想、而且塑造制度的罕见案例——大多数轴心突破没有这么直接的政治制度化。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--politics);"></span>
+  <span style="font-weight:600;color:var(--politics);">IEMP 权力配置（L4）：</span>
+  <span>雅典民主的权力配置独特：<strong>强制</strong>（公民军，非职业军）+ <strong>经济</strong>（梭伦废债务奴隶 + 帝国贡金）+ <strong>规范</strong>（民主作为公民美德的生活方式）。三源的平衡是民主稳定的条件。伯罗奔尼撒战败后强制瓦解、帝国贡金断绝经济基础、规范叙事（民主美德）被内战腐蚀——三源同时崩塌，民主终结。这正是 L4 说的「权力来源相互依赖，削弱一维波及其他」。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--history);"></span>
+  <span style="font-weight:600;color:var(--history);">合法性类型（L2）：</span>
+  <span>雅典民主是<strong>法理型合法性</strong>的早期形态——权威来自程序（公民大会、抽签、法庭），而非个人或传统。但它有强烈的<strong>卡里斯马成分</strong>（伯里克利本人的魅力、煽动家如克里昂的个人号召力）——伯里克利死后卡里斯马失控（克里昂），民主质量下降。这印证 L2：法理型中潜藏卡里斯马需求，领袖魅力的周期性注入既是民主的活力也是其风险。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--economics);"></span>
+  <span style="font-weight:600;color:var(--economics);">经济基础与排斥（L4 经济权力）：</span>
+  <span>雅典民主的「内部民主」依赖<strong>经济排斥</strong>——奴隶劳动支撑公民的脱产政治，帝国贡金支撑公职津贴，外邦人承担工商业但无政治权。这不是偶然的瑕疵，而是<strong>结构性条件</strong>：直接民主需要公民有闲暇，闲暇需要有人替他们劳动。这个「民主依赖排斥」的结构在后世反复重现（美国建国时的奴隶制、现代福利国家的全球分工外移）——它是 L4 经济权力分析的典型应用。</span>
+</div>
+
+<div class="concept-box">
+  <div class="concept-name">🧠 可带走的概念工具</div>
+  <h3>民主审计：分析任何「民主」的四问</h3>
+  <p>雅典案例教我们：面对任何自称「民主」的体制，不要停在「是不是民主」的标签判断，而问：</p>
+  <ol>
+    <li><strong>谁在内/谁在外：</strong>公民体的边界在哪？谁被排除？排除是结构性的（如雅典奴隶）还是偶然的？「民主」覆盖了多少人口？</li>
+    <li><strong>直接还是代议：</strong>公民是直接决策（雅典大会）还是选代表（现代议会）？如果是代议，代表如何产生——选举（亚里士多德说偏贵族）还是抽签（雅典式民主）？</li>
+    <li><strong>经济基础：</strong>民主靠什么经济基础支撑？这个基础是否依赖某种排斥（内部剥削、外部帝国、全球分工）？经济基础动摇时民主会怎样？</li>
+    <li><strong>规模-形式匹配：</strong>政治共同体的规模与政治形式是否匹配？雅典式直接民主需要 polis 规模；现代民族国家能否承载直接民主要素，还是只能代议？</li>
+  </ol>
+  <p style="margin-bottom:0;">这个审计在后续反复使用：L4 扩展（美国建国）、L16（法国大革命）、L19（三种现代性方案）、L24（民主衰落）。</p>
+</div>
+
+<!-- ====== PART 7: EXERCISES ====== -->
+<h2>7. 练习与思考</h2>
+
+<div class="quiz-section">
+
+  <div class="quiz-question" id="q1">
+    <div class="q-num">练习 1 · polis 概念</div>
+    <div class="q-text">「polis」最准确的含义是？</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option" data-answer="wrong">一座有城墙的希腊城市</div>
+      <div class="quiz-option" data-answer="correct">一个由公民组成的政治共同体——可以无城市（如斯巴达），但不能无公民体</div>
+      <div class="quiz-option" data-answer="wrong">希腊的城邦国家，等同于现代民族国家的小型版</div>
+      <div class="quiz-option" data-answer="wrong">一个宗教祭祀共同体</div>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <div class="q-num">练习 2 · 抽签 vs 选举</div>
+    <div class="q-text">雅典绝大多数公职由抽签产生，只有十将军由选举产生。亚里士多德说「抽签是民主的，选举是贵族的」。这个判断的深层理由是？</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option" data-answer="wrong">抽签更省事</div>
+      <div class="quiz-option" data-answer="best">选举选出「最优秀的人」，但「最优秀」总偏向有钱有闲有名望者，久而久之政权落入精英；抽签假定任何公民都有资格且结果真正反映公民体构成——这才是民主的逻辑</div>
+      <div class="quiz-option" data-answer="wrong">雅典人不懂选举的好处</div>
+      <div class="quiz-option" data-answer="wrong">抽签是宗教仪式的遗留</div>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <div class="q-num">练习 3 · 民主的局限</div>
+    <div class="q-text">雅典「民主」覆盖的人口大约是？</div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option" data-answer="wrong">几乎全部居民</div>
+      <div class="quiz-option" data-answer="correct">约 10–15% 的居民——妇女、奴隶（约三分之一人口）、外邦人、盟邦公民全部被排除</div>
+      <div class="quiz-option" data-answer="wrong">约 50%（所有成年男性）</div>
+      <div class="quiz-option" data-answer="wrong">约 30%（所有自由人）</div>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q4">
+    <div class="q-num">练习 4 · 柏拉图的批评</div>
+    <div class="q-text">柏拉图论证「民主必然滑向僭主制」。他的核心逻辑是？</div>
+    <div class="quiz-options" id="q4-opts">
+      <div class="quiz-option" data-answer="wrong">民主总是被外国势力推翻</div>
+      <div class="quiz-option" data-answer="best">民主的「过度自由」使秩序瓦解，民众在混乱中渴望强人恢复秩序，强人掌权即成僭主——民主和僭主制是「孪生」，民主包含僭主的种子</div>
+      <div class="quiz-option" data-answer="wrong">民主制度本身规定要选僭主</div>
+      <div class="quiz-option" data-answer="wrong">所有民主最终都变成僭主制，这是经验规律</div>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q5">
+    <div class="q-num">练习 5 · 框架综合</div>
+    <div class="q-text">用 L4 的 IEMP 框架分析：伯罗奔尼撒战败后雅典民主终结。以下分析最有洞察力的是？</div>
+    <div class="quiz-options" id="q5-opts">
+      <div class="quiz-option" data-answer="wrong">民主终结是因为雅典人不再相信民主</div>
+      <div class="quiz-option" data-answer="best">三源同时崩塌：强制（公民军败于斯巴达职业军）+ 经济（帝国贡金断绝、瘟疫、战争消耗）+ 规范（内战使民主美德叙事腐蚀、寡头与民主派互屠）。权力来源相互依赖——一维瓦解波及其他，三源同时崩塌使民主无法维持。这不是「信念消失」，而是支撑民主的权力配置解体</div>
+      <div class="quiz-option" data-answer="wrong">民主终结纯粹是斯巴达军事优势的结果</div>
+      <div class="quiz-option" data-answer="wrong">民主是雅典的偶然，终结是必然，与权力配置无关</div>
+    </div>
+    <div class="quiz-feedback" id="q5-fb"></div>
+  </div>
+
+</div>
+
+<div class="exercise">
+  <h3>✏️ 民主审计应用（开放练习，10 分钟）</h3>
+  <p>选一个自称「民主」的体制——可以是当代的（某国代议民主、某组织的一人一票、某公司的员工投票），也可以是历史的。用「民主审计四问」做完整分析：</p>
+  <ol style="margin-left:1.5rem;">
+    <li>谁在内/谁在外（公民体边界 + 排除性质）</li>
+    <li>直接还是代议（+ 产生方式：选举/抽签/混合）</li>
+    <li>经济基础（靠什么支撑 + 是否依赖排斥）</li>
+    <li>规模-形式匹配（共同体规模与政治形式是否匹配）</li>
+  </ol>
+  <textarea placeholder="选择体制：……&#10;&#10;1. 谁在内/谁在外：……&#10;2. 直接/代议：……&#10;3. 经济基础：……&#10;4. 规模-形式匹配：……&#10;&#10;你的洞察：……"></textarea>
+  <p class="hint">💡 把审计发给 Claude——我会回应你忽略的排斥维度、挑战你的形式判断、补充历史对照。这是把雅典案例转化为可操作分析能力的核心练习。</p>
+</div>
+
+<!-- ====== FURTHER READING ====== -->
+<h2>8. 推荐阅读</h2>
+
+<div style="background:var(--card-bg);border-radius:6px;padding:1.3rem 1.5rem;margin:1.2rem 0;">
+  <p style="font-weight:600;margin-top:0;">📖 主读</p>
+  <p style="margin-bottom:0.3rem;"><strong>Moses Finley —《古代民主与现代民主》（Democracy Ancient and Modern, 1973）</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">芬利是 20 世纪最重要的古代史家之一。本书薄而精，直接对比雅典民主与现代代议民主，破除大量浪漫化误读。强烈推荐作为本课主读。有中译本。</p>
+
+  <p style="font-weight:600;margin-top:1rem;">📖 辅读</p>
+  <p style="margin-bottom:0.3rem;"><strong>亚里士多德 —《雅典政制》（Athenaion Politeia）</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">亚里士多德（或其学派）对雅典政体的实证描述，从梭伦写到当代。是关于雅典民主演化的一手资料。有中译本（商务/人大等）。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>柏拉图 —《理想国》第八卷</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">柏拉图对民主的批评。读原文会发现他的论证比「反民主」标签复杂得多——他抓住了民主的真实脆弱性。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>Paul Cartledge —《斯巴达：一个古希腊城邦的兴衰》（2018，或更早的 <em>Spartan Reflections</em>）</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:0;">平衡的斯巴达研究——既不浪漫化也不妖魔化。理解斯巴达作为混合宪政和路径依赖极端案例。</p>
+</div>
+
+<!-- ====== CROSS-REFERENCES ====== -->
+<h2>9. 关联与展望</h2>
+<ul style="font-size:0.92rem;">
+  <li><strong>L5 回扣：</strong>雅典民主是希腊轴心突破（逻各斯）的政治制度化——理性论证开放转化为政治决策开放。</li>
+  <li><strong>L2 回扣：</strong>雅典民主是法理型合法性的早期形态，但内嵌卡里斯马成分（伯里克利/煽动家）——法理型中潜藏卡里斯马需求。</li>
+  <li><strong>L4 回扣：</strong>IEMP 三源（强制/经济/规范）的平衡是民主稳定条件；伯罗奔尼撒战败是三源同时崩塌的案例；「内部民主依赖外部排斥」是经济权力的结构性条件。</li>
+  <li><strong>L3 回扣：</strong>斯巴达是路径依赖的极端案例——制度锁定到完美形态而无法适应变化，传统型权威的典型命运。</li>
+  <li><strong>L7 预告：</strong>战国百家——中国轴心突破的政治制度化，与雅典形成对照（治道 vs 辩论）。</li>
+  <li><strong>L8 预告：</strong>柏拉图《理想国》vs 韩非子——本课的柏拉图批评将在 L8 与韩非子并置。</li>
+  <li><strong>L9 罗马：</strong>罗马共和是亚里士多德混合政体的大规模实现——城邦规模悖论的第一个回应。</li>
+  <li><strong>L4 扩展（美国建国）：</strong>美国国父直接援引柏拉图/亚里士多德反纯粹民主的论证，设计混合政体——现代宪政民主是亚里士多德处方而非雅典纯粹民主的实现。</li>
+  <li><strong>L24：</strong>抽签民主的当代复兴作为对民主衰落的诊断。</li>
+</ul>
+
+<div class="lesson-footer">
+  <p>🎯 本课服务于你的 <a href="../MISSION.md">MISSION</a>：<em>构建跨学科理解框架。</em>雅典民主是政治学的奠基案例，也是「民主」概念被反复援引的原型——把它从口号还原为可分析的实验，是理解此后所有民主话语的前提。</p>
+  <p>💬 雅典民主你更倾向「庆祝」还是「批判」？柏拉图的批评你觉得公平吗？民主审计中你的判断有犹豫？<strong>直接问 Claude。</strong></p>
+  <div class="links">
+    <span><a href="./0005-axial-age.html">← L5 轴心时代</a></span>
+    <span><a href="#" style="color:var(--text-light);">L7 战国百家 →</a>（即将推出）</span>
+    <span><a href="../reference/glossary.html">📚 术语表</a></span>
+    <span><a href="../index.html">↑ 课程路径</a></span>
+  </div>
+</div>
+
+<script>
+(function() {
+  function setup(qId) {
+    const opts = document.querySelectorAll('#' + qId + '-opts .quiz-option');
+    const fb = document.getElementById(qId + '-fb');
+    opts.forEach(o => {
+      o.addEventListener('click', function() {
+        opts.forEach(x => { x.classList.remove('selected', 'correct', 'incorrect'); });
+        o.classList.add('selected');
+        const ans = o.dataset.answer;
+        if (ans === 'correct' || ans === 'best') {
+          o.classList.add('correct');
+          fb.className = 'quiz-feedback show fb-correct';
+          if (qId === 'q1') fb.innerHTML = '✅ <strong>正确。</strong>polis 是政治共同体而非城市——这个区分是理解希腊政治的钥匙。它解释了为什么斯巴达（无城墙）仍是 polis，为什么亚里士多德说「人是 polis 的动物」不是说人喜欢城市而是说人需要政治共同体才能实现本质。';
+          else if (qId === 'q2') fb.innerHTML = '✅ <strong>正确。</strong>这是雅典民主最反现代直觉、也最深刻的洞察。现代人把「民主」等同于「选举」，但雅典人会把选举-rich 的体制归为寡头制。当代抽签民主运动的复兴（L24）正是回到这一直觉——它诊断现代民主的精英化恰恰源于「民主=选举」这一遗忘。';
+          else if (qId === 'q3') fb.innerHTML = '✅ <strong>正确。</strong>这个数字是必要的清醒。它不否定雅典民主在公民内部的真实性，但把「希腊发明民主」的叙事还原为「一种建立在大量排斥之上的公民体内部直接民主」。后世「民主依赖排斥」的结构反复重现——这是 L4 经济权力分析的应用。';
+          else if (qId === 'q4') fb.innerHTML = '✅ <strong>正确。</strong>柏拉图的论证不是「民主不好」，而是「民主内含自我毁灭的动力学」——自由→混乱→渴望强人→僭主。这个论证有偏见（贵族立场），但抓住了真实脆弱性，且在雅典后期的实史中得到印证。它也是 L24 分析当代民粹的重要资源——民粹正是「民主的过度自由→渴望强人」的现代版。';
+          else if (qId === 'q5') fb.innerHTML = '✅ <strong>正确。</strong>这是 IEMP 框架的典型应用。关键洞察是<strong>权力来源相互依赖</strong>——民主不是单独「信念」的产物，而是三源平衡的产物。一维瓦解波及其他，三源同时崩塌使民主无法维持。这个分析框架比「雅典人不再相信民主」深刻得多——它指向民主的<strong>结构性条件</strong>而非主观信念。L24 会用同一框架分析当代民主衰落。';
+        } else {
+          o.classList.add('incorrect');
+          fb.className = 'quiz-feedback show fb-incorrect';
+          if (qId === 'q1') {
+            if (o.textContent.includes('城墙')) fb.innerHTML = '❌ 城墙不是 polis 的本质——斯巴达长期无城墙仍是 polis，而许多有城墙的定居点不是 polis。城市（asty）只是 polis 的可能组成部分，不是定义。';
+            else if (o.textContent.includes('民族国家')) fb.innerHTML = '❌ polis 与现代民族国家有本质区别——规模（千 vs 亿）、形式（直接 vs 代议）、共同体性质（面对面的公民 vs 抽象的国民）。把 polis 当「小民族国家」会错过其独特性。';
+            else fb.innerHTML = '❌ polis 主要是<strong>政治</strong>共同体，宗教是其一部分但非定义。希腊宗教是城邦宗教（每个 polis 有自己的守护神），但 polis 的核心是公民政治而非祭祀。';
+          } else if (qId === 'q2') {
+            if (o.textContent.includes('省事')) fb.innerHTML = '❌ 抽签不见得更省事——它需要复杂的资格审核、抽签机器、轮换制度。雅典选择抽签不是出于效率，而是出于<strong>政治原则</strong>（民主 vs 贵族的逻辑）。';
+            else if (o.textContent.includes('不懂')) fb.innerHTML = '❌ 雅典人完全懂选举——他们选举十将军，且对选举的贵族化倾向有清醒认识（亚里士多德明确论述）。他们在大范围用抽签是<strong>选择</strong>，不是无知。';
+            else fb.innerHTML = '❌ 抽签虽有宗教起源（占卜），但在雅典它已是<strong>理性的政治技术</strong>，有专门的抽签机器（kleroterion）和程序设计。把它归为宗教遗留 misses 其政治原理。';
+          } else if (qId === 'q3') fb.innerHTML = '❌ 仔细看排除人群：妇女（约半自由人）+ 奴隶（约三分之一总人口）+ 外邦人 + 盟邦。合起来远超 50% 被排除。雅典民主的「直接」真实，但「民主」覆盖范围有限。';
+          else if (qId === 'q4') {
+            if (o.textContent.includes('外国')) fb.innerHTML = '❌ 柏拉图的论证是<strong>内生</strong>的——民主从自身内部产生僭主，不需要外国势力。这是他最深刻的洞察：民主的威胁不在外部，而在民主自身的动力学。';
+            else if (o.textContent.includes('规定要选')) fb.innerHTML = '❌ 民主制度当然不规定选僭主。柏拉图说的是民主的<strong>非意图后果</strong>——制度没有规定，但其动力学<strong>导致</strong>僭主。这是关于制度内生演化的论证，不是关于制度规定。';
+            else fb.innerHTML = '❌ 柏拉图不是做经验归纳（「所有民主都…」），而是做<strong>结构论证</strong>——民主的内在动力学（自由→混乱→强人）逻辑上导向僭主。这个论证即使不每次应验，其结构性洞察仍有价值。';
+          } else if (qId === 'q5') {
+            if (o.textContent.includes('不再相信')) fb.innerHTML = '❌ 「不再相信」把民主终结归因于主观信念，错过了结构性原因。雅典人并非突然不信民主——是支撑民主的<strong>权力配置</strong>解体了。信念变化是结构解体的<strong>结果</strong>而非原因。这是 IEMP 框架 vs 信念解释的关键区别。';
+            else if (o.textContent.includes('纯粹斯巴达')) fb.innerHTML = '❌ 斯巴达军事优势是<strong>强制维度</strong>的瓦解，但民主终结不止于此——经济（帝国贡金断绝）和规范（内战腐蚀民主美德）同时崩塌。只看军事错过三源相互依赖。';
+            else fb.innerHTML = '❌ 「偶然 vs 必然」的二元不适用于制度分析。雅典民主既非纯粹偶然也非纯粹必然——它是在特定权力配置下的<strong> contingent 稳定</strong>，配置解体则终结。IEMP 框架正是要避免偶然/必然的简单二元，而看结构条件。';
+          }
+        }
+      });
+    });
+  }
+  ['q1','q2','q3','q4','q5'].forEach(setup);
+})();
+</script>
+
+</body>
+</html>

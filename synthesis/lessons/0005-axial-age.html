@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0005 · 轴心时代谜题</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --bg: #fdfcf9; --text: #2c2c2c; --text-light: #5c5c5c;
+    --accent: #8b4513; --accent-dim: #a0522d; --border: #d4c5b2; --card-bg: #f8f5f0;
+    --history: #8b4513; --economics: #2d6a4f; --politics: #1a659e; --philosophy: #7b2d8b;
+    --highlight: #fef3c7; --correct: #2d6a4f; --incorrect: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Serif SC', 'SimSun', serif; background: var(--bg); color: var(--text); line-height: 1.85; max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 1.02rem; }
+  h1 { font-size: 1.8rem; font-weight: 700; margin: 2rem 0 0.6rem; letter-spacing: 0.02em; line-height: 1.3; }
+  h2 { font-size: 1.25rem; font-weight: 600; margin: 2.6rem 0 0.7rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+  p { margin: 0.9rem 0; } li { margin: 0.4rem 0; }
+  a { color: var(--accent-dim); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); } strong { font-weight: 600; }
+  .meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-light); margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .meta .tag { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 3px; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; color: white; }
+  .meta .phase-badge { background: var(--accent); color: white; padding: 0.15rem 0.55rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; }
+  .tag-history { background: var(--history); } .tag-economics { background: var(--economics); } .tag-politics { background: var(--politics); } .tag-philosophy { background: var(--philosophy); }
+  .hook { background: var(--highlight); border-left: 4px solid var(--accent); padding: 1.3rem 1.5rem; margin: 1.5rem 0; font-size: 1.02rem; border-radius: 0 6px 6px 0; }
+  blockquote { border-left: 3px solid var(--border); padding: 0.6rem 1.2rem; margin: 1.2rem 0; color: var(--text-light); background: var(--card-bg); border-radius: 0 4px 4px 0; font-size: 0.96rem; }
+  blockquote.important { border-left-color: var(--accent); background: var(--highlight); color: var(--text); }
+  table { width: 100%; border-collapse: collapse; margin: 1.3rem 0; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; font-size: 0.82rem; letter-spacing: 0.03em; color: var(--text-light); }
+  tr:hover td { background: #fef9f0; }
+  .axial-card { background: var(--card-bg); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; border-top: 3px solid var(--philosophy); }
+  .axial-card .ac-label { font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--philosophy); margin-bottom: 0.3rem; }
+  .axial-card h3 { margin-top: 0; }
+  .theory { background: var(--card-bg); border-radius: 6px; padding: 1.1rem 1.3rem; margin: 0.9rem 0; border-left: 3px solid var(--border); }
+  .theory .theory-name { font-weight: 600; } .theory .theory-scholar { font-size: 0.82rem; color: var(--text-light); }
+  .concept-box { border: 2px solid var(--accent); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 2rem 0; background: var(--card-bg); }
+  .concept-box .concept-name { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem; }
+  .concept-box h3 { margin-top: 0; }
+  .quiz-section { margin: 2rem 0; }
+  .quiz-question { background: var(--card-bg); border-radius: 6px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; }
+  .quiz-question .q-num { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.3rem; }
+  .quiz-question .q-text { font-weight: 600; margin-bottom: 0.9rem; font-size: 1.02rem; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .quiz-option { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; transition: background 0.12s, border-color 0.12s; font-size: 0.93rem; }
+  .quiz-option:hover { background: #fdf5e8; }
+  .quiz-option.selected { border-color: var(--accent); background: var(--highlight); }
+  .quiz-option.correct { border-color: var(--correct) !important; background: #e8f5e9 !important; }
+  .quiz-option.incorrect { border-color: var(--incorrect) !important; background: #fdecea !important; }
+  .quiz-feedback { margin-top: 0.7rem; font-size: 0.9rem; display: none; padding: 0.7rem 0.9rem; border-radius: 4px; line-height: 1.7; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.fb-correct { background: #e8f5e9; color: #1b5e20; }
+  .quiz-feedback.fb-incorrect { background: #fdecea; color: #b71c1c; }
+  .exercise { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 8px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .exercise h3 { margin-top: 0; }
+  .exercise textarea { width: 100%; min-height: 110px; margin: 0.8rem 0; padding: 0.6rem; font-family: inherit; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px; background: white; resize: vertical; line-height: 1.7; }
+  .exercise .hint { font-size: 0.84rem; color: var(--text-light); font-style: italic; }
+  .lesson-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.87rem; color: var(--text-light); }
+  .lesson-footer .links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
+  .lens-header { display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+  .lens-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  @media (max-width: 600px) { body { padding: 1.5rem 1rem 4rem; font-size: 0.98rem; } h1 { font-size: 1.4rem; } }
+  @media print { body { max-width: 100%; padding: 1rem; font-size: 10pt; } }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <span>📅 Lesson 0005 · L5</span>
+  <span>⏱ ~30 分钟</span>
+  <span><span class="phase-badge">PHASE 2 开始</span></span>
+  <span><span class="tag tag-history">历史</span> <span class="tag tag-philosophy">哲学</span> <span class="tag tag-politics">政治</span></span>
+  <span>🔗 <a href="../reference/glossary.html">术语表</a></span>
+</div>
+
+<h1>轴心时代谜题</h1>
+<p style="font-size:1.05rem;color:var(--text-light);margin-top:-0.2rem;">
+  公元前 800–200 年，四个互不知晓的文明同时完成了哲学突破——为什么？
+</p>
+
+<div class="hook">
+  <strong>一个令人困惑的同步。</strong>公元前 800 到 200 年这五百年间，欧亚大陆四个互不知晓的文明，<em>独立地</em>完成了一次相似的精神突破：<br><br>
+
+  在<strong>希腊</strong>，苏格拉底、柏拉图、亚里士多德把神话思维转化为理性论证，发明了哲学、逻辑、演绎几何。<br>
+  在<strong>以色列</strong>，先知们把部落神雅威提升为普世的、伦理的、超越宇宙的唯一神，发明了线性历史观和道德一神论。<br>
+  在<strong>印度</strong>，奥义书、佛陀、大雄追问自我与实在本质，发明了内省形而上学和普遍解脱伦理。<br>
+  在<strong>中国</strong>，孔子、老子、墨子、韩非子在「礼崩乐坏」的乱世中追问秩序的根基，发明了政治哲学和道德形而上学。<br><br>
+
+  他们没有互相影响（希腊和以色列有零星接触，但与中国、印度基本隔绝）。他们面对的具体问题不同，语言不同，制度不同。但他们都走到了一个相似的地方：<strong>对既有的神话和传统提出质疑，用超越的、批判的、普遍性的话语重新奠基</strong>。<br><br>
+
+  卡尔·雅斯贝尔斯在 1949 年把这段时期命名为<strong>「轴心时代」</strong>（Achsenzeit），并声称它是人类历史的「轴心」——此前的一切为它做准备，此后的一切以它为参照。谜题是：<strong>为什么是这五百年？为什么是这四个地方？为什么是同时？</strong>
+</div>
+
+<!-- ====== PART 1: JASPERS AND THE CONCEPT ====== -->
+<h2>1. 雅斯贝尔斯与「轴心时代」概念</h2>
+
+<p>德国哲学家卡尔·雅斯贝尔斯在《历史的起源与目标》（Vom Ursprung und Ziel der Geschichte, 1949）中提出「轴心时代」概念。写作背景很重要——1949 年，二战刚结束，雅斯贝尔斯试图在废墟中寻找人类共同的「起源」，以对抗纳粹的种族特殊论。轴心时代是他的反纳粹叙事：人类的精神根基不是某一个种族的发明，而是<strong>多个文明独立发现的共同可能性</strong>。</p>
+
+<p>雅斯贝尔斯的命题有三个要素：</p>
+
+<ol>
+  <li><strong>同步性：</strong>四个突破在公元前 800–200 年间几乎同时发生（误差不超过几百年）。</li>
+  <li><strong>独立性：</strong>各文明基本互不知晓——同步不是传播的结果。</li>
+  <li><strong>共同特征：</strong>都经历了「超越的突破」——对既有神话/传统的批判性质疑，用普遍的、理性的、伦理的话语重新奠基。</li>
+</ol>
+
+<p>雅斯贝尔斯进一步声称：轴心时代之前的人类社会（埃及、美索不达米亚、早期印度、商朝）尽管技术精湛、规模宏大，但<strong>没有完成这一突破</strong>——它们的精神生活仍是「神话式的」：没有把「超越」与「现世」明确区分，没有把「应当」与「是」分离，没有把批判的个体从集体中解放出来。轴心时代之后的所有高等文明，要么是这四个突破的延续，要么受其辐射。这就是「轴心」的含义——历史在此转弯，此后一切以它为坐标。</p>
+
+<blockquote class="important">
+  「最不寻常的事件集中在这一时期……在中国和印度，在西方（以色列和希腊），发生了<strong>精神的突破</strong>。人开始<strong>意识到整体、意识到自己、意识到边界</strong>。人开始追问根本问题。面对这一切，人试图通过反思来获得解脱和救赎……神话时代走向终结。」<br>
+  <span style="font-size:0.85rem;">— Karl Jaspers, <em>The Origin and Goal of History</em> (1949)</span>
+</blockquote>
+
+<p>这个命题很美，但立刻引出三个尖锐的问题：</p>
+<ul>
+  <li><strong>同步性是真的吗？</strong>四个突破的时间跨度其实达五六百年，把它们说成「同时」是否是事后归并？</li>
+  <li><strong>独立性是真的吗？</strong>希腊-波斯-印度之间的接触比雅斯贝尔斯想象的多，丝绸之路的前身已存在，思想真的完全独立吗？</li>
+  <li><strong>「突破」是真的吗？</strong>把埃及和美索不达米亚归为「未突破」是否是欧洲中心论/轴心中心论？它们难道没有自己的批判思想？</li>
+</ul>
+
+<p>这三个问题在过去七十年里被反复辩论。我们逐一处理。</p>
+
+<!-- ====== PART 2: THE FOUR BREAKTHROUGHS ====== -->
+<h2>2. 四个突破的具体内容</h2>
+
+<p>在评判同步性之前，先看清四个突破各自发生了什么。注意它们的<strong>共同结构</strong>和<strong>具体差异</strong>——共同结构是轴心时代的证据，具体差异是独立性的证据。</p>
+
+<div class="axial-card">
+  <div class="ac-label">突破一 · 希腊（~600–300 BCE）</div>
+  <h3>从神话到逻各斯</h3>
+  <p>前 6 世纪，米利都的泰勒斯开始用<strong>自然原因</strong>而非神话解释世界——「地震是大地浮在水上被波涛撼动」，而非「波塞冬震怒」。这看似简单的转换是巨大的：它意味着世界原则上可被人的理性理解，而非神的任意意志。</p>
+  <p>随后苏格拉底把理性从自然转向人事——「未经审视的生活不值得过」。柏拉图把感官世界与理念世界分离，发明了形而上学的核心架构。亚里士多德系统化了逻辑、物理学、生物学、伦理学、政治学。</p>
+  <p><strong>突破的核心结构：</strong>（1）<em>逻各斯</em>（理性论证）取代<em>神话</em>（叙事权威）作为真理的来源；（2）真理对所有人开放，不依赖祭司血统；（3）「是」与「应当」分离——物理描述与道德规范分属不同话语。</p>
+</div>
+
+<div class="axial-card">
+  <div class="ac-label">突破二 · 以色列（~800–500 BCE）</div>
+  <h3>从部落神到普世伦理一神论</h3>
+  <p>前 8–6 世纪的希伯来先知（阿摩司、何西阿、以赛亚、耶利米）完成了一次看似微小实则根本的转换：部落神雅威——原本是以色列人的战神/地方神，与周围部落神并列——被重新理解为<strong>普世的、伦理的、超越宇宙的唯一神</strong>。</p>
+  <p>关键转变：神不再主要关心献祭仪式和部落胜利，而关心<strong>正义、怜悯、对弱者的保护</strong>。「我厌恶你们的节期……惟愿公平如大水滚滚，使公义如江河滔滔」（阿摩司书 5:21–24）。这是仪式宗教向伦理宗教的转折。</p>
+  <p>同时发明了<strong>线性历史观</strong>：历史有起点（创世）、有方向（神的计划）、有终点（救赎）——不同于循环的神话时间。这一历史观直接塑造了后来的基督教、伊斯兰教、以及现代进步叙事。</p>
+  <p><strong>突破的核心结构：</strong>（1）神超越宇宙而非内在于自然；（2）神意是伦理的而非仪式的；（3）历史是线性的、有方向的、有目的的。</p>
+</div>
+
+<div class="axial-card">
+  <div class="ac-label">突破三 · 印度（~800–300 BCE）</div>
+  <h3>从仪式梵到内省解脱</h3>
+  <p>奥义书（前 800–500）开始追问吠陀仪式背后的本质——「梵」（Brahman，宇宙终极实在）与「我」（Atman，个体自我）的关系。终极真理不再通过外在仪式获得，而通过<strong>内省</strong>证悟「我即梵」。</p>
+  <p>佛陀（前 563–483）和大雄（耆那教创始人）进一步突破：他们质疑奥义书的梵我合一，否定不变的自我（无我），把解脱从形而上学思辨转化为<strong>具体的修行路径</strong>，并向所有种姓开放（反种姓）。</p>
+  <p><strong>突破的核心结构：</strong>（1）终极实在超越仪式和神祇；（2）解脱靠内省/修行而非祭司中介；（3）伦理（不害、慈悲）具有普世性，跨越种姓。</p>
+</div>
+
+<div class="axial-card">
+  <div class="ac-label">突破四 · 中国（~600–300 BCE）</div>
+  <h3>从天命到诸子争鸣</h3>
+  <p>春秋战国（前 770–221）的「礼崩乐坏」——周代宗法秩序瓦解——迫使思想家追问秩序的根基。诸子百家不是学术讨论，是<strong>乱世中的政治-伦理救世方案</strong>。</p>
+  <p>孔子把「礼」从贵族专利转化为通过修身可达的普遍伦理，发明了以君子人格为中心的政治哲学。老子质疑文明本身，主张返璞归真。墨子提出兼爱非攻的功利主义伦理。韩非子把法、术、势系统化为冷峻的国家权力学说。孟子性善、荀子性恶——人性问题被首次明确提出。</p>
+  <p><strong>突破的核心结构：</strong>（1）秩序的正当性不再自动来自传统（周礼），而需论证；（2）论证以普遍的「道」「理」「天」为依据，超越具体传统；（3）政治与伦理紧密绑定——治世即修身之延伸。</p>
+</div>
+
+<h3>共同结构 vs 具体差异</h3>
+
+<p>四个突破共享一个深层结构：</p>
+<ol>
+  <li><strong>超越与现世的分离：</strong>都设定了一个超越具体传统/神话的「终极」（逻各斯/唯一神/梵/道），作为批判现世的依据。</li>
+  <li><strong>个体的觉醒：</strong>都把批判性的个体从集体神话中解放——苏格拉底的「审视」、先知的「个人责任」、佛陀的「自灯明」、孔子的「为仁由己」。</li>
+  <li><strong>普遍主义：</strong>都把真理/伦理从特定血统/种姓/城邦扩展到「所有人」。</li>
+  <li><strong>反思性：</strong>都把思想本身对象化——开始「思考关于思考」「追问追问的根据」。</li>
+</ol>
+
+<p>但具体形态差异巨大：希腊走向<strong>逻辑与自然哲学</strong>，以色列走向<strong>伦理一神论与线性历史</strong>，印度走向<strong>内省形而上学与解脱</strong>，中国走向<strong>政治伦理与治世</strong>。这个<strong>共同结构 + 具体差异</strong>的组合，正是轴心时代最有意思的地方——它暗示某种共同的「人类可能性」在不同条件下长成不同形态。</p>
+
+<!-- ====== PART 3: WHY SIMULTANEOUS ====== -->
+<h2>3. 为什么是同时？三种解释</h2>
+
+<p>同步性是轴心时代命题最惊人的部分，也是最需要解释的部分。三种主要解释，各有洞见也各有不足。</p>
+
+<div class="theory">
+  <div class="theory-name">解释一：共同的外生冲击（技术 + 通讯）</div>
+  <div class="theory-scholar">早期雅斯贝尔斯；后由 Eric Voegelin、Shmuel Eisenstadt 发展</div>
+
+  <p>四个地区在前 800 年左右都经历了类似的结构变化：</p>
+  <ul>
+    <li><strong>铁器普及：</strong>前 1200–800 铁器取代青铜，铁器更便宜、更锋利，使（1）农业深耕成为可能（人口增长），（2）武器民主化（平民可武装，冲击贵族垄断）。</li>
+    <li><strong>文字普及：</strong>字母文字（腓尼基，前 1000）和中国的简牍使知识脱离祭司/宫廷垄断，可被更广泛的人群掌握和批判。</li>
+    <li><strong>城市化与贸易：</strong>城市增长、长途贸易形成，产生跨部落的人群流动和思想交流。</li>
+    <li><strong>传统秩序的危机：</strong>铁器武装的平民、流动的商人、新兴的城市冲击了青铜时代的贵族/祭司秩序，传统神话的权威动摇。</li>
+  </ul>
+
+  <p>共同的结构变化产生共同的精神需求：旧权威瓦解→需要新的奠基→批判性超越话语应运而生。</p>
+
+  <p><strong>不足：</strong>这个解释说明「为什么这一时期有突破的<strong>条件</strong>」，但没说明「为什么是<strong>这种</strong>突破」（超越性、普遍主义）。埃及和美索不达米亚也经历过技术变化和秩序危机，但没有产生轴心突破。条件不充分。</p>
+</div>
+
+<div class="theory">
+  <div class="theory-name">解释二：轴心突破的内在动力学（Eisenstadt）</div>
+  <div class="theory-scholar">S.N. Eisenstadt, <em>Comparative Civilizations and Multiple Modernities</em> (2003)</div>
+
+  <p>艾森斯塔德把轴心突破理解为一种<strong>特定的文化结构转变</strong>，其动力学一旦启动就会产生类似结果。核心机制：</p>
+  <ol>
+    <li><strong>超越与现世的张力：</strong>一旦设定一个超越的「终极」，它与不完美的现世之间必然产生张力——现世应当按照超越标准被改造。这种张力是轴心文明的<strong>发动机</strong>。</li>
+    <li><strong>张力驱动的反思：</strong>改造现世的努力不断暴露现世与超越的差距，驱使更深的反思、更系统的伦理、更精致的神学/哲学。</li>
+    <li><strong>精英分化：</strong>超越话语产生一个新的文化精英（先知/哲学家/圣人），他们与传统的政治-祭司精英形成张力，推动话语进一步自主化。</li>
+  </ol>
+
+  <p>艾森斯塔德强调：轴心突破不是「一次性事件」，而是一种<strong>持续运作的文化动力学</strong>。一旦启动，它会自我深化——这解释了为什么轴心文明有如此长的持续生命力（两千多年仍在运作），而非轴心文明（埃及、美索不达米亚）在神话框架内高度稳定但缺乏自我转化的能力。</p>
+
+  <p><strong>不足：</strong>这个解释把「轴心突破」当作一个已经定义好的东西来解释其动力学，但「为什么这种突破会发生」的源头问题仍部分悬而未决。它解释了<strong>持续</strong>，没完全解释<strong>起源</strong>。</p>
+</div>
+
+<div class="theory">
+  <div class="theory-name">解释三：扩散与接触（怀疑论）</div>
+  <div class="theory-scholar">近年考古学和思想史修正</div>
+
+  <p>一种越来越有影响力的怀疑论：四个突破的「独立性」被夸大了。实际接触比雅斯贝尔斯承认的多：</p>
+  <ul>
+    <li>希腊-波斯战争后希腊对波斯（及其印度延伸）的了解大增；毕达哥拉斯可能受印度思想影响。</li>
+    <li>亚历山大东征（前 327）把希腊、波斯、印度直接连在一起——希腊化佛教（犍陀罗）是这一接触的产物。</li>
+    <li>丝绸之路前身的跨欧亚贸易在前 1000 年已存在，思想沿商路扩散比想象中快。</li>
+  </ul>
+
+  <p>按此观点，轴心时代更像是一个<strong>欧亚大陆的思想网络</strong>在特定条件下同时被点燃——同步性来自接触和共振，而非完全独立的平行发明。</p>
+
+  <p><strong>不足：</strong>接触确实存在，但四个突破的<strong>核心结构差异</strong>（希腊的逻辑、以色列的一神论、印度的解脱、中国的治世）太大，无法归因于扩散。扩散可以解释某些主题的传播（如二元论、轮回），但不能解释四个独立成体系的形态。最合理的判断是：<strong>核心突破独立，边缘主题有扩散</strong>。</p>
+</div>
+
+<h3>三种解释的综汇</h3>
+
+<p>三种解释不是互斥的，而是<strong>不同层次</strong>的说明：</p>
+<ul>
+  <li>解释一说明<strong>触发条件</strong>（外生冲击松动旧秩序）；</li>
+  <li>解释二说明<strong>内在动力学</strong>（一旦启动，超越-现世张力驱动持续深化）；</li>
+  <li>解释三修正<strong>独立性程度</strong>（核心独立，边缘扩散）。</li>
+</ul>
+
+<p>合起来：前 800 年左右，欧亚大陆四个地区因类似的技术/社会变化经历了传统秩序危机；在各自的具体条件下，它们独立地发现了「超越」这一文化结构；这一结构一旦启动就产生自我深化的动力学；边缘思想沿商路相互渗透，但核心形态保持独立。这就是当前最合理的综合图景。</p>
+
+<!-- ====== PART 4: WHY NOT EGYPT ====== -->
+<h2>4. 为什么埃及和美索不达米亚没有突破？</h2>
+
+<p>轴心时代命题最尖锐的批评是：把埃及和美索不达米亚归为「未突破」是否公平？它们有近三千年的高度文明史，难道没有批判思想？</p>
+
+<p>这个问题需要小心回答。埃及和美索不达米亚并非没有思想生活——它们有丰富的智慧文学、伦理反思、宗教思辨。但艾森斯塔德区分了两个关键点：</p>
+
+<ol>
+  <li><strong>有反思 ≠ 有突破。</strong>埃及的智慧文学（如《普塔霍特普箴言》）有伦理反思，但它<strong>不质疑框架本身</strong>——它教人如何在既有秩序中活得好，不追问秩序的正当性。轴心突破的特征是<strong>把框架本身对象化</strong>，使其成为可批判的问题。</li>
+  <li><strong>超越与现世未分离。</strong>在埃及和美索不达米亚，神祇内在于自然秩序（太阳神就是太阳，而非超越太阳的造物主）。没有「超越的终极」与「不完美的现世」之间的张力，就没有改造现世的持续动力。秩序是给定的，不是待实现的。</li>
+</ol>
+
+<p>用 L4 的语言：埃及和美索不达米亚的<strong>规范性权力</strong>高度发达且高度稳定，但它运作于 Lukes 的第三维（塑造偏好使现世被体验为自然给定），而<strong>没有产生把规范本身对象化的二阶反思</strong>。轴心突破正是这种二阶反思的诞生——规范权力第一次成为<strong>可批判的对象</strong>，而非透明的背景。</p>
+
+<p>这给了我们一个重要洞察：<strong>轴心突破本质上是规范性权力的一次自我反思</strong>。它不是产生规范权力（所有社会都有），而是产生<strong>对规范权力的批判能力</strong>。此后，任何秩序都必须面对「凭什么」这个问题——这是 L2 合法性问题的文化前提。前轴心文明不需要为秩序辩护（它「向来如此」），后轴心文明必须不断辩护。</p>
+
+<p>这个判断仍可争议——有人认为埃及「阿肯那顿的宗教改革」（前 14 世纪）是一次未成功的轴心突破，有人认为把「超越」作为标准本身是西方/亚伯拉罕传统的偏见。但即使承认这些，宏观差异是真实的：埃及和美索不达米亚的精神生活确实没有产生希腊/以色列/印度/中国那种<strong>持续两千年的批判性传统</strong>。</p>
+
+<!-- ====== PART 5: SECOND AXIAL AGE ====== -->
+<h2>5. 二次轴心时代？基督教与伊斯兰</h2>
+
+<p>艾森斯塔德进一步提出「二次轴心突破」概念。原始轴心突破发生在四个地区，但其后有两个运动把轴心动力学推向新阶段：</p>
+
+<ul>
+  <li><strong>基督教（1 世纪）：</strong>把以色列的伦理一神论与希腊的逻各斯传统融合（「道成肉身」是把希腊逻各斯与犹太神意合成的神学操作），并<strong>打破民族边界</strong>——救赎向所有民族开放。这是轴心突破的<strong>普遍化</strong>。</li>
+  <li><strong>伊斯兰（7 世纪）：</strong>把一神论、线性历史、普世伦理重新整合，并建立政教合一的文明框架。穆罕默德明确自认处于亚伯拉罕-摩西-耶稣的先知传统的延续中——伊斯兰是轴心突破的<strong>自我意识最强的继承者</strong>。</li>
+</ul>
+
+<p>这两个运动都不是「新轴心」（它们继承而非独立发明），但它们把轴心动力学从其原生土壤中提取出来，转化为<strong>跨文明的普世力量</strong>。理解这一点对后续课程至关重要：L11（伊斯兰政治哲学）、L12（宗教改革）都是二次轴心动力学的展开。</p>
+
+<p>有人（如 Karen Armstrong、Robert Bellah）提出我们正经历<strong>「第三次轴心时代」</strong>——科学革命、启蒙、现代性、全球化构成新一轮的超越-现世张力。这个类比有启发但也松散——我们会在 L25 评估它。</p>
+
+<!-- ====== PART 6: SYNTHESIS WITH FRAMEWORK ====== -->
+<h2>6. 综汇：轴心时代在 L1–L4 框架中的位置</h2>
+
+<p>现在把轴心时代放进 Phase 1 建立的框架。这不是装饰——它让我们看清轴心时代在长程历史中的<strong>结构性位置</strong>。</p>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--philosophy);"></span>
+  <span style="font-weight:600;color:var(--philosophy);">作为关键节点（L3）：</span>
+  <span>轴心时代是规范性权力的一次<strong>关键节点</strong>——外生冲击（铁器/文字/贸易/秩序危机）松动了几千年的神话型路径依赖，打开了突破窗口。节点之后，四个文明沿各自的轴心路径漂移，制度与思想分化加剧。这完全符合 L3 的「关键节点 + 制度漂移」模型。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--politics);"></span>
+  <span style="font-weight:600;color:var(--politics);">作为规范性权力的自我反思（L4）：</span>
+  <span>轴心突破最深的本质是<strong>规范性权力产生了对自身的二阶反思</strong>。此前规范权力透明地运作（Lukes 三维，塑造偏好而不被察觉）；轴心突破使规范本身成为可批判的对象。这彻底改变了权力的运作方式——此后任何政权都必须为规范基础辩护（L2 合法性问题的诞生）。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--history);"></span>
+  <span style="font-weight:600;color:var(--history);">作为长程分流的起点（L1）：</span>
+  <span>轴心时代解释了 L1 中六大原生国家之后的<strong>长程分化</strong>。六个国家都建立在农业剩余+战争+合法性叙事上，但只有四个（希腊/以色列/印度/中国，埃及和美索不达米亚除外）完成了轴心突破。这个差异在两千年后结出了完全不同的果实——西方的科学与宪政、伊斯兰的律法文明、印度的宗教社会、中国的儒法国家——所有这些都可以追溯到轴心时代的不同路径。</span>
+</div>
+
+<div class="lens-header">
+  <span class="lens-dot" style="background:var(--economics);"></span>
+  <span style="font-weight:600;color:var(--economics);">作为经济权力的间接产物：</span>
+  <span>解释一的触发条件（铁器、文字、贸易、城市化）本质上是<strong>经济权力</strong>的物质基础变化。铁器和文字是技术（经济），贸易和城市是交换网络（经济）。轴心突破虽是精神事件，但其触发条件是经济权力结构的变化——这印证了 L4 的「权力来源非同步漂移」：经济先动，规范（轴心突破）随后。又一个经济→规范的时序案例。</span>
+</div>
+
+<div class="concept-box">
+  <div class="concept-name">🧠 可带走的概念工具</div>
+  <h3>识别「轴心式突破」的四个标志</h3>
+  <p>轴心时代不只是一个历史时期标签——它是一种可识别的<strong>文化结构转变</strong>。面对任何思想运动（宗教改革、启蒙、科学革命、现代主义、乃至当代某种思潮），可以问它是否构成「轴心式突破」：</p>
+  <ol>
+    <li><strong>超越与现世的分离：</strong>是否设定了一个超越既定秩序的终极，作为批判现世的依据？</li>
+    <li><strong>个体的觉醒：</strong>是否把批判性个体从集体框架中解放，使「审视」成为权威的来源？</li>
+    <li><strong>普遍主义：</strong>是否把真理/伦理从特定群体扩展到「所有人」？</li>
+    <li><strong>反思性：</strong>是否把思想本身对象化，开始「思考关于思考」？</li>
+  </ol>
+  <p>四条都满足→强轴心突破；满足部分→部分突破；都不满足→框架内反思（如埃及智慧文学）。这个清单让我们能比较：宗教改革是轴心动力学的二次发动（四条都满足）；科学革命是轴心的逻各斯维度的深化；许多「新思潮」其实只是框架内反思而非真正突破。我们将在 L15（启蒙）、L25（当代）使用这个清单。</p>
+</div>
+
+<!-- ====== PART 7: EXERCISES ====== -->
+<h2>7. 练习与思考</h2>
+
+<div class="quiz-section">
+
+  <div class="quiz-question" id="q1">
+    <div class="q-num">练习 1 · 概念理解</div>
+    <div class="q-text">雅斯贝尔斯「轴心时代」命题的三个核心要素是？</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option" data-answer="wrong">四个文明都达到了相同的哲学水平</div>
+      <div class="quiz-option" data-answer="correct">同步性（同时发生）+ 独立性（互不知晓）+ 共同特征（超越的批判性突破）</div>
+      <div class="quiz-option" data-answer="wrong">四个文明都发明了民主、科学和人权</div>
+      <div class="quiz-option" data-answer="wrong">四个文明都从青铜时代进入铁器时代</div>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <div class="q-num">练习 2 · 共同结构</div>
+    <div class="q-text">四个轴心突破共享一个深层结构。以下哪个不是这个共同结构的一部分？</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option" data-answer="wrong">超越与现世的分离</div>
+      <div class="quiz-option" data-answer="wrong">批判性个体的觉醒</div>
+      <div class="quiz-option" data-answer="best">民主政治制度的建立——四个突破中只有希腊有（有限的）民主传统，以色列是神权、印度是种姓、中国是君主制，民主不是共同结构</div>
+      <div class="quiz-option" data-answer="wrong">普遍主义（真理向所有人开放）</div>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <div class="q-num">练习 3 · 为什么不是埃及</div>
+    <div class="q-text">埃及和美索不达米亚有近三千年高度文明，为何不被归为轴心突破？关键区分是？</div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option" data-answer="wrong">它们的技术不够发达</div>
+      <div class="quiz-option" data-answer="correct">它们有反思但没有「突破」——反思在框架内进行（教人如何在既有秩序中活好），未把框架本身对象化为可批判的问题；超越与现世未分离，秩序被体验为给定而非待实现</div>
+      <div class="quiz-option" data-answer="wrong">它们没有文字</div>
+      <div class="quiz-option" data-answer="wrong">雅斯贝尔斯的欧洲中心论偏见</div>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q4">
+    <div class="q-num">练习 4 · 框架连接</div>
+    <div class="q-text">用 L1–L4 框架看，轴心突破最深的本质是什么？</div>
+    <div class="quiz-options" id="q4-opts">
+      <div class="quiz-option" data-answer="wrong">经济权力取代强制权力成为主导</div>
+      <div class="quiz-option" data-answer="best">规范性权力产生了对自身的二阶反思——此前规范权力透明运作（Lukes 三维），轴心突破使规范本身成为可批判对象，从此任何秩序都必须为规范基础辩护（合法性问题的诞生）</div>
+      <div class="quiz-option" data-answer="wrong">强制性权力首次被垄断</div>
+      <div class="quiz-option" data-answer="wrong">路径依赖被彻底打破</div>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+  <div class="quiz-question" id="q5">
+    <div class="q-num">练习 5 · 应用轴心清单</div>
+    <div class="q-text">用「轴心式突破四标志」（超越/个体/普遍/反思）评估 16 世纪欧洲宗教改革。最准确的判断是？</div>
+    <div class="quiz-options" id="q5-opts">
+      <div class="quiz-option" data-answer="wrong">宗教改革不是轴心式突破，因为它没有产生新宗教</div>
+      <div class="quiz-option" data-answer="best">宗教改革是轴心动力学的二次发动：超越（信徒直接面对神，绕过教会中介）、个体（良心作为权威）、普遍（救赎向所有信徒开放而非神职垄断）、反思（圣经被批判性诠释）四条都满足——它是轴心突破的深化而非新突破</div>
+      <div class="quiz-option" data-answer="wrong">宗教改革只是政治事件，与轴心动力学无关</div>
+      <div class="quiz-option" data-answer="wrong">宗教改革满足四条，所以是全新的轴心突破</div>
+    </div>
+    <div class="quiz-feedback" id="q5-fb"></div>
+  </div>
+
+</div>
+
+<div class="exercise">
+  <h3>✏️ 比较两个轴子（开放练习，10 分钟）</h3>
+  <p>选两个轴心文明进行比较——建议从「希腊 vs 中国」或「以色列 vs 印度」中选一对。回答：</p>
+  <ol style="margin-left:1.5rem;">
+    <li>它们的轴心突破在<strong>共同结构</strong>上如何相似？</li>
+    <li>在<strong>具体形态</strong>上如何不同？（关注：终极是人格神还是非人格原理？突破主要在政治/伦理/形而上学/解脱哪个维度？个体与集体的关系？）</li>
+    <li>这种差异如何<strong>预示</strong>了两个文明后来的长程分化？（如希腊的逻各斯→科学/宪政，中国的治道→儒法国家）</li>
+  </ol>
+  <textarea placeholder="比较：…… vs ……&#10;&#10;1. 共同结构：……&#10;2. 具体形态差异：……&#10;3. 长程分化预示：……"></textarea>
+  <p class="hint">💡 把你的比较发给 Claude——我会回应你忽略的维度、补充文本证据、挑战你的因果判断。这是 Phase 2 的核心练习：从「知道四个突破」到「能比较它们的结构」。</p>
+</div>
+
+<!-- ====== FURTHER READING ====== -->
+<h2>8. 推荐阅读</h2>
+
+<div style="background:var(--card-bg);border-radius:6px;padding:1.3rem 1.5rem;margin:1.2rem 0;">
+  <p style="font-weight:600;margin-top:0;">📖 主读</p>
+  <p style="margin-bottom:0.3rem;"><strong>卡尔·雅斯贝尔斯 —《历史的起源与目标》（Vom Ursprung und Ziel der Geschichte, 1949），第 1–2 章</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">轴心时代概念的原始论述。雅斯贝尔斯的哲学背景（存在主义）使他的叙述有独特深度——他不只描述事件，而追问「人成为人」的时刻。有中译本。</p>
+
+  <p style="font-weight:600;margin-top:1rem;">📖 辅读</p>
+  <p style="margin-bottom:0.3rem;"><strong>S.N. Eisenstadt — <em>The Axial Age and Its Diversity</em> (2003) 或 <em>Comparative Civilizations and Multiple Modernities</em></strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">艾森斯塔德把轴心时代从雅斯贝尔斯的哲学命题转化为可操作的社会学框架——轴心突破的内在动力学、二次轴心、多元现代性。是当代轴心研究的核心。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>Robert Bellah — <em>Religion in Human Evolution</em> (2011)，第 9–12 章</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);">贝拉从宗教演化角度系统比较四个轴心突破，材料极丰富。厚但值得——尤其希腊和中国的章节。</p>
+
+  <p style="margin-bottom:0.3rem;margin-top:0.6rem;"><strong>余英时 —《士与中国文化》（1987）或《论天人之际》（2014）</strong></p>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:0;">从中国轴心突破内部理解其形态——「士」阶层的诞生、「道」与「势」的张力。是避免把中国轴心强行套入西方框架的必要平衡。</p>
+</div>
+
+<!-- ====== CROSS-REFERENCES ====== -->
+<h2>9. 关联与展望</h2>
+<ul style="font-size:0.92rem;">
+  <li><strong>L1 回扣：</strong>轴心时代解释了六大原生国家之后的长程分化——为什么六个国家演化出如此不同的文明轨迹。</li>
+  <li><strong>L2 回扣：</strong>轴心突破使合法性成为问题——此后任何秩序都必须为规范基础辩护。前轴心文明不需要辩护（「向来如此」），后轴心文明必须不断辩护。</li>
+  <li><strong>L3 回扣：</strong>轴心时代是规范性权力的关键节点；四个文明沿各自轴心路径漂移，是制度漂移的经典案例。</li>
+  <li><strong>L4 回扣：</strong>轴心突破 = 规范性权力的二阶反思；触发条件是经济权力（铁器/文字/贸易）的变化——又一个经济→规范的时序。</li>
+  <li><strong>L6 预告：</strong>希腊城邦——轴心突破在希腊的具体制度化：逻各斯如何转化为民主实践。</li>
+  <li><strong>L7 预告：</strong>战国百家——轴心突破在中国的具体制度化：道/势张力如何转化为诸子政治方案。</li>
+  <li><strong>L8 预告：</strong>柏拉图 vs 韩非子——两个轴心文明对「好国家」的不同回答的并置比较。</li>
+  <li><strong>L11/L12：</strong>伊斯兰和宗教改革——二次轴心动力学的展开。</li>
+</ul>
+
+<div class="lesson-footer">
+  <p>🎯 本课服务于你的 <a href="../MISSION.md">MISSION</a>：<em>构建跨学科理解框架。</em>轴心时代是 Phase 2 的开篇——它把 L1–L4 的工具箱首次应用于一个重大历史现象，并建立了理解此后所有思想史的结构坐标。</p>
+  <p>💬 同步性命题你同意吗？把埃及归为「未突破」你觉得公平吗？比较练习中你的判断有犹豫？<strong>直接问 Claude。</strong></p>
+  <div class="links">
+    <span><a href="./0004-three-dimensions-of-power.html">← L4 权力三维</a></span>
+    <span><a href="#" style="color:var(--text-light);">L6 古希腊城邦 →</a>（即将推出）</span>
+    <span><a href="../reference/glossary.html">📚 术语表</a></span>
+    <span><a href="../index.html">↑ 课程路径</a></span>
+  </div>
+</div>
+
+<script>
+(function() {
+  function setup(qId) {
+    const opts = document.querySelectorAll('#' + qId + '-opts .quiz-option');
+    const fb = document.getElementById(qId + '-fb');
+    opts.forEach(o => {
+      o.addEventListener('click', function() {
+        opts.forEach(x => { x.classList.remove('selected', 'correct', 'incorrect'); });
+        o.classList.add('selected');
+        const ans = o.dataset.answer;
+        if (ans === 'correct' || ans === 'best') {
+          o.classList.add('correct');
+          fb.className = 'quiz-feedback show fb-correct';
+          if (qId === 'q1') fb.innerHTML = '✅ <strong>正确。</strong>同步性+独立性+共同特征是雅斯贝尔斯命题的三根支柱。注意它们是<strong>经验命题</strong>（可被证据挑战），不是定义——同步性的精确程度、独立性的接触程度、共同特征的具体内容都是过去七十年辩论的焦点。';
+          else if (qId === 'q2') fb.innerHTML = '✅ <strong>正确。</strong>民主不是轴心共同结构——这是一个重要的澄清。把轴心时代等同于「民主/科学/人权的诞生」是西方中心论的误读。轴心突破是<strong>精神结构</strong>的转变，其政治后果在四个文明中截然不同：希腊有民主（且有限），以色列是神权，印度是种姓，中国是君主制。共同的是精神突破，不是政治制度。';
+          else if (qId === 'q3') fb.innerHTML = '✅ <strong>正确。</strong>这是艾森斯塔德的关键区分——有反思 ≠ 有突破。埃及智慧文学教人「在既有秩序中活好」，不追问秩序本身。轴心突破把框架<strong>对象化</strong>，使其成为问题。用 L4 的话说：埃及的规范权力透明运作（Lukes 三维），没有产生对自身的二阶反思。这个区分比「有没有思想」深刻得多。';
+          else if (qId === 'q4') fb.innerHTML = '✅ <strong>正确。</strong>这是本课最深的洞察——轴心突破本质上是<strong>规范性权力的自我反思</strong>。此前规范权力塑造偏好而不被察觉（Lukes 三维）；轴心突破使规范本身成为可批判对象。这彻底改变了权力的运作方式：此后任何政权都必须为规范基础辩护——L2 合法性问题在轴心时代诞生。这是为什么前轴心文明（埃及）高度稳定但缺乏自我转化能力，而后轴心文明不断革命/改革/反思。';
+          else if (qId === 'q5') fb.innerHTML = '✅ <strong>正确。</strong>宗教改革满足轴心四标志，但它是<strong>二次发动</strong>而非新突破——它深化亚伯拉罕轴心的内在张力（信徒直接面对神），而非发明新的超越结构。这个区分很重要：轴心动力学可以被反复发动（宗教改革、启蒙、乃至某些当代运动），但原始轴心突破只有那一次（四个地区）。用 L3 的话说，宗教改革是轴心路径上的一个<strong>次级关键节点</strong>。';
+        } else {
+          o.classList.add('incorrect');
+          fb.className = 'quiz-feedback show fb-incorrect';
+          if (qId === 'q1') {
+            if (o.textContent.includes('相同水平')) fb.innerHTML = '❌ 轴心命题不是关于「水平相同」——四个突破的形态差异巨大（希腊的逻辑、以色列的一神论、印度的解脱、中国的治世）。命题是关于<strong>结构相似</strong>（都完成超越突破），不是内容相同。';
+            else if (o.textContent.includes('民主')) fb.innerHTML = '❌ 民主/科学/人权是西方（且主要是希腊+近代）的产物，不是四个文明共享的。把它们当作轴心共同特征是西方中心论的误读——以色列没有民主，印度没有科学（在希腊意义上），中国没有人权（在西方意义上）。';
+            else fb.innerHTML = '❌ 铁器时代是<strong>触发条件</strong>（解释一的内容），不是轴心命题本身。轴心命题是关于<strong>精神突破</strong>的，技术变化只是其背景条件之一。';
+          } else if (qId === 'q2') fb.innerHTML = '❌ 这一条其实是共同结构的一部分——超越与现世分离、个体觉醒、普遍主义、反思性都是四个突破共享的。再看看哪个不属于。';
+          else if (qId === 'q3') {
+            if (o.textContent.includes('技术')) fb.innerHTML = '❌ 埃及和美索不达米亚的技术在前轴心时代是<strong>领先</strong>的——金字塔、灌溉、冶金、数学。技术不够发达不是它们未突破的原因。恰恰相反，它们的技术成熟可能<strong>固化</strong>了神话框架（秩序太成功，无需质疑）。';
+            else if (o.textContent.includes('文字')) fb.innerHTML = '❌ 埃及有象形文字，美索不达米亚有楔形文字——都是成熟的书写系统。文字不是区分因素。';
+            else fb.innerHTML = '❌ 虽然雅斯贝尔斯确有欧洲中心论嫌疑（这是合理的批评），但把埃及归为「未突破」<strong>不 solely</strong>出于偏见——艾森斯塔德从结构上区分「框架内反思」与「突破」，这个区分有独立的理论依据。简单归为偏见就放弃了分析。';
+          } else if (qId === 'q4') {
+            if (o.textContent.includes('经济')) fb.innerHTML = '❌ 轴心时代没有发生经济权力取代强制权力——四个文明的政治结构仍是强制主导（君主/城邦/种姓）。轴心突破主要发生在<strong>规范</strong>维度，不是经济/强制的替代。';
+            else if (o.textContent.includes('垄断')) fb.innerHTML = '❌ 强制性权力的垄断在 L1 的国家起源中就完成了（韦伯的暴力垄断），不是轴心时代的产物。轴心突破主要在规范维度。';
+            else fb.innerHTML = '❌ 轴心时代没有「彻底」打破路径依赖——L3 告诉我们路径依赖是常态。轴心时代是<strong>关键节点</strong>，它松动了一部分锁定并开启了新路径，但旧路径仍有巨大惯性（四个文明都保留了相当多的前轴心元素）。「彻底打破」既不符合史实也不符合理论。';
+          } else if (qId === 'q5') {
+            if (o.textContent.includes('不是轴心')) fb.innerHTML = '❌ 「没产生新宗教」不是判断标准——轴心式突破的关键是<strong>结构转变</strong>（四标志），不是产生新宗教。宗教改革虽在基督教内部，但它重新发动了轴心动力学（个体直接面对神），结构上满足四标志。';
+            else if (o.textContent.includes('政治事件')) fb.innerHTML = '❌ 把宗教改革只当政治事件严重低估了它——它同时是神学、伦理、文化、权力结构的转变，且其神学维度（信徒直接面对神、良心权威）正是轴心动力学的核心。L12 会深入。';
+            else fb.innerHTML = '❌ 宗教改革满足四标志，但它是<strong>二次发动</strong>（深化亚伯拉罕轴心）而非<strong>新突破</strong>（独立发明新超越结构）。这个区分很重要——轴心动力学可被反复发动，但原始轴心突破只有那一次。称其为「全新」会混淆这两个层次。';
+          }
+        }
+      });
+    });
+  }
+  ['q1','q2','q3','q4','q5'].forEach(setup);
+})();
+</script>
+
+</body>
+</html>

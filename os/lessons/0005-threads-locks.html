@@ -5,121 +5,764 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lesson 0005 · 线程·锁·信号量</title>
 <script>
-window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, svg: { fontCache: 'global' }, startup: { typeset: false } };
+window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] }, svg: { fontCache: 'global' }, startup: { typeset: false } };
 </script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <style>
-  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; }
+  :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; --correct: #2d6a4f; --incorrect: #c1121f; }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
-  h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.35rem; color: #1a1a1a; } .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
-  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); } h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  body { font-family: 'Palatino','Noto Serif SC','Source Han Serif SC','STSong',Georgia,serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
+  h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.35rem; color: #1a1a1a; letter-spacing: -0.02em; } .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; } h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
   p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
-  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; } .toc a { color: var(--accent); text-decoration: none; }
-  .insight { background: var(--light-accent); border-left: 4px solid #d4a574; padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; } .insight::before { content: "💡 "; }
-  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; } .warning::before { content: "⚠️ "; }
+  strong { font-weight: 700; } em { font-style: italic; }
+  .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; } .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
+  .insight { background: var(--light-accent); border-left: 4px solid #d4a574; padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; } .insight::before { content: "💡 "; font-style: normal; }
+  .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; } .warning::before { content: "⚠️ "; font-style: normal; }
   .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; } .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
-  .checkpoint { background: #f0f7ff; border: 1px solid #b8d4f0; border-radius: 8px; padding: 0.8rem 1.1rem; margin: 1.2rem 0; font-size: 0.92rem; }
-  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; } .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; } .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; }
-  .formula-block { text-align: center; margin: 1.4rem 0; }
-  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.9em; }
+  .checkpoint { background: #f0f7ff; border: 1px solid #b8d4f0; border-radius: 8px; padding: 0.8rem 1.1rem; margin: 1.2rem 0; font-size: 0.92rem; } .checkpoint strong { color: #2d5f8a; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; } .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; } .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 0.9em; }
   table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; } th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); } td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
   .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; } .retrieval h3 { margin-top: 0; color: #2d4a8a; }
-  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; } .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; } .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
-  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
-  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; } .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; } .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; } .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); } .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; } .concept-card .cc-section { margin-top: 0.7rem; } .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; } .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; } .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
-  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; color: #1a1a1a; margin-bottom: 0.3rem; } .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; vertical-align: middle; font-family: 'Inter',sans-serif; } .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem summary:hover { color: #4a2a10; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .sol .step { margin: 0.4rem 0; } .problem .sol .reason { color: var(--muted); font-size: 0.83rem; font-style: italic; display: block; }
+  .quiz { margin: 2rem 0; } .quiz-question { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin-bottom: 1rem; } .quiz-question h4 { font-size: 1rem; margin-bottom: 0.8rem; color: #1a1a1a; } .quiz-options { display: flex; flex-direction: column; gap: 0.45rem; } .quiz-option { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.5rem 0.7rem; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: background 0.12s; } .quiz-option:hover { background: var(--light-accent); } .quiz-option input { margin-top: 0.25rem; } .quiz-option label { cursor: pointer; flex: 1; } .quiz-feedback { font-size: 0.9rem; margin-top: 0.7rem; padding: 0.6rem 0.8rem; border-radius: 5px; display: none; } .quiz-feedback.show { display: block; } .quiz-feedback.correct-fb { background: #d8f3dc; color: var(--correct); } .quiz-feedback.incorrect-fb { background: #ffd7d7; color: var(--incorrect); }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; } .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; } .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; } .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; } .concept-card .cc-section { margin-top: 0.7rem; } .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; } .concept-card .cc-section p, .concept-card .cc-section li { font-size: 0.9rem; } .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; } .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .primary-source h3 { margin-top: 0; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
   .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); } .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
+  .fig { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; margin: 1.5rem 0; text-align: center; }
+  .fig .fig-cap { font-size: 0.82rem; color: var(--muted); margin-top: 0.6rem; font-style: italic; line-height: 1.5; }
+  .fig svg { max-width: 100%; height: auto; }
+  /* race interleaving visualizer */
+  .race-viz { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+  .race-viz .rv-controls { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+  .race-viz button { font-family: 'Inter',sans-serif; font-size: 0.85rem; padding: 0.4rem 1rem; border: 1px solid var(--accent); background: var(--light-accent); color: var(--accent); border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+  .race-viz button:hover { background: var(--accent); color: white; }
+  .race-viz .rv-cols { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .race-viz .rv-col { flex: 1; min-width: 180px; }
+  .race-viz .rv-col h5 { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem; font-family: 'Inter',sans-serif; }
+  .race-viz .rv-trace { font-family: 'SF Mono',monospace; font-size: 0.8rem; line-height: 1.7; background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem; min-height: 180px; white-space: pre-wrap; }
+  .race-viz .rv-trace .t1 { color: #2d6a4f; } .race-viz .rv-trace .t2 { color: #c1121f; }
+  .race-viz .rv-result { margin-top: 1rem; font-size: 0.9rem; } .race-viz .rv-result .val { font-family: 'SF Mono',monospace; font-weight: 700; font-size: 1.1rem; }
 </style>
 </head>
 <body>
 
 <h1>Lesson 0005 · 线程·锁·信号量</h1>
-<div class="subtitle">并发不是"多个程序同时跑"，而是"中断随时随地可能插入"。从线程与进程的区别到 CAS 造锁再到信号量解生产者-消费者——并发编程的第一套工具 · 阅读时间 ~50 分钟</div>
+<div class="subtitle">并发不是"多个程序同时跑"，而是"你以为程序在顺序执行，但 OS 和硬件随时随地可能打断你"。从线程与进程的本质区别，到竞态条件的指令级剖析，到 CAS 造锁、自旋到休眠、信号量解生产者-消费者，再到 futex 与内存序——并发编程的第一套完整工具 · 阅读时间 ~55 分钟</div>
 
 <div class="toc"><strong>目录</strong><br>
   <a href="#s1">1. 线程 vs 进程：共享什么、不共享什么</a><br>
-  <a href="#s2">2. 竞态条件：原子性的幻觉</a><br>
-  <a href="#s3">3. 锁的硬件基础：从关中断到 CAS</a><br>
-  <a href="#s4">4. 自旋锁 → mutex：从忙等到休眠</a><br>
-  <a href="#s5">5. 信号量与生产者-消费者</a><br>
-  <a href="#s6">6. 推导与自测</a>
+  <a href="#s2">2. 线程的创建：clone() 与 pthread 的内核路径</a><br>
+  <a href="#s3">3. 竞态条件：原子性的幻觉（指令级剖析）</a><br>
+  <a href="#s4">4. 临界区与互斥的三条要求</a><br>
+  <a href="#s5">5. 锁的硬件基础：从关中断到 CAS 到 FAA</a><br>
+  <a href="#s6">6. 自旋锁的演进：TAS → Ticket → MCS</a><br>
+  <a href="#s7">7. 自旋锁 → mutex：从忙等到休眠</a><br>
+  <a href="#s8">8. 读写锁与 per-CPU 变量</a><br>
+  <a href="#s9">9. 信号量：计数同步原语</a><br>
+  <a href="#s10">10. 生产者-消费者：完整代码与死锁陷阱</a><br>
+  <a href="#s11">11. futex：用户态快速路径 + 内核态慢路径</a><br>
+  <a href="#s12">12. 内存序与屏障：并发的最后一道暗坑</a><br>
+  <a href="#s13">13. 自测题</a><br>
+  <a href="#s14">14. 习题</a>
 </div>
 
-<p>展开基石 0001 §5（并发作为根本挑战）。前三课 CPU/内存虚拟化都在<strong>隔离</strong>进程，这课打开"当隔离被故意打破时会发生什么"。线程故意共享地址空间——好处是通信极快（直接读写变量），代价是竞态条件。</p>
+<p>展开基石 0001 §5（并发作为根本挑战）。前三课 CPU/内存虚拟化都在<strong>隔离</strong>进程——每个进程以为自己独占整台机器。这课打开"当隔离被故意打破时会发生什么"。线程故意共享地址空间——好处是通信极快（直接读写同一变量，不用 IPC 系统调用），代价是<strong>竞态条件</strong>：多个线程的访存操作可以任意交错，程序的最终状态不再由代码单线程语义决定。</p>
+
+<p>这课的脉络是一条<strong>困难递增曲线</strong>：先看清"为什么会错"（§3 竞态），再看清"对的代价是什么"（§5–§7 锁的硬件基础与实现演进），然后看"锁之上的结构化原语"（§9 信号量），最后看"现实系统怎么把这套做快做对"（§11 futex、§12 内存序）。每一节都是上一节的"那还不够"。</p>
 
 <div class="retrieval"><h3>🔁 回忆</h3><ol>
-  <li>基石 0001 §5：为什么单核也需要锁？</li>
-  <li>0002 §2：上下文切换时线程切换和进程切换有什么区别？（提示：CR3）</li>
-  <li>0001 P3：两个线程同时改 `balance`，最终值有几种可能？</li>
+  <li>基石 0001 §5：为什么单核单线程 CPU 也需要锁？（提示：中断）</li>
+  <li>0002 §2：上下文切换时，线程切换和进程切换有什么区别？哪个寄存器不用写？（提示：CR3）</li>
+  <li>0002 §3：<code>task_struct</code> 里 <code>tgid</code> 和 <code>pid</code> 的区别？一个进程的多个线程共享哪些字段？</li>
+  <li>0001 P3：两个线程各对 <code>balance</code> 加 100，最终值有几种可能？为什么不是只有 200？</li>
+  <li>0003 §5：PTE 的 D（Dirty）bit 是谁置的？这和"写共享页"有什么关系？</li>
 </ol></div>
 
 <h2 id="s1">1. 线程 vs 进程：共享什么、不共享什么</h2>
+
 <div class="concept-card"><div class="cc-header"><span class="cc-tag">核心</span><h3>线程 · Thread</h3></div>
-<div class="cc-essence"><strong>一个进程可以有多个线程。线程共享</strong>：地址空间（代码+数据+堆）、文件描述符表、信号处理。<strong>线程独立拥有</strong>：PC（执行到哪）、寄存器、栈（每个线程有自己的栈）、线程 ID。</div>
-<div class="cc-section"><h4>维恩图</h4>
-<table><tr><th></th><th>进程（一个进程一个线程）</th><th>多线程（同一进程）</th></tr>
-<tr><td>地址空间</td><td>独立</td><td><strong>共享</strong></td></tr>
-<tr><td>文件描述符</td><td>独立（fork 复制）</td><td><strong>共享</strong></td></tr>
-<tr><td>上下文切换代价</td><td>贵（切换页表 = 写 CR3 = TLB 刷）</td><td><strong>便宜</strong>（不写 CR3、TLB 可保留）</td></tr>
-</table>
-</div></div>
-
-<h2 id="s2">2. 竞态条件：原子性的幻觉</h2>
-<p>0001 P3 的 `balance = balance + 100` ——在 x86 上是三条指令：`mov eax, [balance]`; `add eax, 100`; `mov [balance], eax`。如果两个线程交错这三条 → 结果不确定。这不是"编译器的问题"——这是硬件指令级的事实。</p>
-
-<p><strong>临界区（Critical Section）</strong>：访问共享数据的代码段——同一时刻最多一个线程在其中。解法 = <strong>互斥</strong>（Mutual Exclusion）。互斥的三个要求：正确性（最多一个在临界区）、公平性（有机会进去）、性能（不空耗 CPU）。</p>
-
-<h2 id="s3">3. 锁的硬件基础：从关中断到 CAS</h2>
-<div class="derivation"><h4>锁实现技术演进</h4>
-<div class="step"><strong>① 关中断（单核·最简单）：</strong>进入临界区前 `cli`（关中断），出去后 `sti`（开中断）。在单核上，只要没中断就不会有人抢 CPU → 不会有线程切换 → 临界区自然互斥。<span class="reason">缺点：(a) 关中断期间所有 I/O 中断都丢失；(b) 用户态程序不能关中断（特权指令）；(c) 多核上没用——另一个核上的线程不受影响。</span></div>
-<div class="step"><strong>② Test-and-Set（硬件原子指令）：</strong>`TAS(lock_addr)` 原子地返回旧值、写入 1。如果旧值 0 → 拿到锁；旧值 1 → 锁被占——自旋重试。</div>
-<div class="step"><strong>③ Compare-and-Swap（CAS）——更强的原子指令：</strong>`CAS(addr, expected, new)` → if *addr == expected → *addr = new, return true; else return false。<strong>CAS 比 TAS 更通用</strong>——它能做的不只是 0/1 flag：无锁栈、无锁队列、原子计数器都靠 CAS。</div>
+<div class="cc-essence"><strong>线程是进程内的执行流。一个进程可以有多个线程，它们共享进程的"静态资源"（地址空间、文件描述符表、信号处理表、当前工作目录），但各自独立拥有"动态状态"（PC、寄存器、栈、栈指针、线程局部存储、信号掩码）。</strong></div>
 </div>
 
-<div class="checkpoint"><strong>停下来想一想：</strong>锁本身的实现需要原子指令——但谁来保护原子指令？答案：硬件。`LOCK` 前缀（x86）锁住总线或 cache line——在这个原子操作完成前，其他核不能访问同一 cache line。这是范式 #6（HW-SW 协同）的极致——原子指令是硬件给的、锁是软件造的。</div>
+<div class="fig">
+<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="13">
+  <!-- process box -->
+  <rect x="40" y="20" width="640" height="320" rx="10" fill="#fafaf7" stroke="#b8c8f0" stroke-width="2"/>
+  <text x="360" y="42" text-anchor="middle" font-weight="700" fill="#2d4a8a">一个进程（地址空间 + files_struct + 信号表 共享）</text>
+  <!-- shared heap -->
+  <rect x="70" y="60" width="580" height="60" rx="6" fill="#f5efe6" stroke="#6b4226"/>
+  <text x="360" y="85" text-anchor="middle" font-weight="700" fill="#6b4226">共享：代码段 · 数据段 · 堆 · 文件描述符表 · 信号处理表 · cwd</text>
+  <text x="360" y="103" text-anchor="middle" font-size="11" fill="#6b6b6b">所有线程读写同一份 → 通信极快，但需同步</text>
+  <!-- thread 1 -->
+  <rect x="70" y="150" width="270" height="170" rx="8" fill="#e6f4ea" stroke="#2d6a4f" stroke-width="2"/>
+  <text x="205" y="172" text-anchor="middle" font-weight="700" fill="#2d6a4f">线程 1（独立）</text>
+  <text x="90" y="196" fill="#333">PC / 寄存器</text>
+  <text x="90" y="218" fill="#333">自己的栈（8MB）</text>
+  <text x="90" y="240" fill="#333">栈指针 SP</text>
+  <text x="90" y="262" fill="#333">TLS（__thread 变量）</text>
+  <text x="90" y="284" fill="#333">信号掩码</text>
+  <text x="90" y="306" fill="#6b6b6b" font-size="11">→ 同一 CR3，不刷 TLB</text>
+  <!-- thread 2 -->
+  <rect x="380" y="150" width="270" height="170" rx="8" fill="#fce8e8" stroke="#c1121f" stroke-width="2"/>
+  <text x="515" y="172" text-anchor="middle" font-weight="700" fill="#c1121f">线程 2（独立）</text>
+  <text x="400" y="196" fill="#333">PC / 寄存器</text>
+  <text x="400" y="218" fill="#333">自己的栈（8MB）</text>
+  <text x="400" y="240" fill="#333">栈指针 SP</text>
+  <text x="400" y="262" fill="#333">TLS（__thread 变量）</text>
+  <text x="400" y="284" fill="#333">信号掩码</text>
+  <text x="400" y="306" fill="#6b6b6b" font-size="11">→ 同一 CR3，不刷 TLB</text>
+</svg>
+<div class="fig-cap">图 1.1 · 同一进程的多线程：上方共享资源是一份，下方每线程独立自己的执行状态。栈必须独立——否则函数调用互相覆盖返回地址立刻崩溃。线程栈之间留 guard page（未映射），溢出踩到 → SIGSEGV 而非悄悄破坏邻居。</div>
+</div>
 
-<h2 id="s4">4. 自旋锁 → mutex：从忙等到休眠</h2>
-<p><strong>自旋锁（Spin Lock）</strong>：拿不到锁就一直在循环里 CAS——"忙等"。适合临界区极短（几 ns）的场景（内核里常见）。不适合用户态——如果持锁的线程被切走（时间片到），等锁的线程会空转整个时间片。</p>
-<p><strong>互斥锁（Mutex）</strong>：拿不到锁 → 把自己放入等待队列 → 调 `schedule()` 让出 CPU。持锁线程 unlock 时唤醒等待队列中的一个线程。适合临界区可能较长（μs–ms）的场景。</p>
+<div class="checkpoint"><strong>停下来想一想：</strong>线程切换比进程切换便宜，便宜在哪一步？<br>答案：进程切换要写 CR3（换页表根）→ TLB 全刷 → 后续访存全部 TLB miss 重新 walk 页表。线程切换<strong>不写 CR3</strong>，TLB 保留，cache 也大概率还有效（同一地址空间）。省下的不是"少存几个寄存器"——寄存器都要存——省下的是 TLB/cache 的冷启动代价。这就是 0002 §3 讲的"上下文切换真正的代价是 cache 污染"。</div>
+
+<h2 id="s2">2. 线程的创建：clone() 与 pthread 的内核路径</h2>
+
+<p>用户态调 <code>pthread_create</code>，背后 glibc 的 NPTL 最终调一个系统调用——<code>clone()</code>。理解 clone 是理解"线程和进程在内核里其实是同一种东西"的钥匙。</p>
+
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">统一</span><h3>clone() · 进程和线程的同源</h3></div>
+<div class="cc-essence"><strong>Linux 内核里没有"进程"和"线程"两种对象——只有 task_struct。fork() 和 pthread_create() 都调 clone()，区别只在传给 clone 的 flags：共享哪些资源。</strong></div>
+</div>
+
+<div class="fig">
+<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="13">
+  <text x="360" y="24" text-anchor="middle" font-weight="700" fill="#1a1a1a">clone() 的 flags 决定"复制还是共享"</text>
+  <!-- fork column -->
+  <rect x="30" y="40" width="320" height="320" rx="8" fill="#fffdfb" stroke="#6b4226"/>
+  <text x="190" y="62" text-anchor="middle" font-weight="700" fill="#6b4226">fork() — 复制</text>
+  <text x="50" y="88" fill="#333">不设 CLONE_VM</text>
+  <text x="50" y="108" fill="#6b6b6b" font-size="11">→ 复制 mm_struct（COW 页表）</text>
+  <text x="50" y="134" fill="#333">不设 CLONE_FILES</text>
+  <text x="50" y="154" fill="#6b6b6b" font-size="11">→ 复制文件描述符表</text>
+  <text x="50" y="180" fill="#333">不设 CLONE_SIGHAND</text>
+  <text x="50" y="200" fill="#6b6b6b" font-size="11">→ 复制信号处理表</text>
+  <text x="50" y="226" fill="#333">不设 CLONE_THREAD</text>
+  <text x="50" y="246" fill="#6b6b6b" font-size="11">→ 新 tgid = 新 pid</text>
+  <rect x="50" y="270" width="280" height="70" rx="6" fill="#f5efe6" stroke="#6b4226"/>
+  <text x="190" y="292" text-anchor="middle" font-weight="700" fill="#6b4226">结果：两个独立进程</text>
+  <text x="190" y="312" text-anchor="middle" font-size="11" fill="#6b6b6b">各自地址空间，写 CR3 刷 TLB</text>
+  <text x="190" y="328" text-anchor="middle" font-size="11" fill="#6b6b6b">getpid() 返回不同值</text>
+  <!-- pthread column -->
+  <rect x="370" y="40" width="320" height="320" rx="8" fill="#fffdfb" stroke="#2d6a4f"/>
+  <text x="530" y="62" text-anchor="middle" font-weight="700" fill="#2d6a4f">pthread_create() — 共享</text>
+  <text x="390" y="88" fill="#333">设 CLONE_VM ✓</text>
+  <text x="390" y="108" fill="#6b6b6b" font-size="11">→ 指向同一 mm_struct，引用计数+1</text>
+  <text x="390" y="134" fill="#333">设 CLONE_FILES ✓</text>
+  <text x="390" y="154" fill="#6b6b6b" font-size="11">→ 共享文件描述符表</text>
+  <text x="390" y="180" fill="#333">设 CLONE_SIGHAND ✓</text>
+  <text x="390" y="200" fill="#6b6b6b" font-size="11">→ 共享信号处理表</text>
+  <text x="390" y="226" fill="#333">设 CLONE_THREAD ✓</text>
+  <text x="390" y="246" fill="#6b6b6b" font-size="11">→ 同 tgid，新 pid = 新 TID</text>
+  <rect x="390" y="270" width="280" height="70" rx="6" fill="#e6f4ea" stroke="#2d6a4f"/>
+  <text x="530" y="292" text-anchor="middle" font-weight="700" fill="#2d6a4f">结果：同进程的新线程 (LWP)</text>
+  <text x="530" y="312" text-anchor="middle" font-size="11" fill="#6b6b6b">共享地址空间，不写 CR3</text>
+  <text x="530" y="328" text-anchor="middle" font-size="11" fill="#6b6b6b">getpid() 相同，gettid() 不同</text>
+</svg>
+<div class="fig-cap">图 2.1 · fork 与 pthread_create 走同一条 clone 路径，差别仅在 flags。内核不区分"进程对象"和"线程对象"——都是 task_struct，差别在它们共享了多少资源。</div>
+</div>
+
+<p>创建路径的四步：(1) glibc 用 <code>mmap</code> 分配线程栈 + guard page，设好 TLS 基址，然后调 <code>clone</code>；(2) 内核 <code>copy_process</code> 根据 flags 决定复制还是共享——CLONE_VM 不设就 COW 复制页表，设了就父子指向同一个 mm_struct；(3) <code>copy_thread</code> 把子线程的内核栈伪造好，设其返回点指向 <code>ret_from_fork</code>，这样它第一次被调度时就能回到用户态跑 <code>fn(arg)</code>；(4) <code>wake_up_new_task</code> 把新 task_struct 入 CFS 红黑树，等下次调度获得 CPU。</p>
+
+<div class="warning"><strong>pid 命名陷阱。</strong>Linux 内核里 <code>task_struct.pid</code> 实际是"线程 ID"，<code>task_struct.tgid</code> 才是用户态看到的"进程 ID"。<code>getpid()</code> 返回 tgid，<code>gettid()</code> 返回 pid。主线程的 pid == tgid。这个命名是历史包袱，看内核代码时要时刻警惕。</div>
+
+<h2 id="s3">3. 竞态条件：原子性的幻觉（指令级剖析）</h2>
+
+<p>0001 P3 的 <code>balance = balance + 100</code> 看起来是一条语句，但在 x86 上是<strong>三条机器指令</strong>：把 balance 从内存读进寄存器、在寄存器里加 100、把结果写回内存。这三条指令之间，<strong>任何</strong>时刻都可能发生线程切换（中断 → 调度）。两个线程各执行一次，关键看"读"和"写"之间是否插入了另一个线程的完整序列。</p>
+
+<div class="fig">
+<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="13">
+  <text x="360" y="22" text-anchor="middle" font-weight="700">balance += 100 的三指令分解</text>
+  <!-- three instructions -->
+  <rect x="60" y="40" width="180" height="50" rx="6" fill="#e6f4ea" stroke="#2d6a4f"/>
+  <text x="150" y="62" text-anchor="middle" font-weight="700">① 读 (load)</text>
+  <text x="150" y="80" text-anchor="middle" font-size="11" fill="#6b6b6b">eax ← mem[balance]</text>
+  <rect x="270" y="40" width="180" height="50" rx="6" fill="#fff3cd" stroke="#8a6a10"/>
+  <text x="360" y="62" text-anchor="middle" font-weight="700">② 加 (add)</text>
+  <text x="360" y="80" text-anchor="middle" font-size="11" fill="#6b6b6b">eax ← eax + 100</text>
+  <rect x="480" y="40" width="180" height="50" rx="6" fill="#fce8e8" stroke="#c1121f"/>
+  <text x="570" y="62" text-anchor="middle" font-weight="700">③ 写 (store)</text>
+  <text x="570" y="80" text-anchor="middle" font-size="11" fill="#6b6b6b">mem[balance] ← eax</text>
+  <text x="360" y="115" text-anchor="middle" font-size="11" fill="#6b6b6b">单条 load/store 原子，但"读-改-写"序列不原子 → 中间可被切换</text>
+  <!-- interleaving A -->
+  <text x="40" y="150" font-weight="700" fill="#2d6a4f">交错 A（串行，正确 → 200）</text>
+  <text x="40" y="172" fill="#333">T1: 读(0)→加→写(100)</text>
+  <text x="40" y="190" fill="#333">T2: 读(100)→加→写(200)</text>
+  <!-- interleaving B -->
+  <text x="400" y="150" font-weight="700" fill="#c1121f">交错 B（穿插，丢失更新 → 100）</text>
+  <text x="400" y="172" fill="#333">T1: 读(0) ── T2: 读(0) ── T1: 加→写(100) ── T2: 加→写(100)</text>
+  <text x="400" y="190" fill="#6b6b6b" font-size="11">T2 的"读"抢在 T1 的"写"之前 → 拿到旧值 0 → 覆盖 T1 的更新</text>
+  <rect x="40" y="210" width="640" height="70" rx="6" fill="#fff8f0" stroke="#e09f3e"/>
+  <text x="360" y="232" text-anchor="middle" font-weight="700" fill="#8a6a10">最终值可能是 100 或 200 —— 不确定</text>
+  <text x="360" y="252" text-anchor="middle" font-size="11" fill="#6b6b6b">这不是编译器问题，是硬件指令级事实：三指令序列中间能被切换</text>
+  <text x="360" y="270" text-anchor="middle" font-size="11" fill="#6b6b6b">推广：N 线程各加 1 共 M 次 → 结果 ∈ [1, M]，最坏所有读先于所有写</text>
+</svg>
+<div class="fig-cap">图 3.1 · "丢失更新"的本质：读和写之间插入了别人的读，导致两次加法都基于同一个旧值。</div>
+</div>
+
+<div class="race-viz" id="raceViz">
+  <div class="rv-controls">
+    <strong style="font-size:0.9rem;">竞态交错模拟器</strong>
+    <button onclick="rvStep('t1r')">T1 读</button>
+    <button onclick="rvStep('t1w')">T1 写</button>
+    <button onclick="rvStep('t2r')">T2 读</button>
+    <button onclick="rvStep('t2w')">T2 写</button>
+    <button onclick="rvReset()">重置</button>
+    <button onclick="rvBad()">演示丢失更新</button>
+  </div>
+  <div class="rv-cols">
+    <div class="rv-col"><h5>T1 (加 100)</h5><div class="rv-trace" id="rvT1"></div></div>
+    <div class="rv-col"><h5>T2 (加 100)</h5><div class="rv-trace" id="rvT2"></div></div>
+    <div class="rv-col"><h5>内存 balance</h5><div class="rv-trace" id="rvMem"></div></div>
+  </div>
+  <div class="rv-result" id="rvResult"></div>
+</div>
+
+<script>
+var rvState = { t1reg: null, t2reg: null, mem: 0, t1log: [], t2log: [], memlog: [] };
+function rvRender() {
+  document.getElementById('rvT1').innerHTML = rvState.t1log.map(function(l){return '<span class="t1">'+l+'</span>';}).join('\n') || '(空)';
+  document.getElementById('rvT2').innerHTML = rvState.t2log.map(function(l){return '<span class="t2">'+l+'</span>';}).join('\n') || '(空)';
+  document.getElementById('rvMem').innerHTML = rvState.memlog.join('\n') || 'balance = 0';
+  var r = document.getElementById('rvResult');
+  if (rvState.t1log.length >= 3 && rvState.t2log.length >= 3) {
+    r.innerHTML = '最终 balance = <span class="val">' + rvState.mem + '</span>' + (rvState.mem === 200 ? ' ✅ (正确)' : ' ❌ (丢失更新！应为 200)');
+  } else {
+    r.innerHTML = '当前 balance = <span class="val">' + rvState.mem + '</span> · 继续点击让两个线程各完成 读→加→写';
+  }
+}
+function rvStep(op) {
+  if (op === 't1r') { rvState.t1reg = rvState.mem; rvState.t1log.push('读 → r=' + rvState.t1reg); }
+  else if (op === 't1w') { if (rvState.t1reg === null) return; rvState.mem = rvState.t1reg + 100; rvState.t1log.push('加100, 写 → mem=' + rvState.mem); rvState.memlog.push('balance = ' + rvState.mem); }
+  else if (op === 't2r') { rvState.t2reg = rvState.mem; rvState.t2log.push('读 → r=' + rvState.t2reg); }
+  else if (op === 't2w') { if (rvState.t2reg === null) return; rvState.mem = rvState.t2reg + 100; rvState.t2log.push('加100, 写 → mem=' + rvState.mem); rvState.memlog.push('balance = ' + rvState.mem); }
+  rvRender();
+}
+function rvReset() { rvState = { t1reg: null, t2reg: null, mem: 0, t1log: [], t2log: [], memlog: ['balance = 0'] }; rvRender(); }
+function rvBad() { rvReset(); rvStep('t1r'); rvStep('t2r'); rvStep('t1w'); rvStep('t2w'); }
+rvReset();
+</script>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>如果 <code>balance</code> 是 <code>int</code>，两个线程各加 1 一百万次，最终值最坏是多少？<br>答案：最好 2,000,000（几乎不穿插）。最坏 2——所有线程都先读完 0，然后依次写 1、覆盖 1、覆盖 1……只要"读"全部发生在任何"写"之前。实际最坏值取决于穿插模式，但<strong>任何小于 2,000,000 的值都可能出现</strong>。这就是为什么"测试通过"毫无意义——竞态 bug 是概率性的，跑一万次可能只错一次。</div>
+
+<h3>3.1 竞态的四个必要条件</h3>
+<p>竞态发生需要四个条件同时满足，打断任何一个就消除竞态：</p>
+<ol>
+  <li><strong>共享</strong>：两个线程访问同一变量</li>
+  <li><strong>可变</strong>：至少一个是写</li>
+  <li><strong>交错</strong>：访问不是原子的，中间能切换</li>
+  <li><strong>无同步</strong>：没有锁/原子操作保护</li>
+</ol>
+<p>解法对应四种思路：不共享（线程局部存储）、不可变（只读共享）、不交错（原子指令/锁）、加同步（本课主题）。本课聚焦后两种。</p>
+
+<h2 id="s4">4. 临界区与互斥的三条要求</h2>
+
+<p><strong>临界区（Critical Section）</strong>：访问共享数据的代码段——同一时刻最多一个线程在其中。解法 = <strong>互斥</strong>。一把好锁要同时满足三条：</p>
+
+<div class="fig">
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="13">
+  <rect x="30" y="20" width="210" height="160" rx="8" fill="#e6f4ea" stroke="#2d6a4f"/>
+  <text x="135" y="44" text-anchor="middle" font-weight="700" fill="#2d6a4f">① 互斥（正确性）</text>
+  <text x="135" y="72" text-anchor="middle" font-size="12" fill="#333">任意时刻最多一个线程</text>
+  <text x="135" y="90" text-anchor="middle" font-size="12" fill="#333">在临界区内</text>
+  <text x="135" y="130" text-anchor="middle" font-size="11" fill="#6b6b6b">底线：做不到就不是锁</text>
+  <rect x="255" y="20" width="210" height="160" rx="8" fill="#fff3cd" stroke="#8a6a10"/>
+  <text x="360" y="44" text-anchor="middle" font-weight="700" fill="#8a6a10">② 前进 + 有限等待</text>
+  <text x="360" y="72" text-anchor="middle" font-size="12" fill="#333">门开着就有人能进</text>
+  <text x="360" y="90" text-anchor="middle" font-size="12" fill="#333">等待有界 → 无饥饿</text>
+  <text x="360" y="130" text-anchor="middle" font-size="11" fill="#6b6b6b">公平：FIFO 是强形式</text>
+  <rect x="480" y="20" width="210" height="160" rx="8" fill="#fce8e8" stroke="#c1121f"/>
+  <text x="585" y="44" text-anchor="middle" font-weight="700" fill="#c1121f">③ 性能</text>
+  <text x="585" y="72" text-anchor="middle" font-size="12" fill="#333">无竞争时快（几 ns）</text>
+  <text x="585" y="90" text-anchor="middle" font-size="12" fill="#333">有竞争时不空耗 CPU</text>
+  <text x="585" y="130" text-anchor="middle" font-size="11" fill="#6b6b6b">自旋锁违反此条</text>
+</svg>
+<div class="fig-cap">图 4.1 · 后续所有锁实现都在同时追这三条。自旋锁满足前两条但忙等空耗 CPU；mutex 全满足但慢；futex 接近最优。</div>
+</div>
+
+<h2 id="s5">5. 锁的硬件基础：从关中断到 CAS 到 FAA</h2>
+
+<p>软件层面的锁最终都要落到<strong>硬件给的原子指令</strong>上——软件本身没有"原子地做两件事"的能力。原子指令的演进，每一种都是上一种的"还不够"：</p>
+
+<div class="derivation"><h4>原子指令演进链</h4>
+<div class="step"><strong>① 关中断（单核·最简单）：</strong>进临界区前 <code>cli</code>，出去后 <code>sti</code>。单核上只要没中断就不会调度 → 临界区自然互斥。<span class="reason">缺点：关中断期间 I/O 中断都丢失；用户态不能执行特权指令；多核上没用——另一核的线程不受本核 cli 影响。</span></div>
+<div class="step"><strong>② Test-and-Set (TAS)：</strong>原子地"返回旧值，写入 1"。用来造自旋锁：返回 1（被占）就继续转，返回 0（空闲，已写成 1）就拿到锁。</div>
+<div class="step"><strong>③ Compare-and-Swap (CAS) —— 更通用：</strong>原子地"若当前值 == 期望值 则写成新值并返回成功，否则返回失败"。CAS 比 TAS 通用——TAS 只能玩 0/1 flag，CAS 能做无锁栈、无锁队列、任意原子更新。x86 上是 <code>LOCK CMPXCHG</code>。</div>
+<div class="step"><strong>④ Fetch-and-Add (FAA)：</strong>原子地"返回旧值，写入 旧值+n"。用来做 ticket 自旋锁和原子计数器。</div>
+<div class="step"><strong>⑤ LL/SC（Load-Linked / Store-Conditional）：</strong>RISC 风格（ARM/MIPS/RISC-V）。LL 普通读，SC"若该地址自上次 LL 没被写过则写并成功，否则失败"。比 CAS 更基础，能构建双字 CAS。</div>
+</div>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>锁本身的实现需要原子指令——但谁来保护原子指令的原子性？<br>答案：硬件。<code>LOCK</code> 前缀在多核时<strong>锁住缓存行</strong>（通过 MESI 协议获取该 cache line 的独占权）——在这个原子操作完成前，其他核不能修改同一 cache line。早期实现锁总线——慢得多。现代 CPU 用 cache line lock，只影响该行。<strong>这是范式 #6（HW-SW 协同）的极致</strong>：原子指令是硬件给的、锁是软件造的、锁的语义是软件定的。</div>
 
 <div class="meta-box"><h4>范式 #6 · HW-SW 协同（锁版）</h4>
-<p>硬件提供 `LOCK CMPXCHG`（CAS）——一个可以原子地"比较并交换"的指令。软件用它构建自旋锁、mutex、信号量、RCU。硬件不决定临界区多长——那是软件的权力。硬件只管"这个 8-byte 操作不会被打断"。</p></div>
+<p>硬件提供 <code>LOCK CMPXCHG</code>——一个原子地"比较并交换"的指令，只保证这一个 8-byte 操作不被打断。软件用它构建自旋锁、mutex、信号量、RCU、无锁栈。硬件不决定临界区多长、保护什么——那是软件的权力。分工：硬件给又快又蠢的原子砖，软件砌又慢但聪明的锁。</p></div>
 
-<h2 id="s5">5. 信号量与生产者-消费者</h2>
-<div class="concept-card"><div class="cc-header"><span class="cc-tag">同步原语</span><h3>信号量 · Semaphore</h3></div>
-<div class="cc-essence"><strong>一个信号量 = 一个整数 + 一个等待队列 + 两个原子操作：</strong>`sem_wait()` ("P"): 如果 count > 0 → count--; 否则 → 睡眠等待。`sem_post()` ("V"): 如果有人在等 → 唤醒一个; 否则 → count++。</div>
+<p>CAS 的"弱"在于它只比较值，不比较"身份"。如果值从 A → B → A，CAS 会以为"没变过"——这就是 <strong>ABA 问题</strong>，是 0006 无锁编程的核心难点。这里先埋下。</p>
+
+<h2 id="s6">6. 自旋锁的演进：TAS → Ticket → MCS</h2>
+
+<p>自旋锁是最简单的锁，但"简单"的实现有性能陷阱。三种自旋锁，每一种都是上一种的"在竞争时不够好"。</p>
+
+<div class="fig">
+<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="12">
+  <!-- TAS -->
+  <rect x="20" y="10" width="680" height="110" rx="8" fill="#fffdfb" stroke="#c1121f"/>
+  <text x="40" y="32" font-weight="700" fill="#c1121f">TAS 自旋锁：所有人在同一个 lock 字上自旋</text>
+  <circle cx="80" cy="70" r="18" fill="#fce8e8" stroke="#c1121f"/><text x="80" y="74" text-anchor="middle" font-size="10">核1</text>
+  <circle cx="140" cy="70" r="18" fill="#fce8e8" stroke="#c1121f"/><text x="140" y="74" text-anchor="middle" font-size="10">核2</text>
+  <circle cx="200" cy="70" r="18" fill="#fce8e8" stroke="#c1121f"/><text x="200" y="74" text-anchor="middle" font-size="10">核3</text>
+  <rect x="280" y="55" width="80" height="30" rx="4" fill="#fff3cd" stroke="#8a6a10"/><text x="320" y="74" text-anchor="middle" font-weight="700">lock</text>
+  <text x="400" y="68" fill="#c1121f" font-weight="700">unlock: lock=0</text>
+  <text x="400" y="86" fill="#6b6b6b" font-size="11">→ 所有核的 cache line 同时失效 → 全部重读</text>
+  <text x="400" y="104" fill="#6b6b6b" font-size="11">→ cache line 抖动 + 抢锁随机（可能饥饿）</text>
+  <!-- Ticket -->
+  <rect x="20" y="130" width="680" height="110" rx="8" fill="#fffdfb" stroke="#8a6a10"/>
+  <text x="40" y="152" font-weight="700" fill="#8a6a10">Ticket 锁：取号排队，严格 FIFO（公平）</text>
+  <text x="60" y="180" fill="#333">核1 取号①</text>
+  <text x="160" y="180" fill="#333">核2 取号②</text>
+  <text x="260" y="180" fill="#333">核3 取号③</text>
+  <rect x="370" y="165" width="120" height="40" rx="4" fill="#fff3cd" stroke="#8a6a10"/>
+  <text x="430" y="182" text-anchor="middle" font-size="11">next_ticket / owner</text>
+  <text x="430" y="198" text-anchor="middle" font-size="11">叫号服务</text>
+  <text x="520" y="180" fill="#8a6a10" font-weight="700">公平：无饥饿</text>
+  <text x="520" y="198" fill="#6b6b6b" font-size="11">但仍在 owner 上自旋 → 抖动未解决</text>
+  <!-- MCS -->
+  <rect x="20" y="250" width="680" height="120" rx="8" fill="#fffdfb" stroke="#2d6a4f"/>
+  <text x="40" y="272" font-weight="700" fill="#2d6a4f">MCS 锁：每人自旋在自己的 cache 里的 waiting 字</text>
+  <rect x="60" y="290" width="90" height="50" rx="4" fill="#e6f4ea" stroke="#2d6a4f"/><text x="105" y="310" text-anchor="middle" font-size="10">核1 本地</text><text x="105" y="326" text-anchor="middle" font-size="10">waiting</text>
+  <rect x="170" y="290" width="90" height="50" rx="4" fill="#e6f4ea" stroke="#2d6a4f"/><text x="215" y="310" text-anchor="middle" font-size="10">核2 本地</text><text x="215" y="326" text-anchor="middle" font-size="10">waiting</text>
+  <rect x="280" y="290" width="90" height="50" rx="4" fill="#e6f4ea" stroke="#2d6a4f"/><text x="375" y="310" text-anchor="middle" font-size="10">核3 本地</text><text x="325" y="326" text-anchor="middle" font-size="10">waiting</text>
+  <text x="400" y="300" fill="#2d6a4f" font-weight="700">unlock 只写后继的 waiting=0</text>
+  <text x="400" y="318" fill="#6b6b6b" font-size="11">→ 只动一个 cache line，跨核传递一次</text>
+  <text x="400" y="336" fill="#6b6b6b" font-size="11">→ 公平 + 无抖动，竞争越激烈优势越大</text>
+  <text x="400" y="356" fill="#6b6b6b" font-size="11">Linux osq_lock 即 MCS 变种</text>
+</svg>
+<div class="fig-cap">图 6.1 · 三种自旋锁的等待方式。TAS：所有人挤在同一个字上抢，unlock 时 cache line 雪崩失效。Ticket：取号排队解决公平，但仍在共享字上等。MCS：每人等在自己的本地变量上，unlock 只唤醒链表下一个——只动一个 cache line。</div>
 </div>
 
-<p><strong>二值信号量（count=1）= 互斥锁。</strong>但信号量更强大的是<strong>计数信号量</strong>——控制"最多 N 个线程同时访问资源"。</p>
-<p><strong>生产者-消费者问题（Bounded Buffer）</strong>：一个或多个生产者线程向有界缓冲区放数据，消费者线程取数据。解：</p>
-<ul><li>`sem empty(N)` — 缓冲区空位数（初值 N = buffer size）</li>
-<li>`sem full(0)` — 缓冲区已有数据数（初值 0）</li>
-<li>`mutex lock` — 保护缓冲区内部数据结构</li></ul>
-<p>生产者：`sem_wait(empty); lock(mutex); 放入; unlock(mutex); sem_post(full);`</p>
-<p>消费者：`sem_wait(full); lock(mutex); 取出; unlock(mutex); sem_post(empty);`</p>
-<p><strong>两个信号量各管一个条件</strong>（有空位吗？有数据吗？），互斥锁管缓冲区内部的原子性。三个原语，解一家族问题。</p>
+<div class="insight"><strong>自旋锁的使用准则：</strong>临界区必须<strong>极短</strong>（几 ns 到几 μs），且<strong>持锁期间不睡眠</strong>（不能调任何可能睡眠的函数）。原因：自旋时不让 CPU，如果持锁者被调度走，等锁者会空转整个时间片。内核里中断处理程序用的锁都是自旋锁，因为中断里不能睡眠。</div>
 
-<div class="warning"><strong>信号量易错。</strong>如果生产者顺序写成 `lock(mutex); sem_wait(empty);` → 缓冲区满了 → sem_wait 睡眠 → <strong>持锁睡觉 → 死锁</strong>（消费者需要锁才能取数据 → `sem_post(empty)` 但拿不到锁）。这个错误非常常见——因为它看起来"只是顺序不同"。</div>
+<h2 id="s7">7. 自旋锁 → mutex：从忙等到休眠</h2>
 
-<h2 id="s6">6. 推导与自测</h2>
-<div class="problem"><div class="ptitle">P1 · CAS 实现自旋锁 <span class="plevel l1">L1</span></div><div class="pbody"><p>用 C 伪代码和 CAS 实现 `spin_lock(lock)` 和 `spin_unlock(lock)`。</p></div>
-<details><summary>▸ 解答</summary><div class="sol"><div class="step">`spin_lock(int *lock) { while (CAS(lock, 0, 1) == false); }` — 原子检查 lock 是否为 0，是 → 设为 1 返回 true（拿到锁）；否 → 返回 false 继续循环。</div><div class="step">`spin_unlock(int *lock) { *lock = 0; }` — 释放不需要原子（只有持锁者会写）。</div></div></details></div>
+<p>自旋锁在临界区长或可能睡眠时是灾难。mutex 解决"持锁者被切走"的问题——拿不到锁就<strong>让出 CPU 睡觉</strong>，持锁者释放时唤醒。</p>
 
-<div class="problem"><div class="ptitle">P2 · 生产者-消费者死锁分析 <span class="plevel l2">L2</span></div><div class="pbody"><p>分析：如果 mutex lock 放在 sem_wait(empty) 之前，在 buf 满时会发生什么？画出线程状态。</p></div>
-<details><summary>▸ 解答</summary><div class="sol"><div class="step">生产者获锁 → sem_wait(empty) buf 满 count=0 → 睡眠。消费者需要获锁才能取数据 → 但锁被睡眠的生产者持着 → <strong>死锁</strong>。</div></div></details></div>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">原语</span><h3>Mutex · 互斥锁</h3></div>
+<div class="cc-essence"><strong>拿不到锁 → 把自己挂入等待队列 → 调 schedule() 让出 CPU（睡眠）。持锁者 unlock 时唤醒等待队列中的一个线程。代价：两次上下文切换（切出 + 切回），但持锁期间不空耗 CPU。</strong></div>
+</div>
 
-<div class="problem"><div class="ptitle">P3 · Linux futex <span class="plevel l3">L3</span></div><div class="pbody"><p>Linux 的 futex（fast userspace mutex）是 mutex 的高效实现——它在无竞争时不陷入内核。(a) futex 怎么知道有没有竞争？(b) 为什么"无竞争走用户态、有竞争才走内核"能大幅减少系统调用的次数？(c) 这体现了哪个设计范式？</p></div>
-<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) futex 在用户态用原子 CAS 尝试拿锁。如果 CAS 成功 → 没人竞争 → 直接从用户态返回（零系统调用）。CAS 失败 → 有人持锁 → 调 `futex(FUTEX_WAIT)` 陷入内核睡眠。(b) 大多数 mutex 的持锁时间极短、竞争极罕见——99%+ 的 lock/unlock 可以在用户态完成。(c) <strong>范式 #6（HW-SW 协同）</strong>：硬件给 CAS（用户态快速路径），软件在竞争时才用内核机制（休眠/唤醒）。</div></div></details></div>
+<div class="fig">
+<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="12">
+  <text x="360" y="22" text-anchor="middle" font-weight="700">Mutex 的状态与等待队列</text>
+  <!-- lock state -->
+  <rect x="40" y="40" width="120" height="50" rx="6" fill="#fff3cd" stroke="#8a6a10"/>
+  <text x="100" y="62" text-anchor="middle" font-weight="700">state</text>
+  <text x="100" y="80" text-anchor="middle" font-size="11" fill="#6b6b6b">0=空闲 / 1=被占</text>
+  <!-- wait queue -->
+  <rect x="200" y="40" width="480" height="50" rx="6" fill="#f0f4ff" stroke="#2d4a8a"/>
+  <text x="440" y="62" text-anchor="middle" font-weight="700" fill="#2d4a8a">wait_list（等待队列：阻塞的 task_struct）</text>
+  <text x="440" y="80" text-anchor="middle" font-size="11" fill="#6b6b6b">用内嵌的自旋锁 wait_lock 保护（操作队列极短，不能睡眠）</text>
+  <!-- thread A holding -->
+  <rect x="40" y="120" width="200" height="70" rx="8" fill="#e6f4ea" stroke="#2d6a4f" stroke-width="2"/>
+  <text x="140" y="142" text-anchor="middle" font-weight="700" fill="#2d6a4f">线程 A（持锁）</text>
+  <text x="140" y="162" text-anchor="middle" font-size="11">CAS(state,0,1) 成功</text>
+  <text x="140" y="178" text-anchor="middle" font-size="11">在临界区里干活</text>
+  <!-- thread B blocked -->
+  <rect x="270" y="120" width="200" height="70" rx="8" fill="#fce8e8" stroke="#c1121f" stroke-width="2"/>
+  <text x="370" y="142" text-anchor="middle" font-weight="700" fill="#c1121f">线程 B（阻塞）</text>
+  <text x="370" y="162" text-anchor="middle" font-size="11">CAS 失败 → 入 wait_list</text>
+  <text x="370" y="178" text-anchor="middle" font-size="11">state=UNINTERRUPTIBLE, schedule()</text>
+  <!-- thread C blocked -->
+  <rect x="500" y="120" width="180" height="70" rx="8" fill="#fce8e8" stroke="#c1121f" stroke-width="2"/>
+  <text x="590" y="142" text-anchor="middle" font-weight="700" fill="#c1121f">线程 C（阻塞）</text>
+  <text x="590" y="162" text-anchor="middle" font-size="11">同样入 wait_list 尾</text>
+  <text x="590" y="178" text-anchor="middle" font-size="11">排队等</text>
+  <!-- arrows -->
+  <path d="M240 155 L270 155" stroke="#c1121f" stroke-width="2" marker-end="url(#arrR)"/>
+  <path d="M470 155 L500 155" stroke="#c1121f" stroke-width="2" marker-end="url(#arrR)"/>
+  <defs><marker id="arrR" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c1121f"/></marker></defs>
+  <!-- unlock flow -->
+  <rect x="40" y="220" width="640" height="120" rx="8" fill="#fffdfb" stroke="#6b4226"/>
+  <text x="60" y="242" font-weight="700" fill="#6b4226">A 调 unlock 时：</text>
+  <text x="60" y="264" fill="#333">① 加 wait_lock（自旋，保护队列操作）</text>
+  <text x="60" y="284" fill="#333">② wait_list 非空 → 取出队首 B，标记 RUNNING，state 仍为 1（"传递"给 B）</text>
+  <text x="60" y="304" fill="#333">③ 释放 wait_lock</text>
+  <text x="60" y="324" fill="#333">④ B 被调度时从 schedule() 返回处继续，已"拿到"锁</text>
+  <text x="60" y="334" fill="#6b6b6b" font-size="11">关键：mutex 内部用自旋锁保护自己的等待队列——锁的分层</text>
+</svg>
+<div class="fig-cap">图 7.1 · Mutex 的完整工作流。快路径：CAS 抢到锁直接返回。慢路径：CAS 失败 → 入等待队列 → 睡眠。unlock 唤醒队首，把锁"传递"给它（state 不归零，避免新来的插队）。</div>
+</div>
+
+<table>
+<tr><th></th><th>自旋锁</th><th>mutex</th></tr>
+<tr><td>拿不到锁时</td><td>忙等（CPU 100%）</td><td>睡眠（让出 CPU）</td></tr>
+<tr><td>适合临界区</td><td>极短（&lt; 上下文切换代价）</td><td>较长或不确定</td></tr>
+<tr><td>持锁期间能否睡眠</td><td><strong>不能</strong></td><td>能</td></tr>
+<tr><td>典型用户</td><td>中断处理、内核短临界区</td><td>用户态、内核长临界区</td></tr>
+<tr><td>无竞争代价</td><td>~10-20 ns（一次原子指令）</td><td>~10-20 ns（快路径 CAS）</td></tr>
+<tr><td>有竞争代价</td><td>空耗 CPU × 等待时间</td><td>2 次上下文切换 (~几 μs)</td></tr>
+</table>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>临界区多长时该用自旋锁、多长时该用 mutex？<br>答案：临界区时间 <code>T_cs</code> 与一次上下文切换时间 <code>T_ctx</code>（约 1-5 μs）比较。<code>T_cs &lt; T_ctx</code> → 自旋锁更优（睡眠+唤醒比直接转完还贵）。<code>T_cs &gt; T_ctx</code> → mutex 更优（让出 CPU 给别人干活）。边界在 μs 量级——所以内核中断处理用自旋，用户态几乎都用 mutex。</div>
+
+<h2 id="s8">8. 读写锁与 per-CPU 变量</h2>
+
+<h3>8.1 读写锁（rwlock）</h3>
+<p>很多共享数据是<strong>读多写少</strong>——比如内核的进程列表、路由表。读不修改数据，多个读者同时读完全安全。用普通 mutex 会让读者互相串行——浪费。读写锁区分读模式和写模式：多个读者可同时持有读锁；写锁独占——有写者时不能有任何读者或其他写者；有读者时不能加写锁。</p>
+
+<div class="warning"><strong>读写锁的饥饿陷阱。</strong>如果读者源源不断，写者永远等不到所有读者退出——<strong>写者饥饿</strong>。解决：写者到来时设"有写者在等"flag，新读者看到 flag 就不进入——让已有读者慢慢退出，写者进去。这牺牲一点读者吞吐换写者公平。Linux 的 <code>rwsem</code> 就处理了这个问题。</div>
+
+<h3>8.2 per-CPU 变量（免锁计数）</h3>
+<p>如果每个 CPU 只访问自己的计数器，就根本不需要锁。Linux 的 <code>DEFINE_PER_CPU</code> 给每个 CPU 分配一份副本。更新时关本核抢占 + 访问本核副本——<strong>无跨核同步</strong>。读时遍历所有核求和。这是<strong>用空间换同步</strong>——N 个核 N 份计数器。网络包计数、中断计数、vm_stat 都用这招。</p>
+
+<div class="fig">
+<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="12">
+  <text x="360" y="22" text-anchor="middle" font-weight="700">per-CPU 计数器：每个核只动自己的副本，无锁</text>
+  <rect x="40" y="40" width="140" height="70" rx="6" fill="#e6f4ea" stroke="#2d6a4f"/><text x="110" y="62" text-anchor="middle" font-weight="700">CPU 0</text><text x="110" y="84" text-anchor="middle">cnt[0] = 1024</text><text x="110" y="100" text-anchor="middle" font-size="10" fill="#6b6b6b">只 CPU0 写</text>
+  <rect x="200" y="40" width="140" height="70" rx="6" fill="#e6f4ea" stroke="#2d6a4f"/><text x="270" y="62" text-anchor="middle" font-weight="700">CPU 1</text><text x="270" y="84" text-anchor="middle">cnt[1] = 768</text><text x="270" y="100" text-anchor="middle" font-size="10" fill="#6b6b6b">只 CPU1 写</text>
+  <rect x="360" y="40" width="140" height="70" rx="6" fill="#e6f4ea" stroke="#2d6a4f"/><text x="430" y="62" text-anchor="middle" font-weight="700">CPU 2</text><text x="430" y="84" text-anchor="middle">cnt[2] = 2048</text><text x="430" y="100" text-anchor="middle" font-size="10" fill="#6b6b6b">只 CPU2 写</text>
+  <rect x="520" y="40" width="160" height="70" rx="6" fill="#e6f4ea" stroke="#2d6a4f"/><text x="600" y="62" text-anchor="middle" font-weight="700">CPU 3</text><text x="600" y="84" text-anchor="middle">cnt[3] = 512</text><text x="600" y="100" text-anchor="middle" font-size="10" fill="#6b6b6b">只 CPU3 写</text>
+  <text x="360" y="140" text-anchor="middle" fill="#6b6b6b" font-size="11">更新：preempt_disable() → 本核 cnt++ → preempt_enable()（无 CAS、无锁、无跨核通信）</text>
+  <rect x="200" y="160" width="320" height="60" rx="6" fill="#fff3cd" stroke="#8a6a10"/><text x="360" y="184" text-anchor="middle" font-weight="700">读总和 = Σ cnt[i] = 4352</text><text x="360" y="204" text-anchor="middle" font-size="11" fill="#6b6b6b">读时遍历所有核求和（不精确但近似，统计场景够用）</text>
+</svg>
+<div class="fig-cap">图 8.1 · per-CPU 变量：写无锁（各写各的），读求和。范式 #6 的另一面——硬件给"每核独立 cache"，软件用它造免锁计数。</div>
+</div>
+
+<h2 id="s9">9. 信号量：计数同步原语</h2>
+
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">同步原语</span><h3>Semaphore · 信号量</h3></div>
+<div class="cc-essence"><strong>一个信号量 = 一个整数 count + 一个等待队列 + 两个原子操作。P (wait)：若有名额则占一个，否则睡眠。V (post)：释放一个名额，若有等待者则唤醒一个。Dijkstra 1965 提出。</strong></div>
+</div>
+
+<div class="fig">
+<svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="12">
+  <text x="360" y="22" text-anchor="middle" font-weight="700">信号量 = 名额池（count=N，最多 N 个线程同时通过）</text>
+  <!-- pool -->
+  <rect x="40" y="40" width="240" height="160" rx="8" fill="#f0f4ff" stroke="#2d4a8a"/>
+  <text x="160" y="62" text-anchor="middle" font-weight="700" fill="#2d4a8a">名额池 count</text>
+  <circle cx="80" cy="100" r="14" fill="#2d6a4f"/><text x="80" y="104" text-anchor="middle" font-size="10" fill="white">✓</text>
+  <circle cx="120" cy="100" r="14" fill="#2d6a4f"/><text x="120" y="104" text-anchor="middle" font-size="10" fill="white">✓</text>
+  <circle cx="160" cy="100" r="14" fill="#2d6a4f"/><text x="160" y="104" text-anchor="middle" font-size="10" fill="white">✓</text>
+  <circle cx="200" cy="100" r="14" fill="#fff" stroke="#6b6b6b"/><text x="200" y="104" text-anchor="middle" font-size="10">空</text>
+  <circle cx="240" cy="100" r="14" fill="#fff" stroke="#6b6b6b"/><text x="240" y="104" text-anchor="middle" font-size="10">空</text>
+  <text x="160" y="140" text-anchor="middle" font-size="11" fill="#6b6b6b">P：占一个 → count--；count&lt;0 则睡</text>
+  <text x="160" y="160" text-anchor="middle" font-size="11" fill="#6b6b6b">V：放一个 → count++；有等待者则唤醒</text>
+  <text x="160" y="186" text-anchor="middle" font-size="11" fill="#6b6b6b">初值 N=5，已占 3，剩 2</text>
+  <!-- waiters -->
+  <rect x="320" y="40" width="360" height="160" rx="8" fill="#fffdfb" stroke="#c1121f"/>
+  <text x="500" y="62" text-anchor="middle" font-weight="700" fill="#c1121f">等待队列（count 用尽时）</text>
+  <rect x="340" y="80" width="100" height="40" rx="4" fill="#fce8e8" stroke="#c1121f"/><text x="390" y="104" text-anchor="middle" font-size="11">线程 X (P 阻塞)</text>
+  <rect x="460" y="80" width="100" height="40" rx="4" fill="#fce8e8" stroke="#c1121f"/><text x="510" y="104" text-anchor="middle" font-size="11">线程 Y (P 阻塞)</text>
+  <rect x="580" y="80" width="80" height="40" rx="4" fill="#fce8e8" stroke="#c1121f"/><text x="620" y="104" text-anchor="middle" font-size="11">…</text>
+  <text x="500" y="150" text-anchor="middle" font-size="11" fill="#6b6b6b">某线程 V → 唤醒队首 X → X 的 P 返回</text>
+  <text x="500" y="172" text-anchor="middle" font-size="11" fill="#6b6b6b">二值信号量 (N=1) = 互斥锁</text>
+  <text x="500" y="190" text-anchor="middle" font-size="11" fill="#6b6b6b">计数信号量 (N&gt;1) = 限并发数（连接池等）</text>
+</svg>
+<div class="fig-cap">图 9.1 · 信号量是"名额池"。P 申请名额（满则睡），V 释放名额（有等待者则唤醒）。二值即锁，计数即并发限制。</div>
+</div>
+
+<div class="warning"><strong>信号量与 mutex 不完全等价。</strong>二值信号量看起来像 mutex，但有区别：mutex 有"所有权"——只有持锁者才能 unlock（调试时能定位谁忘放锁）。信号量没有所有权——任何线程都能 V。所以用信号量当 mutex 是反模式，会丢失调试信息。</div>
+
+<h2 id="s10">10. 生产者-消费者：完整代码与死锁陷阱</h2>
+
+<p><strong>生产者-消费者问题（Bounded Buffer）</strong>：生产者向有界缓冲区放数据，消费者取数据。要解决三个约束：缓冲区满时生产者等、空时消费者等、缓冲区本身的结构修改要互斥。用三个原语各管一件事：<code>empty</code> 信号量管"有空位吗"、<code>full</code> 信号量管"有数据吗"、<code>mutex</code> 管缓冲区内部结构的原子性。</p>
+
+<div class="fig">
+<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="12">
+  <text x="360" y="22" text-anchor="middle" font-weight="700">生产者-消费者：环形缓冲区 + 两个信号量 + 一把 mutex</text>
+  <!-- buffer ring -->
+  <g transform="translate(160,170)">
+    <circle cx="0" cy="-60" r="26" fill="#e6f4ea" stroke="#2d6a4f"/><text x="0" y="-56" text-anchor="middle" font-size="10">D0</text>
+    <circle cx="55" cy="-30" r="26" fill="#e6f4ea" stroke="#2d6a4f"/><text x="55" y="-26" text-anchor="middle" font-size="10">D1</text>
+    <circle cx="55" cy="30" r="26" fill="#fff" stroke="#6b6b6b"/><text x="55" y="34" text-anchor="middle" font-size="10">空</text>
+    <circle cx="0" cy="60" r="26" fill="#fff" stroke="#6b6b6b"/><text x="0" y="64" text-anchor="middle" font-size="10">空</text>
+    <circle cx="-55" cy="30" r="26" fill="#fff" stroke="#6b6b6b"/><text x="-55" y="34" text-anchor="middle" font-size="10">空</text>
+    <circle cx="-55" cy="-30" r="26" fill="#fff" stroke="#6b6b6b"/><text x="-55" y="-26" text-anchor="middle" font-size="10">空</text>
+    <text x="0" y="100" text-anchor="middle" font-size="11" fill="#6b6b6b">in 指针 / out 指针</text>
+  </g>
+  <!-- semaphores -->
+  <rect x="320" y="80" width="180" height="50" rx="6" fill="#fff3cd" stroke="#8a6a10"/>
+  <text x="410" y="100" text-anchor="middle" font-weight="700">empty 信号量</text>
+  <text x="410" y="118" text-anchor="middle" font-size="11">剩 4 个空位（初值 N=6）</text>
+  <rect x="320" y="140" width="180" height="50" rx="6" fill="#fff3cd" stroke="#8a6a10"/>
+  <text x="410" y="160" text-anchor="middle" font-weight="700">full 信号量</text>
+  <text x="410" y="178" text-anchor="middle" font-size="11">有 2 个数据（初值 0）</text>
+  <rect x="320" y="200" width="180" height="50" rx="6" fill="#f0f4ff" stroke="#2d4a8a"/>
+  <text x="410" y="220" text-anchor="middle" font-weight="700">mutex</text>
+  <text x="410" y="238" text-anchor="middle" font-size="11">保护 in/out/数组</text>
+  <!-- producer flow -->
+  <rect x="520" y="80" width="180" height="110" rx="6" fill="#e6f4ea" stroke="#2d6a4f"/>
+  <text x="610" y="100" text-anchor="middle" font-weight="700" fill="#2d6a4f">生产者</text>
+  <text x="535" y="120" font-size="11">1. P(empty) 等空位</text>
+  <text x="535" y="138" font-size="11">2. lock(mutex)</text>
+  <text x="535" y="156" font-size="11">3. 放入, in++</text>
+  <text x="535" y="174" font-size="11">4. unlock(mutex)</text>
+  <text x="535" y="186" font-size="11">5. V(full) 通知有数据</text>
+  <!-- consumer flow -->
+  <rect x="520" y="200" width="180" height="110" rx="6" fill="#fce8e8" stroke="#c1121f"/>
+  <text x="610" y="220" text-anchor="middle" font-weight="700" fill="#c1121f">消费者</text>
+  <text x="535" y="240" font-size="11">1. P(full) 等数据</text>
+  <text x="535" y="258" font-size="11">2. lock(mutex)</text>
+  <text x="535" y="276" font-size="11">3. 取出, out++</text>
+  <text x="535" y="294" font-size="11">4. unlock(mutex)</text>
+  <text x="535" y="306" font-size="11">5. V(empty) 通知有空位</text>
+  <!-- warning -->
+  <rect x="40" y="320" width="640" height="50" rx="6" fill="#fff8f0" stroke="#e09f3e"/>
+  <text x="60" y="342" font-weight="700" fill="#8a6a10">顺序至关重要：必须先 P(sem) 再 lock(mutex)。</text>
+  <text x="60" y="360" font-size="11" fill="#6b6b6b">反了 → 满时生产者持 mutex 睡 → 消费者拿不到 mutex → 死锁</text>
+</svg>
+<div class="fig-cap">图 10.1 · 生产者-消费者的完整结构。empty/full 各管一个条件，mutex 管缓冲区原子性。顺序写反是经典死锁。</div>
+</div>
+
+<div class="warning"><strong>死锁陷阱：顺序写反。</strong>如果生产者先 <code>lock(mutex)</code> 再 <code>P(empty)</code>——缓冲区满时：生产者拿到 mutex → P(empty) 因满而睡眠 → <strong>持着 mutex 睡觉</strong>。消费者需要 mutex 才能取数据 → 拿不到 mutex → 永远不能 V(empty) → <strong>死锁</strong>。这个错误极常见——因为代码"看起来只是顺序不同"，但语义天差地别。规则：<strong>先等条件（P），再拿互斥（mutex）</strong>。</div>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>如果只有一个生产者一个消费者，<code>mutex</code> 还需要吗？<br>答案：不需要。单生产单消费时，<code>in</code> 只有生产者写、<code>out</code> 只有消费者写，两者各读对方的索引但不修改——不会竞态。<code>empty</code> 和 <code>full</code> 两个信号量已足够。但多生产或多消费时，多个生产者同时改 <code>in</code> → 需要 mutex。这是"无锁"的边界——竞态条件是否真存在决定了锁是否真需要。</div>
+
+<h2 id="s11">11. futex：用户态快速路径 + 内核态慢路径</h2>
+
+<p>传统的 mutex 每次 lock/unlock 都陷入内核——即使无竞争也要两次系统调用（~几百 ns 每次）。但大多数 mutex 的实际使用<strong>几乎无竞争</strong>——99%+ 的 lock/unlock 是同一个线程在跑，根本没人抢。为这 99% 的情况付系统调用代价，太亏。Linux 的 <strong>futex（fast userspace mutex）</strong> 解决这个。</p>
+
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">实战</span><h3>Futex · 快速用户态互斥</h3></div>
+<div class="cc-essence"><strong>无竞争时在用户态用原子指令完成（零系统调用）；有竞争时才陷入内核睡眠/唤醒。把"快路径"做到极致，"慢路径"只在必要时走。</strong></div>
+</div>
+
+<div class="fig">
+<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="12">
+  <text x="360" y="22" text-anchor="middle" font-weight="700">futex：快路径（无竞争）vs 慢路径（有竞争）</text>
+  <!-- fast path -->
+  <rect x="30" y="40" width="320" height="290" rx="8" fill="#e6f4ea" stroke="#2d6a4f"/>
+  <text x="190" y="62" text-anchor="middle" font-weight="700" fill="#2d6a4f">快路径（99%+ 走这）</text>
+  <text x="50" y="88" fill="#333">lock: CAS(fut, 0→1) 成功</text>
+  <text x="50" y="106" fill="#6b6b6b" font-size="11">→ 直接返回，零系统调用</text>
+  <text x="50" y="126" fill="#6b6b6b" font-size="11">代价：一次原子指令 ~10ns</text>
+  <text x="50" y="156" fill="#333">unlock: fut 是 1（无等待者）</text>
+  <text x="50" y="174" fill="#6b6b6b" font-size="11">→ 直接减到 0，零系统调用</text>
+  <rect x="50" y="200" width="280" height="110" rx="6" fill="#fff" stroke="#2d6a4f"/>
+  <text x="190" y="222" text-anchor="middle" font-weight="700">fut 三态</text>
+  <text x="70" y="244" font-size="11">0 = 空闲</text>
+  <text x="70" y="264" font-size="11">1 = 被占，无等待者</text>
+  <text x="70" y="284" font-size="11">2 = 被占，有等待者在内核睡</text>
+  <text x="70" y="302" font-size="11" fill="#6b6b6b">区分 1/2：unlock 时 1→0 不唤醒</text>
+  <!-- slow path -->
+  <rect x="370" y="40" width="320" height="290" rx="8" fill="#fce8e8" stroke="#c1121f"/>
+  <text x="530" y="62" text-anchor="middle" font-weight="700" fill="#c1121f">慢路径（罕见竞争时）</text>
+  <text x="390" y="88" fill="#333">lock: CAS(fut, 0→1) 失败</text>
+  <text x="390" y="106" fill="#6b6b6b" font-size="11">→ 有人持锁</text>
+  <text x="390" y="126" fill="#333">→ CAS(fut, 1→2) 标记有等待者</text>
+  <text x="390" y="146" fill="#333">→ syscall(futex, FUTEX_WAIT, 2)</text>
+  <text x="390" y="164" fill="#6b6b6b" font-size="11">  内核把本线程挂到 fut 地址的等待队列，睡眠</text>
+  <text x="390" y="194" fill="#333">unlock: fut 是 2（有等待者）</text>
+  <text x="390" y="212" fill="#333">→ fut = 0</text>
+  <text x="390" y="232" fill="#333">→ syscall(futex, FUTEX_WAKE, 1)</text>
+  <text x="390" y="250" fill="#6b6b6b" font-size="11">  唤醒一个等待者</text>
+  <rect x="390" y="270" width="280" height="40" rx="6" fill="#fff" stroke="#c1121f"/>
+  <text x="530" y="294" text-anchor="middle" font-size="11">内核用哈希表把 fut 地址映射到等待队列</text>
+</svg>
+<div class="fig-cap">图 11.1 · futex 的双路径。无竞争时纯用户态 CAS，零系统调用；有竞争才陷入内核。三态 0/1/2 让"无等待者的 unlock"也走快路径（1→0 不需 FUTEX_WAKE）。</div>
+</div>
+
+<div class="meta-box"><h4>范式 #6 + #3 · futex 的双重范式</h4>
+<p>futex 是范式 #6（HW-SW 协同）的教科书案例：硬件给 CAS（用户态快速路径），软件在竞争时才用内核机制（休眠/唤醒）。同时也是范式 #3（惰性求值）：内核对象（等待队列）<strong>不到真有人等待时才创建</strong>——无竞争时完全没有内核态开销。glibc 的 <code>pthread_mutex</code> 底层就是 futex。</p></div>
+
+<h2 id="s12">12. 内存序与屏障：并发的最后一道暗坑</h2>
+
+<p>这是并发里最反直觉、最容易写错的部分。即使你用了原子指令，<strong>编译器和 CPU 仍然会重排你的访存指令</strong>——单线程下重排不影响结果，但多线程下会破坏你精心设计的同步。重排来源：编译器看到无依赖的访存可交换顺序；CPU 乱序执行 + 写缓冲 + cache 不一致——x86 是<strong>强序</strong>（TSO，只可能 store-load 重排），ARM/POWER 是<strong>弱序</strong>（几乎任意重排）。</p>
+
+<div class="fig">
+<svg viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" font-family="Palatino, serif" font-size="12">
+  <text x="360" y="22" text-anchor="middle" font-weight="700">经典发布 bug：弱序 CPU 上 store-store 可重排</text>
+  <!-- intended -->
+  <rect x="30" y="40" width="320" height="120" rx="8" fill="#e6f4ea" stroke="#2d6a4f"/>
+  <text x="190" y="62" text-anchor="middle" font-weight="700" fill="#2d6a4f">程序员意图（代码顺序）</text>
+  <text x="50" y="88" fill="#333">线程1: data = 42;</text>
+  <text x="50" y="108" fill="#333">线程1: ready = 1;  ← 发标志</text>
+  <text x="50" y="134" fill="#6b6b6b" font-size="11">消费者看到 ready=1 时 data 应为 42</text>
+  <text x="50" y="152" fill="#6b6b6b" font-size="11">（单线程语义下成立）</text>
+  <!-- actual -->
+  <rect x="370" y="40" width="320" height="120" rx="8" fill="#fce8e8" stroke="#c1121f"/>
+  <text x="530" y="62" text-anchor="middle" font-weight="700" fill="#c1121f">ARM 实际执行（可重排）</text>
+  <text x="390" y="88" fill="#333">线程1: ready = 1;  ← 先发标志</text>
+  <text x="390" y="108" fill="#333">线程1: data = 42;  ← 后写数据</text>
+  <text x="390" y="134" fill="#c1121f" font-size="11">消费者看到 ready=1 时 data 可能还是 0</text>
+  <text x="390" y="152" fill="#c1121f" font-size="11">→ 打印 0 而非 42，bug</text>
+  <!-- fix -->
+  <rect x="30" y="180" width="660" height="120" rx="8" fill="#fffdfb" stroke="#6b4226"/>
+  <text x="50" y="202" font-weight="700" fill="#6b4226">修复：用 release / acquire 内存序</text>
+  <text x="50" y="226" fill="#333">线程1: data = 42; store(ready, 1, release);</text>
+  <text x="50" y="246" fill="#6b6b6b" font-size="11">release：data 的写必须先于 ready 的写对其他核可见</text>
+  <text x="50" y="270" fill="#333">线程2: if (load(ready, acquire)) print(data);</text>
+  <text x="50" y="290" fill="#6b6b6b" font-size="11">acquire：ready 读到后，data 的读不能重排到 ready 之前 → data 必为 42</text>
+  <text x="50" y="308" fill="#6b6b6b" font-size="11">x86 上 acquire/release 几乎免费（TSO 已满足）；ARM 上要插 dmb 屏障指令，有代价</text>
+</svg>
+<div class="fig-cap">图 12.1 · 内存序的本质：给原子操作加约束，禁止某些重排。release-store 保证之前的写先可见；acquire-load 保证之后的读不提前。配对使用即正确发布。</div>
+</div>
+
+<div class="warning"><strong>这是真坑。</strong>很多"在 x86 上跑得好好的"代码移植到 ARM 就出 bug——因为 x86 的强序掩盖了代码的内存序错误。Linux 内核的 <code>smp_store_release</code> / <code>smp_load_acquire</code>、C11 的 <code>memory_order_*</code>、Rust 的 <code>Ordering::Acquire/Release</code> 都是为这个。写无锁代码不懂内存序 = 写 bug。</div>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>为什么 x86 的 <code>LOCK CMPXCHG</code>（CAS）自带全序语义，而普通 <code>mov</code> 不自带？<br>答案：<code>LOCK</code> 前缀不仅锁 cache line，还隐含<strong>全内存屏障</strong>——它之前的所有 store 必须先对其他核可见，才能执行这个 CAS，CAS 之后的读也不能提前。普通 <code>mov</code> 在 x86 上只保证 TSO（store 顺序、load 顺序，但 store→load 可重排），不保证全序。所以用 CAS 做同步天然安全，用普通 mov 做 flag 就要小心。</div>
+
+<h2 id="s13">13. 自测题</h2>
+
+<p style="color:var(--muted); font-size:0.9rem;">13 题覆盖本课每节核心点。做完后若某题答错，回到对应节重读——不要满足于"有印象"。</p>
+
+<div class="quiz">
+
+<div class="quiz-question"><h4>Q1（§1 线程 vs 进程）· 同一进程的两个线程，下列哪个是<strong>各自独立</strong>拥有的？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。堆在地址空间里，线程共享地址空间 → 共享堆。','incorrect-fb')"><label>A. 堆</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。文件描述符表属于进程级 files_struct，线程共享。','incorrect-fb')"><label>B. 文件描述符表</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','对。每个线程有自己的栈、PC、寄存器、TLS、信号掩码。','correct-fb')"><label>C. 栈与程序计数器 (PC)</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。页表根 pgd/CR3 共享——这正是线程切换不刷 TLB 的原因。','incorrect-fb')"><label>D. 页表根 (CR3)</label></div>
+</div>
+<div class="quiz-feedback" id="q1fb"></div></div>
+
+<div class="quiz-question"><h4>Q2（§1 上下文切换）· 线程切换比进程切换便宜，主要省在？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。寄存器都要存/恢复，这部分一样。','incorrect-fb')"><label>A. 少存几个通用寄存器</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','对。不写 CR3 → TLB 保留 → cache 大概率还有效。省的是 TLB/cache 冷启动代价。','correct-fb')"><label>B. 不写 CR3，TLB 和 cache 保留</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。两者都要走调度器。','incorrect-fb')"><label>C. 不经过调度器</label></div>
+</div>
+<div class="quiz-feedback" id="q2fb"></div></div>
+
+<div class="quiz-question"><h4>Q3（§2 clone）· Linux 内核中 <code>fork()</code> 和 <code>pthread_create()</code> 的关系是？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。两者底层都走 clone。','incorrect-fb')"><label>A. 完全不同的两条内核路径</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','对。都调 clone()，区别在 flags：pthread 设 CLONE_VM|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD，fork 不设。','correct-fb')"><label>B. 都调 clone()，区别只在 flags</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。线程也是 task_struct，是 LWP。','incorrect-fb')"><label>C. pthread 不创建 task_struct</label></div>
+</div>
+<div class="quiz-feedback" id="q3fb"></div></div>
+
+<div class="quiz-question"><h4>Q4（§2 pid 命名）· Linux 内核 <code>task_struct.pid</code> 字段实际存的是？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。这是历史包袱——pid 字段存的是线程 ID。','incorrect-fb')"><label>A. 用户态看到的进程 ID (getpid 返回值)</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','对。pid 字段 = 线程 ID = gettid()；tgid 字段 = 进程 ID = getpid()。主线程两者相等。','correct-fb')"><label>B. 线程 ID (gettid 返回值)</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。','incorrect-fb')"><label>C. 线程组大小</label></div>
+</div>
+<div class="quiz-feedback" id="q4fb"></div></div>
+
+<div class="quiz-question"><h4>Q5（§3 竞态）· 两个线程各对 <code>int x</code> 加 1 共一万次（每线程一万次），无同步。最终 <code>x</code> 可能值范围？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。x++ 不是原子指令，是 load→add→store 三条。','incorrect-fb')"><label>A. 恰好 20000</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。穿插可以丢更多。','incorrect-fb')"><label>B. 10000 到 20000</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','对。最坏情况：所有线程的 load 都先于所有 store，则每次都从 0 加，最终只剩最后一个 store 生效 → 2。','correct-fb')"><label>C. 2 到 20000 之间任意值</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。单字 load/store 原子，但"读-改-写"序列不原子。','incorrect-fb')"><label>D. 总是 20000，CPU 保证单字原子</label></div>
+</div>
+<div class="quiz-feedback" id="q5fb"></div></div>
+
+<div class="quiz-question"><h4>Q6（§3 竞态条件）· 竞态发生的四个必要条件中，"用线程局部存储 (TLS) 消除竞态"打断的是哪一条？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','对。TLS 让每个线程有自己的副本 → 不再共享 → 竞态条件 1 (共享) 不成立。','correct-fb')"><label>A. 共享</label></div>
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','错。TLS 不改变可变性。','incorrect-fb')"><label>B. 可变</label></div>
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','错。TLS 不改变原子性。','incorrect-fb')"><label>C. 交错（非原子）</label></div>
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','错。TLS 本身就是"无同步"的体现。','incorrect-fb')"><label>D. 无同步</label></div>
+</div>
+<div class="quiz-feedback" id="q6fb"></div></div>
+
+<div class="quiz-question"><h4>Q7（§5 原子指令）· "关中断" (<code>cli</code>) 作为同步手段，在多核系统上失效的原因是？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q7" onchange="quizFB(this,'q7fb','错。cli 确实是特权指令，但这不是它在多核失效的原因。','incorrect-fb')"><label>A. 用户态不能执行 cli</label></div>
+<div class="quiz-option"><input type="radio" name="q7" onchange="quizFB(this,'q7fb','对。cli 只关本核中断，另一核上的线程不受影响，照样能进入临界区。','correct-fb')"><label>B. cli 只关本核中断，其他核的线程不受影响</label></div>
+<div class="quiz-option"><input type="radio" name="q7" onchange="quizFB(this,'q7fb','错。','incorrect-fb')"><label>C. cli 会丢失 I/O 中断</label></div>
+</div>
+<div class="quiz-feedback" id="q7fb"></div></div>
+
+<div class="quiz-question"><h4>Q8（§5 CAS）· CAS 相比 Test-and-Set (TAS) 更通用的原因？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q8" onchange="quizFB(this,'q8fb','错。两者都是单条原子指令。','incorrect-fb')"><label>A. CAS 是两条指令，更灵活</label></div>
+<div class="quiz-option"><input type="radio" name="q8" onchange="quizFB(this,'q8fb','对。TAS 只能玩 0/1 flag；CAS 可以比较任意 expected 值并换成任意 new 值，能构建无锁栈/队列/任意原子更新。','correct-fb')"><label>B. CAS 能比较任意值并换成任意新值，不限于 0/1</label></div>
+<div class="quiz-option"><input type="radio" name="q8" onchange="quizFB(this,'q8fb','错。','incorrect-fb')"><label>C. CAS 不需要 LOCK 前缀</label></div>
+</div>
+<div class="quiz-feedback" id="q8fb"></div></div>
+
+<div class="quiz-question"><h4>Q9（§6 自旋锁）· MCS 锁相对朴素 TAS 自旋锁的主要改进是？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q9" onchange="quizFB(this,'q9fb','错。两者临界区语义相同。','incorrect-fb')"><label>A. 临界区可以更长</label></div>
+<div class="quiz-option"><input type="radio" name="q9" onchange="quizFB(this,'q9fb','对。每个等待者在自己 CPU cache 的 me->waiting 上自旋，unlock 只动后继一个 cache line，消除所有等待者对同一变量的 cache line 抖动。同时严格 FIFO 公平。','correct-fb')"><label>B. 每个等待者在本地变量自旋，消除 cache line 抖动 + 公平</label></div>
+<div class="quiz-option"><input type="radio" name="q9" onchange="quizFB(this,'q9fb','错。MCS 仍不能持锁睡眠。','incorrect-fb')"><label>C. 持锁期间可以睡眠</label></div>
+</div>
+<div class="quiz-feedback" id="q9fb"></div></div>
+
+<div class="quiz-question"><h4>Q10（§7 mutex vs spinlock）· 自旋锁持锁期间不能睡眠的原因？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q10" onchange="quizFB(this,'q10fb','错。','incorrect-fb')"><label>A. 内核不允许</label></div>
+<div class="quiz-option"><input type="radio" name="q10" onchange="quizFB(this,'q10fb','对。自旋时不让 CPU，若持锁者被调度走睡眠，等锁者会空转整个时间片（甚至更久）——白白烧 CPU。','correct-fb')"><label>B. 持锁者睡眠后，等锁者会空转整个时间片烧 CPU</label></div>
+<div class="quiz-option"><input type="radio" name="q10" onchange="quizFB(this,'q10fb','错。','incorrect-fb')"><label>C. 会触发死锁检测</label></div>
+</div>
+<div class="quiz-feedback" id="q10fb"></div></div>
+
+<div class="quiz-question"><h4>Q11（§10 生产者-消费者）· <code>mutex_lock</code> 放在 <code>sem_wait(empty)</code> <strong>之前</strong> 会怎样？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q11" onchange="quizFB(this,'q11fb','错。','incorrect-fb')"><label>A. 只是性能差一点，功能正确</label></div>
+<div class="quiz-option"><input type="radio" name="q11" onchange="quizFB(this,'q11fb','对。缓冲区满时：生产者持 mutex → sem_wait(empty) 睡眠 → 持锁睡觉。消费者需 mutex 才能取数据 sem_post(empty) → 拿不到 → 死锁。','correct-fb')"><label>B. 缓冲区满时死锁：生产者持锁睡眠，消费者拿不到锁</label></div>
+<div class="quiz-option"><input type="radio" name="q11" onchange="quizFB(this,'q11fb','错。','incorrect-fb')"><label>C. 编译器报错</label></div>
+</div>
+<div class="quiz-feedback" id="q11fb"></div></div>
+
+<div class="quiz-question"><h4>Q12（§11 futex）· futex 用三个值 0/1/2 区分锁状态，区分 1（被占无等待者）和 2（被占有等待者）的目的是？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q12" onchange="quizFB(this,'q12fb','错。','incorrect-fb')"><label>A. 支持递归加锁</label></div>
+<div class="quiz-option"><input type="radio" name="q12" onchange="quizFB(this,'q12fb','对。unlock 时若 fut==1（无等待者），直接减到 0，不需 FUTEX_WAKE 系统调用；仅 fut==2 才唤醒。这让"无等待者的 unlock"也走快路径。','correct-fb')"><label>B. 让无等待者时的 unlock 也走快路径，省 FUTEX_WAKE 系统调用</label></div>
+<div class="quiz-option"><input type="radio" name="q12" onchange="quizFB(this,'q12fb','错。','incorrect-fb')"><label>C. 防止 ABA 问题</label></div>
+</div>
+<div class="quiz-feedback" id="q12fb"></div></div>
+
+<div class="quiz-question"><h4>Q13（§12 内存序）· 线程1 <code>data=42; ready=1;</code>，线程2 <code>if(ready) print(data);</code>。在 ARM 上可能打印 0 的原因？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q13" onchange="quizFB(this,'q13fb','错。两个 store 都是普通指令，硬件可重排。','incorrect-fb')"><label>A. data=42 没写成功</label></div>
+<div class="quiz-option"><input type="radio" name="q13" onchange="quizFB(this,'q13fb','对。ARM 弱序，线程1 的两个 store 可重排为先 ready=1 后 data=42。线程2 看到 ready=1 时 data 可能还是 0。需用 release/acquire 修复。','correct-fb')"><label>B. ARM 弱序允许 store-store 重排，ready 可能先于 data 可见</label></div>
+<div class="quiz-option"><input type="radio" name="q13" onchange="quizFB(this,'q13fb','错。x86 TSO 保证 store-store 不重排，这个 bug 在 x86 上不会出现。','incorrect-fb')"><label>C. x86 上也会出现</label></div>
+</div>
+<div class="quiz-feedback" id="q13fb"></div></div>
+
+</div>
+
+<script>
+function quizFB(radio, fbId, msg, cls) {
+  var fb = document.getElementById(fbId);
+  fb.textContent = msg;
+  fb.className = 'quiz-feedback show ' + cls;
+}
+</script>
+
+<h2 id="s14">14. 习题</h2>
+
+<div class="problem"><div class="ptitle">P1 · CAS 实现自旋锁 <span class="plevel l1">L1</span></div><div class="pbody"><p>用文字描述如何用 CAS 实现 <code>spin_lock</code> 和 <code>spin_unlock</code>。说明 unlock 为什么不需要 CAS。</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step"><code>spin_lock</code>：循环 CAS(lock, 0, 1) 直到成功——原子检查 lock 是否为 0，是则设为 1 返回成功（拿到锁），否则返回失败继续循环。</div><div class="step"><code>spin_unlock</code>：直接写 lock=0。<span class="reason">只有持锁者会写 lock=0，没有竞争；其他线程在读 lock 判断是否为 0，普通 store 对它们可见（x86 TSO 保证 store 顺序可见）。若要严格跨平台，用 release 序的原子 store。</span></div></div></details></div>
+
+<div class="problem"><div class="ptitle">P2 · 竞态值枚举 <span class="plevel l2">L2</span></div><div class="pbody"><p>两个线程各执行 <code>x = x + 1</code> 一次，<code>x</code> 初值 0，<code>x = x + 1</code> 编译为 load→add→store 三指令。列出所有可能的最终 <code>x</code> 值，并各给一个产生该值的交错。</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">可能值：<strong>1 或 2</strong>。</div><div class="step">x=2：T1 全做完 (load0→add→store1) → T2 全做完 (load1→add→store2)。串行。</div><div class="step">x=1：T1 load(0) → T2 load(0) → T1 add→store(1) → T2 add→store(1)。T2 的 load 抢在 T1 的 store 前，两人都从 0 加，都写 1，丢失一次更新。</div><div class="step">不可能得到 0（至少一次 store 会成功）或 3（只有两次 add）。<span class="reason">推广：N 个线程各加 1 一次，结果范围 [1, N]。各加 1 共 M 次，结果范围 [1, M]——最坏是所有 load 先于所有 store。</span></div></div></details></div>
+
+<div class="problem"><div class="ptitle">P3 · 生产者-消费者死锁分析 <span class="plevel l2">L2</span></div><div class="pbody"><p>若 mutex 放在 sem_wait(empty) 之前，缓冲区满时描述所有线程的状态，证明死锁。</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">状态：生产者 P 持有 mutex，正在 sem_wait(empty) 上睡眠（empty=0）。消费者 C 阻塞在 mutex_lock 上（等 P 释放 mutex）。</div><div class="step">死锁条件：C 要释放 empty（V(empty)）才能唤醒 P，但 C 需要 mutex 才能进入临界区取数据 → V(empty)，而 mutex 被 P 持着 → C 永远拿不到 mutex → empty 永远不被 post → P 永远睡。循环等待，死锁。</div><div class="step">修复：调换顺序，先 sem_wait(empty) 再 mutex_lock。sem_wait 在 mutex 之外睡眠，不持 mutex，消费者能拿 mutex 取数据并 V(empty) 唤醒生产者。</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P4 · Ticket 锁公平性 <span class="plevel l2">L2</span></div><div class="pbody"><p>证明 ticket spinlock 满足"有限等待"（无饥饿），并解释它相对 TAS 锁在公平性上的改进。</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">证明：每个线程调 lock 时通过 FAA 取到一个唯一递增的 ticket 号 <code>my</code>。owner 从 0 单调递增，每次 unlock +1。线程 <code>my</code> 会在 owner 等于 my 时获得锁——它前面只有 <code>my - owner</code> 个线程，这个数只减不增（每次 unlock 减 1）。所以最多等 <code>my - owner</code> 次 unlock 就轮到——等待有界。</div><div class="step">TAS 锁：unlock 写 locked=0 后，所有等待者同时去 TAS 抢——谁抢到随机，可能某核一直抢不到（饥饿）。ticket 锁按取号顺序服务，严格 FIFO，消除饥饿。</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P5 · futex 双路径 <span class="plevel l3">L3</span></div><div class="pbody"><p>(a) futex 怎么知道有没有竞争？(b) 为什么"无竞争走用户态、有竞争才走内核"能大幅减少系统调用次数？(c) fut 字的三个值 0/1/2 各代表什么状态？为什么需要区分 1 和 2？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) 用户态先 CAS 尝试 0→1。成功 → 无竞争 → 直接返回（零系统调用）。失败 → 有竞争 → 调 futex(FUTEX_WAIT) 陷入内核睡眠。</div><div class="step">(b) 大多数 mutex 持锁时间极短、竞争极罕见——99%+ 的 lock/unlock 无竞争，在用户态完成。只有真正冲突时才付系统调用代价。把昂贵路径推到罕见情况 = 范式 #3（惰性求值）。</div><div class="step">(c) 0=空闲；1=被占但无等待者；2=被占且有等待者在内核睡。区分 1 和 2 的原因：unlock 时若 fut==1，直接减到 0 即可，<strong>不需要唤醒</strong>（没人在等）——省一次 FUTEX_WAKE 系统调用。若 fut==2，减到 0 后必须 FUTEX_WAKE 唤醒一个等待者。如果不区分（只用 0/1），unlock 每次都要调 FUTEX_WAKE 检查有没有等待者——又回到每次系统调用的老路。三态设计让"无等待者时的 unlock"也走快路径。</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P6 · 内存序发布 bug <span class="plevel l3">L3</span></div><div class="pbody"><p>线程 1：<code>data = 42; ready = 1;</code>（普通 store）。线程 2：<code>if (ready) print(data);</code>（普通 load）。在 ARM 上观察到线程 2 打印出 0。解释原因，并给出用 release/acquire 修复的方案。</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">原因：ARM 是弱序内存模型，编译器/CPU 可把线程 1 的两个 store 重排为先 <code>ready=1</code> 后 <code>data=42</code>（单线程下无依赖，重排合法）。线程 2 看到 ready=1 时 data 可能还是 0。</div><div class="step">修复：线程 1 用 <code>store(ready, 1, release)</code>——保证 data 的 store 先于 ready 的 store 对其他核可见；线程 2 用 <code>load(ready, acquire)</code>——保证 ready 的 load 之后的 data 读不会重排到 ready 之前。配对使用，线程 2 看到 ready==1 则 data 必为 42。</div><div class="step">x86 上这个 bug 不会出现——x86 的 TSO 保证 store-store 不重排，普通 store 自带 release 语义。但写可移植代码不能依赖 x86 的强序，必须显式标注内存序。</div></div></details></div>
 
 <div class="primary-source"><h3>📖 延伸阅读</h3><ul>
-  <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf">Ch 26 (Concurrency & Threads)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks.pdf">Ch 28 (Locks)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-sema.pdf">Ch 31 (Semaphores)</a></li>
+  <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf">Ch 26 (Concurrency & Threads)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks.pdf">Ch 28 (Locks)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks-usage.pdf">Ch 27 (Lock Usage)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-sema.pdf">Ch 31 (Semaphores)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-cv.pdf">Ch 30 (Condition Variables)</a></li>
   <li><strong>xv6</strong>：<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/spinlock.c">kernel/spinlock.c</a>、<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/sleeplock.c">kernel/sleeplock.c</a></li>
+  <li><strong>Linux</strong>：<code>kernel/locking/mutex.c</code>、<code>kernel/locking/futex.c</code>、<code>include/asm-generic/mcs_spinlock.h</code></li>
+  <li><strong>内存序</strong>：<a href="https://www.kernel.org/doc/Documentation/memory-barriers.txt">Linux memory-barriers.txt</a>、Paul McKenney 的 RCU/内存模型系列</li>
 </ul></div>
 
-<div class="reminder"><h3>🔄 间隔复习</h3><ul><li><strong>24h</strong>：CAS vs TAS 的区别——CAS 为什么更通用？</li><li><strong>72h</strong>：生产者-消费者的三个信号量用法——为什么顺序不能换？</li></ul></div>
+<div class="reminder"><h3>🔄 间隔复习</h3><ul>
+  <li><strong>24h</strong>：CAS vs TAS 的区别——CAS 为什么更通用？futex 的三态 0/1/2 各代表什么？</li>
+  <li><strong>72h</strong>：生产者-消费者的三个原语用法——为什么顺序不能换？ticket 锁为什么无饥饿？</li>
+  <li><strong>7d</strong>：内存序的 acquire/release——为什么 x86 上"碰巧"正确而 ARM 上出错？默写一次发布-消费的正确方案。</li>
+</ul></div>
 
-<div class="lesson-footer"><p><a href="../index.html">🏠</a> · <a href="./0004-page-replacement.html">← 0004</a> · <a href="./0006-monitors-deadlock.html">0006 管程·死锁·无锁 →</a></p><p>基石：0001 §5（并发挑战）· 范式 #6（CAS+锁）</p></div>
+<div class="lesson-footer">
+  <p><a href="../index.html">🏠 课程首页</a> · <a href="./0004-page-replacement.html">← 0004 页替换</a> · <a href="./0006-monitors-deadlock.html">0006 管程·死锁·无锁 →</a></p>
+  <p style="margin-top:0.5rem;">基石：0001 §5（并发挑战）· 范式 #6（CAS+锁）· #3（futex 惰性）· 下一课 0006 将讲条件变量、死锁四条件、银行家算法、无锁栈与 ABA、RCU</p>
+</div>
 <script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
 </body>
 </html>
