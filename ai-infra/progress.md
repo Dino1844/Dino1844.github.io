@@ -4,9 +4,9 @@
 
 ## Phase 0:工程地基
 
-- [~] 0.1a Linux 进程/fd/socket/IO 多路复用(select/poll/epoll)
-       ├ lesson 0001 (epoll 概念) — 已讲
-       └ lesson 0002 (手写 echo server, Py+C) — 骨架已发, 待填+review
+- [~] 0.1a Linux 进程/fd/socket/IO 多路复用
+       ├ lesson 0001 (socket → accept 全链路) — 已讲, HTML 已重写为自包含版
+       └ lesson 0002 (select 详解) — 下一节
 - [ ] 0.1b Python 并发(threading/multiprocessing/asyncio/GIL)+ 多进程数据 pipeline
 - [ ] 0.2 分布式系统概念 + 通信原语
 - [ ] 0.3 GPU 架构 + 工具链

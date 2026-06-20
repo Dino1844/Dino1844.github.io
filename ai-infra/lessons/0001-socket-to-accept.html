@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0001 — 从 socket() 到 accept()：一个 TCP Server 是怎么建起来的</title>
+<style>
+  /* === 基础变量 === */
+  :root {
+    --ink: #1a1a1a; --muted: #6b6b6b; --rule: #d2d2d2; --bg: #fdfdfb;
+    --accent: #8a1538; --code-bg: #f4f1ec; --hilite: #fffbe6;
+    --green: #2a6f2a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 17px; scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+    line-height: 1.65; -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 740px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+
+  /* === 头部 === */
+  header { margin-bottom: 2.2rem; border-bottom: 1px solid var(--rule); padding-bottom: 1rem; }
+  .kicker {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  h1 { font-size: 1.8rem; margin: .4rem 0 .2rem; line-height: 1.22; }
+  .meta { color: var(--muted); font-size: .9rem; }
+
+  /* === 正文 === */
+  h2 { font-size: 1.22rem; margin: 2.6rem 0 .7rem;
+       padding-bottom: .35rem; border-bottom: 1px solid var(--rule); }
+  h3 { font-size: 1.04rem; margin: 1.8rem 0 .5rem; }
+  p  { margin: 0 0 .85rem; }
+  ul, ol { margin: 0 0 .85rem 1.4rem; }
+  li { margin-bottom: .35rem; }
+
+  /* === 代码 === */
+  code, pre, .ascii {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  code {
+    background: var(--code-bg); padding: .1em .4em;
+    border-radius: 3px; font-size: .86em;
+  }
+  pre {
+    background: var(--code-bg); padding: .9rem 1.1rem;
+    border-radius: 6px; overflow-x: auto; font-size: .82rem;
+    line-height: 1.5; border: 1px solid var(--rule);
+    margin: .85rem 0;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  /* === ASCII 图 === */
+  .ascii {
+    font-size: .75rem; line-height: 1.35;
+    white-space: pre; background: var(--code-bg);
+    padding: .9rem 1.1rem; border-radius: 6px;
+    overflow-x: auto; border: 1px solid var(--rule);
+    margin: .85rem 0;
+  }
+
+  /* === 标注框 === */
+  .analogy {
+    border-left: 3px solid var(--accent);
+    background: var(--hilite);
+    padding: .65rem 1rem;
+    margin: 1rem 0;
+    font-size: .94rem;
+  }
+  .analogy::before {
+    content: "💡 类比";
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .1em;
+    color: var(--accent); display: block; margin-bottom: .3rem;
+  }
+
+  .note {
+    border-left: 3px solid #5a7fb5;
+    padding: .55rem 0 .55rem 1rem;
+    margin: 1rem 0; color: #444; font-size: .93rem;
+  }
+  .note::before {
+    content: "📌 面试链接";
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .1em;
+    color: #5a7fb5; display: block; margin-bottom: .2rem;
+  }
+
+  .warning {
+    border: 1px solid #e0c060; background: #fffdf0;
+    padding: .55rem 1rem; margin: 1rem 0;
+    border-radius: 4px; font-size: .93rem;
+  }
+  .warning::before {
+    content: "⚠ 常见误区";
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .1em;
+    color: #9a6a00; display: block; margin-bottom: .2rem;
+  }
+
+  /* === 逐行拆解 === */
+  .walkthrough {
+    border: 1px solid var(--rule); border-radius: 6px;
+    margin: 1.2rem 0;
+  }
+  .walkthrough > .title {
+    background: #f4f1ec;
+    padding: .5rem 1rem;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .78rem; letter-spacing: .08em;
+    color: var(--muted); border-bottom: 1px solid var(--rule);
+  }
+  .walkthrough .line {
+    display: flex; padding: .3rem 1rem;
+    border-bottom: 1px solid #eee;
+    font-size: .88rem;
+  }
+  .walkthrough .line:last-child { border-bottom: none; }
+  .walkthrough .ln {
+    width: 2.4rem; flex-shrink: 0;
+    color: var(--muted); font-family: ui-monospace, Menlo, monospace;
+    font-size: .75rem; text-align: right; margin-right: .8rem;
+  }
+  .walkthrough .co {
+    flex: 1;
+  }
+  .walkthrough .co code { font-size: .82rem; }
+
+  /* === Gate === */
+  .gate {
+    background: #f7f3ec; border: 1px solid var(--rule);
+    border-radius: 5px; padding: .8rem 1rem; margin: 1.6rem 0;
+  }
+  .gate::before {
+    content: "🎯 GATE（完成标准）";
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .7rem; letter-spacing: .12em;
+    color: var(--accent); display: block; margin-bottom: .35rem;
+  }
+
+  /* === 问答 === */
+  .q { margin: 1.2rem 0 .3rem; font-weight: 600; }
+  details {
+    margin: 1rem 0; border: 1px solid var(--rule);
+    border-radius: 5px; padding: .6rem 1rem; background: #fff;
+  }
+  summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: .6rem; }
+
+  /* === 表格 === */
+  table {
+    border-collapse: collapse; width: 100%;
+    margin: 1rem 0; font-size: .9rem;
+  }
+  th, td {
+    border-bottom: 1px solid var(--rule);
+    padding: .45rem .6rem; text-align: left; vertical-align: top;
+  }
+  th {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .76rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .07em;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* === 脚注 === */
+  footer {
+    margin-top: 3.5rem; padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    color: var(--muted); font-size: .84rem;
+  }
+  footer a { color: var(--muted); text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Phase 0 · Lesson 0001 · AI Infra</div>
+  <h1>从 socket() 到 accept()：一个 TCP Server 是怎么建起来的</h1>
+  <p class="meta">不需要 C 基础。会用 Python 就能看懂。读完这一页，你就知道 vLLM 推理 server 底层的 "listen socket + conn socket" 模型是什么。</p>
+</header>
+
+<!-- ============================================================ -->
+<h2>0. 首先回答：你打开文件、读文件的时候，电脑内部到底发生了什么？</h2>
+
+<p>因为答案直接决定了 socket 是什么。</p>
+
+<p>假设你在 Python 里写：</p>
+<pre><code>f = open("hello.txt", "r")
+content = f.read()
+f.close()</code></pre>
+
+<p>这三行代码背后，操作系统（Linux 内核）做了一个关键设计：它不给你这个文件本身，只给你一个号码牌。</p>
+
+<div class="ascii">
+你的程序                     Linux 内核
+─────────                   ─────────
+                              ┌─────────────────────┐
+f = open("hello.txt")  ──→   │ 找到 hello.txt      │
+                         ←── │ 分配第 3 号牌子给你  │   返回 3
+                              └─────────────────────┘
+
+f.read()   ──→  "帮我读 3 号牌子对应的那个文件"
+                         ←── 把文件内容拷给你
+
+f.close()  ──→  "我还 3 号牌子, 不读了"
+</div>
+
+<p>这个<strong>号码牌</strong>就是 <strong>文件描述符 (file descriptor)</strong>，简称 <strong>fd</strong>。它是一个非负整数。</p>
+
+<p>Linux 的核心设计哲学就是一句话：<strong>一切皆文件</strong>。你要操作什么东西（真文件、网络连接、管道、设备），内核就给你派一个 fd，之后所有读/写/关操作都用这个整数。</p>
+
+<div class="ascii">
+fd 0  = 键盘输入 (stdin)      ← 程序一启动就开着
+fd 1  = 屏幕输出 (stdout)
+fd 2  = 错误输出 (stderr)
+fd 3  = 你自己 open() 的第一个东西
+fd 4  = 你自己 open() 的第二个东西
+...
+</div>
+
+<div class="analogy">
+去银行取号。柜员不直接管你叫"张三"，她叫"第 37 号"。这个 37 号就是 fd——一个简短的数字，用来唯一代表你（文件/连接/设备）。之后你每一次被叫到（read/write），都是喊这个号。
+</div>
+
+<p>记住这个模型之后，socket 就很好理解了。</p>
+
+<!-- ============================================================ -->
+<h2>1. socket() — 建一个通信用的"空壳"</h2>
+
+<p>我们现在想写一个 server 程序，监听网络上的请求。第一步：<code>socket()</code>。</p>
+
+<pre><code>import socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</code></pre>
+
+<h3>逐字拆解</h3>
+
+<table>
+  <tr><th>代码</th><th>含义</th></tr>
+  <tr>
+    <td><code>socket.socket(...)</code></td>
+    <td>请操作系统（内核）给我建一个通信用的"空壳"，并返还一个 fd 让我能引用它。</td>
+  </tr>
+  <tr>
+    <td><code>AF_INET</code></td>
+    <td>地址家族 = AF_INET，意思是"我用 IPv4 地址"。比如 127.0.0.1 就是一个 IPv4 地址。<br>
+    另一种常见的是 <code>AF_UNIX</code>——同机器上两个进程之间通信，不需要走网卡，用 unix domain socket 更快。</td>
+  </tr>
+  <tr>
+    <td><code>SOCK_STREAM</code></td>
+    <td>用 TCP 协议。TCP 的特点是：可靠（确保送达）、有序（先发的先到）、字节流（不帮你分消息边界）。<br>
+    另一种是 <code>SOCK_DGRAM</code> = UDP，不可靠但快。</td>
+  </tr>
+</table>
+
+<p>调用后，内核返回一个整数——这就是 <code>sock</code> 对应的 fd。此刻这个 socket 还没有地址，还没有绑定端口，只是内核里一个"新建的通信端点"。</p>
+
+<div class="note">
+为什么 vLLM 里你常听到 "TensorPipe / ZMQ / NCCL / shared memory" 这些词？因为 tensor parallel 通信时：
+<b>同机两个 GPU</b> 之间不需要走 TCP 协议栈（太慢），用 <code>AF_UNIX</code>（unix domain socket）甚至直接共享内存；
+<b>跨机通信</b> 才走 TCP + NCCL 的 RDMA 通道。你后面 Phase 4 会学 NCCL 为什么能绕过内核直接写远程 GPU 显存。
+</div>
+
+<div class="warning">
+<code>socket.socket()</code> 返回的是一个 Python <b>对象</b>（有方法有属性），不只一个整数。但本质上这个 Python 对象里面包了一个 C 级别的 fd 整数。你可以用 <code>sock.fileno()</code> 直接拿到这个整数。
+</div>
+
+<!-- ============================================================ -->
+<h2>2. bind() — 给这个空壳贴上地址</h2>
+
+<pre><code>sock.bind(("127.0.0.1", 9000))</code></pre>
+
+<p><code>socket()</code> 建了一个空壳，谁都可以往它发数据——但"谁"是谁？网络上的数据包到达主机后，内核看什么字段来决定发给哪个 socket？</p>
+
+<p><strong>看 (IP 地址, 端口号) 这个二元组。</strong><code>bind()</code> 就是告诉内核：以后发到 <code>127.0.0.1:9000</code> 的数据包，请交给这个 socket。</p>
+
+<div class="analogy">
+socket() = 你租了一间毛坯房。<br>
+bind()   = 你在门口挂上门牌 "长宁路 100 号，9000 室"。之后所有寄到 "长宁路 100 号 9000 室" 的信件（数据包），邮局（内核）都知道应该往这间房投。
+</div>
+
+<table>
+  <tr><th>参数</th><th>含义</th></tr>
+  <tr><td><code>"127.0.0.1"</code></td><td>只接受发给本机的连接。如果你想让局域网内其他机器也能连，绑 <code>"0.0.0.0"</code>（监听所有网卡）。</td></tr>
+  <tr><td><code>9000</code></td><td>端口号。0-1023 是系统保留端口（比如 80 是 HTTP），大于 1024 的可以随便选。</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>3. listen() — 打开"迎客模式"</h2>
+
+<pre><code>sock.listen(128)</code></pre>
+
+<p>此前，这个 socket 只是一个有地址的通信端点，还不能接客户端。调了 <code>listen()</code> 之后，有两件事改变：</p>
+
+<ol>
+  <li><strong>这个 socket 被标记为 "server socket"</strong>。只有 listen socket 才能调 <code>accept()</code>。</li>
+  <li><strong>内核开始维护一个"已完成握手队列"（backlog）</strong>。参数 <code>128</code> 就是这个队列的长度上限。</li>
+</ol>
+
+<div class="analogy">
+listen() = 你把毛坯房装修成了营业厅，开了叫号系统。128 = 你最多让 128 个客户在等候区排队，满 128 之后新来的客户，内核替你给人家回复 "我现在满了，等会再试"。
+</div>
+
+<p>关键认知：<strong>listen 之后，内核就已经开始在后台帮你接 TCP 三次握手了</strong>。你的程序甚至还没调 <code>accept()</code>，内核就已经替你发了 SYN+ACK。这样当你的程序终于调 <code>accept()</code> 时，很可能连接已经建好，只是放在内核队列里等你来拿。</p>
+
+<div class="note">
+128 这个 backlog 值在面试里可能问到。实际上内核会把它放大（Linux 上默认乘 1.5），但太多 pending 连接意味着你的 server 处理速度赶不上需求——要么扩进程，要么优化 accept 速度。
+</div>
+
+<!-- ============================================================ -->
+<h2>4. accept() — 从等候区叫下一个客户</h2>
+
+<p>这是你之前最搞不清的一步。现在我把它内部机制说清楚。</p>
+
+<pre><code>conn, addr = sock.accept()</code></pre>
+
+<p><strong><code>accept()</code> 不是建立连接，连接早被内核建好了。</strong>它做的事情非常简单：</p>
+
+<div class="ascii">
+内核的 "已完成队列" （backlog）
+┌─────────────────────────────────┐
+│  [client A: fd=12 ready]       │  ← 内核已经帮这个客户端完成了三次握手
+│  [client B: fd=14 ready]       │
+│  [client C: fd=17 ready]       │
+└─────────────────────────────────┘
+          ↓
+    accept()  — 你的程序喊 "下一个"
+          ↓
+  返回 conn (fd=12), addr (客户端的 ip:port)
+  fd=12 从队列中移除
+</div>
+
+<h3>逐行看：accept 到底发生了什么</h3>
+
+<div class="walkthrough">
+  <div class="title">Python 代码: conn, addr = sock.accept()   — 逐行含义</div>
+
+  <div class="line">
+    <div class="ln">●</div>
+    <div class="co"><b>你的程序调用 <code>sock.accept()</code></b> — 这是一次系统调用 (syscall)，控制权从你的程序交给 Linux 内核。</div>
+  </div>
+  <div class="line">
+    <div class="ln">●</div>
+    <div class="co"><b>内核检查 <code>sock</code> 对应的 listen backlog 队列。</b></div>
+  </div>
+  <div class="line">
+    <div class="ln">●</div>
+    <div class="co"><b>队列为空？</b> 默认行为是 <b>阻塞</b>——你的程序暂停在这行，什么事都不干，等有客户连进来。如果 socket 设置了非阻塞模式 (<code>setblocking(False)</code>)，则立刻返回一个错误 <code>EAGAIN</code>（"现在没人，你先干别的"）。</div>
+  </div>
+  <div class="line">
+    <div class="ln">●</div>
+    <div class="co"><b>队列有连接？</b> 内核从队首摘一个连接，<b>给它分配一个新的 fd 整数</b>（比如 fd=12），并把客户端的 IP 和端口号也记下来。</div>
+  </div>
+  <div class="line">
+    <div class="ln">●</div>
+    <div class="co"><b>返回给你的程序</b>：<code>conn</code> = 一个新的 Python socket 对象（封装了 fd=12），<code>addr</code> = <code>("127.0.0.1", 54321)</code>。</div>
+  </div>
+</div>
+
+<div class="warning">
+<b>最关键的误会</b>：很多人以为 accept() 返回的 conn 就是原来的 sock，只是"激活了一下"。不对。listen socket (<code>sock</code>) 和 accept 返回的 connector socket (<code>conn</code>) 是<b>两个完全不同的 fd</b>，代表两个完全不同的东西：
+<br><br>
+<b>sock (listen fd)</b>：只做一件事——"有没有新客户来了？" 你不往它里面读数据，你从它身上取连接。<br>
+<b>conn (connector fd)</b>：只做一件事——跟一个具体客户收发数据。你往它里面 read/write。
+</div>
+
+<h3>为什么不能复用 listen fd？</h3>
+
+<p>因为一个 server 要同时服务 100 个客户端。每个客户端有自己的发送速率、自己的传输状态、自己的序列号。如果用同一个 fd 操作所有客户端，你发出一句话 "Hello client 27"，内核怎么知道发给 100 个客户端里的哪一个？</p>
+
+<p>所以设计成：<b>一个连接 = 一个 fd</b>。同时有 100 个客户端 = 1 个 listen_fd + 100 个 conn_fd = 你的进程里开着 101 个 fd。</p>
+
+<div class="ascii">
+你的 server 进程 (fd 表)
+┌─────────────────────────────────┐
+│ fd 0  = stdin                   │
+│ fd 1  = stdout                  │
+│ fd 2  = stderr                  │
+│ fd 3  = sock   (listen socket)  │  ← 只 accept, 不 read 数据
+│ fd 4  = connA  (客户端 A)       │  ← 可以 recv/send
+│ fd 5  = connB  (客户端 B)       │
+│ fd 6  = connC  (客户端 C)       │
+│ ...                             │
+└─────────────────────────────────┘
+</div>
+
+<!-- ============================================================ -->
+<h2>5. 四步串联在一起：一个完整的、可跑的 TCP Echo Server</h2>
+
+<p>下面这 25 行代码就是上面 4 步的串联。它做的事情：收到什么就回什么（echo）。</p>
+
+<pre><code>import socket
+
+# 1. 建一个空壳
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # 让端口可重用
+
+# 2. 贴上地址
+sock.bind(("127.0.0.1", 9000))
+
+# 3. 开迎客模式
+sock.listen(128)
+print("server listening on 127.0.0.1:9000")
+
+while True:
+    # 4. 从等候区叫下一个客户
+    conn, addr = sock.accept()
+    print(f"new connection from {addr}")
+
+    # 5. 跟这个客户收发数据
+    data = conn.recv(4096)       # 从 conn_fd 里读
+    conn.sendall(data)           # 原样写回去
+    conn.close()                 # 还回这个 fd
+    print(f"closed {addr}")</code></pre>
+
+<div class="warning">
+这个 server 有一个致命缺陷：while 循环一次只能处理一个连接。它在跟 A 收发数据时，B 哪怕已经在 backlog 里排到队了，也必须等 A 的 <code>conn.close()</code> 之后再下一轮 <code>accept()</code>。这就是下一课要解决的问题——<b>如何同时处理多个客户端</b>（io 多路复用）。
+</div>
+
+<!-- ============================================================ -->
+<h2>6. 概念检查（确认你跟上了再往下走）</h2>
+
+<div class="q">Q1. 下面这个描述哪里错了？
+  <em>"一个 server 只有一个 socket，客户端连进来后 accept 直接把这个 socket 变成可以通信的状态。"</em>
+</div>
+
+<div class="q">Q2. 同时有 5 个客户端连接，你的进程里共有几个 socket/fd？分别是什么？</div>
+
+<div class="q">Q3. <code>listen(128)</code> 的参数 128 控制什么？设成 5 和设成 1000 的区别是什么？</div>
+
+<details>
+<summary>点击展开答案（先自己答再看）</summary>
+
+<p><strong>A1</strong>：错了。listen socket 不会"变成"conn socket。accept 是创建一个<b>全新的 fd</b>：listen socket 仍然存在（继续接新连接），新 fd 负责跟这个客户通信。它们是两个不同的 fd。</p>
+
+<p><strong>A2</strong>：6 个。1 个 listen socket（接新连接）+ 5 个 connector socket（跟各自的客户端通信）。</p>
+
+<p><strong>A3</strong>：控制内核 backlog 队列的长度（完成握手但尚未被 accept 取走的连接数上限）。设 5 的话，第 6 个同时在握手的客户端会被内核拒绝；设 1000 则缓冲更大，但内存占用更多。关键是：backlog 太长意味着你的 accept 速度跟不上连接速度——根本解决办法不是调大 backlog，而是加快 accept 或加进程。</p>
+</details>
+
+<!-- ============================================================ -->
+<h2>7. 课后：在你自己机器上跑看看</h2>
+
+<p>把上面第 5 节的代码保存成 <code>echo_naive.py</code>，然后：</p>
+
+<pre><code># 终端 1
+python3 echo_naive.py
+
+# 终端 2
+nc 127.0.0.1 9000
+hello        # 回车, 应该回显 hello
+</code></pre>
+
+<p>然后试试：开两个 <code>nc</code> 同时连。你会发现第二个 <code>nc</code> 发什么都卡住——证实了我们说的"一次只能处理一个连接"。下一节就解决这个问题。</p>
+
+<!-- ============================================================ -->
+<h2>8. 这篇文章跟 AI Infra 面试有什么关系</h2>
+
+<ol>
+  <li><b>vLLM 的 AsyncLLMEngine</b> 底层就是用一个 event loop 管理一堆 socket fd（HTTP/gRPC 请求、TP 通信）。你如果在简历上写"熟悉 vLLM 源码"，面试官问你 "vLLM 怎么同时处理推理请求和 health check"，本质就是考这套多 fd 管理。</li>
+  <li><b>NCCL 通信</b> 里每个 rank 之间的通信通道就是 socket + 内存映射。理解 fd 这个抽象之后，你再看 NCCL 源码才知道它怎么复用同一个 fd 来做 ring all-reduce。</li>
+  <li><b>系统设计题</b> "设计一个 LLM 推理平台"——你至少需要画清楚：负载均衡→推理 server（如何并发？）→ GPU 间通信（走什么协议？）。答案全是从今天这课开始的。</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2>推荐一手源</h2>
+<ul>
+  <li><a href="https://docs.python.org/3/library/socket.html">Python socket 官方文档</a> — 本节所有代码的权威参考。</li>
+  <li>《The Linux Programming Interface》第 56–61 章 (Kerrisk) — socket 编程最权威教材，从 C 角度完整讲解。</li>
+  <li><a href="https://beej.us/guide/bgnet/">Beej's Guide to Network Programming</a> — 免费在线教程, 经典入门。</li>
+</ul>
+
+<footer>
+  <p>下一节：<a href="./0002-io-multiplexing-select.html">Lesson 0002 — "怎么同时处理多个客户端"（select 详解）</a></p>
+  <p>术语见 <a href="../GLOSSARY.md">GLOSSARY</a> · 路线见 <a href="../roadmap.md">roadmap</a></p>
+  <p>有不懂的？直接问老师。这是你的课。</p>
+</footer>
+
+</div>
+</body>
+</html>

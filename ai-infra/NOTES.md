@@ -13,7 +13,13 @@
 - 6 个月版,每 phase 多 1 周读源码。详见 roadmap.md。
 
 ## What works
-- (记录哪些教学手法对这个 learner 有效,持续更新)
+- HTML lesson 需要自包含、足够详细,不能只放概念提纲。每一行代码都要拆开解释。
+- 类比（银行取号、毛坯房装修营业厅、邮局投递）效果好。
+
+## Lesson 0001 feedback (2026-06-20)
+- 用户反馈: 原版 0001 太简略, select/poll/epoll 的代码看不懂。
+- 调整: 重写为 "socket→accept 全链路", 不讲 select。
+- 原则: 一个 lesson = 一个可跑通的心智模型。不赶进度。
 
 ## What doesn't
 - (记录无效手法)
