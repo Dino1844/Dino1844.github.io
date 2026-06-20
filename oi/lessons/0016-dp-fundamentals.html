@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0016 — DP 基础：最优子结构与状态定义</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;font-size:17px;line-height:1.7;color:#1a1a1a;max-width:840px;margin:0 auto;padding:48px 24px 120px;background:#fdfdfd}
+  h1{font-size:2rem;font-weight:700;margin-bottom:.2em;letter-spacing:-.02em;color:#111}
+  h2{font-size:1.3rem;font-weight:600;margin:2.2em 0 .6em;color:#222;border-bottom:2px solid #e9ecef;padding-bottom:.3em}
+  h3{font-size:1.08rem;font-weight:600;margin:1.5em 0 .4em;color:#333}
+  p{margin-bottom:.9em}
+  ul,ol{margin:0 0 1em 1.5em}li{margin-bottom:.35em}
+  code{font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;font-size:.88em;background:#f1f3f5;padding:.1em .35em;border-radius:3px}
+  pre{font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;font-size:.82rem;line-height:1.55;background:#1e1e2e;color:#cdd6f4;padding:20px 24px;border-radius:8px;overflow-x:auto;margin:1.2em 0}
+  pre .kw{color:#cba6f7}pre .fn{color:#89b4fa}pre .num{color:#fab387}pre .cmt{color:#6c7086;font-style:italic}pre .type{color:#f9e2af}pre .pp{color:#f38ba8}
+  .box{padding:16px 22px;margin:1.2em 0;border-radius:6px;font-size:.94em}
+  .box-i{background:#fff9db;border-left:4px solid #f08c00}
+  .box-d{background:#e7f5ff;border-left:4px solid #1971c2}
+  .box-e{background:#fff0f0;border-left:4px solid #c92a2a}
+  .box-g{background:#ebfbee;border-left:4px solid #2b8a3e}
+  table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9em}
+  th,td{border:1px solid #dee2e6;padding:7px 12px;text-align:left}
+  th{background:#f1f3f5;font-weight:600}
+  .quiz{background:#f0f4ff;border:1px solid #bac8ff;border-radius:8px;padding:22px;margin:2em 0}
+  .quiz h3{margin-top:0;color:#364fc7}
+  .quiz label{display:block;margin:5px 0;padding:7px 10px;border-radius:4px;cursor:pointer}
+  .quiz label:hover{background:#dbe4ff}
+  .quiz input[type="radio"]{margin-right:8px}
+  .quiz button{margin-top:10px;background:#364fc7;color:#fff;border:none;padding:9px 22px;border-radius:5px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .quiz button:hover{background:#2b3fa8}
+  .quiz .fb{margin-top:10px;font-weight:600;min-height:1.3em}
+  .quiz .fb.correct{color:#2b8a3e}.quiz .fb.incorrect{color:#c92a2a}
+  .nav{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid #dee2e6;font-size:.9em}
+  .nav a{color:#364fc7;text-decoration:none}.nav a:hover{text-decoration:underline}
+  .tag{display:inline-block;background:#e9ecef;color:#495057;padding:2px 10px;border-radius:12px;font-size:.8rem;font-weight:500;margin-right:6px}
+  .toc{background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;padding:16px 24px;margin:1.5em 0;font-size:.93em}.toc ol{margin-bottom:0}
+  .proof{background:#f3f0ff;border:2px solid #9775fa;border-radius:8px;padding:20px 24px;margin:1.4em 0}
+  .proof h3{margin-top:0;color:#6741d9}
+  .ladder{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:1.2em 0}
+  .ladder .step{background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:14px;text-align:center}
+  .ladder .step .sn{font-size:1.6rem;font-weight:800;color:#6366f1;margin-bottom:4px}
+  .ladder .step .st{font-weight:600;color:#1e293b;font-size:.92rem}
+  .ladder .step .sd{font-size:.78rem;color:#64748b;margin-top:4px}
+  @media print{body{font-size:12px;color:#000}pre{background:#f8f9fa;color:#000;border:1px solid #ccc}.quiz,.nav{display:none}}
+</style>
+</head>
+<body>
+
+<h1>Lesson 0016 — DP 基础：最优子结构与状态定义</h1>
+
+<p><span class="tag">动态规划</span><span class="tag">状态定义</span><span class="tag">记忆化→递推</span><span class="tag">4 题</span></p>
+
+<div class="toc">
+<strong>📑 本课目录</strong>
+<ol>
+  <li><a href="#s1">DP 是什么：把大问题拆成子问题，并记住答案</a></li>
+  <li><a href="#s2">DP 的三要素：状态、转移、边界</a></li>
+  <li><a href="#s3">从递归到 DP：四步思维阶梯</a></li>
+  <li><a href="#s4">题 1：爬楼梯 — 最简单的 1D DP</a></li>
+  <li><a href="#s5">题 2：打家劫舍 — 状态引入「选/不选」</a></li>
+  <li><a href="#s6">题 3：不同路径 — 2D 网格 DP</a></li>
+  <li><a href="#s7">题 4：最小路径和 — DP 值不只是计数</a></li>
+  <li><a href="#s8">空间优化：滚动数组</a></li>
+  <li><a href="#s9">DP 设计的常见陷阱</a></li>
+  <li><a href="#s10">测验</a></li>
+</ol>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s1">1. DP 是什么：把大问题拆成子问题，并记住答案</h2>
+
+<p>回忆 Lesson 0000 中的斐波那契：朴素递归 O(2ⁿ) → 记忆化 O(n)。那次优化的核心是<strong>同一个子问题被重复求解</strong>。DP（动态规划）就是这个思想的<strong>系统化</strong>。</p>
+
+<div class="box box-d">
+  <strong>DP 的本质定义：</strong>一个问题能用 DP 求解，当且仅当它具有两个性质：<br>
+  <strong>① 最优子结构（Optimal Substructure）</strong>：原问题的最优解可以由子问题的最优解组合而成。<br>
+  <strong>② 重叠子问题（Overlapping Subproblems）</strong>：不同的递归路径会反复求解相同的子问题。
+</div>
+
+<p>对比分治：分治也用「拆分→合并」，但分治的子问题<strong>不重叠</strong>（如归并排序的左右两半互不相交），所以不需要记忆化。DP 的精髓在于<strong>识别重叠并存储</strong>。</p>
+
+<h3>一个直觉例子</h3>
+
+<p>从 (0,0) 走到 (m,n) 的路径数。从 (i,j) 出发，可以向下或向右走一步：</p>
+<pre>paths(i, j) = paths(i+1, j) + paths(i, j+1)</pre>
+
+<p>注意 <code>paths(2, 3)</code> 会被 <code>paths(1,3)</code> 和 <code>paths(2,2)</code> 同时调用——<strong>重叠</strong>了。朴素递归会重复算，DP 把它存起来。</p>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s2">2. DP 的三要素：状态、转移、边界</h2>
+
+<p>任何 DP 题都可以拆成三个部分。面试中按这个顺序思考，能避免 80% 的卡壳。</p>
+
+<table>
+<tr><th>要素</th><th>含义</th><th>思考方式</th></tr>
+<tr><td><strong>状态</strong> <code>dp[...]</code></td><td>子问题的参数化描述</td><td>「问题的哪些维度会变化？」通常对应：位置 i、容量 j、阶段 k、选/不选</td></tr>
+<tr><td><strong>转移</strong></td><td>从已知子问题计算当前问题</td><td>「最后一步做了什么决策？」枚举所有可能的最后一步</td></tr>
+<tr><td><strong>边界</strong></td><td>最小子问题的直接答案</td><td>「问题退化到最小时答案是什么？」dp[0]=? dp[1]=?</td></tr>
+</table>
+
+<div class="box box-i">
+  <strong>🧠 状态定义的黄金法则：</strong>状态要满足两个条件——<br>
+  1. <strong>无后效性</strong>：未来的决策只依赖当前状态，不依赖「怎么到达当前状态的」<br>
+  2. <strong>完备性</strong>：所有可能的最优解都能被某个状态表示<br>
+  如果发现状态不够用（无法表达关键信息），就需要<strong>增加维度</strong>。这是 DP 调试的核心思路。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s3">3. 从递归到 DP：四步思维阶梯</h2>
+
+<div class="ladder">
+  <div class="step"><div class="sn">1</div><div class="st">暴力递归</div><div class="sd">直接翻译问题，先不管复杂度</div></div>
+  <div class="step"><div class="sn">2</div><div class="st">记忆化搜索</div><div class="sd">加 memo 数组，自顶向下</div></div>
+  <div class="step"><div class="sn">3</div><div class="st">自底向上递推</div><div class="sd">改写成循环，按依赖顺序填表</div></div>
+  <div class="step"><div class="sn">4</div><div class="st">空间优化</div><div class="sd">滚动数组 / 滚动变量</div></div>
+</div>
+
+<p>面试中<strong>从第 1 步开始</strong>，逐步优化。这样即使最后写不出最优解，至少能拿到暴力分。下面用爬楼梯完整演示这四步。</p>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s4">4. 题 1：爬楼梯 — 最简单的 1D DP</h2>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+  <strong>LeetCode 70. Climbing Stairs（Hot 100）</strong><br>
+  你在爬 n 阶楼梯，每次可以爬 1 或 2 阶。有多少种不同的方法爬到顶？
+</blockquote>
+
+<h3>4.1 第 1 步：暴力递归</h3>
+
+<p><strong>状态定义：</strong>设 f(n) = 爬 n 阶楼梯的方法数。<br>
+<strong>转移：</strong>最后一步要么爬 1 阶（来自 f(n-1)），要么爬 2 阶（来自 f(n-2)）。<br>
+<strong>边界：</strong>f(0)=1（在地面，1 种「不动」的方法），f(1)=1。</p>
+
+<pre><span class="type">int</span> <span class="fn">climbStairs</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">return</span> <span class="fn">climbStairs</span>(n - <span class="num">1</span>) + <span class="fn">climbStairs</span>(n - <span class="num">2</span>);
+}
+<span class="cmt">// 复杂度：O(2ⁿ) — n=45 就跑不出来</span></pre>
+
+<h3>4.2 第 2 步：记忆化搜索</h3>
+
+<pre><span class="type">int</span> memo[<span class="num">46</span>];  <span class="cmt">// 初始化为 -1</span>
+<span class="type">int</span> <span class="fn">climbStairs</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">if</span> (memo[n] != -<span class="num">1</span>) <span class="kw">return</span> memo[n];  <span class="cmt">// 已算过，直接返回</span>
+    <span class="kw">return</span> memo[n] = <span class="fn">climbStairs</span>(n - <span class="num">1</span>) + <span class="fn">climbStairs</span>(n - <span class="num">2</span>);
+}
+<span class="cmt">// 复杂度：O(n) 时间，O(n) 空间</span></pre>
+
+<h3>4.3 第 3 步：自底向上递推</h3>
+
+<p>记忆化是「自顶向下」（从 f(n) 出发，按需计算子问题）。递推是「自底向上」（从 f(0) 开始，依次填表）。</p>
+
+<pre><span class="type">int</span> <span class="fn">climbStairs</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="type">vector</span>&lt;<span class="type">int</span>&gt; dp(n + <span class="num">1</span>);
+    dp[<span class="num">0</span>] = <span class="num">1</span>; dp[<span class="num">1</span>] = <span class="num">1</span>;          <span class="cmt">// 边界</span>
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">2</span>; i &lt;= n; i++)
+        dp[i] = dp[i - <span class="num">1</span>] + dp[i - <span class="num">2</span>];  <span class="cmt">// 转移</span>
+    <span class="kw">return</span> dp[n];
+}</pre>
+
+<h3>4.4 第 4 步：空间优化</h3>
+
+<p>观察转移：dp[i] 只依赖 dp[i-1] 和 dp[i-2]。不需要整个数组，两个变量就够。</p>
+
+<pre><span class="type">int</span> <span class="fn">climbStairs</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="type">int</span> prev2 = <span class="num">1</span>, prev1 = <span class="num">1</span>;  <span class="cmt">// dp[0], dp[1]</span>
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">2</span>; i &lt;= n; i++) {
+        <span class="type">int</span> cur = prev1 + prev2;
+        prev2 = prev1; prev1 = cur;
+    }
+    <span class="kw">return</span> prev1;
+}
+<span class="cmt">// 复杂度：O(n) 时间，O(1) 空间 ✅</span></pre>
+
+<div class="box box-g">
+  <strong>四步法的价值：</strong>面试时即使紧张忘了最优解，按「暴力→记忆化→递推→优化」走，至少能拿到 O(n) 的解。这个思维链在所有 DP 题通用。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s5">5. 题 2：打家劫舍 — 状态引入「选/不选」</h2>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+  <strong>LeetCode 198. House Robber（Hot 100）</strong><br>
+  沿街排列的房屋，每间有金额 nums[i]。不能偷相邻的两间。求能偷到的最大金额。<br>
+  例：<code>nums = [2,7,9,3,1]</code> → 答案 12（偷第 0,2,4 间）
+</blockquote>
+
+<h3>5.1 状态定义（关键一步）</h3>
+
+<p>爬楼梯的状态只有「位置 i」一个维度。打家劫舍需要表达<strong>「在位置 i，偷或不偷」</strong>这个决策。两种定义方式：</p>
+
+<p><strong>方式 A（一维，推荐）：</strong>dp[i] = 考虑前 i 间房能偷到的最大金额。<br>
+<strong>方式 B（二维，更通用）：</strong>dp[i][0/1] = 考虑前 i 间房，第 i 间偷(1)/不偷(0) 的最大金额。</p>
+
+<h3>5.2 方式 A：一维 DP</h3>
+
+<p><strong>转移：</strong>对于第 i 间房，两种选择：<br>
+- <strong>不偷</strong>：dp[i] = dp[i-1]（沿用前 i-1 间的最优）<br>
+- <strong>偷</strong>：dp[i] = dp[i-2] + nums[i]（不能偷第 i-1 间，所以来自 i-2）</p>
+
+<pre><span class="type">int</span> <span class="fn">rob</span>(<span class="type">vector</span>&lt;<span class="type">int</span>&gt;& nums) {
+    <span class="type">int</span> n = nums.<span class="fn">size</span>();
+    <span class="kw">if</span> (n == <span class="num">1</span>) <span class="kw">return</span> nums[<span class="num">0</span>];
+    <span class="type">vector</span>&lt;<span class="type">int</span>&gt; dp(n);
+    dp[<span class="num">0</span>] = nums[<span class="num">0</span>];
+    dp[<span class="num">1</span>] = <span class="fn">max</span>(nums[<span class="num">0</span>], nums[<span class="num">1</span>]);
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">2</span>; i &lt; n; i++)
+        dp[i] = <span class="fn">max</span>(dp[i-<span class="num">1</span>], dp[i-<span class="num">2</span>] + nums[i]);
+    <span class="kw">return</span> dp[n-<span class="num">1</span>];
+}</pre>
+
+<h3>5.3 方式 B：二维 DP（更清晰的「选/不选」）</h3>
+
+<pre><span class="cmt">// dp[i][0] = 不偷第 i 间，前 i 间最大金额</span>
+<span class="cmt">// dp[i][1] = 偷第 i 间，前 i 间最大金额</span>
+<span class="type">int</span> n = nums.<span class="fn">size</span>();
+<span class="type">vector</span>&lt;<span class="type">array</span>&lt;<span class="type">int</span>,<span class="num">2</span>&gt;&gt; dp(n);
+dp[<span class="num">0</span>][<span class="num">0</span>] = <span class="num">0</span>;        <span class="cmt">// 不偷第 0 间</span>
+dp[<span class="num">0</span>][<span class="num">1</span>] = nums[<span class="num">0</span>];   <span class="cmt">// 偷第 0 间</span>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">1</span>; i &lt; n; i++) {
+    dp[i][<span class="num">0</span>] = <span class="fn">max</span>(dp[i-<span class="num">1</span>][<span class="num">0</span>], dp[i-<span class="num">1</span>][<span class="num">1</span>]);  <span class="cmt">// 不偷 i，i-1 随意</span>
+    dp[i][<span class="num">1</span>] = dp[i-<span class="num">1</span>][<span class="num">0</span>] + nums[i];            <span class="cmt">// 偷 i，i-1 必须不偷</span>
+}
+<span class="kw">return</span> <span class="fn">max</span>(dp[n-<span class="num">1</span>][<span class="num">0</span>], dp[n-<span class="num">1</span>][<span class="num">1</span>]);</pre>
+
+<div class="box box-i">
+  <strong>🧠 何时用二维「选/不选」：</strong>当相邻元素有<strong>互斥约束</strong>（不能同时选）时，二维状态能清晰表达约束。打家劫舍 II（环形）、股票含冷冻期、股票含手续费都用这个模式。Lesson 0019 会深入。
+</div>
+
+<h3>5.4 正确性论证</h3>
+
+<div class="proof">
+<h3>📐 打家劫舍的最优子结构证明</h3>
+<p>设 OPT(i) 为前 i 间房的最优解。考虑第 i 间房在最优解中的状态：</p>
+<ul>
+  <li>若最优解<strong>不偷</strong>第 i 间：则 OPT(i) = OPT(i-1)。因为前 i-1 间的选择不受影响，且必须是 OPT(i-1)（否则替换后更优）。</li>
+  <li>若最优解<strong>偷</strong>第 i 间：则第 i-1 间必不偷，OPT(i) = OPT(i-2) + nums[i]。OPT(i-2) 必须是前 i-2 间的最优（同样的替换论证）。</li>
+</ul>
+<p>因此 OPT(i) = max(OPT(i-1), OPT(i-2) + nums[i])。这就是转移方程的来源。</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s6">6. 题 3：不同路径 — 2D 网格 DP</h2>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+  <strong>LeetCode 62. Unique Paths（Hot 100）</strong><br>
+  m×n 网格，从左上角到右下角，每次只能向下或向右走一步。有多少条不同路径？
+</blockquote>
+
+<h3>6.1 状态与转移</h3>
+
+<p><strong>状态：</strong>dp[i][j] = 从 (0,0) 到 (i,j) 的路径数。<br>
+<strong>转移：</strong>到达 (i,j) 的最后一步要么从 (i-1,j) 向下，要么从 (i,j-1) 向右。<br>
+&nbsp;&nbsp;&nbsp;&nbsp;dp[i][j] = dp[i-1][j] + dp[i][j-1]<br>
+<strong>边界：</strong>第一行和第一列都只有 1 条路径（一直向右 / 一直向下）。</p>
+
+<pre><span class="type">int</span> <span class="fn">uniquePaths</span>(<span class="type">int</span> m, <span class="type">int</span> n) {
+    <span class="type">vector</span>&lt;<span class="type">vector</span>&lt;<span class="type">int</span>&gt;&gt; dp(m, <span class="type">vector</span>&lt;<span class="type">int</span>&gt;(n, <span class="num">1</span>));  <span class="cmt">// 边界：第一行/列=1</span>
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">1</span>; i &lt; m; i++)
+        <span class="kw">for</span> (<span class="type">int</span> j = <span class="num">1</span>; j &lt; n; j++)
+            dp[i][j] = dp[i-<span class="num">1</span>][j] + dp[i][j-<span class="num">1</span>];
+    <span class="kw">return</span> dp[m-<span class="num">1</span>][n-<span class="num">1</span>];
+}</pre>
+
+<p><strong>复杂度：</strong>O(mn) 时间和空间。空间可优化到 O(n)（滚动数组，见 §8）。</p>
+
+<h3>6.2 为什么这是 DP 而不是 BFS/DFS</h3>
+
+<p>这题也可以 DFS 枚举所有路径，但那是 O(2<sup>m+n</sup>) 指数级。DP 之所以 O(mn)，是因为<strong>路径数有递推结构</strong>——每个格子的路径数只依赖左、上两个格子，且这些子问题被反复使用（重叠）。这是 DP 与暴力搜索的根本区别。</p>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s7">7. 题 4：最小路径和 — DP 值不只是计数</h2>
+
+<blockquote style="border-left:3px solid #7950f2; padding-left:16px; color:#555; margin:1em 0;">
+  <strong>LeetCode 64. Minimum Path Sum（Hot 100）</strong><br>
+  m×n 网格每格有非负数 grid[i][j]，从左上到右下，每次向下或向右，使路径上数字之和<strong>最小</strong>。
+</blockquote>
+
+<h3>7.1 与 Unique Paths 的对比</h3>
+
+<p>结构完全一样（2D 网格、向右/向下转移），唯一区别：dp 值从「路径<strong>计数</strong>」变成「路径<strong>最小和</strong>」，转移从「相加」变成「取 min 后相加」。</p>
+
+<pre><span class="type">int</span> <span class="fn">minPathSum</span>(<span class="type">vector</span>&lt;<span class="type">vector</span>&lt;<span class="type">int</span>&gt;&gt;& grid) {
+    <span class="type">int</span> m = grid.<span class="fn">size</span>(), n = grid[<span class="num">0</span>].<span class="fn">size</span>();
+    <span class="type">vector</span>&lt;<span class="type">vector</span>&lt;<span class="type">int</span>&gt;&gt; dp(m, <span class="type">vector</span>&lt;<span class="type">int</span>&gt;(n));
+    dp[<span class="num">0</span>][<span class="num">0</span>] = grid[<span class="num">0</span>][<span class="num">0</span>];
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">1</span>; i &lt; m; i++) dp[i][<span class="num">0</span>] = dp[i-<span class="num">1</span>][<span class="num">0</span>] + grid[i][<span class="num">0</span>];  <span class="cmt">// 第一列</span>
+    <span class="kw">for</span> (<span class="type">int</span> j = <span class="num">1</span>; j &lt; n; j++) dp[<span class="num">0</span>][j] = dp[<span class="num">0</span>][j-<span class="num">1</span>] + grid[<span class="num">0</span>][j];  <span class="cmt">// 第一行</span>
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">1</span>; i &lt; m; i++)
+        <span class="kw">for</span> (<span class="type">int</span> j = <span class="num">1</span>; j &lt; n; j++)
+            dp[i][j] = <span class="fn">min</span>(dp[i-<span class="num">1</span>][j], dp[i][j-<span class="num">1</span>]) + grid[i][j];
+    <span class="kw">return</span> dp[m-<span class="num">1</span>][n-<span class="num">1</span>];
+}</pre>
+
+<div class="box box-d">
+  <strong>DP 的统一视角：</strong>计数问题用 +，最优化问题用 min/max。本质都是<strong>对所有「最后一步」的选择做聚合</strong>。<br>
+  - 计数：dp[i] = Σ dp[子问题]<br>
+  - 最小化：dp[i] = min(dp[子问题] + cost)<br>
+  - 最大化：dp[i] = max(dp[子问题] + cost)<br>
+  - 存在性：dp[i] = ∃ dp[子问题]（用 bool 或位运算）
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s8">8. 空间优化：滚动数组</h2>
+
+<p>观察 2D DP 的转移：<code>dp[i][j]</code> 只依赖 <code>dp[i-1][...]</code> 和 <code>dp[i][...]</code>。也就是说，<strong>算第 i 行只需要第 i-1 行</strong>。整个二维表可以压成一维。</p>
+
+<pre><span class="cmt">// 原始 2D：</span>
+dp[i][j] = dp[i-<span class="num">1</span>][j] + dp[i][j-<span class="num">1</span>];
+
+<span class="cmt">// 滚动数组：用一维 dp[j] 表示「当前行的第 j 列」</span>
+<span class="cmt">// dp[j] 在更新前还存着上一行的值（即 dp[i-1][j]）</span>
+<span class="type">vector</span>&lt;<span class="type">int</span>&gt; dp(n, <span class="num">1</span>);
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">1</span>; i &lt; m; i++)
+    <span class="kw">for</span> (<span class="type">int</span> j = <span class="num">1</span>; j &lt; n; j++)
+        dp[j] = dp[j] + dp[j-<span class="num">1</span>];  <span class="cmt">// dp[j](旧)=上, dp[j-1](新)=左</span>
+<span class="kw">return</span> dp[n-<span class="num">1</span>];
+<span class="cmt">// 空间：O(mn) → O(n) ✅</span></pre>
+
+<div class="box box-e">
+  <strong>⚠️ 滚动数组的陷阱：</strong>必须保证更新 <code>dp[j]</code> 时，<code>dp[j-1]</code> 已经是<strong>本行</strong>的新值（即左邻居），而 <code>dp[j]</code> 还是<strong>上一行</strong>的旧值（即上邻居）。所以<strong>列循环必须从左到右</strong>。如果转移依赖右邻居，就要从右到左。方向搞错就全盘皆输。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s9">9. DP 设计的常见陷阱</h2>
+
+<table>
+<tr><th>陷阱</th><th>症状</th><th>解法</th></tr>
+<tr><td>状态维度不足</td><td>转移写不出，或写出来不对</td><td>增加维度（如打家劫舍加「选/不选」）</td></tr>
+<tr><td>边界处理遗漏</td><td>n=0 或 n=1 时崩溃/返回错值</td><td>单独处理小规模，或显式初始化 dp[0]</td></tr>
+<tr><td>循环顺序错误</td><td>用到还没算的值</td><td>按依赖关系拓扑序填表（被依赖的先算）</td></tr>
+<tr><td>滚动数组方向错</td><td>结果完全不对</td><td>画图确认每个 dp[j] 更新时左右邻居的「新旧」</td></tr>
+<tr><td>初始值用错（0 vs 1 vs ∞）</td><td>计数少 1 / 最优化取到错值</td><td>计数：空方案=1；最优化：不可达=∞，可达=实际值</td></tr>
+</table>
+
+<div class="box box-i">
+  <strong>🎯 面试 DP 题的 5 分钟思考流程：</strong><br>
+  1. <strong>识别 DP</strong>：求最值/计数/存在性，且子问题重叠<br>
+  2. <strong>定义状态</strong>：哪些维度变化？先写一维，不够再加<br>
+  3. <strong>写转移</strong>：枚举「最后一步」的所有选择<br>
+  4. <strong>定边界</strong>：最小子问题直接给值<br>
+  5. <strong>确定循环顺序</strong>：按依赖拓扑序<br>
+  然后再考虑空间优化。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s10">10. 测验</h2>
+
+<div class="quiz" id="q1">
+<h3>Q1：以下哪个问题<strong>不适合</strong>用 DP？</h3>
+<label><input type="radio" name="q1" value="a">A. 求字符串的最长回文子序列</label>
+<label><input type="radio" name="q1" value="b">B. 求图的最短哈密顿回路（TSP）</label>
+<label><input type="radio" name="q1" value="c">C. 判断一棵二叉树是否平衡</label>
+<label><input type="radio" name="q1" value="d">D. 求从 (0,0) 走到 (m,n) 的最小代价路径</label>
+<button onclick="checkQ1()">提交</button>
+<div class="fb" id="f1"></div>
+</div>
+
+<div class="quiz" id="q2">
+<h3>Q2：打家劫舍中，为什么转移是 dp[i] = max(dp[i-1], dp[i-2]+nums[i]) 而不是 dp[i] = dp[i-2] + nums[i]？</h3>
+<label><input type="radio" name="q2" value="a">A. 因为 dp[i-1] 是不偷第 i 间时的最优解，必须和「偷第 i 间」的情况取 max</label>
+<label><input type="radio" name="q2" value="b">B. 因为 nums[i] 可能是负数</label>
+<label><input type="radio" name="q2" value="c">C. 因为 dp[i-1] 防止数组越界</label>
+<label><input type="radio" name="q2" value="d">D. 两种写法等价</label>
+<button onclick="checkQ2()">提交</button>
+<div class="fb" id="f2"></div>
+</div>
+
+<div class="quiz" id="q3">
+<h3>Q3：滚动数组优化 Unique Paths 时，内层列循环必须从左到右，原因是？</h3>
+<label><input type="radio" name="q3" value="a">A. 因为数组下标必须递增</label>
+<label><input type="radio" name="q3" value="b">B. 因为更新 dp[j] 时需要 dp[j-1] 已经是本行新值（左邻居），而 dp[j] 还是上一行旧值（上邻居）</label>
+<label><input type="radio" name="q3" value="c">C. 因为从右到左会内存不连续</label>
+<label><input type="radio" name="q3" value="d">D. 没有原因，从右到左也行</label>
+<button onclick="checkQ3()">提交</button>
+<div class="fb" id="f3"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+
+<h2>本课覆盖的 Hot 100 题目</h2>
+<table>
+<tr><th>题号</th><th>题目</th><th>状态维度</th><th>复杂度</th></tr>
+<tr><td>70</td><td>Climbing Stairs 爬楼梯</td><td>1D</td><td>O(n) / O(1)</td></tr>
+<tr><td>198</td><td>House Robber 打家劫舍</td><td>1D 或 2D(选/不选)</td><td>O(n) / O(1)</td></tr>
+<tr><td>62</td><td>Unique Paths 不同路径</td><td>2D 网格</td><td>O(mn) / O(n)</td></tr>
+<tr><td>64</td><td>Minimum Path Sum 最小路径和</td><td>2D 网格</td><td>O(mn) / O(n)</td></tr>
+</table>
+
+<h2>专项练习</h2>
+<ul>
+  <li>LeetCode 上独立 AC：70、198、62、64（目标 30 分钟内完成 4 题）</li>
+  <li>把爬楼梯的<strong>四步思维阶梯</strong>在纸上默写一遍（暴力→记忆化→递推→滚动变量）</li>
+  <li>用二维「选/不选」状态重写打家劫舍，体会两种定义的等价性</li>
+  <li>进阶：213. 打家劫舍 II（环形，拆成两个线性子问题）</li>
+  <li>预习：下一课背包问题——DP 最经典的应用，0-1 与完全背包的循环顺序差异是面试高频考点</li>
+</ul>
+
+<h2>参考资源</h2>
+<ul>
+  <li>📖 <a href="https://programmercarl.com/0070.%E7%88%AC%E6%A5%BC%E6%9D%AF.html">代码随想录：爬楼梯</a></li>
+  <li>📖 <a href="https://labuladong.online/algo/dynamic-programming/">labuladong：动态规划解题套路框架</a></li>
+  <li>📖 <a href="https://oi-wiki.org/dp/basic/">OI Wiki：动态规划基础</a></li>
+  <li>📖 CLRS 第 15 章：动态规划 — 最优子结构的形式化定义</li>
+</ul>
+
+<div class="box box-g">
+  <strong>💬 有问题？</strong>DP 入门最难的是<strong>状态定义</strong>。如果某题你卡在「不知道 dp 该表示什么」，把题目发给我，我们一起从「最后一步做了什么决策」开始推导。这是 DP 的万能起点。
+</div>
+
+<div class="nav">
+  <a href="../index.html">← 课程首页</a>
+  <a href="0017-dp-knapsack.html">下一课：背包问题 →</a>
+</div>
+
+<script>
+function checkQ1(){var f=document.getElementById('f1');var s=document.querySelector('input[name="q1"]:checked');if(!s){f.textContent='请选择';f.className='fb incorrect';return}if(s.value==='c'){f.textContent='✅ 正确！判断二叉树是否平衡是分治/递归，子问题（左右子树）不重叠，不需要 DP。TSP 虽是 NP-hard，但状态压缩 DP 是经典解法。';f.className='fb correct'}else{f.textContent='❌ 再想想。A 是区间 DP，B 是状压 DP，D 是网格 DP。只有 C 的子问题不重叠。';f.className='fb incorrect'}}
+function checkQ2(){var f=document.getElementById('f2');var s=document.querySelector('input[name="q2"]:checked');if(!s){f.textContent='请选择';f.className='fb incorrect';return}if(s.value==='a'){f.textContent='✅ 正确！dp[i-1] 代表「不偷第 i 间」的最优，必须和「偷第 i 间」(dp[i-2]+nums[i]) 取 max。漏掉 max 会强制偷第 i 间，可能不是最优。';f.className='fb correct'}else{f.textContent='❌ 再想想。关键是不偷第 i 间也是一种合法选择，其最优就是 dp[i-1]。';f.className='fb incorrect'}}
+function checkQ3(){var f=document.getElementById('f3');var s=document.querySelector('input[name="q3"]:checked');if(!s){f.textContent='请选择';f.className='fb incorrect';return}if(s.value==='b'){f.textContent='✅ 正确！这正是滚动数组正确性的核心。从右到左会导致 dp[j-1] 还是上一行旧值，转移错误。';f.className='fb correct'}else{f.textContent='❌ 再想想。滚动数组依赖「更新顺序」来区分新旧值。方向错了，左邻居就变成了上一行的值。';f.className='fb incorrect'}}
+</script>
+
+</body>
+</html>

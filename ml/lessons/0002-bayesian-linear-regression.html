@@ -202,6 +202,49 @@ window.MathJax = {
 <!-- ============================================================ -->
 <h2 id="s1">1. 为什么要从点走到分布（认识论的差别）</h2>
 
+<h3>从点估计到分布估计——贝叶斯到底怎么做</h3>
+
+<p>把"贝叶斯怎么做"和点估计并排放一张表，差别立刻清楚。左边是<strong>操作</strong>（你写代码时实际做的事），右边是<strong>输出</strong>：</p>
+
+<table>
+  <tr><th>阶段</th><th>输入</th><th>操作</th><th>输出</th></tr>
+  <tr>
+    <td><strong>MLE</strong></td><td>数据</td>
+    <td>$\arg\max_\mathbf{w}\; p(\mathcal{D}\mid\mathbf{w})$</td>
+    <td>一个点 $\mathbf{w}_{\text{ML}}$</td>
+  </tr>
+  <tr>
+    <td><strong>MAP</strong></td><td>先验 + 数据</td>
+    <td>$\arg\max_\mathbf{w}\; p(\mathcal{D}\mid\mathbf{w})\,p(\mathbf{w})$</td>
+    <td>一个点 $\mathbf{w}_{\text{MAP}}$</td>
+  </tr>
+  <tr>
+    <td><strong>贝叶斯</strong></td><td>先验 + 数据</td>
+    <td>$\dfrac{p(\mathcal{D}\mid\mathbf{w})\,p(\mathbf{w})}{\int p(\mathcal{D}\mid\mathbf{w})\,p(\mathbf{w})\,d\mathbf{w}}$</td>
+    <td><strong>一个分布 $p(\mathbf{w}\mid\mathcal{D})$</strong></td>
+  </tr>
+  <tr>
+    <td><strong>预测</strong></td><td>那个分布</td>
+    <td>$\int p(y_\ast\mid\mathbf{x}_\ast,\mathbf{w})\,p(\mathbf{w}\mid\mathcal{D})\,d\mathbf{w}$</td>
+    <td><strong>预测的分布</strong></td>
+  </tr>
+</table>
+
+<p>逐行读：</p>
+<ul>
+  <li><strong>MLE 和 MAP 只差一个 $p(\mathbf{w})$ 因子</strong>，但都做 $\arg\max$——都只取<strong>峰值</strong>，把峰值以外的形状全扔了。MAP 加先验 = MLE 加正则（§4 会证），但两者本质都是点估计。</li>
+  <li><strong>贝叶斯把 $\arg\max$ 换成"乘起来再归一化"</strong>——不取众数，保留 $p(\mathcal{D}\mid\mathbf{w})p(\mathbf{w})$ 整个函数的<strong>形状</strong>，只除以一个常数让它积分为 1。形状里藏着不确定性：宽=不确定，窄=确定。$\arg\max$ 把这些全扔了，归一化保留。这就是"从点到分布"。</li>
+  <li><strong>预测把"代入"换成"平均"</strong>——点估计 $y_\ast=\hat{\mathbf{w}}^\top\boldsymbol\phi_\ast$（代入一个值）；贝叶斯把所有可能 $\mathbf{w}$ 的预测按后验概率加权平均。这一步是贝叶斯相对 MAP 的本质增益：MAP 只用后验一个点，贝叶斯用后验全部。</li>
+</ul>
+
+<div class="insight">
+  <strong>贝叶斯就三个动作：乘（似然×先验）、归一化（除以积分）、平均（预测时积分）。</strong>本课后面所有推导——共轭、配平方、边缘化——都是让这三个动作在高斯下有闭式：
+  <strong>共轭</strong>让"乘"还在族内，<strong>配平方</strong>算"归一化"后的均值方差，<strong>边缘化</strong>算"平均"后的预测分布。
+  三个范式对应三个动作，不是凭空冒出来的。记住这个对应，后面每一步都有归属。
+</div>
+
+<p>现在看为什么这个差别不只是技术细节，而是<strong>认识论</strong>差别——</p>
+
 <p>
   MLE 给 $\mathbf{w}_{\text{ML}}$，MAP 给 $\mathbf{w}_{\text{MAP}}$——都是单个值。贝叶斯给一个<strong>分布</strong>。
   这不只是"多输出一个方差"的技术差别，而是对"参数是什么"的根本立场差别：

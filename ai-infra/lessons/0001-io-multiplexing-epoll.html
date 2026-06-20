@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0001 — IO 多路复用与 epoll</title>
+<style>
+  :root {
+    --ink:#1a1a1a; --muted:#6b6b6b; --rule:#d2d2d2; --bg:#fdfdfb;
+    --accent:#8a1538; --code-bg:#f4f1ec; --ok:#2a6f2a; --warn:#9a6a00;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 17px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+    line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+  header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--rule); padding-bottom: 1rem; }
+  .kicker { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: .72rem;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: 1.9rem; margin: .4rem 0 .2rem; line-height: 1.2; }
+  .meta { color: var(--muted); font-size: .9rem; margin: 0; }
+  h2 { font-size: 1.25rem; margin: 2.4rem 0 .6rem; }
+  h3 { font-size: 1.02rem; margin: 1.6rem 0 .4rem; }
+  p, li { margin: 0 0 .7rem; }
+  ul, ol { padding-left: 1.3rem; }
+  code, pre { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 3px; font-size: .85em; }
+  pre { background: var(--code-bg); padding: .9rem 1rem; border-radius: 5px; overflow-x: auto;
+    font-size: .82rem; line-height: 1.5; border: 1px solid var(--rule); }
+  pre code { background: none; padding: 0; }
+  .note { border-left: 3px solid var(--accent); padding: .2rem 0 .2rem 1rem;
+    margin: 1rem 0; color: #444; font-size: .94rem; }
+  .gate { background: #f7f3ec; border: 1px solid var(--rule); border-radius: 5px;
+    padding: .8rem 1rem; margin: 1.4rem 0; }
+  .gate::before { content: "GATE"; font-family: ui-monospace,Menlo,monospace; font-size: .7rem;
+    letter-spacing: .14em; color: var(--accent); display: block; margin-bottom: .3rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .9rem; }
+  th, td { border-bottom: 1px solid var(--rule); padding: .45rem .5rem; text-align: left; vertical-align: top; }
+  th { font-family: ui-monospace,Menlo,monospace; font-size: .78rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .08em; }
+  details { margin: 1rem 0; border: 1px solid var(--rule); border-radius: 5px; padding: .6rem 1rem; background: #fff; }
+  summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: .6rem; }
+  .q { margin: 1rem 0 .3rem; font-weight: 600; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule);
+    color: var(--muted); font-size: .82rem; }
+  .ascii { font-family: ui-monospace,Menlo,monospace; font-size: .78rem; line-height: 1.35;
+    white-space: pre; background: var(--code-bg); padding: .8rem 1rem; border-radius: 5px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Phase 0 · Session 0.1a · AI Infra</div>
+  <h1>IO 多路复用与 epoll</h1>
+  <p class="meta">为什么 epoll 比 select 快 — 推理 server 高并发的底座</p>
+</header>
+
+<p>这一节是 Phase 0 工程地基的第一块。它不是"AI"内容,但 <strong>vLLM 的 async engine、NCCL 通信、所有高并发推理 server</strong> 全建在这层之上。面试问"你 vLLM 里 ZMQ/TensorPipe 怎么用的",答不上来多半就是这层空。</p>
+
+<h2>1. 进程与 fd — 心智模型对齐</h2>
+
+<p>一个<strong>进程</strong>是内核眼里一组被隔离的资源:</p>
+<div class="ascii">进程 = {
+  地址空间 (代码/数据/堆/栈),     ← 独享, 别人看不到
+  打开的文件描述符表 (fd table),  ← 重点
+  一个或多个线程,
+  PID, 权限, cwd ...
+}</div>
+
+<p>Linux 的核心设计原则:<strong>一切皆文件</strong>。打开真文件、开 socket、开 pipe、开 <code>/dev/null</code>——内核都给你一个非负整数,叫<strong>文件描述符 (fd)</strong>。之后 <code>read/write/close</code> 全用这个整数。</p>
+<div class="ascii">fd 0 = stdin,  1 = stdout,  2 = stderr   (默认开着)
+fd 3+ = 你 open/socket/pipe 出来的</div>
+
+<div class="note">面试常问"进程 vs 线程":进程切换要换地址空间(贵),线程切换只换栈和寄存器(便宜)。这就是为什么 vLLM 跨进程 tensor parallel 通信贵、同进程多线程便宜。</div>
+
+<h2>2. socket — 一种特殊的 fd</h2>
+
+<p>socket 是一个 fd,但两头连着网络或本机。TCP server 标准流程:</p>
+<pre><code>socket()  → 拿到 listen_fd
+bind()    → 绑到 (ip, port)
+listen()  → 标记"我是 server"
+accept()  → 阻塞等连接, 返回新 fd = conn_fd
+              ↑ 这个 fd 才用来 read/write 数据</code></pre>
+
+<p>关键坑:一个 server 同时有 N 个客户端,就有 <strong>1 个 listen_fd + N 个 conn_fd</strong>。你要<strong>同时</strong>盯这 N+1 个 fd:哪个来数据读哪个,哪个新连进来就 accept。<br>问题来了:<strong>怎么用一两个线程同时盯一堆 fd?</strong></p>
+
+<h2>3. IO 多路复用 — 本节核心</h2>
+
+<h3>3.1 最笨:一个线程一个连接</h3>
+<p>每个 conn_fd 开一个线程,各自阻塞 <code>read()</code>。1 万连接 = 1 万线程,内存爆 + 上下文切换爆。这就是早期 <strong>C10k 问题</strong>。</p>
+
+<h3>3.2 select — 第一个多路复用</h3>
+<pre><code>int select(int nfds, fd_set *readfds, ...);
+// 把要盯的 fd 塞进 bitmap, 阻塞到任一就绪, 返回。
+// 然后你遍历 bitmap 看是哪个。</code></pre>
+<p>三个致命问题(面试必问):</p>
+<ol>
+  <li><strong>fd 数量有上限</strong>:典型 1024 (<code>FD_SETSIZE</code>),改要重编内核。</li>
+  <li><strong>每次调用全量拷</strong> fd 集合从用户态到内核态。N 大时贵。</li>
+  <li><strong>返回后线性遍历</strong>找 ready fd,O(N)。</li>
+</ol>
+
+<h3>3.3 poll — 修了上限,没修本质</h3>
+<pre><code>struct pollfd { int fd; short events; short revents; };
+int poll(struct pollfd *fds, nfds_t nfds, int timeout);</code></pre>
+<p>用数组代替 bitmap,fd 数量没上限了。但问题 2、3 还在:仍全量拷、仍线性遍历。<strong>poll 也没解决 C10k</strong>。</p>
+
+<h3>3.4 epoll — Linux 的答案</h3>
+<p>epoll 把"盯哪些 fd"拆成两步:</p>
+<pre><code>int epfd = epoll_create1(0);               // 内核里建一个实例 (红黑树)
+
+epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);    // 增量! 只在加/删时调
+epoll_ctl(epfd, EPOLL_CTL_DEL, fd, ...);
+
+epoll_wait(epfd, events, maxevents, -1);    // 阻塞, 只返回就绪的 fd
+                  ↑ 不遍历全部, 只把就绪的拷出来</code></pre>
+
+<table>
+  <tr><th></th><th>select / poll</th><th>epoll</th></tr>
+  <tr><td>拷贝</td><td>每次调用全量拷 fd 集合</td><td><code>epoll_ctl</code> 增量注册, 只在加删时调</td></tr>
+  <tr><td>找 ready fd</td><td>线性遍历全部 O(N)</td><td>只返回就绪的 O(就绪数)</td></tr>
+  <tr><td>fd 上限</td><td>select 1024</td><td>无</td></tr>
+</table>
+
+<div class="note">深层原因:epoll 在内核里给每个注册 fd 挂了回调。fd 上有数据到达,内核直接把它加进 ready list,不轮询。所以 epoll 是 <strong>O(1) 注册 + O(就绪数) 返回</strong>,与总 fd 数无关。</div>
+
+<h3>3.5 水平触发 vs 边沿触发(面试加分)</h3>
+<ul>
+  <li><strong>LT(水平触发,默认)</strong>:fd 里只要还有未读数据,<code>epoll_wait</code> 就一直返回它。读不干净下次还提醒。<strong>安全,不易漏数据</strong>。</li>
+  <li><strong>ET(边沿触发)</strong>:只在状态<strong>从无到有</strong>变化那一次返回,之后哪怕还有数据也不提醒。<strong>性能更好(系统调用少),但必须循环 read 到 EAGAIN,否则数据卡住</strong>。nginx、Redis 用 ET。</li>
+</ul>
+
+<div class="gate">
+  本节 gate:能用自己的话讲清<strong>epoll 比 select 快的三个原因</strong>(增量注册 / 只返回就绪 / 无上限),并能解释 ET 模式下为什么必须循环 read 到 EAGAIN。下一节(0002)会用 Python <code>selectors</code> + C 裸 epoll 把这套机制写出来。
+</div>
+
+<h2>概念检查</h2>
+<p class="q">Q1. 一个 server 有 1 万空闲连接,没数据在传。select 和 epoll 的 CPU 占用差别在哪?</p>
+<p class="q">Q2. 为什么说"select 是 O(N),epoll 是 O(就绪数)"?N 是什么?</p>
+<p class="q">Q3. ET 模式下你 <code>read</code> 一次读了 1024 字节,但对方发了 8KB。会发生什么?怎么避免?</p>
+
+<details>
+<summary>答案(先自己想再展开)</summary>
+<p><strong>Q1</strong>:空闲时都阻塞,几乎都没 CPU。差别在<strong>有事件时</strong>:select 要把 1 万 fd 全拷进内核 + 返回后线性扫 1 万个找是哪个;epoll 只返回那 1 个就绪的。空闲时都闲,有事件时 select 开销随连接数线性涨,epoll 不涨。</p>
+<p><strong>Q2</strong>:N = 注册的 fd 总数。select 返回后必须遍历所有 N 个 fd 检查 <code>FD_ISSET</code>;<code>epoll_wait</code> 直接把就绪的填进 events 数组,数量 = 就绪数,跟 N 无关。</p>
+<p><strong>Q3</strong>:ET 只在"从无到有"通知一次。读 1024 字节后缓冲区还有 7KB,但 epoll 不再通知 → <strong>数据卡住,连接看起来 hang</strong>。避免:ET 下必须<strong>循环 read 直到返回 <code>EAGAIN</code>/<code>EWOULDBLOCK</code></strong>,且 fd 设成非阻塞。</p>
+</details>
+
+<h2>推荐一手源</h2>
+<ul>
+  <li><a href="https://man7.org/linux/man-pages/man7/epoll.7.html">man 7 epoll</a> — 语义权威,写代码存疑时回查。</li>
+  <li><a href="http://kegel.com/c10k.html">Dan Kegel, "The C10k problem"</a> — IO 多路复用动机的历史原文。</li>
+  <li>《The Linux Programming Interface》ch.63 (Kerrisk) — epoll 章节深读。</li>
+</ul>
+
+<footer>
+  <p>下一节:<a href="./0002-epoll-echo-server.html">0002 — 手写 epoll echo server (Python + C)</a> ·
+  术语见 <a href="../GLOSSARY.md">GLOSSARY</a> ·
+  路线见 <a href="../roadmap.md">roadmap</a></p>
+  <p>有不清楚的地方?直接问老师(在对话里提问),这是你的课。</p>
+</footer>
+
+</div>
+</body>
+</html>

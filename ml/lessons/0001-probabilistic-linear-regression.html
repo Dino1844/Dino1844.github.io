@@ -169,7 +169,7 @@ window.MathJax = {
   <a href="#s2">2. 假设推出损失：为什么是平方</a><br>
   <a href="#s3">3. 损失推出解：正规方程</a><br>
   <a href="#s4">4. 解的几何：正交投影</a><br>
-  <a href="#s5">5. 解的代价：σ² 被低估，过拟合</a><br>
+  <a href="#s5">5. 解的代价：σ² 被低估，过拟合，以及正则从哪来</a><br>
   <a href="#s6">6. 解的意义：MLE 即最小化 KL 散度</a><br>
   <a href="#s7">7. 推广：指数族与 GLM——一个假设统一所有损失</a><br>
   <a href="#s8">8. 推导与自测</a>
@@ -312,6 +312,17 @@ window.MathJax = {
     <span class="reason">代入高斯密度，拆出与 $\mathbf{w}$ 无关的常数项</span>
   </div>
 </div>
+
+<p>
+  那个 $-\frac{N}{2}\log(2\pi\sigma^2)$ 是高斯的<strong>归一化因子</strong>（配分函数）$Z=\sqrt{2\pi\sigma^2}$ 取 log 的结果。
+  它从哪来？从"概率必须积分为 1"这个硬约束来——$\int p\,dy=1$ 逼出一个除数 $Z$。
+  注意 $Z$ 是<strong>参数的函数</strong>（依赖 $\sigma^2$），不是 $y$ 的函数（$y$ 已积掉）。
+  本课估 $\mathbf{w}$ 时 $\sigma^2$ 已知，$Z$ 是常数，可以丢掉，只剩平方和。但<strong>不是总能丢</strong>：
+  估 $\sigma^2$ 时（§5）$Z$ 依赖 $\sigma^2$，丢不得，$\log\sigma$ 那项正是 $\widehat{\sigma^2}$ 偏差的来源之一；
+  贝叶斯里（0002）后验归一化常数 $Z=\int p(\mathcal{D}\mid\mathbf{w})p(\mathbf{w})\,d\mathbf{w}$ <strong>绝对不能丢</strong>——它就是边缘似然（0003 的主角）。
+  指数族里这个 $Z$ 就是 $\int b(y)e^{\eta^\top T(y)}dy$，$a(\eta)=\log Z$ 生成所有矩（0004）。
+  <strong>归一化因子贯穿全书：MLE 里常丢、贝叶斯里必留、指数族里它生成所有矩。</strong>
+</p>
 
 <p>关于 $\mathbf{w}$ 最大化。第一项与 $\mathbf{w}$ 无关，第二项前有负号，于是：</p>
 
@@ -490,7 +501,7 @@ window.MathJax = {
 <p>非正交基时，$\boldsymbol{\Phi}^\top\boldsymbol{\Phi}$ 那个矩阵就是在处理基函数之间的耦合——它把"在斜基下求坐标"修正成"在正交意义下求投影"。Gram–Schmidt 可以把任意线性无关基正交化，本质上就是在消这个耦合。</p>
 
 <!-- ============================================================ -->
-<h2 id="s5">5. 解的代价：σ² 被低估，过拟合</h2>
+<h2 id="s5">5. 解的代价：σ² 被低估，过拟合，以及正则从哪来</h2>
 
 <p>
   $\sigma^2$ 也能用 MLE 估。对对数似然求 $\partial/\partial\sigma^2$ 令为零，得
@@ -549,6 +560,54 @@ window.MathJax = {
 </table>
 
 <p>正则化只是贝叶斯的"贫民版"——它取后验的众数（MAP），丢掉了后验的形状（不确定性）。Ridge 让 $\boldsymbol{\Phi}^\top\boldsymbol{\Phi}+\lambda\mathbf{I}$ 强制可逆，几何上把投影"收缩"向原点；Lasso 在 $\lambda$ 足大时让某些系数<strong>恰好为零</strong>，产生稀疏模型——稀疏性来自 L1 球的角点与等高线相切，是约束区域几何形状的后果，不是概率假设的直接推论。<strong>下一课</strong>就做完整的贝叶斯线性回归，看不确定性如何被显式表达。</p>
+
+<h3 style="margin-top:1.8rem;">$\lambda\|\mathbf{w}\|_2^2$ 到底怎么来的——从高斯先验取 log</h3>
+
+<p>上面那句"高斯先验 $\Rightarrow$ L2"不是约定，是一行推导。把它写开，因为这是 0001 自洽闭环的最后一环：本课从高斯噪声假设推出了平方损失，现在从高斯先验假设推出 L2 正则——<strong>同一套"取 log 看指数"的逻辑用了两次</strong>。</p>
+
+<p><strong>设定。</strong>给参数加一个零均值各向同性高斯先验：</p>
+
+<div class="formula-block">
+  $$p(\mathbf{w})=\mathcal{N}(\mathbf{w}\mid\mathbf{0},\tau^2\mathbf{I})=\frac{1}{(2\pi\tau^2)^{M/2}}\exp\!\Big(-\frac{\|\mathbf{w}\|^2}{2\tau^2}\Big)$$
+</div>
+
+<p><strong>MAP = 最大化后验 = 最大化"似然 × 先验"</strong>。取 log：</p>
+
+<div class="derivation">
+  <h4>从高斯先验到 L2 正则</h4>
+  <div class="step">
+    $\log p(\mathbf{w}\mid\mathcal{D})=\log p(\mathcal{D}\mid\mathbf{w})+\log p(\mathbf{w})+\text{const}$
+    <span class="reason">贝叶斯定理取 log，分母与 $\mathbf{w}$ 无关进 const</span>
+  </div>
+  <div class="step">
+    $=\log p(\mathcal{D}\mid\mathbf{w})\;\underbrace{-\frac{1}{2\tau^2}\|\mathbf{w}\|^2}_{\log p(\mathbf{w})\text{ 的指数部分}}\;+\text{const}$
+    <span class="reason">代入高斯先验，$\log$ 把 $\exp$ 消掉，只剩 $-\|\mathbf{w}\|^2/(2\tau^2)$；归一化常数 $(2\pi\tau^2)^{-M/2}$ 与 $\mathbf{w}$ 无关进 const</span>
+  </div>
+  <div class="step">
+    最大化它 $\;\Leftrightarrow\;$ 最小化 $\;\underbrace{-\log p(\mathcal{D}\mid\mathbf{w})}_{\text{负对数似然}}\;+\;\underbrace{\frac{1}{2\tau^2}}_{\lambda}\|\mathbf{w}\|^2$
+    <span class="reason">乘 $-1$ 翻成最小化；先验项前的负号变正 → 成为<strong>罚项</strong></span>
+  </div>
+</div>
+
+<p>代入本课的负对数似然 $-\log p(\mathcal{D}\mid\mathbf{w})=\frac{1}{2\sigma^2}\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}\|^2+\text{const}$：</p>
+
+<div class="formula-block">
+  $$\boxed{\;\mathbf{w}_{\text{MAP}}=\arg\min_\mathbf{w}\;\frac{1}{2\sigma^2}\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}\|^2+\frac{1}{2\tau^2}\|\mathbf{w}\|^2\;=\;\arg\min_\mathbf{w}\;\|\mathbf{y}-\boldsymbol{\Phi}\mathbf{w}\|^2+\underbrace{\frac{\sigma^2}{\tau^2}}_{\lambda}\|\mathbf{w}\|^2\;}$$
+</div>
+
+<p>这就是 Ridge，$\lambda=\sigma^2/\tau^2$。几个要点串起来：</p>
+<ul>
+  <li><strong>$\|\mathbf{w}\|^2$ 的形式来自高斯密度的指数 $-\|\mathbf{w}\|^2/(2\tau^2)$。</strong>高斯先验的"平方衰减"取 log 后变成"平方罚"——L2 正则项是高斯先验对数的直接读出。<strong>没有高斯先验就没有 $\|\mathbf{w}\|^2$ 这个形式</strong>。</li>
+  <li><strong>$\lambda=\sigma^2/\tau^2$ 是两个方差的比。</strong>先验越紧（$\tau^2$ 小，你越确信 $\mathbf{w}\approx\mathbf{0}$）→ $\lambda$ 大 → 罚得重；噪声越大（$\sigma^2$ 大，数据越不可靠）→ $\lambda$ 大 → 更该听先验。<strong>"数据不可靠时更该听先验"被这个比值编码</strong>。</li>
+  <li><strong>负号变正号是关键一步。</strong>先验是 $\exp(-\|\mathbf{w}\|^2/2\tau^2)$——指数上负，表示"$\mathbf{w}$ 大时先验概率小"。取 log 翻成最小化后，负变正 → 成为<strong>罚</strong>。这个符号翻转就是"先验偏好"变成"正则罚"的机制。</li>
+  <li><strong>L1 同理来自拉普拉斯先验。</strong>$p(\mathbf{w})\propto\exp(-\|\mathbf{w}\|/b)$（拉普拉斯）取 log 给 $-\|\mathbf{w}\|/b$，翻号成 $+\lambda\|\mathbf{w}\|_1$——Lasso。<strong>先验的衰减形状决定正则项的形状</strong>：高斯平方衰减 → L2，拉普拉斯线性衰减 → L1。</li>
+</ul>
+
+<div class="insight">
+  <strong>本课用了两次"取 log 看指数"：</strong>§2 从高斯<strong>噪声</strong>的指数 $(y-\mu)^2/(2\sigma^2)$ 推出平方<strong>损失</strong>；这里从高斯<strong>先验</strong>的指数 $\|\mathbf{w}\|^2/(2\tau^2)$ 推出平方<strong>正则</strong>。同一个动作，两次应用，把"损失"和"正则"都挂回概率假设。<strong>损失是噪声假设的影子，正则是先验假设的影子</strong>——两者都不是人为设计，都是从高斯（或拉普拉斯）取 log 掉出来的。这就是为什么 Ridge/Lasso 不是"工程技巧"，而是贝叶斯 MAP 在特定先验下的必然形式。
+</div>
+
+<p>但 MAP 只取后验众数（这个 $\mathbf{w}_{\text{MAP}}$），<strong>丢掉了后验的形状</strong>——它不知道这个解有多不确定。要拿回不确定性，就得做完整贝叶斯：不取 $\arg\max$，保留 $\exp(\log\text{似然}+\log\text{先验})$ 整个函数再归一化。这是 0002 的起点，也是上面三条出路里"贝叶斯方法"那一行真正要做的事。</p>
 
 <!-- ============================================================ -->
 <h2 id="s6">6. 解的意义：MLE 即最小化 KL 散度</h2>
