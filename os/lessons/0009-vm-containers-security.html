@@ -26,6 +26,9 @@
   .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; } .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; } .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
   .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
   .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .quiz { margin: 1.5rem 0; } .quiz-question { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem; margin-bottom: 0.8rem; }
+  .quiz-question h4 { font-size: 0.95rem; margin-bottom: 0.4rem; } .quiz-options { display: flex; flex-direction: column; gap: 0.3rem; }
+  .quiz-option { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; } .quiz-feedback { font-size: 0.85rem; padding: 0.4rem 0.6rem; margin-top: 0.4rem; border-radius: 4px; display: none; }
   .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); } .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
 </style>
 </head>
@@ -41,7 +44,8 @@
   <a href="#s4">4. OS 安全：内存破坏的攻与防</a><br>
   <a href="#s5">5. Linux 内核数据结构全景</a><br>
   <a href="#s6">6. 一次 read() 的完整代码路径</a><br>
-  <a href="#s7">7. 推导与自测</a>
+  <a href="#s7">7. 自测题</a><br>
+  <a href="#s8">8. 推导与自测</a>
 </div>
 
 <p>0001–0008 讲清了 OS 的核心机制——进程、内存、并发、文件、I/O。这课是<strong>压轴合龙</strong>：把概念串成一次系统调用的完整路径，并展示 OS 前沿——虚拟化、容器、安全。读完这课，你应该能在脑中从 `read()` 一路追踪到 DMA 控制器。</p>
@@ -140,7 +144,55 @@
 
 <div class="insight"><strong>这就是操作系统之美。</strong>10 步，涉及 0001–0008 的全部核心概念。每一步都是前面机制的具体化。如果你能不看屏幕在脑中走完这 10 步，这个课程就已经达到了它的目标。</div>
 
-<h2 id="s7">7. 推导与自测</h2>
+<h2 id="s7">7. 自测题</h2>
+
+<p style="color:var(--muted); font-size:0.9rem;">5 题覆盖本课核心点。</p>
+
+<div class="quiz">
+
+<div class="quiz-question"><h4>Q1（§1 虚拟机）· Type-1 和 Type-2 Hypervisor 的关键区别？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。','incorrect-fb')"><label>A. Type-1 支持更多虚拟机</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','对。Type-1 直接跑在硬件上（如 KVM），Type-2 跑在宿主 OS 上（如 VirtualBox）。','correct-fb')"><label>B. Type-1 直接跑在硬件上，Type-2 跑在宿主 OS 上</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。','incorrect-fb')"><label>C. Type-1 不支持嵌套页表</label></div>
+</div>
+<div class="quiz-feedback" id="q1fb"></div></div>
+
+<div class="quiz-question"><h4>Q2（§2 容器）· 容器的隔离靠哪两个机制？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','对。Namespace 限制"能看见什么"，cgroup 限制"能用多少"。','correct-fb')"><label>A. Namespace + cgroup</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>B. Hypervisor + 嵌套页表</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>C. Chroot + nice</label></div>
+</div>
+<div class="quiz-feedback" id="q2fb"></div></div>
+
+<div class="quiz-question"><h4>Q3（§4 安全）· Stack Canary 怎么工作？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','对。函数入口在返回地址和局部变量间放随机值。返回前检查——被覆盖（缓冲区溢出）则异常。','correct-fb')"><label>A. 返回地址前放随机值，返回前检查——被覆盖则异常</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>B. 在栈上运行 shellcode 检测器</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>C. 禁止栈上所有数据操作</label></div>
+</div>
+<div class="quiz-feedback" id="q3fb"></div></div>
+
+<div class="quiz-question"><h4>Q4（§5 数据结构）· <code>task_struct</code> 通过哪个字段访问进程的页表？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','对。mm->pgd 是页表根物理地址——上下文切换时写入 CR3。','correct-fb')"><label>A. <code>mm</code>（→ mm_struct → <code>pgd</code> 是页表根）</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。','incorrect-fb')"><label>B. <code>cred</code></label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。','incorrect-fb')"><label>C. <code>sched_entity</code></label></div>
+</div>
+<div class="quiz-feedback" id="q4fb"></div></div>
+
+<div class="quiz-question"><h4>Q5（§6 read 路径）· 一次 <code>read(fd, buf, 100)</code> 中，page cache 检查发生在哪一层之后？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','对。VFS 层通过 inode 的物理块号后 → 查 page cache。命中则 copy_to_user，不命中才走块层/驱动。','correct-fb')"><label>A. VFS 层把 (f_pos, size) 翻译成物理块号之后</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。','incorrect-fb')"><label>B. DMA 完成之后</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。','incorrect-fb')"><label>C. 用户态准备阶段</label></div>
+</div>
+<div class="quiz-feedback" id="q5fb"></div></div>
+
+</div>
+
+<h2 id="s8">8. 推导与自测</h2>
 <div class="problem"><div class="ptitle">P1 · VM vs 容器安全 <span class="plevel l2">L2</span></div><div class="pbody"><p>(a) 攻击者通过内核漏洞拿到了宿主机的 root shell。他能看到容器 A 里的进程的内存吗？容器 B 呢？(b) 如果宿主机跑的是 KVM 虚拟机而非容器，攻击者能从宿主机 root 看到 VM 里的内存吗（无额外漏洞）？(c) 这两种场景揭示了 VM 和容器的什么根本安全差异？</p></div>
 <details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) 宿主机 root → 可以 `nsenter` 进入任意 namespace → 可以看到所有容器的进程、内存、文件。因为容器共享内核——宿主机 root 即是所有 namespace 的 root。(b) KVM 中 guest 的内存在 hypervisor 视角是普通用户态进程的内存——但 EPT/NPT 是独立的页表。宿主机 root 可以读 `/proc/PID/mem` 或 `/dev/mem` 但 guest 的物理内存被映射在 QEMU 进程的虚拟地址空间中——直接读 QEMU 进程内存是可以的（除非额外保护如 AMD SEV 内存加密）。(c) VM 隔离强但非绝对——hypervisor 层的漏洞可打破隔离。容器根本依赖于"内核没有漏洞"这个假设——共享内核意味着一个内核漏洞可以打破所有容器的隔离。</div></div></details>
 </div>
@@ -163,6 +215,14 @@
   <p><a href="../index.html">🏠 课程首页</a> · <a href="./0008-io-raid.html">← 0008 I/O·RAID</a></p>
   <p style="margin-top:0.5rem;">全书基石：0001 · 本课回接全部 0001–0008 · 课程完结</p>
 </div>
+<script>
+function quizFB(el, fbId, msg, cls) {
+  const fb = document.getElementById(fbId);
+  fb.textContent = msg;
+  fb.className = 'quiz-feedback ' + cls;
+  fb.style.display = 'block';
+}
+</script>
 <script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
 </body>
 </html>

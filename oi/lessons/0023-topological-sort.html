@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0023 — 拓扑排序与环检测</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;font-size:17px;line-height:1.7;color:#1a1a1a;max-width:840px;margin:0 auto;padding:48px 24px 120px;background:#fdfdfd}
+  h1{font-size:2rem;font-weight:700;margin-bottom:.2em;letter-spacing:-.02em;color:#111}
+  h2{font-size:1.3rem;font-weight:600;margin:2.2em 0 .6em;color:#222;border-bottom:2px solid #e9ecef;padding-bottom:.3em}
+  h3{font-size:1.08rem;font-weight:600;margin:1.5em 0 .4em;color:#333}
+  p{margin-bottom:.9em}
+  ul,ol{margin:0 0 1em 1.5em}li{margin-bottom:.35em}
+  code{font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;font-size:.88em;background:#f1f3f5;padding:.1em .35em;border-radius:3px}
+  pre{font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;font-size:.82rem;line-height:1.55;background:#1e1e2e;color:#cdd6f4;padding:20px 24px;border-radius:8px;overflow-x:auto;margin:1.2em 0}
+  pre .kw{color:#cba6f7}pre .fn{color:#89b4fa}pre .num{color:#fab387}pre .cmt{color:#6c7086;font-style:italic}pre .type{color:#f9e2af}pre .pp{color:#f38ba8}pre .str{color:#a6e3a1}
+  .box{padding:16px 22px;margin:1.2em 0;border-radius:6px;font-size:.94em}
+  .box-i{background:#fff9db;border-left:4px solid #f08c00}
+  .box-d{background:#e7f5ff;border-left:4px solid #1971c2}
+  .box-e{background:#fff0f0;border-left:4px solid #c92a2a}
+  .box-g{background:#ebfbee;border-left:4px solid #2b8a3e}
+  table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9em}
+  th,td{border:1px solid #dee2e6;padding:7px 12px;text-align:left}
+  th{background:#f1f3f5;font-weight:600}
+  .quiz{background:#f0f4ff;border:1px solid #bac8ff;border-radius:8px;padding:22px;margin:2em 0}
+  .quiz h3{margin-top:0;color:#364fc7}
+  .quiz label{display:block;margin:5px 0;padding:7px 10px;border-radius:4px;cursor:pointer}
+  .quiz label:hover{background:#dbe4ff}
+  .quiz input[type="radio"]{margin-right:8px}
+  .quiz button{margin-top:10px;background:#364fc7;color:#fff;border:none;padding:9px 22px;border-radius:5px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .quiz button:hover{background:#2b3fa8}
+  .quiz .fb{margin-top:10px;font-weight:600;min-height:1.3em}
+  .quiz .fb.correct{color:#2b8a3e}.quiz .fb.incorrect{color:#c92a2a}
+  .nav{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid #dee2e6;font-size:.9em}
+  .nav a{color:#364fc7;text-decoration:none}.nav a:hover{text-decoration:underline}
+  .tag{display:inline-block;background:#e9ecef;color:#495057;padding:2px 10px;border-radius:12px;font-size:.8rem;font-weight:500;margin-right:6px}
+  .toc{background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;padding:16px 24px;margin:1.5em 0;font-size:.93em}.toc ol{margin-bottom:0}
+  .proof{background:#f3f0ff;border:2px solid #9775fa;border-radius:8px;padding:20px 24px;margin:1.4em 0}
+  .proof h3{margin-top:0;color:#6741d9}
+  @media print{body{font-size:12px;color:#000}pre{background:#f8f9fa;color:#000;border:1px solid #ccc}.quiz,.nav{display:none}}
+</style>
+</head>
+<body>
+
+<h1>Lesson 0023 — 拓扑排序与环检测</h1>
+
+<p><span class="tag">有向图</span><span class="tag">拓扑排序</span><span class="tag">环检测</span><span class="tag">Kahn</span><span class="tag">DFS</span><span class="tag">3 题</span></p>
+
+<div class="toc">
+<strong>📑 本课目录</strong>
+<ol>
+  <li><a href="#s1">拓扑排序：DAG 的线性化</a></li>
+  <li><a href="#s2">Kahn 算法（BFS 版）：入度驱动</a></li>
+  <li><a href="#s3">环检测：有向图 vs 无向图</a></li>
+  <li><a href="#s4">题 1：课程表 I — 环检测</a></li>
+  <li><a href="#s5">题 2：课程表 II — 输出拓扑序</a></li>
+  <li><a href="#s6">题 3：除法求值 — 带权图的 DFS/BFS</a></li>
+  <li><a href="#s7">拓扑排序 vs DFS 后序遍历</a></li>
+  <li><a href="#s8">测验</a></li>
+</ol>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s1">1. 拓扑排序：DAG 的线性化</h2>
+
+<p><strong>拓扑排序（Topological Sort）</strong>：给定一个有向图，输出一个节点序列，使得<strong>每条边的起点都在终点之前</strong>。</p>
+
+<p>拓扑排序存在的<strong>充要条件</strong>：图是 <strong>DAG（有向无环图）</strong>。如果有环，拓扑排序不存在。</p>
+
+<div class="box box-d">
+<strong>直觉：</strong>可以想象成一堆课程的前置依赖——"计算机组成"需要先学"数字逻辑"，"操作系统"需要先学"计算机组成"。拓扑排序就是排出一个<strong>合理的选课顺序</strong>。
+</div>
+
+<table>
+<tr><th></th><th>Kahn 算法（BFS 版）</th><th>DFS 后序逆序</th></tr>
+<tr><td><strong>思路</strong></td><td>不断移除入度为 0 的节点</td><td>DFS 后序遍历，最后逆序</td></tr>
+<tr><td><strong>数据结构</strong></td><td>队列 + 入度数组</td><td>递归栈 + visited[] 三态</td></tr>
+<tr><td><strong>环检测</strong></td><td>结果集 size &lt; V → 有环</td><td>DFS 中遇到「正在访问」→ 有环</td></tr>
+<tr><td><strong>代码风格</strong></td><td>迭代，无递归风险</td><td>递归，深度大时可能栈溢出</td></tr>
+</table>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s2">2. Kahn 算法（BFS 版）：入度驱动</h2>
+
+<pre><span class="cmt">// 拓扑排序标准模板（Kahn 算法）</span>
+vector&lt;<span class="kw">int</span>&gt; <span class="fn">topologicalSort</span>(<span class="kw">int</span> n, vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt;&amp; edges) {
+    vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt; g(n);
+    vector&lt;<span class="kw">int</span>&gt; indeg(n, <span class="num">0</span>);
+
+    <span class="cmt">// 建图 + 统计入度</span>
+    <span class="kw">for</span> (<span class="kw">auto</span>&amp; e : edges) {
+        <span class="kw">int</span> u = e[<span class="num">0</span>], v = e[<span class="num">1</span>];
+        g[u].<span class="fn">push_back</span>(v);
+        indeg[v]++;
+    }
+
+    <span class="cmt">// 初始：所有入度为 0 的节点入队</span>
+    queue&lt;<span class="kw">int</span>&gt; q;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+        <span class="kw">if</span> (indeg[i] == <span class="num">0</span>) q.<span class="fn">push</span>(i);
+
+    <span class="cmt">// 不断移除队首，将其后继的入度 -1</span>
+    vector&lt;<span class="kw">int</span>&gt; res;
+    <span class="kw">while</span> (!q.empty()) {
+        <span class="kw">int</span> u = q.front(); q.pop();
+        res.<span class="fn">push_back</span>(u);
+        <span class="kw">for</span> (<span class="kw">int</span> v : g[u]) {
+            <span class="kw">if</span> (--indeg[v] == <span class="num">0</span>)
+                q.<span class="fn">push</span>(v);
+        }
+    }
+
+    <span class="cmt">// 结果长度 &lt; n → 有环（拓扑排序不存在）</span>
+    <span class="kw">return</span> res.<span class="fn">size</span>() == n ? res : vector&lt;<span class="kw">int</span>&gt;();
+}</pre>
+
+<div class="proof">
+<h3>✅ Kahn 算法的正确性证明（三段式）</h3>
+<p><strong>① 不变式：</strong>队列中的节点都是当前「入度为 0」的节点——它们没有未完成的前驱。<br>
+<strong>② 初始成立：</strong>刚开始时，所有入度 0 的节点入队。<br>
+<strong>③ 循环保持：</strong>每次出队 u 加入结果，它所有的后继 v 的入度减 1。如果 v 的入度变为 0 → v 的所有前驱都已被处理 → v 可以安全加入结果。<br>
+<strong>⟹ 如果所有节点都进了结果 → 顺序合法。如果没进完 → 还有节点入度 > 0 → 这些节点构成环。</strong></p>
+</div>
+
+<div class="box box-i">
+<strong>为什么用队列？</strong>Kahn 算法不需要队列——用任何容器（vector、set、stack）都行，因为拓扑序不唯一。<strong>用队列给出的是「字典序优先」的版本之一</strong><br>
+如果要输出<strong>字典序最小</strong>的拓扑序 → 把 queue 换成 priority_queue (min-heap)。（LeetCode 269 · 火星词典 需要这个变种）
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s3">3. 环检测：有向图 vs 无向图</h2>
+
+<p>环检测是拓扑排序的孪生问题——有环 = 拓扑排序不存在。但<strong>有向图和无向图的环检测方法不同</strong>。</p>
+
+<h3>有向图环检测（三色标记法）</h3>
+
+<pre><span class="cmt">// DFS 三色标记：0=未访问, 1=正在访问, 2=已访问完</span>
+<span class="kw">bool</span> <span class="fn">hasCycle</span>(vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt;&amp; g) {
+    <span class="kw">int</span> n = g.size();
+    vector&lt;<span class="kw">int</span>&gt; state(n, <span class="num">0</span>);
+    <span class="kw">function</span>&lt;<span class="kw">bool</span>(<span class="kw">int</span>)&gt; dfs = [&amp;](<span class="kw">int</span> u) {
+        state[u] = <span class="num">1</span>;  <span class="cmt">// 正在访问</span>
+        <span class="kw">for</span> (<span class="kw">int</span> v : g[u]) {
+            <span class="kw">if</span> (state[v] == <span class="num">1</span>) <span class="kw">return</span> <span class="kw">true</span>;  <span class="cmt">// ⚡ 遇到「正在访问」= 环！</span>
+            <span class="kw">if</span> (state[v] == <span class="num">0</span> &amp;&amp; <span class="fn">dfs</span>(v))
+                <span class="kw">return</span> <span class="kw">true</span>;
+        }
+        state[u] = <span class="num">2</span>;  <span class="cmt">// 访问完成</span>
+        <span class="kw">return</span> <span class="kw">false</span>;
+    };
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+        <span class="kw">if</span> (state[i] == <span class="num">0</span> &amp;&amp; <span class="fn">dfs</span>(i)) <span class="kw">return</span> <span class="kw">true</span>;
+    <span class="kw">return</span> <span class="kw">false</span>;
+}</pre>
+
+<h3>无向图环检测</h3>
+
+<pre><span class="cmt">// 无向图：DFS 时记录 parent。遇到 visited 且不是 parent → 有环</span>
+<span class="kw">bool</span> <span class="fn">hasCycleUndirected</span>(vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt;&amp; g) {
+    <span class="kw">int</span> n = g.size();
+    vector&lt;<span class="kw">bool</span>&gt; vis(n, <span class="kw">false</span>);
+    <span class="kw">function</span>&lt;<span class="kw">bool</span>(<span class="kw">int</span>,<span class="kw">int</span>)&gt; dfs = [&amp;](<span class="kw">int</span> u, <span class="kw">int</span> parent) {
+        vis[u] = <span class="kw">true</span>;
+        <span class="kw">for</span> (<span class="kw">int</span> v : g[u]) {
+            <span class="kw">if</span> (!vis[v]) { <span class="kw">if</span> (<span class="fn">dfs</span>(v, u)) <span class="kw">return</span> <span class="kw">true</span>; }
+            <span class="kw">else</span> <span class="kw">if</span> (v != parent) <span class="kw">return</span> <span class="kw">true</span>;  <span class="cmt">// 遇到已访问且不是父节点 = 环</span>
+        }
+        <span class="kw">return</span> <span class="kw">false</span>;
+    };
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+        <span class="kw">if</span> (!vis[i] &amp;&amp; <span class="fn">dfs</span>(i, <span class="num">-1</span>)) <span class="kw">return</span> <span class="kw">true</span>;
+    <span class="kw">return</span> <span class="kw">false</span>;
+}</pre>
+
+<table>
+<tr><th></th><th>有向图</th><th>无向图</th></tr>
+<tr><td><strong>环检测方法</strong></td><td>三色标记法（DFS 遇到 state=1）</td><td>parent 法（DFS 遇到 visited 且不是 parent）</td></tr>
+<tr><td><strong>Kahn 也能检测</strong></td><td>✅ 结果 size &lt; V</td><td>❌ Kahn 只适用于有向图</td></tr>
+<tr><td><strong>并查集（0024 内容）</strong></td><td>❌ 不适用</td><td>✅ 最简便的方法</td></tr>
+</table>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s4">4. 题 1：课程表 I — 环检测</h2>
+
+<p><strong>LeetCode 207 · 难度：🟡 中等</strong></p>
+
+<p>numCourses 门课，prerequisites[i] = [aᵢ, bᵢ] 表示学 aᵢ 前必须先学 bᵢ。判断是否可能完成所有课程（= 图是否有环）。</p>
+
+<div class="box box-d">
+<strong>建模：</strong>每门课是一个节点，先修关系是一条边 bᵢ → aᵢ（先学 bᵢ 才能学 aᵢ）。有向图有环 → 不可能。Kahn 算法 和 DFS 三色标记都可以。
+</div>
+
+<pre><span class="cmt">// Kahn 算法判断是否有环</span>
+<span class="kw">bool</span> <span class="fn">canFinish</span>(<span class="kw">int</span> n, vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt;&amp; prerequisites) {
+    vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt; g(n);
+    vector&lt;<span class="kw">int</span>&gt; indeg(n, <span class="num">0</span>);
+
+    <span class="kw">for</span> (<span class="kw">auto</span>&amp; p : prerequisites) {
+        <span class="kw">int</span> a = p[<span class="num">0</span>], b = p[<span class="num">1</span>];
+        g[b].<span class="fn">push_back</span>(a);   <span class="cmt">// b → a</span>
+        indeg[a]++;
+    }
+
+    queue&lt;<span class="kw">int</span>&gt; q;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+        <span class="kw">if</span> (indeg[i] == <span class="num">0</span>) q.<span class="fn">push</span>(i);
+
+    <span class="kw">int</span> cnt = <span class="num">0</span>;
+    <span class="kw">while</span> (!q.empty()) {
+        <span class="kw">int</span> u = q.front(); q.pop();
+        cnt++;
+        <span class="kw">for</span> (<span class="kw">int</span> v : g[u])
+            <span class="kw">if</span> (--indeg[v] == <span class="num">0</span>) q.<span class="fn">push</span>(v);
+    }
+    <span class="kw">return</span> cnt == n;  <span class="cmt">// 全部入队 = 无环</span>
+}</pre>
+
+<div class="box box-g">
+<strong>DFS 三色版本（面试备选）：</strong>上面的数字如果是 n=2000，DFS 递归深度最多 2000（一条长依赖链），栈安全。如果面试官问「还能怎么做」，给出三色标记法的 DFS 版本加分。<br>
+<strong>一句口诀：课程表 I → K ahn 数个数，课程表 II → K ahn 存序列。</strong>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s5">5. 题 2：课程表 II — 输出拓扑序</h2>
+
+<p><strong>LeetCode 210 · 难度：🟡 中等</strong></p>
+
+<p>和课程表 I 完全一样，但不仅要判断「是否可能」，还要输出<strong>任意一个合理的选课顺序</strong>。</p>
+
+<pre><span class="cmt">// 和课程表 I 几乎一样，多一个 res 存结果</span>
+vector&lt;<span class="kw">int</span>&gt; <span class="fn">findOrder</span>(<span class="kw">int</span> n, vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt;&amp; prerequisites) {
+    vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt; g(n);
+    vector&lt;<span class="kw">int</span>&gt; indeg(n, <span class="num">0</span>);
+
+    <span class="kw">for</span> (<span class="kw">auto</span>&amp; p : prerequisites) {
+        <span class="kw">int</span> a = p[<span class="num">0</span>], b = p[<span class="num">1</span>];
+        g[b].<span class="fn">push_back</span>(a);
+        indeg[a]++;
+    }
+
+    queue&lt;<span class="kw">int</span>&gt; q;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+        <span class="kw">if</span> (indeg[i] == <span class="num">0</span>) q.<span class="fn">push</span>(i);
+
+    vector&lt;<span class="kw">int</span>&gt; res;
+    <span class="kw">while</span> (!q.empty()) {
+        <span class="kw">int</span> u = q.front(); q.pop();
+        res.<span class="fn">push_back</span>(u);     <span class="cmt">// 唯一区别：记录出队顺序</span>
+        <span class="kw">for</span> (<span class="kw">int</span> v : g[u])
+            <span class="kw">if</span> (--indeg[v] == <span class="num">0</span>) q.<span class="fn">push</span>(v);
+    }
+
+    <span class="kw">if</span> (res.<span class="fn">size</span>() != n) <span class="kw">return</span> {};  <span class="cmt">// 有环</span>
+    <span class="kw">return</span> res;
+}</pre>
+
+<div class="box box-i">
+<strong>题目变形：</strong>如果要求输出<strong>字典序最小</strong>的拓扑序怎么办？把 queue 换成 priority_queue&lt;int, vector&lt;int&gt;, greater&lt;int&gt;&gt;（小根堆）。每次选当前入度为 0 的节点中编号最小的。<br>
+这是 LeetCode 269 · 火星词典（Hard）的前置知识——它需要先建图再用 Kahn + 字典序最小。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s6">6. 题 3：除法求值 — 带权图的 DFS/BFS</h2>
+
+<p><strong>LeetCode 399 · 难度：🟡 中等</strong></p>
+
+<p>已知 a / b = 2.0, b / c = 3.0 … 求 a / c, a / e 等的值。</p>
+
+<div class="box box-d">
+<strong>建图思路：</strong>每个变量是节点，除法关系是<strong>带权有向边</strong>。<br>
+a / b = 2.0 → 建两条边：a → b 权重 2.0（a = 2.0 × b），b → a 权重 0.5。<br>
+求 a / c = a 到 c 路径上权重的<strong>乘积</strong>：<code>w(a→b) × w(b→c)</code>。
+</div>
+
+<pre><span class="cmt">// DFS 带权图的路径乘积</span>
+<span class="kw">using</span> Node = pair&lt;<span class="kw">int</span>, <span class="kw">double</span>&gt;;  <span class="cmt">// (邻接节点, 权重)</span>
+
+vector&lt;<span class="kw">double</span>&gt; <span class="fn">calcEquation</span>(
+    vector&lt;vector&lt;string&gt;&gt;&amp; equations,
+    vector&lt;<span class="kw">double</span>&gt;&amp; values,
+    vector&lt;vector&lt;string&gt;&gt;&amp; queries)
+{
+    <span class="cmt">// 给变量名分配整数 id</span>
+    unordered_map&lt;string, <span class="kw">int</span>&gt; id;
+    <span class="kw">int</span> n = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">auto</span>&amp; e : equations) {
+        <span class="kw">if</span> (!id.<span class="fn">count</span>(e[<span class="num">0</span>])) id[e[<span class="num">0</span>]] = n++;
+        <span class="kw">if</span> (!id.<span class="fn">count</span>(e[<span class="num">1</span>])) id[e[<span class="num">1</span>]] = n++;
+    }
+
+    <span class="cmt">// 建带权无向图（双向边，权重互为倒数）</span>
+    vector&lt;vector&lt;Node&gt;&gt; g(n);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; equations.<span class="fn">size</span>(); i++) {
+        <span class="kw">int</span> u = id[equations[i][<span class="num">0</span>]], v = id[equations[i][<span class="num">1</span>]];
+        <span class="kw">double</span> w = values[i];
+        g[u].<span class="fn">push_back</span>({v, w});
+        g[v].<span class="fn">push_back</span>({u, <span class="num">1.0</span> / w});
+    }
+
+    <span class="cmt">// DFS 求从 u 到 v 的路径权重乘积</span>
+    <span class="kw">function</span>&lt;<span class="kw">double</span>(<span class="kw">int</span>,<span class="kw">int</span>,vector&lt;<span class="kw">bool</span>&gt;&amp;)&gt; dfs =
+        [&amp;](<span class="kw">int</span> u, <span class="kw">int</span> target, vector&lt;<span class="kw">bool</span>&gt;&amp; vis) -&gt; <span class="kw">double</span> {
+        <span class="kw">if</span> (u == target) <span class="kw">return</span> <span class="num">1.0</span>;
+        vis[u] = <span class="kw">true</span>;
+        <span class="kw">for</span> (<span class="kw">auto</span>&amp; [v, w] : g[u]) {
+            <span class="kw">if</span> (!vis[v]) {
+                <span class="kw">double</span> t = <span class="fn">dfs</span>(v, target, vis);
+                <span class="kw">if</span> (t &gt;= <span class="num">0</span>) <span class="kw">return</span> w * t;  <span class="cmt">// 找到路径</span>
+            }
+        }
+        <span class="kw">return</span> <span class="num">-1.0</span>;  <span class="cmt">// 不可达</span>
+    };
+
+    vector&lt;<span class="kw">double</span>&gt; ans;
+    <span class="kw">for</span> (<span class="kw">auto</span>&amp; q : queries) {
+        <span class="kw">if</span> (!id.<span class="fn">count</span>(q[<span class="num">0</span>]) || !id.<span class="fn">count</span>(q[<span class="num">1</span>])) {
+            ans.<span class="fn">push_back</span>(<span class="num">-1.0</span>);
+        } <span class="kw">else</span> {
+            vector&lt;<span class="kw">bool</span>&gt; vis(n, <span class="kw">false</span>);
+            ans.<span class="fn">push_back</span>(<span class="fn">dfs</span>(id[q[<span class="num">0</span>]], id[q[<span class="num">1</span>]], vis));
+        }
+    }
+    <span class="kw">return</span> ans;
+}</pre>
+
+<div class="box box-i">
+<strong>除法求值的三种解法（从易到难）：</strong><br>
+① DFS / BFS（本课）— 每次查询单独遍历，O(N × (V+E))<br>
+② Floyd / 多源最短路 — 先算好所有对之间的值，O(V³)，但查询 O(1)<br>
+③ 并查集带权（0024 内容）— 合并时将权重关联到根，O(α(N)) 近似常数<br>
+面试中 DFS/BFS 足够，追问优化再提并查集。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s7">7. 拓扑排序 vs DFS 后序遍历</h2>
+
+<p>DFS 后序逆序也能得到拓扑排序——很多资料只给这个版本。但它们的能力不同：</p>
+
+<pre><span class="cmt">// DFS 后序逆序求拓扑排序（适合链长已知的场景）</span>
+<span class="kw">void</span> <span class="fn">dfs</span>(<span class="kw">int</span> u, vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt;&amp; g,
+         vector&lt;<span class="kw">bool</span>&gt;&amp; vis, vector&lt;<span class="kw">int</span>&gt;&amp; res) {
+    vis[u] = <span class="kw">true</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> v : g[u])
+        <span class="kw">if</span> (!vis[v]) <span class="fn">dfs</span>(v, g, vis, res);
+    res.<span class="fn">push_back</span>(u);  <span class="cmt">// 后序：子节点处理完后再加入</span>
+}
+<span class="cmt">// 调用后 reverse(res.begin(), res.end()) → 拓扑序</span></pre>
+
+<table>
+<tr><th></th><th>Kahn（BFS）</th><th>DFS 后序逆序</th></tr>
+<tr><td><strong>环检测</strong></td><td>✅ 结果长度 &lt; V</td><td>✅ 需要加三色标记</td></tr>
+<tr><td><strong>输出顺序</strong></td><td>按「前驱都处理完」顺序</td><td>按「后继都处理完」逆序</td></tr>
+<tr><td><strong>偏好</strong></td><td>面试写这个——迭代无递归</td><td>代码更短但递归有栈风险</td></tr>
+</table>
+
+<div class="box box-g">
+<strong>面试建议：</strong>先写 Kahn 算法（迭代，入度驱动），然后在面试官追问「还能怎么做」时写出 DFS 后序逆序的版本。Kahn 的另一个优势是<strong>天然支持动态添加边</strong>——入度实时更新即可。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s8">8. 测验</h2>
+
+<div class="quiz">
+<h3>🔍 自测题</h3>
+
+<p><strong>Q1（拓扑排序）</strong>：以下哪个条件是拓扑排序存在的充要条件？</p>
+<label><input type="radio" name="q1" value="a"> A. 图是连通图</label>
+<label><input type="radio" name="q1" value="b"> B. 图是有向无环图（DAG）</label>
+<label><input type="radio" name="q1" value="c"> C. 图是无向图</label>
+<label><input type="radio" name="q1" value="d"> D. 图有至少一个入度为 0 的节点</label>
+<button onclick="checkQuiz('q1','b','B. 只有 DAG 才有拓扑排序。入度 0 节点是必要非充分——有环图也可能有入度 0 节点。')">检查</button>
+<div class="fb" id="fbq1"></div>
+
+<p><strong>Q2（环检测）</strong>：有向图 DFS 环检测用三态（0/1/2），遇到以下哪种状态说明有环？</p>
+<label><input type="radio" name="q2" value="a"> A. state[v] == 0（未访问）</label>
+<label><input type="radio" name="q2" value="b"> B. state[v] == 1（正在访问）</label>
+<label><input type="radio" name="q2" value="c"> C. state[v] == 2（已访问完）</label>
+<button onclick="checkQuiz('q2','b','B. 遇到「正在访问」= 从 u 可以绕一圈回到 u 的某个祖先 = 环。已访问完是安全的——说明它的子树都已处理完。')">检查</button>
+<div class="fb" id="fbq2"></div>
+
+<p><strong>Q3（Kahn 算法）</strong>：Kahn 算法结束后还有节点没入队，这说明什么？</p>
+<label><input type="radio" name="q3" value="a"> A. 图不连通</label>
+<label><input type="radio" name="q3" value="b"> B. 存在环（这些节点的入度始终 &gt; 0）</label>
+<label><input type="radio" name="q3" value="c"> C. 输入边数不够</label>
+<button onclick="checkQuiz('q3','b','B. 所有入度 &gt; 0 的节点构成环——它们互相依赖，永远无法入队。')">检查</button>
+<div class="fb" id="fbq3"></div>
+
+<p><strong>Q4（除法求值）</strong>：a / b = 2.0 在图中对应两条边，a→b 权重 2.0，b→a 权重多少？</p>
+<label><input type="radio" name="q4" value="a"> A. 1.0</label>
+<label><input type="radio" name="q4" value="b"> B. 0.5</label>
+<label><input type="radio" name="q4" value="c"> C. -2.0</label>
+<button onclick="checkQuiz('q4','b','B. 0.5 = 1/2.0。如果 a / b = 2，则 b / a = 0.5。')">检查</button>
+<div class="fb" id="fbq4"></div>
+
+<p><strong>Q5（课程表变种）</strong>：如果要求输出字典序最小的拓扑序，Kahn 算法的队列应改成什么？</p>
+<label><input type="radio" name="q5" value="a"> A. stack</label>
+<label><input type="radio" name="q5" value="b"> B. priority_queue&lt;int, vector&lt;int&gt;, greater&lt;int&gt;&gt;</label>
+<label><input type="radio" name="q5" value="c"> C. deque</label>
+<button onclick="checkQuiz('q5','b','B. 小根堆保证每次取出的是当前入度为 0 且编号最小的节点。')">检查</button>
+<div class="fb" id="fbq5"></div>
+</div>
+
+<div class="nav">
+  <a href="./0022-graph-traversal-dfs-bfs.html">← 0022 图遍历</a>
+  <a href="./0024-union-find.html">0024 并查集 →</a>
+</div>
+
+<script>
+function checkQuiz(q, ans, explanation) {
+    const fb = document.getElementById('fb' + q);
+    const selected = document.querySelector(`input[name="${q}"]:checked`);
+    if (!selected) { fb.innerHTML = '⚠️ 请先选择一个选项'; fb.className = 'fb incorrect'; return; }
+    if (selected.value === ans) {
+        fb.innerHTML = '✅ ' + explanation;
+        fb.className = 'fb correct';
+    } else {
+        fb.innerHTML = '❌ 再想想。' + explanation;
+        fb.className = 'fb incorrect';
+    }
+}
+</script>
+
+</body>
+</html>

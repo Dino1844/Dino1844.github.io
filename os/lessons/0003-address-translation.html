@@ -254,6 +254,41 @@ window.MathJax = {
 
 <p>为什么是四级？48 bit 虚拟地址，minus 12 bit offset = 36 bit VPN。36/9 = 4 级。如果 57-bit（5-level paging，Intel 新增）：minus 12 = 45，45/9 = 5 级。Linux 的 `CONFIG_5LEVEL_PAGING` 支持这个。</p>
 
+<div class="derivation">
+  <h4>交互式四级页表 Walk</h4>
+  <p style="font-size:0.88rem;">虚拟地址 <code>0x00007F4A3B1C2000</code> 的四级分解——点击每一步看翻译过程。</p>
+  <div style="display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; margin:0.8rem 0;">
+    <button onclick="ptStep(1)" style="padding:0.3rem 0.7rem; border:1px solid var(--border); background:var(--code-bg); border-radius:4px; cursor:pointer;">① CR3 → PGD</button>
+    <button onclick="ptStep(2)" style="padding:0.3rem 0.7rem; border:1px solid var(--border); background:var(--code-bg); border-radius:4px; cursor:pointer;">② PGD[0] → PUD</button>
+    <button onclick="ptStep(3)" style="padding:0.3rem 0.7rem; border:1px solid var(--border); background:var(--code-bg); border-radius:4px; cursor:pointer;">③ PUD[63] → PMD</button>
+    <button onclick="ptStep(4)" style="padding:0.3rem 0.7rem; border:1px solid var(--border); background:var(--code-bg); border-radius:4px; cursor:pointer;">④ PMD[330] → PTE</button>
+    <button onclick="ptStep(5)" style="padding:0.3rem 0.7rem; border:1px solid var(--border); background:var(--code-bg); border-radius:4px; cursor:pointer;">⑤ PFN + offset</button>
+    <button onclick="ptReset()" style="padding:0.3rem 0.7rem; border:1px solid var(--border); background:#fce8e8; border-radius:4px; cursor:pointer;">↺ 重置</button>
+  </div>
+  <div id="ptDisplay" style="background:#fafaf7; border:1px solid var(--border); border-radius:6px; padding:0.8rem 1rem; font-size:0.88rem; min-height:3.5rem;">
+    <span style="color:var(--muted);">点击上方按钮，追踪一次四级页表 walk。</span>
+  </div>
+</div>
+
+<script>
+const ptSteps = [
+  "读 CR3 寄存器 → 得到 PGD（页全局目录）的物理地址。PGD 对应 VA 的 bit[47:39] = 000000000 = <strong>索引 0</strong>。读内存中 PGD[0] 的 PTE → 得到 PUD 的物理地址。",
+  "PGD[0] 的 PTE 指向 PUD 页。以 VA 的 bit[38:30] = 0000111111 = <strong>索引 63</strong> 查 PUD[63]。如果 Present=0 → <strong>在此缺页</strong>（这 1GB 区域未映射）。假设 Present=1 → 得到 PMD 页的物理地址。",
+  "PUD[63] 的 PTE 指向 PMD 页。以 VA 的 bit[29:21] = 101001010 = <strong>索引 330</strong> 查 PMD[330]。假设 Present=1 → 得到 PTE 页的物理地址。",
+  "PMD[330] 的 PTE 指向 PTE 页（最后一级）。以 VA 的 bit[20:12] = 0011101100 = <strong>索引 236</strong> 查 PTE[236]。Present=1 → 取出 <strong>PFN（物理帧号）</strong>。",
+  "物理地址 = PFN × 4096 + offset(bit[11:0])。offset 直接复制到物理地址低位。<strong>翻译完成！</strong>整条链的结果被 TLB 缓存。如果您未来再访问同一个虚拟页——TLB 命中，无需走这 5 步。"
+];
+
+function ptStep(n) {
+  const d = document.getElementById('ptDisplay');
+  d.innerHTML = '<strong>Step ' + n + ':</strong> ' + ptSteps[n-1];
+}
+function ptReset() {
+  const d = document.getElementById('ptDisplay');
+  d.innerHTML = '<span style="color:var(--muted);">点击上方按钮，追踪一次四级页表 walk。</span>';
+}
+</script>
+
 <p><strong>多级页表是"空间换时间（TLB miss 走多级）"。TLB 是"用硬件缓存再把时间换回来"。</strong>这是 OS 设计里反复出现的 tradeoff 螺旋。</p>
 
 <!-- ============================================================ -->
@@ -270,7 +305,56 @@ window.MathJax = {
 </div>
 
 <!-- ============================================================ -->
-<h2 id="s9">9. 推导与自测</h2>
+<h2 id="s9">9. 自测题</h2>
+
+<p style="color:var(--muted); font-size:0.9rem;">5 题覆盖本课核心点。做后如果某题答错，回到对应节重读。</p>
+
+<div class="quiz">
+
+<div class="quiz-question"><h4>Q1（§2 基址-界限）· 基址-界限最大的问题是？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。','incorrect-fb')"><label>A. 硬件的寄存器开销太大</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','对。堆和栈之间的大量未用空间也必须占物理内存。','correct-fb')"><label>B. 内部碎片——堆栈之间的未用空间占物理内存</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。','incorrect-fb')"><label>C. 不支持动态重定位</label></div>
+</div>
+<div class="quiz-feedback" id="q1fb"></div></div>
+
+<div class="quiz-question"><h4>Q2（§4 分页）· 分页相对分段的核心优势是？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。外部碎片是分页的核心优势——所有帧大小一样。','incorrect-fb')"><label>A. 减少内部碎片</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','对。所有帧大小相等，任意空闲帧都能分配，不产生外部碎片。','correct-fb')"><label>B. 消除外部碎片</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>C. 页表比段表小</label></div>
+</div>
+<div class="quiz-feedback" id="q2fb"></div></div>
+
+<div class="quiz-question"><h4>Q3（§5 PTE）· PTE 的 A（Accessed）bit 是谁置的？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。A bit 是硬件 MMU 自动置的。','incorrect-fb')"><label>A. OS 的缺页处理程序</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','对。MMU 硬件在每次页表 walk 找到该页时自动置 1。','correct-fb')"><label>B. 硬件 MMU 在页表 walk 时自动置 1</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>C. 应用程序通过系统调用设置</label></div>
+</div>
+<div class="quiz-feedback" id="q3fb"></div></div>
+
+<div class="quiz-question"><h4>Q4（§6 TLB）· 上下文切换时写 CR3 为什么导致 TLB 全刷？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。','incorrect-fb')"><label>A. CR3 是所有线程共享的</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','对。TLB 条目存的是虚拟→物理的映射，不包含进程 ID。换页表 = 老的映射全失效（除非 G=1）。','correct-fb')"><label>B. TLB 条目不包含进程 ID——新进程的 VPN 可能映射到不同的物理页</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。','incorrect-fb')"><label>C. 硬件设计缺陷</label></div>
+</div>
+<div class="quiz-feedback" id="q4fb"></div></div>
+
+<div class="quiz-question"><h4>Q5（§7 多级页表）· 多级页表解决的什么问题？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。多级反而增加未命中延迟。','incorrect-fb')"><label>A. 减少 TLB miss 次数</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','对。不为未映射的区域分配页表——只分配有映射的子树，大幅节省空间。','correct-fb')"><label>B. 减少页表的内存占用——不为未映射区域分配中间页表</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。','incorrect-fb')"><label>C. 加速地址翻译</label></div>
+</div>
+<div class="quiz-feedback" id="q5fb"></div></div>
+
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s10">10. 推导与自测</h2>
 
 <div class="problem">
   <div class="ptitle">P1 · 页表大小计算 <span class="plevel l1">L1 基础</span></div>

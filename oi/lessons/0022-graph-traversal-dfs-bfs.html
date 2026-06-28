@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 0022 — 图遍历：DFS/BFS 模板与连通性</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;font-size:17px;line-height:1.7;color:#1a1a1a;max-width:840px;margin:0 auto;padding:48px 24px 120px;background:#fdfdfd}
+  h1{font-size:2rem;font-weight:700;margin-bottom:.2em;letter-spacing:-.02em;color:#111}
+  h2{font-size:1.3rem;font-weight:600;margin:2.2em 0 .6em;color:#222;border-bottom:2px solid #e9ecef;padding-bottom:.3em}
+  h3{font-size:1.08rem;font-weight:600;margin:1.5em 0 .4em;color:#333}
+  p{margin-bottom:.9em}
+  ul,ol{margin:0 0 1em 1.5em}li{margin-bottom:.35em}
+  code{font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;font-size:.88em;background:#f1f3f5;padding:.1em .35em;border-radius:3px}
+  pre{font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;font-size:.82rem;line-height:1.55;background:#1e1e2e;color:#cdd6f4;padding:20px 24px;border-radius:8px;overflow-x:auto;margin:1.2em 0}
+  pre .kw{color:#cba6f7}pre .fn{color:#89b4fa}pre .num{color:#fab387}pre .cmt{color:#6c7086;font-style:italic}pre .type{color:#f9e2af}pre .pp{color:#f38ba8}pre .str{color:#a6e3a1}
+  .box{padding:16px 22px;margin:1.2em 0;border-radius:6px;font-size:.94em}
+  .box-i{background:#fff9db;border-left:4px solid #f08c00}
+  .box-d{background:#e7f5ff;border-left:4px solid #1971c2}
+  .box-e{background:#fff0f0;border-left:4px solid #c92a2a}
+  .box-g{background:#ebfbee;border-left:4px solid #2b8a3e}
+  table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9em}
+  th,td{border:1px solid #dee2e6;padding:7px 12px;text-align:left}
+  th{background:#f1f3f5;font-weight:600}
+  .quiz{background:#f0f4ff;border:1px solid #bac8ff;border-radius:8px;padding:22px;margin:2em 0}
+  .quiz h3{margin-top:0;color:#364fc7}
+  .quiz label{display:block;margin:5px 0;padding:7px 10px;border-radius:4px;cursor:pointer}
+  .quiz label:hover{background:#dbe4ff}
+  .quiz input[type="radio"]{margin-right:8px}
+  .quiz button{margin-top:10px;background:#364fc7;color:#fff;border:none;padding:9px 22px;border-radius:5px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .quiz button:hover{background:#2b3fa8}
+  .quiz .fb{margin-top:10px;font-weight:600;min-height:1.3em}
+  .quiz .fb.correct{color:#2b8a3e}.quiz .fb.incorrect{color:#c92a2a}
+  .nav{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid #dee2e6;font-size:.9em}
+  .nav a{color:#364fc7;text-decoration:none}.nav a:hover{text-decoration:underline}
+  .tag{display:inline-block;background:#e9ecef;color:#495057;padding:2px 10px;border-radius:12px;font-size:.8rem;font-weight:500;margin-right:6px}
+  .toc{background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;padding:16px 24px;margin:1.5em 0;font-size:.93em}.toc ol{margin-bottom:0}
+  .proof{background:#f3f0ff;border:2px solid #9775fa;border-radius:8px;padding:20px 24px;margin:1.4em 0}
+  .proof h3{margin-top:0;color:#6741d9}
+  @media print{body{font-size:12px;color:#000}pre{background:#f8f9fa;color:#000;border:1px solid #ccc}.quiz,.nav{display:none}}
+</style>
+</head>
+<body>
+
+<h1>Lesson 0022 — 图遍历：DFS/BFS 模板与连通性</h1>
+
+<p><span class="tag">图</span><span class="tag">DFS</span><span class="tag">BFS</span><span class="tag">连通性</span><span class="tag">Trie</span><span class="tag">5 题</span></p>
+
+<div class="toc">
+<strong>📑 本课目录</strong>
+<ol>
+  <li><a href="#s1">图的表示：邻接矩阵 vs 邻接表</a></li>
+  <li><a href="#s2">DFS 模板：递归地深入探索</a></li>
+  <li><a href="#s3">BFS 模板：队列的层序扩散</a></li>
+  <li><a href="#s4">连通分量问题：DFS 染色法</a></li>
+  <li><a href="#s5">题 1：岛屿数量 — 网格图的 DFS/BFS</a></li>
+  <li><a href="#s6">题 2：被围绕的区域 — 边界连通性</a></li>
+  <li><a href="#s7">题 3：克隆图 — 图的深拷贝</a></li>
+  <li><a href="#s8">Trie（前缀树）：字符串高效查找</a></li>
+  <li><a href="#s9">题 4：Trie 实现 + 单词搜索 II</a></li>
+  <li><a href="#s10">DFS vs BFS 选择决策</a></li>
+  <li><a href="#s11">测验</a></li>
+</ol>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s1">1. 图的表示：邻接矩阵 vs 邻接表</h2>
+
+<p>在做任何图算法之前，先决定「图怎么存」。两种标准方案：</p>
+
+<table>
+<tr><th></th><th>邻接矩阵</th><th>邻接表</th></tr>
+<tr><td><strong>存储</strong></td><td><code>vector&lt;vector&lt;int&gt;&gt; g(n, vector&lt;int&gt;(n))</code></td><td><code>vector&lt;vector&lt;int&gt;&gt; g(n)</code></td></tr>
+<tr><td><strong>查边 O(1)</strong></td><td>✅ <code>g[u][v]</code></td><td>❌ 需遍历 g[u]</td></tr>
+<tr><td><strong>空间</strong></td><td>O(V²) — 稀疏图完全浪费</td><td>O(V+E) — 稀疏图优选</td></tr>
+<tr><td><strong>遍历邻居</strong></td><td>O(V) — 必须扫全行</td><td>O(deg(u)) — 只扫连出去的</td></tr>
+<tr><td><strong>适用</strong></td><td>稠密图（如 Floyd 算法）</td><td><strong>95% 的面试题</strong></td></tr>
+</table>
+
+<div class="box box-d">
+<strong>面试默认选择：邻接表。</strong>大多数 Hot 100 图题的图是稀疏图（V ~ 10⁴, E ~ 10⁴–10⁵），邻接矩阵的 O(V²) 空间直接爆内存。<br>
+C++ 模板：<code>vector&lt;vector&lt;int&gt;&gt; g(n);</code> 然后 <code>g[u].push_back(v);</code>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s2">2. DFS 模板：递归地深入探索</h2>
+
+<p>DFS（Depth-First Search）的核心是「一条路走到黑，走不动了再回头」。用递归站（系统调用栈）天然匹配。</p>
+
+<pre><span class="cmt">// 通用 DFS 模板（无向图，防重复访问）</span>
+<span class="kw">int</span> n;
+vector&lt;vector&lt;<span class="kw">int</span>&gt;&gt; g;    <span class="cmt">// 邻接表</span>
+vector&lt;<span class="kw">bool</span>&gt; vis;            <span class="cmt">// visited 标记</span>
+
+<span class="kw">void</span> <span class="fn">dfs</span>(<span class="kw">int</span> u) {
+    vis[u] = <span class="kw">true</span>;
+    <span class="cmt">// 处理节点 u</span>
+    <span class="kw">for</span> (<span class="kw">int</span> v : g[u]) {
+        <span class="kw">if</span> (!vis[v]) <span class="fn">dfs</span>(v);
+    }
+}
+
+<span class="cmt">// 全图遍历——处理不连通图</span>
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+    <span class="kw">if</span> (!vis[i]) <span class="fn">dfs</span>(i);  <span class="cmt">// 每个连通分量触发一次 dfs</span></pre>
+
+<div class="box box-i">
+<strong>关键教训：</strong>DFS 的「递归深度」= 图的最长路径长度。如果 V=10⁵ 且图是一条链，递归深度 10⁵ → 栈溢出。<br>
+面试中如果图很大，有两种选择：(1) 显式用 stack 模拟递归（手写栈），(2) 换 BFS（队列天然无递归风险）。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s3">3. BFS 模板：队列的层序扩散</h2>
+
+<p>BFS（Breadth-First Search）的核心是「按层推进，先看到的先处理」。天然用队列实现，第一次到达某节点 = 从起点到该节点的最短路径（无权图）。</p>
+
+<pre><span class="cmt">// 通用 BFS 模板（从 start 出发）</span>
+<span class="kw">int</span> <span class="fn">bfs</span>(<span class="kw">int</span> start, <span class="kw">int</span> target) {
+    queue&lt;<span class="kw">int</span>&gt; q;
+    vector&lt;<span class="kw">int</span>&gt; dist(n, <span class="num">-1</span>);   <span class="cmt">// -1 = 未访问</span>
+
+    dist[start] = <span class="num">0</span>;
+    q.push(start);
+
+    <span class="kw">while</span> (!q.empty()) {
+        <span class="kw">int</span> u = q.front(); q.pop();
+        <span class="kw">if</span> (u == target) <span class="kw">return</span> dist[u];
+        <span class="kw">for</span> (<span class="kw">int</span> v : g[u]) {
+            <span class="kw">if</span> (dist[v] == <span class="num">-1</span>) {
+                dist[v] = dist[u] + <span class="num">1</span>;
+                q.push(v);
+            }
+        }
+    }
+    <span class="kw">return</span> <span class="num">-1</span>;  <span class="cmt">// 不可达</span>
+}</pre>
+
+<div class="proof">
+<h3>✅ BFS 的正确性证明（三段式）</h3>
+<p><strong>① 不变式（Invariant）：</strong>队列中的节点按 dist 从小到大排列，且同一层的节点连续出队。</p>
+<p><strong>② 初始化：</strong>队列只有 start，dist[start]=0，不变式成立。</p>
+<p><strong>③ 保持：</strong>从 u 出队，它的邻居 v 第一次入队时 dist[v] = dist[u]+1。由于 dist[u] 是队列当前最小且队列有序，dist[v] 一定 ≥ 所有已在队列中的 dist——入队后队列仍然有序。<br>
+<strong>⟹ 第一次遇到 target 时 dist[target] 一定是最短距离。</strong></p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s4">4. 连通分量问题：DFS 染色法</h2>
+
+<p>连通分量 = 图中「彼此可达」的最大节点集合。核心操作：DFS/BFS 遍历一次就给一个连通分量「染色」（标记为同一 id）。</p>
+
+<pre><span class="cmt">// 连通分量计数（染色法）</span>
+vector&lt;<span class="kw">int</span>&gt; color(n, <span class="num">-1</span>);
+<span class="kw">int</span> comp_cnt = <span class="num">0</span>;
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+    <span class="kw">if</span> (color[i] == <span class="num">-1</span>) {
+        <span class="fn">dfs</span>(i, comp_cnt);   <span class="cmt">// 给整个连通分量染上 comp_cnt</span>
+        comp_cnt++;
+    }
+}
+<span class="cmt">// comp_cnt = 连通分量个数</span>
+<span class="cmt">// color[u] = u 所属的连通分量编号</span></pre>
+
+<p>染色法就是「岛屿数量」这类问题的理论基础——网格图中的相邻关系就是隐性图，DFS/BFS 扫一遍数出连通块数量。</p>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s5">5. 题 1：岛屿数量 — 网格图的 DFS/BFS</h2>
+
+<p><strong>LeetCode 200 · 难度：🟡 中等</strong></p>
+
+<p>'1'（陆地）和 '0'（水）组成的网格，求岛屿数量（上下左右相连的 1 算一个岛屿）。这不是传统邻接表图——但每个格子可以想象成节点，上下左右四个方向是它的边。</p>
+
+<pre><span class="cmt">// DFS 解法（网格图，用方向数组）</span>
+<span class="kw">const</span> <span class="kw">int</span> dirs[<span class="num">4</span>][<span class="num">2</span>] = {{<span class="num">-1</span>,<span class="num">0</span>},{<span class="num">1</span>,<span class="num">0</span>},{<span class="num">0</span>,<span class="num">-1</span>},{<span class="num">0</span>,<span class="num">1</span>}};
+
+<span class="kw">void</span> <span class="fn">dfs</span>(vector&lt;vector&lt;<span class="kw">char</span>&gt;&gt;&amp; g, <span class="kw">int</span> r, <span class="kw">int</span> c) {
+    <span class="kw">int</span> m = g.size(), n = g[<span class="num">0</span>].size();
+    g[r][c] = <span class="str">'0'</span>;   <span class="cmt">// 沉没——原地标记</span>
+    <span class="kw">for</span> (<span class="kw">auto</span>&amp; d : dirs) {
+        <span class="kw">int</span> nr = r + d[<span class="num">0</span>], nc = c + d[<span class="num">1</span>];
+        <span class="kw">if</span> (nr &gt;= <span class="num">0</span> &amp;&amp; nr &lt; m &amp;&amp; nc &gt;= <span class="num">0</span> &amp;&amp; nc &lt; n
+            &amp;&amp; g[nr][nc] == <span class="str">'1'</span>)
+            <span class="fn">dfs</span>(g, nr, nc);
+    }
+}
+
+<span class="kw">int</span> <span class="fn">numIslands</span>(vector&lt;vector&lt;<span class="kw">char</span>&gt;&gt;&amp; g) {
+    <span class="kw">int</span> cnt = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> r = <span class="num">0</span>; r &lt; g.size(); r++)
+        <span class="kw">for</span> (<span class="kw">int</span> c = <span class="num">0</span>; c &lt; g[<span class="num">0</span>].size(); c++)
+            <span class="kw">if</span> (g[r][c] == <span class="str">'1'</span>) { cnt++; <span class="fn">dfs</span>(g, r, c); }
+    <span class="kw">return</span> cnt;
+}</pre>
+
+<div class="box box-g">
+<strong>技巧「沉没法」：</strong>DFS 访问过的 '1' 直接改成 '0'，省掉了 visited 数组。但<strong>修改了原输入</strong>——如果面试官不允许，就用 visited 二维数组替代。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s6">6. 题 2：被围绕的区域 — 边界连通性</h2>
+
+<p><strong>LeetCode 130 · 难度：🟡 中等</strong></p>
+
+<p>给定矩阵，把被 'X' 包围的 'O' 全变成 'X'。关键洞察：<strong>边界上的 'O' 永远不会被包围</strong>，和边界连通的 'O' 也是。</p>
+
+<div class="box box-d">
+<strong>逆向思维：</strong>不直接找「被包围的 'O'」——不好找。改为找「没被包围的 'O'」（边界连通），剩下的就是被包围的。
+</div>
+
+<pre><span class="kw">void</span> <span class="fn">solve</span>(vector&lt;vector&lt;<span class="kw">char</span>&gt;&gt;&amp; board) {
+    <span class="kw">int</span> m = board.size(), n = board[<span class="num">0</span>].size();
+    <span class="kw">auto</span> dfs = [&amp;](<span class="kw">auto</span>&amp;&amp; self, <span class="kw">int</span> r, <span class="kw">int</span> c) -&gt; <span class="kw">void</span> {
+        <span class="kw">if</span> (r &lt; <span class="num">0</span> || r &gt;= m || c &lt; <span class="num">0</span> || c &gt;= n || board[r][c] != <span class="str">'O'</span>)
+            <span class="kw">return</span>;
+        board[r][c] = <span class="str">'#'</span>;  <span class="cmt">// 标记为「边界连通」</span>
+        <span class="kw">for</span> (<span class="kw">auto</span>&amp; d : dirs)
+            self(self, r + d[<span class="num">0</span>], c + d[<span class="num">1</span>]);
+    };
+    <span class="cmt">// 从四条边的 'O' 开始 DFS</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; m; i++) {
+        <span class="fn">dfs</span>(dfs, i, <span class="num">0</span>);
+        <span class="fn">dfs</span>(dfs, i, n<span class="num">-1</span>);
+    }
+    <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; n; j++) {
+        <span class="fn">dfs</span>(dfs, <span class="num">0</span>, j);
+        <span class="fn">dfs</span>(dfs, m<span class="num">-1</span>, j);
+    }
+    <span class="cmt">// 最后遍历：'#' → 'O',  'O' → 'X'</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; m; i++)
+        <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; n; j++)
+            board[i][j] = (board[i][j] == <span class="str">'#'</span>) ? <span class="str">'O'</span> : <span class="str">'X'</span>;
+}</pre>
+
+<div class="box box-i">
+<strong>「逆向思维」是图连通性问题的核心技巧。</strong>正着找「被包围的」很难，反着找「没被包围的」容易。<br>
+同模式题目：<strong>太平洋大西洋水流问题</strong>（LeetCode 417）——从四条边界分别 DFS，取交集。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s7">7. 题 3：克隆图 — 图的深拷贝</h2>
+
+<p><strong>LeetCode 133 · 难度：🟡 中等</strong></p>
+
+<p>给定一个无向连通图的引用，返回它的<strong>深拷贝</strong>（全新节点，边和原图相同）。</p>
+
+<pre><span class="cmt">// DFS + 哈希映射：old_node → new_node</span>
+unordered_map&lt;Node*, Node*&gt; visited;
+
+Node* <span class="fn">cloneGraph</span>(Node* node) {
+    <span class="kw">if</span> (!node) <span class="kw">return</span> <span class="kw">nullptr</span>;
+    <span class="kw">if</span> (visited.<span class="fn">count</span>(node))
+        <span class="kw">return</span> visited[node];   <span class="cmt">// 已经复制过了，直接返回</span>
+    Node* clone = <span class="kw">new</span> Node(node-&gt;val);
+    visited[node] = clone;
+    <span class="kw">for</span> (Node* neighbor : node-&gt;neighbors)
+        clone-&gt;neighbors.<span class="fn">push_back</span>(<span class="fn">cloneGraph</span>(neighbor));
+    <span class="kw">return</span> clone;
+}</pre>
+
+<div class="box box-d">
+<strong>为什么不用 BFS？</strong>DFS 和 BFS 都可以。DFS 更简洁——天然递归地处理每个邻居的复制。BFS 需要手动管理队列，语义上没优势。但是无向图要注意：<strong>不要在 visited 检查前递归</strong>，否则死循环（又回到自己）。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s8">8. Trie（前缀树）：字符串高效查找</h2>
+
+<p>Trie 不是图，但它<strong>本质上是一棵多叉树</strong>，遍历思路和 DFS 完全一致。Trie 的核心优势：在 O(L) 时间内完成前缀匹配（L = 字符串长度），不受数据集大小影响。</p>
+
+<pre><span class="kw">struct</span> TrieNode {
+    TrieNode* next[<span class="num">26</span>];   <span class="cmt">// 26 个小写字母</span>
+    <span class="kw">bool</span> isEnd;            <span class="cmt">// 到此是否是一个完整单词</span>
+    TrieNode() : isEnd(<span class="kw">false</span>) {
+        <span class="fn">fill</span>(next, next + <span class="num">26</span>, <span class="kw">nullptr</span>);
+    }
+};
+
+<span class="kw">class</span> <span class="type">Trie</span> {
+    TrieNode* root;
+<span class="kw">public</span>:
+    Trie() { root = <span class="kw">new</span> TrieNode(); }
+
+    <span class="kw">void</span> <span class="fn">insert</span>(string word) {
+        TrieNode* p = root;
+        <span class="kw">for</span> (<span class="kw">char</span> c : word) {
+            <span class="kw">int</span> i = c - <span class="str">'a'</span>;
+            <span class="kw">if</span> (!p-&gt;next[i]) p-&gt;next[i] = <span class="kw">new</span> TrieNode();
+            p = p-&gt;next[i];
+        }
+        p-&gt;isEnd = <span class="kw">true</span>;
+    }
+
+    <span class="kw">bool</span> <span class="fn">search</span>(string word) {       <span class="cmt">// 精确查找</span>
+        TrieNode* p = root;
+        <span class="kw">for</span> (<span class="kw">char</span> c : word) {
+            p = p-&gt;next[c - <span class="str">'a'</span>];
+            <span class="kw">if</span> (!p) <span class="kw">return</span> <span class="kw">false</span>;
+        }
+        <span class="kw">return</span> p-&gt;isEnd;
+    }
+
+    <span class="kw">bool</span> <span class="fn">startsWith</span>(string prefix) {  <span class="cmt">// 前缀查询</span>
+        TrieNode* p = root;
+        <span class="kw">for</span> (<span class="kw">char</span> c : prefix) {
+            p = p-&gt;next[c - <span class="str">'a'</span>];
+            <span class="kw">if</span> (!p) <span class="kw">return</span> <span class="kw">false</span>;
+        }
+        <span class="kw">return</span> <span class="kw">true</span>;
+    }
+};</pre>
+
+<table>
+<tr><th>操作</th><th>Trie</th><th>哈希表</th></tr>
+<tr><td>精确查找</td><td>O(L)</td><td>O(L) 平均</td></tr>
+<tr><td><strong>前缀查询</strong></td><td><strong>O(L)</strong></td><td>❌ 必须遍历全部 key</td></tr>
+<tr><td>空间</td><td>可能有大量节点（26×深度）</td><td>紧凑</td></tr>
+</table>
+
+<p>Trie 的最大优势是<strong>前缀查询</strong>——哈希表做不到。而 0023 的「单词搜索 II」用 Trie 剪枝，正是利用了这个性质。</p>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s9">9. 题 4：单词搜索 II — Trie + 回溯剪枝</h2>
+
+<p><strong>LeetCode 212 · 难度：🔴 困难</strong></p>
+
+<p>在字母矩阵中找所有出现的单词（相邻格连接）。如果每个单词都独立 DFS 一次——超时。用 Trie 存储单词列表，在 DFS 过程中同步遍历 Trie——当前缀不在 Trie 中时立刻剪枝。</p>
+
+<pre><span class="cmt">// Trie + DFS 回溯的经典组合</span>
+vector&lt;string&gt; <span class="fn">findWords</span>(vector&lt;vector&lt;<span class="kw">char</span>&gt;&gt;&amp; board,
+                           vector&lt;string&gt;&amp; words) {
+    Trie trie;
+    <span class="kw">for</span> (<span class="kw">auto</span>&amp; w : words) trie.<span class="fn">insert</span>(w);
+
+    <span class="kw">int</span> m = board.size(), n = board[<span class="num">0</span>].size();
+    vector&lt;string&gt; res;
+    string cur;
+
+    <span class="kw">function</span>&lt;<span class="kw">void</span>(<span class="kw">int</span>,<span class="kw">int</span>,TrieNode*)&gt; dfs =
+        [&amp;](<span class="kw">int</span> r, <span class="kw">int</span> c, TrieNode* p) {
+        <span class="kw">if</span> (!p) <span class="kw">return</span>;
+        <span class="kw">if</span> (p-&gt;isEnd) {
+            res.<span class="fn">push_back</span>(cur);
+            p-&gt;isEnd = <span class="kw">false</span>;  <span class="cmt">// 去重</span>
+        }
+        <span class="kw">if</span> (r &lt; <span class="num">0</span> || r &gt;= m || c &lt; <span class="num">0</span> || c &gt;= n) <span class="kw">return</span>;
+        <span class="kw">char</span> ch = board[r][c];
+        <span class="kw">if</span> (ch == <span class="str">'#'</span>) <span class="kw">return</span>;
+
+        TrieNode* nxt = p-&gt;next[ch - <span class="str">'a'</span>];
+        <span class="kw">if</span> (!nxt) <span class="kw">return</span>;   <span class="cmt">// ⚡ 剪枝：前缀都不存在，不用继续</span>
+
+        board[r][c] = <span class="str">'#'</span>;  <span class="cmt">// 标记访问</span>
+        cur.<span class="fn">push_back</span>(ch);
+        <span class="fn">dfs</span>(r<span class="num">-1</span>,c, nxt); <span class="fn">dfs</span>(r+<span class="num">1</span>,c, nxt);
+        <span class="fn">dfs</span>(r,c<span class="num">-1</span>, nxt); <span class="fn">dfs</span>(r,c+<span class="num">1</span>, nxt);
+        cur.<span class="fn">pop_back</span>();
+        board[r][c] = ch;
+    };
+
+    <span class="kw">for</span> (<span class="kw">int</span> r = <span class="num">0</span>; r &lt; m; r++)
+        <span class="kw">for</span> (<span class="kw">int</span> c = <span class="num">0</span>; c &lt; n; c++)
+            <span class="fn">dfs</span>(r, c, trie.<span class="fn">getRoot</span>());
+    <span class="kw">return</span> res;
+}</pre>
+
+<div class="box box-e">
+<strong>复杂度分析：</strong>如果没有 Trie 剪枝，每个单词独立 DFS = O(K × 3ᴸ)。用了 Trie 后，一次 DFS 同时检查所有单词，在矩阵上只走一遍，最坏 O(M×N×3ᴸ) 但剪枝后远小于此。<br>
+<strong>空间：</strong>Trie O(总字符数)，递归栈 O(L)。
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s10">10. DFS vs BFS 选择决策</h2>
+
+<table>
+<tr><th>场景</th><th>选 DFS</th><th>选 BFS</th></tr>
+<tr><td><strong>求连通分量个数</strong></td><td>✅ 代码最简洁</td><td>也可，代码略长</td></tr>
+<tr><td><strong>求最短路径（无权图）</strong></td><td>❌ 需要遍历全部路径</td><td>✅ 第一次遇到即最短</td></tr>
+<tr><td><strong>拓扑排序</strong></td><td>✅ 后序遍历 + 逆序</td><td>✅ Kahn 算法（BFS 版）</td></tr>
+<tr><td><strong>图很大（V &gt; 10⁴ 且链状）</strong></td><td>❌ 栈溢出风险</td><td>✅ 队列安全</td></tr>
+<tr><td><strong>回溯/排列组合（0022 先行课）</strong></td><td>✅ 天然匹配</td><td>❌ 状态不好保存</td></tr>
+<tr><td><strong>按层输出（如层序遍历）</strong></td><td>❌ 需要额外 depth 参数</td><td>✅ 天然按层</td></tr>
+</table>
+
+<div class="box box-g">
+<strong>面试中通用的选择铁律：</strong><br>
+• 只问「是否连通」→ DFS（代码最短）<br>
+• 问「最短距离/最少步数」→ BFS（第一次遇到即最优）<br>
+• 问「所有路径/具体路径」→ DFS/回溯（需要枚举时不能用 BFS，因为 BFS 的状态空间爆炸）
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<h2 id="s11">11. 测验</h2>
+
+<div class="quiz">
+<h3>🔍 自测题</h3>
+
+<p><strong>Q1（连通分量）</strong>：一个无向图有 100 个节点，邻接表表示，DFS 染色法求连通分量个数的时间复杂度是？</p>
+<label><input type="radio" name="q1" value="a"> A. O(V)</label>
+<label><input type="radio" name="q1" value="b"> B. O(E)</label>
+<label><input type="radio" name="q1" value="c"> C. O(V+E)</label>
+<label><input type="radio" name="q1" value="d"> D. O(V×E)</label>
+<button onclick="checkQuiz('q1','c','C. O(V+E) — 每个节点和边恰好访问一次。')">检查</button>
+<div class="fb" id="fbq1"></div>
+
+<p><strong>Q2（BFS 最短路径）</strong>：为什么 BFS 第一次遇到目标节点时的距离就是最短的？</p>
+<label><input type="radio" name="q2" value="a"> A. BFS 总是走最短的那条边</label>
+<label><input type="radio" name="q2" value="b"> B. BFS 按层推进，队列中的距离单调递增，第一次遇到 = 最小距离</label>
+<label><input type="radio" name="q2" value="c"> C. BFS 使用了 Dijkstra 算法的变种</label>
+<button onclick="checkQuiz('q2','b','B. BFS 队列中的节点按距离从小到大排列。')">检查</button>
+<div class="fb" id="fbq2"></div>
+
+<p><strong>Q3（Trie vs 哈希表）</strong>：以下哪个操作只能由 Trie 在 O(L) 时间内完成？</p>
+<label><input type="radio" name="q3" value="a"> A. 精确查找一个单词</label>
+<label><input type="radio" name="q3" value="b"> B. 查询有多少单词以某前缀开头</label>
+<label><input type="radio" name="q3" value="c"> C. 删除一个单词</label>
+<button onclick="checkQuiz('q3','b','B. 前缀查询——哈希表必须遍历全部 key 来匹配前缀。')">检查</button>
+<div class="fb" id="fbq3"></div>
+
+<p><strong>Q4（被围绕的区域）</strong>：为什么要从边界 'O' 开始 DFS，而不是直接找内部 'O'？</p>
+<label><input type="radio" name="q4" value="a"> A. 从内部 DFS 会陷入死循环</label>
+<label><input type="radio" name="q4" value="b"> B. 边界连通 = 没被包围，从边界出发标记出「安全的 O'」，剩下的就是被包围的</label>
+<label><input type="radio" name="q4" value="c"> C. 只有边界才能调用 DFS 函数</label>
+<button onclick="checkQuiz('q4','b','B. 逆向思维——找「没被包围的」比找「被包围的」容易。')">检查</button>
+<div class="fb" id="fbq4"></div>
+</div>
+
+<div class="nav">
+  <a href="./0017-dp-knapsack.html">← 0017 背包</a>
+  <a href="./0023-topological-sort.html">0023 拓扑排序 →</a>
+</div>
+
+<script>
+function checkQuiz(q, ans, explanation) {
+    const fb = document.getElementById('fb' + q);
+    const selected = document.querySelector(`input[name="${q}"]:checked`);
+    if (!selected) { fb.innerHTML = '⚠️ 请先选择一个选项'; fb.className = 'fb incorrect'; return; }
+    if (selected.value === ans) {
+        fb.innerHTML = '✅ ' + explanation;
+        fb.className = 'fb correct';
+    } else {
+        fb.innerHTML = '❌ 再想想。' + explanation;
+        fb.className = 'fb incorrect';
+    }
+}
+</script>
+
+</body>
+</html>

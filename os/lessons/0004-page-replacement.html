@@ -4,12 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lesson 0004 · 页替换与完整内存系统</title>
-<script>
-window.MathJax = {
-  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
-  svg: { fontCache: 'global' }, startup: { typeset: false }
-};
-</script>
+<script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] }, svg: { fontCache: 'global' }, startup: { typeset: false } };</script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <style>
   :root { --bg: #fdfcf9; --text: #2c2c2c; --accent: #6b4226; --light-accent: #f5efe6; --muted: #6b6b6b; --border: #e0d8cc; --code-bg: #f7f4ef; }
@@ -19,6 +14,7 @@ window.MathJax = {
   .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
   h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); color: #1a1a1a; }
   h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  h4 { font-size: 0.95rem; margin: 1.2rem 0 0.4rem; color: #444; }
   p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
   .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; }
   .toc a { color: var(--accent); text-decoration: none; } .toc a:hover { text-decoration: underline; }
@@ -62,6 +58,16 @@ window.MathJax = {
   .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
   .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
   .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
+  .quiz { margin: 1.5rem 0; } .quiz-question { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem; margin-bottom: 0.8rem; }
+  .quiz-question h4 { font-size: 0.95rem; margin-bottom: 0.4rem; } .quiz-options { display: flex; flex-direction: column; gap: 0.3rem; }
+  .quiz-option { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; } .quiz-feedback { font-size: 0.85rem; padding: 0.4rem 0.6rem; margin-top: 0.4rem; border-radius: 4px; display: none; }
+  .page-replace-viz { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin: 1.3rem 0; text-align: center; }
+  .page-replace-viz canvas { border: 1px solid var(--border); border-radius: 6px; background: #fcfcf9; }
+  .pr-controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 0.8rem 0; }
+  .pr-controls button { padding: 0.3rem 0.8rem; border: 1px solid var(--border); background: var(--code-bg); border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+  .pr-controls button:hover { background: #eaeaea; }
+  .pr-controls select { padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
+  .pr-stats { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 </style>
 </head>
 <body>
@@ -74,76 +80,227 @@ window.MathJax = {
   <a href="#s1">1. 缺页中断：Present bit = 0 的全部分支</a><br>
   <a href="#s2">2. 按需调页：不到用时不给帧</a><br>
   <a href="#s3">3. 页替换算法：从 Belady 到时钟</a><br>
-  <a href="#s4">4. 抖动与工作集</a><br>
+  <a href="#s4">4. 抖动与工作集：为什么加 CPU 没用</a><br>
   <a href="#s5">5. 写时复制：fork 不真的复制</a><br>
-  <a href="#s6">6. 交换 + mmap：完整图景</a><br>
-  <a href="#s7">7. 推导与自测</a>
+  <a href="#s6">6. 交换+mmap+完整图景</a><br>
+  <a href="#s7">7. 自测题</a><br>
+  <a href="#s8">8. 习题</a>
 </div>
 
 <p>0003 架好了页表和 TLB 的静态结构。这课打开动态行为——当 PTE 的 P bit = 0 时（缺页），OS 怎么做；当物理内存满了，OS 该换出哪一页；当 fork 被调用，怎么用 COW 避免真的复制。合在一起就是<strong>虚拟内存的完整运转逻辑</strong>。</p>
 
-<div class="retrieval">
-  <h3>🔁 回忆</h3>
-  <ol>
-    <li>0003 §5：PTE 的 Present bit 是什么意思？0 时发生什么？</li>
-    <li>0003 §5：A (Accessed) bit 和 D (Dirty) bit 怎么置的——软件还是硬件？</li>
-    <li>0002 §5：fork 之后父子进程的页表是怎么处理的？"不是深拷贝"——那是什么？</li>
-    <li>基石 0001 §2.2：内存幻象提供了哪三个超能力？</li>
-  </ol>
-</div>
+<div class="retrieval"><h3>🔁 回忆</h3><ol>
+  <li>0003 §5：PTE 的 Present bit 是什么意思？0 时发生什么？</li>
+  <li>0003 §5：A (Accessed) bit 和 D (Dirty) bit 怎么置的——软件还是硬件？</li>
+  <li>0002 §5：fork 之后父子进程的页表是怎么处理的？"不是深拷贝"——那是什么？</li>
+  <li>基石 0001 §2.2：内存幻象提供了哪三个超能力（按需调页、COW、mmap）？</li>
+</ol></div>
 
 <h2 id="s1">1. 缺页中断：Present bit = 0 的全部分支</h2>
 
 <p>MMU 在页表 walk 中发现某个 PTE 的 P=0 → 硬件触发<strong>缺页异常</strong>（page fault，#PF，x86 中断 14）。CPU 把引发缺页的虚拟地址存入 CR2 寄存器，然后跳到 OS 的缺页处理程序。</p>
 
-<div class="derivation">
-  <h4>缺页处理程序的分支（Linux do_page_fault）</h4>
-  <div class="step"><strong>① 读 CR2 → 出错的虚拟地址。</strong></div>
-  <div class="step"><strong>② 检查地址合法性：</strong>如果地址在进程的 VMA（vm_area_struct）范围外 → <strong>SIGSEGV</strong>（真正的 segfault）。<span class="reason">VMA 是进程通过 mmap/brk 向内核"申请"过的区域——没申请的地址访问就是非法的。</span></div>
-  <div class="step"><strong>③ 检查权限：</strong>如果 VMA 是只读的但访问是写 → <strong>SIGSEGV</strong>（写保护页）。如果 VMA 不可执行但访问是指令取指 → <strong>SIGSEGV</strong>（NX violation）。</div>
-  <div class="step"><strong>④ 合法的缺页——分配物理帧：</strong></div>
-  <div class="step">　• <strong>真正的缺页</strong>（major fault）：页在 swap 里 → 从 swap 读回来（~ms 级延迟）</div>
-  <div class="step">　• <strong>COW 缺页</strong>：页是 COW 的 → 复制一份（§5）</div>
-  <div class="step">　• <strong>按需调页</strong>（minor fault）：页还没分配过 → 分配新帧填零（~μs 级）</div>
-  <div class="step">　• <strong>文件映射页</strong>：页对应 mmap 的文件 → 从 page cache 读（~μs 到 ~ms）</div>
-  <div class="step"><strong>⑤ 更新页表：</strong>把新分配的 PFN 写入 PTE，P=1，设置 R/W/U/D/A 等 bit → iret 返回 → CPU 重新执行引起缺页的指令。</div>
+<div class="derivation"><h4>缺页处理程序的分支（Linux do_page_fault）</h4>
+<div class="step"><strong>① 读 CR2 → 出错的虚拟地址。</strong></div>
+<div class="step"><strong>② 检查地址合法性：</strong>如果地址在进程的 VMA（vm_area_struct）范围外 → <strong>SIGSEGV</strong>（真正的 segfault）。<span class="reason">VMA 是进程通过 mmap/brk 向内核"申请"过的区域——没申请的地址访问就是非法的。</span></div>
+<div class="step"><strong>③ 检查权限：</strong>如果 VMA 是只读的但访问是写 → <strong>SIGSEGV</strong>（写保护页）。如果 VMA 不可执行但访问是指令取指 → <strong>SIGSEGV</strong>（NX violation）。</div>
+<div class="step"><strong>④ 合法的缺页——分配物理帧：</strong></div>
+<div class="step">　• <strong>Major fault（真正的缺页）</strong>：页在 swap 里 → 从 swap 读回来（~ms 级延迟）——<code>/proc/PID/stat</code> 的 <code>majflt</code> 计数</div>
+<div class="step">　• <strong>Minor fault（按需调页）</strong>：页还没分配过 → 分配新帧填零（~μs 级）——<code>minflt</code> 计数</div>
+<div class="step">　• <strong>COW 缺页</strong>：页是 COW 的 → 复制一份（§5）</div>
+<div class="step">　• <strong>文件映射缺页</strong>：页对应 mmap 的文件 → 从 page cache 读（~μs 到 ~ms）</div>
+<div class="step"><strong>⑤ 更新页表：</strong>把新分配的 PFN 写入 PTE，P=1，设置 R/W/U/D/A 等 bit → <code>iret</code> 返回 → CPU 重新执行引起缺页的指令。</div>
 </div>
 
-<div class="insight">
-  <strong>关键洞察："合法缺页"是 OS 的正常操作路径。</strong>按需调页、COW、swap 全部靠缺页驱动——这不是"出错"，是"惰性机制被触发"。缺页是内存管理中最高频的内核路径之一。
-</div>
+<div class="insight"><strong>关键洞察："合法缺页"是 OS 的正常操作路径。</strong>按需调页、COW、swap 全部靠缺页驱动——这不是"出错"，是"惰性机制被触发"。缺页是内存管理中最高频的内核路径之一。</div>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>major fault 和 minor fault 的性能差异是多少倍？<br>答案：major ~10ms（磁盘 I/O），minor ~1μs（分配+填零+更新页表）→ <strong>差了一万倍</strong>。这就是为什么 page cache 和 swap 策略如此重要——把 major fault 转换成 minor fault 是数据库/大内存应用的核心优化。</div>
 
 <h2 id="s2">2. 按需调页：不到用时不给帧</h2>
 
-<p>一个进程启动时，内核不为代码段和零初始化数据段（BSS）真的分配物理帧——只建 VMA，页表里 PTE 全部 P=0。进程第一次执行到代码或访问数据 → 缺页 → 内核才分配帧。这节省了大量物理内存——一个加载了 100MB 库但只用其中 1MB 函数的进程，只花 1MB 物理内存。</p>
+<p>一个进程启动时，内核不为代码段和零初始化数据段（BSS）真的分配物理帧——只建 VMA，页表里 PTE 全部 P=0。进程第一次执行到代码或访问数据 → 缺页（minor fault）→ 内核才分配帧。这节省了大量物理内存——一个加载了 100MB 库但只用其中 1MB 函数的进程，只花 1MB 物理内存。</p>
 
-<div class="meta-box">
-  <h4>范式 #3 · 惰性求值（按需调页版）</h4>
-  <p><strong>核心思想：</strong>推迟物理帧的分配，直到真正需要时。not-yet-accessed = not-yet-allocated。不仅省内存，还让启动变快——进程创建时只需建 VMA + 页表壳子，不触碰物理帧。</p>
-  <p><strong>还在哪里出现：</strong>COW（§5）、惰性 slab 分配、RCU（0006）、容器镜像的 overlayfs（0009）</p>
-</div>
+<div class="meta-box"><h4>范式 #3 · 惰性求值（按需调页版）</h4>
+<p><strong>核心思想：</strong>推迟物理帧的分配，直到真正需要时。not-yet-accessed = not-yet-allocated。不仅省内存，还让启动变快——进程创建时只需建 VMA + 页表壳子，不触碰物理帧。</p>
+<p><strong>还在哪里出现：</strong>COW（§5）、惰性 slab 分配、RCU（0006）、容器镜像的 overlayfs（0009）</p></div>
 
 <h2 id="s3">3. 页替换算法：从 Belady 到时钟</h2>
 
 <p>物理内存满了，新缺页需要分配新帧。必须<strong>选一个已经在内存里的页换出去</strong>。选哪个？</p>
 
-<div class="concept-card">
-  <div class="cc-header"><span class="cc-tag">核心问题</span><h3>页替换 · Page Replacement</h3></div>
-  <div class="cc-essence"><strong>目标：最小化未来缺页次数。</strong>最优解（Belady's OPT）：换出"未来最长时间不会被访问"的页。这是完美的——但需要预知未来访问模式。它提供的是一个无法达到的上界。</div>
-  <div class="cc-section"><h4>算法演进</h4>
-    <table>
-      <tr><th>算法</th><th>策略</th><th>问题</th></tr>
-      <tr><td><strong>FIFO</strong></td><td>换最早进来的</td><td><strong>Belady 异常</strong>——更多帧可能导致更多缺页</td></tr>
-      <tr><td><strong>LRU</strong></td><td>换最久未用的</td><td>完美模拟过去 = 缺页少——但每次访问都要更新排序，硬件不支持。纯软件实现 O(1) 需要大量硬件支持</td></tr>
-      <tr><td><strong>时钟（Clock）</strong></td><td>循环扫描，给第二次机会</td><td>LRU 的近似——用 A bit 判断"最近用过没有"，足够好且可实现</td></tr>
-    </table>
+<div class="concept-card"><div class="cc-header"><span class="cc-tag">核心问题</span><h3>页替换 · Page Replacement</h3></div>
+<div class="cc-essence"><strong>目标：最小化未来缺页次数。</strong>最优解（Belady's OPT）：换出"未来最长时间不会被访问"的页。这是完美的——但需要预知未来访问模式。它提供的是一个无法达到的上界。</div>
+<div class="cc-section"><h4>算法演进</h4>
+<table>
+  <tr><th>算法</th><th>策略</th><th>问题</th></tr>
+  <tr><td><strong>FIFO</strong></td><td>换最早进来的</td><td><strong>Belady 异常</strong>——更多帧可能导致更多缺页</td></tr>
+  <tr><td><strong>LRU</strong></td><td>换最久未用的</td><td>完美模拟过去 = 缺页少——但每次访问都要更新排序，硬件不支持。纯软件实现 O(1) 需要大量硬件支持</td></tr>
+  <tr><td><strong>时钟（Clock）</strong></td><td>循环扫描，给第二次机会</td><td>LRU 的近似——用 A bit 判断"最近用过没有"，足够好且可实现</td></tr>
+</table>
+</div></div>
+
+<h3>3.1 交互式页替换模拟器</h3>
+
+<p>下面的模拟器让你亲手运行三种替换算法，直观感受 Belady 异常和 Clock 算法的"两次机会"行为。</p>
+
+<div class="page-replace-viz">
+  <strong style="font-size:0.9rem;">页替换模拟器</strong>
+  <canvas id="pageCanvas" width="640" height="200"></canvas>
+  <div class="pr-controls">
+    <button onclick="prStep()">▶ 下一步</button>
+    <button onclick="prAuto()">▶▶ 自动</button>
+    <button onclick="prReset()">↺ 重置</button>
+    <select id="prAlgo" onchange="prReset()">
+      <option value="fifo">FIFO</option>
+      <option value="lru">LRU</option>
+      <option value="clock">Clock</option>
+    </select>
   </div>
+  <div class="pr-stats" id="prStats">序列: 1 2 3 4 1 2 5 1 2 3 4 5 · 帧: 3 · 缺页: 0</div>
 </div>
 
-<h3>Belady 异常：给更多的帧，反而更多缺页</h3>
+<script>
+(function(){
+  const REFS = [1,2,3,4,1,2,5,1,2,3,4,5];
+  let step = 0, frames = [], clockHand = 0, pageFaults = 0, autoTimer = null;
+
+  function getAlgo() { return document.getElementById('prAlgo').value; }
+
+  function draw() {
+    const c = document.getElementById('pageCanvas');
+    const ctx = c.getContext('2d');
+    const W = 640, H = 200;
+    ctx.clearRect(0, 0, W, H);
+
+    // 页框
+    for (let i = 0; i < 3; i++) {
+      const x = 30 + i * 80, y = 40;
+      ctx.strokeStyle = '#8a6a10';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, 50, 50);
+      ctx.fillStyle = '#fff3cd';
+      ctx.fillRect(x+1, y+1, 48, 48);
+      if (i < frames.length) {
+        ctx.fillStyle = '#333';
+        ctx.font = '24px Palatino, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(frames[i].page || '', x+25, y+36);
+        if (getAlgo() === 'clock' && i === clockHand % frames.length && frames.length > 0) {
+          ctx.strokeStyle = '#c1121f';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x-2, y-2, 54, 54);
+        }
+      }
+    }
+
+    // 引用串指示
+    ctx.fillStyle = '#2d4a8a';
+    ctx.font = 'bold 13px Palatino, serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('访问序列:', 30, 130);
+    for (let i = 0; i < REFS.length; i++) {
+      const x = 120 + i * 38;
+      ctx.fillStyle = i === step ? '#c1121f' : '#6b6b6b';
+      ctx.font = i === step ? 'bold 14px Palatino, serif' : '12px Palatino, serif';
+      ctx.fillText(REFS[i], x, 130);
+    }
+
+    // 缺页计数
+    ctx.fillStyle = '#6b6b6b';
+    ctx.font = '14px Palatino, serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('缺页: ' + pageFaults, W - 30, 170);
+
+    const ds = document.getElementById('prStats');
+    ds.textContent = '序列: 1 2 3 4 1 2 5 1 2 3 4 5 · 帧: 3 · 缺页: ' + pageFaults;
+  }
+
+  // 帧约束：模拟简单页框
+  function findInFrames(p) {
+    for (let i = 0; i < frames.length; i++) if (frames[i].page === p) return i;
+    return -1;
+  }
+
+  function fifoReplace(p) {
+    frames.push({page: p});
+    if (frames.length > 3) frames.shift();
+  }
+
+  function lruReplace(p) {
+    const idx = findInFrames(p);
+    if (idx >= 0) {
+      frames.splice(idx, 1);
+      frames.push({page: p});
+    } else {
+      if (frames.length >= 3) frames.shift();
+      frames.push({page: p});
+    }
+  }
+
+  function clockReplace(p) {
+    const idx = findInFrames(p);
+    if (idx >= 0) {
+      frames[idx].ref = 1;
+      return;
+    }
+    if (frames.length < 3) {
+      frames.push({page: p, ref: 1});
+      clockHand = frames.length - 1;
+      return;
+    }
+    // Clock 扫描
+    let i = clockHand % 3;
+    while (true) {
+      if (frames[i].ref === 0) {
+        frames[i] = {page: p, ref: 1};
+        clockHand = (i + 1) % 3;
+        break;
+      }
+      frames[i].ref = 0;
+      i = (i + 1) % 3;
+    }
+  }
+
+  window.prStep = function() {
+    if (step >= REFS.length) { step = 0; frames = []; clockHand = 0; pageFaults = 0; }
+    const p = REFS[step];
+    const algo = getAlgo();
+    const idx = findInFrames(p);
+    if (idx === -1) {
+      pageFaults++;
+      if (algo === 'fifo') fifoReplace(p);
+      else if (algo === 'lru') lruReplace(p);
+      else clockReplace(p);
+    } else {
+      if (algo === 'lru') lruReplace(p);  // 更新 LRU 顺序
+      else if (algo === 'clock') frames[idx].ref = 1;
+    }
+    step++;
+    draw();
+  };
+
+  window.prAuto = function() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; return; }
+    autoTimer = setInterval(() => {
+      if (step >= REFS.length) { clearInterval(autoTimer); autoTimer = null; return; }
+      prStep();
+    }, 600);
+  };
+
+  window.prReset = function() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    step = 0; frames = []; clockHand = 0; pageFaults = 0;
+    draw();
+  };
+
+  draw();
+})();
+</script>
+
+<h3>3.2 Belady 异常：给更多的帧，反而更多缺页</h3>
 <p>FIFO 独有的反直觉行为。页引用串 1,2,3,4,1,2,5,1,2,3,4,5：3 帧 → 9 次缺页；4 帧 → <strong>10 次</strong>缺页。根本原因：FIFO 不关心页的"未来"，换出的页可能是马上要用的。LRU 和 Clock 没有这个异常——它们用"过去"近似"未来"，这种近似保证了<strong>栈性质</strong>（stack property）：N+1 帧的页集合一定包含 N 帧的页集合。</p>
 
-<h3>时钟算法（Clock / Second Chance）</h3>
+<h3>3.3 时钟算法（Clock / Second Chance）</h3>
 <p>帧围成环，手（指针）在环上转。当需要换出：</p>
 <ol>
   <li>如果当前帧的 A bit = 0 → 换出它</li>
@@ -151,42 +308,34 @@ window.MathJax = {
 </ol>
 <p>效果：最近被访问过的页（A=1）会被跳过——<strong>近似 LRU</strong>，但不需要每次访问都更新排序。增强版时钟（考虑 D bit 避免换出脏页）：A=0,D=0 最佳、A=0,D=1 次之、A=1,D=0 再次之、A=1,D=1 最差。</p>
 
-<div class="meta-box">
-  <h4>范式 #5 · 机制/策略分离（页替换版）</h4>
-  <p><strong>机制：</strong>缺页中断 → 找空帧（或换出）→ 更新页表和 TLB。</p>
-  <p><strong>策略：</strong>选哪一页换出。FIFO、LRU、Clock 是不同的策略，但它们共用同一套缺页/页表更新/磁盘 I/O 的机制。</p>
-  <p><strong>Linux 实际：</strong>用了双链表 LRU 近似——active list + inactive list。页在被访问时在 active 和 inactive 之间移动，换出总是从 inactive 链表尾部选。比纯 Clock 更精细但原理相同。</p>
-</div>
+<div class="meta-box"><h4>范式 #5 · 机制/策略分离（页替换版）</h4>
+<p><strong>机制：</strong>缺页中断 → 找空帧（或换出）→ 更新页表和 TLB。<strong>策略：</strong>选哪一页换出。FIFO、LRU、Clock 是不同的策略，但它们共用同一套缺页/页表更新/磁盘 I/O 的机制。</p>
+<p><strong>Linux 实际：</strong>用了双链表 LRU 近似——active list + inactive list。页在被访问时在 active 和 inactive 之间移动，换出总是从 inactive 链表尾部选。比纯 Clock 更精细但原理相同。具体在 <code>mm/vmscan.c</code> 实现。</p></div>
 
-<h2 id="s4">4. 抖动与工作集</h2>
+<h2 id="s4">4. 抖动与工作集：为什么加 CPU 没用</h2>
 
 <p><strong>抖动（thrashing）</strong>：所有活跃进程的工作集之和 > 物理内存时，系统进入死亡漩涡——进程缺页 → 换出一页 → 被换出的那页恰好是另一个进程马上要用的 → 另一个进程也缺页 → 再换出 → 那个被换出的又是刚才那个进程要用的……CPU 在缺页处理（磁盘 I/O）上花的时间远超实际运行时间。</p>
 
 <p><strong>工作集（Working Set）</strong>：进程在最近 Δ 时间内访问过的页的集合。它是<strong>进程真正需要的内存量</strong>——如果分配给进程的帧数少于工作集，该进程会频繁缺页（抖动）。Denning 的工作集模型：OS 应该跟踪每个进程的工作集，只调度"工作集之和 ≤ 物理内存"的进程组合。</p>
 
-<div class="formula-block">
-  $$W(t, \Delta) = \{\text{page } p \mid p \text{ was accessed in } [t-\Delta, t]\}$$
-</div>
+<div class="formula-block">$$W(t, \Delta) = \{\text{page } p \mid p \text{ was accessed in } [t-\Delta, t]\}$$</div>
 
-<div class="warning">
-  <strong>抖动时你加 CPU 没用——换更快的 CPU 只让你更快地缺页。</strong>唯一的解法：加内存（物理扩容）或杀进程（OOM Killer——见 0001 P5 的讨论）或 swap out 整个进程（现代 Linux 很少用）。
-</div>
+<div class="warning"><strong>抖动时你加 CPU 没用——换更快的 CPU 只让你更快地缺页。</strong>唯一的解法：加内存（物理扩容）或杀进程（OOM Killer——见 0001 P5 的讨论）或 swap out 整个进程（现代 Linux 很少用）。</div>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>如果某应用的工作集是 8GB，而物理内存只有 4GB，会发生什么？<br>答案：不管 CPU 多快、SSD 多快，它都<strong>一直缺页</strong>。因为它的工作集 > 物理内存。极端情况：如果 SSD 延迟 100μs，CPU 3GHz，缺页耗时 = 300,000 个 CPU 周期——而只跑了 4KB 数据。吞吐量的天花板完全由 I/O 延迟决定（范式 #1 间接层——虚拟内存隐藏了缺页的存在，但隐藏不了延迟）。</div>
 
 <h2 id="s5">5. 写时复制：fork 不真的复制</h2>
 
 <p>0002 §5 提到 `fork()` 不深拷贝页表——而是 COW（Copy-On-Write）：</p>
 
-<div class="derivation">
-  <h4>COW 的完整流程</h4>
-  <div class="step"><strong>① fork 时：</strong>子进程复制父进程的页表，但所有页（父子进程的页）的 PTE 被标记为<strong>只读</strong>（R/W=0）。父子共享同一物理帧。页被标为 COW。</div>
-  <div class="step"><strong>② 同时读：</strong>父子都能读（读不需要 R/W=1）→ 不需要复制 → 无额外缺页。大部分页在被写之前一直共享。</div>
-  <div class="step"><strong>③ 写入触发：</strong>父或子写某共享页 → MMU 检查 R/W=0 → <strong>缺页异常</strong> → OS 检测到"这是 COW 页被写了" → 分配新物理帧 → 复制原帧内容 → 更新写入者页表的 PTE（R/W=1，指向新帧）→ 另一个进程的 PTE 保持只读（仍指原帧）。</div>
-  <div class="step"><strong>④ exec 时：</strong>子进程 exec → 全新的地址空间 → 子进程的页表被全换 → 所有 COW 标记消失——子进程不会再去碰父进程的页 → <strong>整个 COW 过程没有发生过一次真正的复制。</strong></div>
+<div class="derivation"><h4>COW 的完整流程</h4>
+<div class="step"><strong>① fork 时：</strong>子进程复制父进程的页表，但所有页（父子进程的页）的 PTE 被标记为<strong>只读</strong>（R/W=0）。父子共享同一物理帧。页被标为 COW。</div>
+<div class="step"><strong>② 同时读：</strong>父子都能读（读不需要 R/W=1）→ 不需要复制 → 无额外缺页。大部分页在被写之前一直共享。</div>
+<div class="step"><strong>③ 写入触发：</strong>父或子写某共享页 → MMU 检查 R/W=0 → <strong>缺页异常</strong> → OS 检测到"这是 COW 页被写了" → 分配新物理帧 → 复制原帧内容 → 更新写入者页表的 PTE（R/W=1，指向新帧）→ 另一个进程的 PTE 保持只读（仍指原帧）。</div>
+<div class="step"><strong>④ exec 时：</strong>子进程 exec → 全新的地址空间 → 子进程的页表被全换 → 所有 COW 标记消失——子进程不会再去碰父进程的页 → <strong>整个 COW 过程没有发生过一次真正的复制。</strong></div>
 </div>
 
-<div class="insight">
-  <strong>COW 是惰性求值（范式 #3）在内存管理中最漂亮的应用。</strong>"万一不需要呢？"——`fork+exec` 模式里子进程几乎从不写父进程的数据。COW 利用了缺页异常机制（写完才裂）和 MMU 的 R/W 保护，让 fork 从 O(内存大小) 变成 O(页表大小)——快了几个数量级。
-</div>
+<div class="insight"><strong>COW 是惰性求值（范式 #3）在内存管理中最漂亮的应用。</strong>"万一不需要呢？"——<code>fork+exec</code> 模式里子进程几乎从不写父进程的数据。COW 利用了缺页异常机制（写完才裂）和 MMU 的 R/W 保护，让 fork 从 O(内存大小) 变成 O(页表大小)——快了几个数量级。</div>
 
 <h2 id="s6">6. 交换 + mmap：完整图景</h2>
 
@@ -201,49 +350,115 @@ window.MathJax = {
   <tr><td><strong>COW 共享页</strong></td><td>1（R/W=0）</td><td>物理帧（共享）</td><td>读 → 正常；写 → COW 缺页 → 复制</td></tr>
 </table>
 
-<p><strong>mmap</strong> 的优雅：<code>mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0)</code> 把文件映射到虚拟地址——以后 `*(int*)addr` 就是读文件、`*(int*)addr = x` 就是写文件。内核在背后做缺页驱动的文件 I/O——和 swap 共用了同一套缺页 + page cache 机制。</p>
+<p><strong>mmap</strong> 的优雅：<code>mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0)</code> 把文件映射到虚拟地址——以后 <code>*(int*)addr</code> 就是读文件、<code>*(int*)addr = x</code> 就是写文件。内核在背后做缺页驱动的文件 I/O——和 swap 共用了同一套缺页 + page cache 机制。</p>
 
-<div class="checkpoint">
-  <strong>停下来想一想</strong>：`MAP_PRIVATE` 的 mmap 写文件映射的页时，是写文件还是触发 COW？MAP_PRIVATE → COW 复制，写入不会回写文件（"私有"）。MAP_SHARED → 写入直接改原文件的内容（多个进程可以共享同一文件映射做 IPC）。
+<div class="checkpoint"><strong>停下来想一想：</strong><code>MAP_PRIVATE</code> 的 mmap 写文件映射的页时，是写文件还是触发 COW？<br>答案：MAP_PRIVATE → COW 复制，写入不会回写文件（"私有"）。MAP_SHARED → 写入直接改原文件的内容（多个进程可以共享同一文件映射做 IPC）。所以 mmap 用于进程间通信时必须是 MAP_SHARED。</div>
+
+<h2 id="s7">7. 自测题</h2>
+
+<p style="color:var(--muted); font-size:0.9rem;">6 题覆盖本课每节核心点。</p>
+
+<div class="quiz">
+
+<div class="quiz-question"><h4>Q1（§1 缺页）· minor fault 和 major fault 的关键区别是？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。minor fault 是不需磁盘 I/O 的缺页。','incorrect-fb')"><label>A. minor fault 是代码错误，major fault 是正常路径</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','对。minor fault 指数据在内存中（如 page cache）不需磁盘 I/O。major fault 需要从磁盘/swap 读。','correct-fb')"><label>B. minor fault 不涉及磁盘 I/O，major fault 涉及磁盘 I/O</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。','incorrect-fb')"><label>C. major fault 是 kernel panic</label></div>
+</div>
+<div class="quiz-feedback" id="q1fb"></div></div>
+
+<div class="quiz-question"><h4>Q2（§2 按需调页）· 按需调页对应哪个设计范式？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>A. 缓存</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','对。惰性求值——不到用时不分配物理帧。','correct-fb')"><label>B. 惰性求值</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>C. 机制/策略分离</label></div>
+</div>
+<div class="quiz-feedback" id="q2fb"></div></div>
+
+<div class="quiz-question"><h4>Q3（§3 页替换）· Belady 异常指的是什么？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。Belady 异常只发生在 FIFO。','incorrect-fb')"><label>A. 使用 LRU 时反而更差</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','对。FIFO 换出策略下，分配更多的物理帧反而导致更多缺页。','correct-fb')"><label>B. 分配更多帧反而导致更多缺页（FIFO 特有）</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>C. 最远未来最可能被访问的页反被换出</label></div>
+</div>
+<div class="quiz-feedback" id="q3fb"></div></div>
+
+<div class="quiz-question"><h4>Q4（§4 抖动）· 系统抖动时，以下哪项措施最有用？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。请重读 §4。','incorrect-fb')"><label>A. 换更快的 CPU</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','对。抖动 = 工作集之和 > 物理内存。加物理内存或减少活跃进程数（杀进程）才行。','correct-fb')"><label>B. 加物理内存或减少活跃进程</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。','incorrect-fb')"><label>C. 换更快的 SSD</label></div>
+</div>
+<div class="quiz-feedback" id="q4fb"></div></div>
+
+<div class="quiz-question"><h4>Q5（§5 COW）· fork 后父子进程直到 exec 前，为什么额外的物理内存开销几乎为零？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。','incorrect-fb')"><label>A. fork 不创建子进程</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','对。COW 共享所有物理页（PTE 标记只读）。只有写入时才复制。子进程通常立即 exec——完全不产生复制。','correct-fb')"><label>B. COW 让父子共享所有物理页，写入才复制</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。','incorrect-fb')"><label>C. 子进程的页表是空的</label></div>
+</div>
+<div class="quiz-feedback" id="q5fb"></div></div>
+
+<div class="quiz-question"><h4>Q6（§5 COW）· COW 使用了 PTE 的哪个 bit 来实现？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','对。COW 将父子的 PTE 设置为只读（R/W=0），写入时触发写保护缺页。','correct-fb')"><label>A. R/W bit（设为只读，写入触发缺页）</label></div>
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','错。','incorrect-fb')"><label>B. Present bit（设为 0）</label></div>
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','错。','incorrect-fb')"><label>C. Dirty bit</label></div>
+</div>
+<div class="quiz-feedback" id="q6fb"></div></div>
+
 </div>
 
-<h2 id="s7">7. 推导与自测</h2>
+<h2 id="s8">8. 习题</h2>
 
-<div class="problem">
-  <div class="ptitle">P1 · Belady 异常验证 <span class="plevel l1">L1</span></div>
-  <div class="pbody"><p>页引用串 1,2,3,4,1,2,5,1,2,3,4,5。帧数 3 → FIFO 缺页 9 次。帧数 4 → 验证缺页次数（应得 10 次——Belady 异常）。</p></div>
-  <details><summary>▸ 解答</summary><div class="sol"><div class="step">3 帧 FIFO：1缺 2缺 3缺 → [123], 4缺换1 → [234], 1缺换2 → [341], 2缺换3 → [412], 5缺换4 → [125], 1命中, 2命中, 3缺换1 → [253], 4缺换2 → [534], 5命中。共 <strong>9 次</strong>。</div><div class="step">4 帧 FIFO：1缺 2缺 3缺 4缺 → [1234], 1命中, 2命中, 5缺换1 → [2345], 1缺换2 → [3451], 2缺换3 → [4512], 3缺换4 → [5123], 4缺换5 → [1234], 5缺换1 → [2345]。共 <strong>10 次</strong>。</div></div></details>
-</div>
+<div class="problem"><div class="ptitle">P1 · Belady 异常验证 <span class="plevel l1">L1</span></div>
+<div class="pbody"><p>页引用串 1,2,3,4,1,2,5,1,2,3,4,5。帧数 3 → FIFO 缺页 9 次。帧数 4 → 验证缺页次数（应得 10 次——Belady 异常）。然后用上面的交互模拟器验证你的结果。</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">3 帧 FIFO：1缺 2缺 3缺 → [123], 4缺换1 → [234], 1缺换2 → [341], 2缺换3 → [412], 5缺换4 → [125], 1命中, 2命中, 3缺换1 → [253], 4缺换2 → [534], 5命中。共 <strong>9 次</strong>。</div><div class="step">4 帧 FIFO：1缺 2缺 3缺 4缺 → [1234], 1命中, 2命中, 5缺换1 → [2345], 1缺换2 → [3451], 2缺换3 → [4512], 3缺换4 → [5123], 4缺换5 → [1234], 5缺换1 → [2345]。共 <strong>10 次</strong>。</div></div></details></div>
 
-<div class="problem">
-  <div class="ptitle">P2 · COW 节省了多少 <span class="plevel l2">L2</span></div>
-  <div class="pbody"><p>进程 P（占 200MB 物理内存）调用 fork()。(a) 无 COW 时，fork 需要多少物理内存？(b) 有 COW 时，fork 后立即需要多少额外物理内存？(c) 子进程随后 exec 了 /bin/ls（2MB），又实际需要多少额外物理内存？</p></div>
-  <details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) 无 COW：200MB（子进程完整复制）。(b) 有 COW：<strong>~0 MB</strong>（共享——页表额外开销 ~几 MB）。(c) exec 后：子进程换新地址空间 → COW 共享消失。子进程实际用 ~2MB（ls）。父进程的 200MB 不变。总共额外 ≈ 2MB 而非 200MB——<strong>节省了 ~100×</strong>。</div></div></details>
-</div>
+<div class="problem"><div class="ptitle">P2 · COW 节省了多少 <span class="plevel l2">L2</span></div>
+<div class="pbody"><p>进程 P（占 200MB 物理内存）调用 fork()。(a) 无 COW 时，fork 需要多少物理内存？(b) 有 COW 时，fork 后立即需要多少额外物理内存？(c) 子进程随后 exec 了 /bin/ls（2MB），又实际需要多少额外物理内存？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) 无 COW：200MB（子进程完整复制）。(b) 有 COW：<strong>~0 MB</strong>（共享——页表额外开销 ~几 MB）。(c) exec 后：子进程换新地址空间 → COW 共享消失。子进程实际用 ~2MB（ls）。父进程的 200MB 不变。总共额外 ≈ 2MB 而非 200MB——<strong>节省了 ~100×</strong>。</div></div></details></div>
 
-<div class="problem">
-  <div class="ptitle">P3 · 抖动诊断 <span class="plevel l3">L3</span></div>
-  <div class="pbody"><p>你的服务器突然变慢，`top` 显示 CPU 的 %iowait 很高、但 CPU 使用率低。`vmstat 1` 显示每秒几千次缺页（`si`/`so` 列数字很大）。(a) 最可能是什么问题？(b) 你会怎么验证和解决？(c) 为什么 `kill -9` 某些进程后系统变快了？</p></div>
-  <details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) <strong>抖动</strong>——高缺页率 + 高 I/O wait + 低 CPU util = CPU 在等磁盘（缺页处理），不是在做有用功。</div><div class="step">(b) 验证：`ps aux --sort=-%mem` 看谁占内存最多。`top` 看 RES（实际用物理内存）。如果所有大进程的 RES 之和 > 物理内存 → 确认抖动。解决：加内存、减少进程数、或使用 cgroup 限制内存（让 OOM killer 主动干预而非被动抖动）。</div><div class="step">(c) 杀掉一些进程 → 它们占的物理帧释放 → 剩余的"活跃进程工作集之和"变小 → 可能重新 fit 进物理内存 → 缺页率骤降 → 系统恢复。这就是 OOM Killer 的"主动版"——它在系统进入抖动前就杀了进程。</div></div></details>
-</div>
+<div class="problem"><div class="ptitle">P3 · 时钟算法追踪 <span class="plevel l2">L2</span></div>
+<div class="pbody"><p>3 帧，Clock 算法。引用串 1,3,2,1,4,2,5,1。初始帧空。手动追踪每一步：每次缺页时，手在哪个位置，哪些帧的 ref bit 被清过零。统计缺页次数。然后用交互模拟器（选 Clock）验证。</p></div>
+<details><summary>▸ 提示</summary><div class="hint">维护 3 个帧围成环，每个帧有 (page, ref)。手初始指帧 0。每次缺页时扫描：如果当前帧 ref=0 就换入，ref=1 就清 ref 并移动。每次访问也设置 ref=1。</div></details>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">1: [1(1)] ← 缺页1。手停1。</div><div class="step">3: [1(1),3(1)] ← 缺页3。手停2。</div><div class="step">2: [1(1),3(1),2(1)] ← 缺页2。手停0。</div><div class="step">1: 命中 → [1(1),3(1),2(1)]。</div><div class="step">4: 缺页4。手在0, ref=1→清0→手1, ref=1→清0→手2, ref=1→清0→手0, ref=0→换入4→[4(1),3(1),2(1)]。共3次清0。（这就是Clock扫描的完整路径）手停1。</div><div class="step">2: 命中 → [4(1),3(1),2(1)]。</div><div class="step">5: 缺页5。手在1, ref=1→清0→手2, ref=1→清0→手0, ref=1→清0→手1, ref=0→换入5→[4(1),5(1),2(1)]。手停2。</div><div class="step">1: 命中 → [4(1),5(1),2(1)]（注意 1 不在——之前被 4 换出了）。所以这里实际是 <strong>缺页 1</strong>！等待——1 已经不在帧里了：1 在步4被换出了。所以我们重新追踪：步8 访问1，不在 → 缺页。手在2, ref=1→清0→手0, ref=1→清0→手1, ref=1→清0→手2, ref=0→换入1→[4(1),5(1),1(1)]。</div><div class="step"><strong>共 6 次缺页</strong>（1,3,2,4,5,1）。</div></div></details></div>
 
-<div class="primary-source">
-  <h3>📖 延伸阅读</h3>
-  <ul>
-    <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys.pdf">Ch 21 (Beyond Physical Memory)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys-policy.pdf">Ch 22 (Page Replacement)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-complete.pdf">Ch 23 (Complete VM System)</a></li>
-    <li><strong>xv6</strong>：<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/trap.c">kernel/trap.c</a> — usertrap 中的缺页处理、<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/kalloc.c">kernel/kalloc.c</a></li>
-  </ul>
-</div>
+<div class="problem"><div class="ptitle">P4 · 抖动诊断 <span class="plevel l3">L3</span></div>
+<div class="pbody"><p>你的服务器突然变慢，<code>top</code> 显示 CPU 的 %iowait 很高、但 CPU 使用率低。<code>vmstat 1</code> 显示每秒几千次缺页（<code>si</code>/<code>so</code> 列数字很大）。(a) 最可能是什么问题？(b) 你会怎么验证和解决？(c) 为什么 <code>kill -9</code> 某些进程后系统变快了？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) <strong>抖动</strong>——高缺页率 + 高 I/O wait + 低 CPU util = CPU 在等磁盘（缺页处理），不是在做有用功。</div><div class="step">(b) 验证：<code>ps aux --sort=-%mem</code> 看谁占内存最多。<code>top</code> 看 RES（实际用物理内存）。如果所有大进程的 RES 之和 > 物理内存 → 确认抖动。解决：加内存、减少进程数、或使用 cgroup 限制内存（让 OOM killer 主动干预而非被动抖动）。</div><div class="step">(c) 杀掉一些进程 → 它们占的物理帧释放 → 剩余的"活跃进程工作集之和"变小 → 可能重新 fit 进物理内存 → 缺页率骤降 → 系统恢复。这就是 OOM Killer 的"主动版"——它在系统进入抖动前就杀了进程。</div></div></details></div>
 
-<div class="reminder">
-  <h3>🔄 间隔复习</h3>
-  <ul><li><strong>24h</strong>：缺页处理程序的分支图——major/minor/COW/segfault 各走哪条</li><li><strong>72h</strong>：闭眼推 Belady 异常的例子</li><li><strong>7d</strong>：抖动的原因 → 诊断方法 → 解法。为什么加 CPU 没用？</li></ul>
-</div>
+<div class="problem"><div class="ptitle">P5 · 设计页替换策略评估框架 <span class="plevel l3">L3</span></div>
+<div class="pbody"><p>你要为一个 64MB 物理内存的嵌入式设备选择页替换算法。应用场景：视频播放器（顺序读取大文件）+ 文本编辑器（来回跳转几个文档页）+ 后台音乐播放。</p>
+<p>(a) 用范式 #5（机制/策略分离）分析：缺页机制在你选择的算法中有没有变化？(b) 比较 FIFO/LRU/Clock 在此场景下的优劣势。(c) 如果要考虑"脏页延迟写回"（Dirty bit），你会怎么修改 Clock 算法？</p></div>
+<details><summary>▸ 提示</summary><div class="hint">(a) 机制（缺页、分配帧、更新页表）不变，策略（选哪页换出）可换。(b) 视频播放是顺序访问 → FIFO 够用（缺页可预测）。编辑器来回跳转 → LRU 更好。音乐播放 → 几乎没有内存压力。(c) 增强版 Clock：优先换出 A=0,D=0 页；次选 A=0,D=1（先写回再换出）。</div></details>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) 机制不变——缺页中断分配帧、更新页表、可能换出都是同一套代码。只有选择"换出哪一页"的函数不同。这就是范式 #5 的实际应用——替换策略是可插拔模块。</div><div class="step">(b) FIFO 对视频顺序访问非常好——视频流的缺页模式是线性的，最早进来的页确实是最久不再需要的。但对文本编辑器不行——来回跳转时 FIFO 可能换出马上又要用的页。LRU 对文本编辑器好，但维护成本高（每次访问更新链表）。Clock 是好的折中：对顺序/随机都足够好，实现简单。</div><div class="step">(c) 增强 Clock：4 类；A=0,D=0 → 最佳换出目标；A=0,D=1 → 需要先写回再换出（代价高但必须做）；A=1,D=0 → 最近被读了但没写；A=1,D=1 → 最热。第一次扫描只选择 A=0 的；第二次扫描才考虑 D（先写回后换出）。Linux 的 swap 逻辑正是这样处理脏页的。</div></div></details></div>
 
-<div class="lesson-footer">
-  <p><a href="../index.html">🏠</a> · <a href="./0003-address-translation.html">← 0003</a> · <a href="./0005-threads-locks.html">0005 并发（上）→</a></p>
-  <p style="margin-top:0.5rem;">基石：0001 §2.2 · 范式 #5（机制/策略·替换策略）· #3（惰性·COW/demand paging）</p>
-</div>
+<div class="primary-source"><h3>📖 延伸阅读</h3><ul>
+  <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys.pdf">Ch 21 (Beyond Physical Memory)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys-policy.pdf">Ch 22 (Page Replacement)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/vm-complete.pdf">Ch 23 (Complete VM System)</a></li>
+  <li><strong>x64</strong>：<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/trap.c">xv6 kernel/trap.c</a> — usertrap 中的缺页处理；<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/kalloc.c">kernel/kalloc.c</a></li>
+  <li><strong>Linux</strong>：<code>mm/vmscan.c</code> — page reclaim 的核心实现；<code>mm/memory.c</code> — do_page_fault 和 COW 处理</li>
+  <li><strong>扩展思考</strong>：Denning 的工作集模型 (1968) — 和现代 Linux 的 <code>working_set_refault</code> 机制有深层联系</li>
+</ul></div>
+
+<div class="reminder"><h3>🔄 间隔复习</h3><ul>
+  <li><strong>24h</strong>：缺页处理程序的分支图——major/minor/COW/segfault 各走哪条</li>
+  <li><strong>72h</strong>：闭眼推 Belady 异常的例子</li>
+  <li><strong>7d</strong>：抖动的原因 → 诊断方法 → 解法。为什么加 CPU 没用？</li>
+</ul></div>
+
+<div class="lesson-footer"><p><a href="../index.html">🏠</a> · <a href="./0003-address-translation.html">← 0003</a> · <a href="./0005-threads-locks.html">0005 并发（上）→</a></p>
+<p style="margin-top:0.5rem;">基石：0001 §2.2 · 范式 #5（机制/策略·替换策略）· #3（惰性·COW/demand paging）· 下一课 0005 将转向并发——共享地址空间带来的全新世界</p></div>
+
+<script>
+function quizFB(el, fbId, msg, cls) {
+  const fb = document.getElementById(fbId);
+  fb.textContent = msg;
+  fb.className = 'quiz-feedback ' + cls;
+  fb.style.display = 'block';
+}
+</script>
 <script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
 </body>
 </html>

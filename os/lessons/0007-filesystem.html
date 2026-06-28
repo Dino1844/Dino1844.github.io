@@ -26,6 +26,9 @@
   .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
   .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; } .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; } .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; } .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); } .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; } .concept-card .cc-section { margin-top: 0.7rem; } .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; } .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; } .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
   .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .quiz { margin: 1.5rem 0; } .quiz-question { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem; margin-bottom: 0.8rem; }
+  .quiz-question h4 { font-size: 0.95rem; margin-bottom: 0.4rem; } .quiz-options { display: flex; flex-direction: column; gap: 0.3rem; }
+  .quiz-option { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; } .quiz-feedback { font-size: 0.85rem; padding: 0.4rem 0.6rem; margin-top: 0.4rem; border-radius: 4px; display: none; }
   .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); } .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
 </style>
 </head>
@@ -41,7 +44,8 @@
   <a href="#s4">4. FFS：为磁盘几何优化的文件系统</a><br>
   <a href="#s5">5. 崩溃一致性：写一半断电怎么办</a><br>
   <a href="#s6">6. 日志与 COW：两种解法</a><br>
-  <a href="#s7">7. 推导与自测</a>
+  <a href="#s7">7. 自测题</a><br>
+  <a href="#s8">8. 推导与自测</a>
 </div>
 
 <p>展开基石 0001 §2.3（I/O 幻象）。前两课讲完了"数据在内存里怎么管"，这课讲"数据怎么在磁盘上活下来"。文件系统的核心问题是：<strong>inode 作为文件的一切元数据的容器，在崩溃后必须保持一致。</strong></p>
@@ -119,7 +123,55 @@
 
 <div class="insight"><strong>日志 vs COW 是两种哲学：</strong>日志 = "坏了能修好"（事后恢复），COW = "永远不会坏"（事前防止）。日志的瓶颈在 checkpoint（随机写回到原位置），COW 的瓶颈在碎片化（树永远在长——inode 和数据块不在一起了）。没有银弹。</div>
 
-<h2 id="s7">7. 推导与自测</h2>
+<h2 id="s7">7. 自测题</h2>
+
+<p style="color:var(--muted); font-size:0.9rem;">5 题覆盖本课核心点。</p>
+
+<div class="quiz">
+
+<div class="quiz-question"><h4>Q1（§1 inode）· 文件名存在哪里？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。文件名在目录项中，不在 inode。','incorrect-fb')"><label>A. inode 里</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','对。目录本质是"名字→inode号"的映射表。这允许多个名字指向同一 inode（硬链接）。','correct-fb')"><label>B. 目录项里（目录数据块中的 name→inode 映射）</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。','incorrect-fb')"><label>C. 文件数据块里</label></div>
+</div>
+<div class="quiz-feedback" id="q1fb"></div></div>
+
+<div class="quiz-question"><h4>Q2（§1 硬链接）· 硬链接为什么 `rm` 第一个链接后文件还在？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。rm 是系统调用 unlink——减少 link count，非零时不释放 inode。','incorrect-fb')"><label>A. rm 只做了覆盖标记</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','对。rm = unlink -> link count--。为 0 才真正释放 inode。','correct-fb')"><label>B. rm 减少 inode 的 link count，归零才释放</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>C. 文件内容在另一个位置备份了</label></div>
+</div>
+<div class="quiz-feedback" id="q2fb"></div></div>
+
+<div class="quiz-question"><h4>Q3（§2 多级索引）· 前 12 个直接指针能覆盖多大文件？为什么要 12 个？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','对。12 × 4KB = 48KB——这是大多数小文件的大小（代码、配置）。12 个是统计最优的折中。','correct-fb')"><label>A. 48KB——大部分文件小于此，只需一次 inode 读取</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>B. 12MB——大文件直接指针覆盖</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>C. 4KB——每个 inode 只有一个直接指针</label></div>
+</div>
+<div class="quiz-feedback" id="q3fb"></div></div>
+
+<div class="quiz-question"><h4>Q4（§5–6 崩溃一致性）· 日志文件系统的核心思想是什么？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。','incorrect-fb')"><label>A. 数据写两次确保完整</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','对。先写日志（顺序写——快），再 checkpoint（恢复时重放已提交的日志，丢弃未提交的）。','correct-fb')"><label>B. 原子地"先写日志再 check point"——重启时重放有 commit 的记录，丢弃无 commit 的记录</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。','incorrect-fb')"><label>C. 每次都完整备份 inode 表</label></div>
+</div>
+<div class="quiz-feedback" id="q4fb"></div></div>
+
+<div class="quiz-question"><h4>Q5（§6 COW）· COW 文件系统相对日志文件系统的根本优势？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错——COW 碎片化严重，日志写放大更小。','incorrect-fb')"><label>A. 写性能更好</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','对。从不覆写 = 永远不会出现"写一半断电导致不一致"。且自然支持 snapshot。','correct-fb')"><label>B. 崩溃后不会产生不一致——旧树完全无损，自然 snapshot</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。','incorrect-fb')"><label>C. 不需要写磁盘</label></div>
+</div>
+<div class="quiz-feedback" id="q5fb"></div></div>
+
+</div>
+
+<h2 id="s8">8. 推导与自测</h2>
 <div class="problem"><div class="ptitle">P1 · inode 指针覆盖范围 <span class="plevel l1">L1</span></div><div class="pbody"><p>4KB 块、4 字节指针。计算直接（12 个）、单间接、双间接、三间接各能覆盖的最大文件大小。</p></div>
 <details><summary>▸ 解答</summary><div class="sol"><div class="step">直接：12 × 4KB = <strong>48KB</strong>。单间接：1024 × 4KB = <strong>4MB</strong>。双间接：1024² × 4KB = <strong>4GB</strong>。三间接：1024³ × 4KB = <strong>4TB</strong>。<strong>合计 ≈ 4TB + 4GB + 4MB + 48KB。</strong></div></div></details></div>
 
@@ -136,6 +188,14 @@
 <div class="reminder"><h3>🔄 间隔复习</h3><ul><li><strong>24h</strong>：多级索引——12 直接 + 3 间接 = 覆盖多大文件？</li><li><strong>72h</strong>：硬链接为什么 `rm` 删的是链接不是文件？（link count）</li><li><strong>7d</strong>：崩溃一致性——新创文件涉及哪四个更新？断电在各步之间各有什么后果？</li></ul></div>
 
 <div class="lesson-footer"><p><a href="../index.html">🏠</a> · <a href="./0006-monitors-deadlock.html">← 0006</a> · <a href="./0008-io-raid.html">0008 I/O·RAID →</a></p><p>基石：0001 §2.3（I/O 幻象）· 范式 #1（inode 间接层）· #3（COW）· #4（日志批处理）</p></div>
+<script>
+function quizFB(el, fbId, msg, cls) {
+  const fb = document.getElementById(fbId);
+  fb.textContent = msg;
+  fb.className = 'quiz-feedback ' + cls;
+  fb.style.display = 'block';
+}
+</script>
 <script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
 </body>
 </html>

@@ -12,111 +12,464 @@
   body { font-family: 'Palatino','Noto Serif SC',serif; background: var(--bg); color: var(--text); line-height: 1.75; max-width: 840px; margin: 0 auto; padding: 3rem 1.5rem 6rem; font-size: 17px; }
   h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.35rem; color: #1a1a1a; } .subtitle { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; font-style: italic; }
   h2 { font-size: 1.35rem; margin: 2.6rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 1.5px solid var(--border); } h3 { font-size: 1.1rem; margin: 1.7rem 0 0.6rem; color: #333; }
+  h4 { font-size: 0.95rem; margin: 1.2rem 0 0.4rem; color: #444; }
   p { margin-bottom: 1rem; } ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; } li { margin-bottom: 0.35rem; }
   .toc { font-size: 0.92rem; line-height: 1.85; margin: 1rem 0 2rem; background: #faf8f3; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; } .toc a { color: var(--accent); text-decoration: none; }
   .insight { background: var(--light-accent); border-left: 4px solid #d4a574; padding: 1rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; } .insight::before { content: "💡 "; }
   .warning { background: #fff8f0; border-left: 4px solid #e09f3e; padding: 0.9rem 1.2rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; } .warning::before { content: "⚠️ "; }
   .meta-box { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.93rem; } .meta-box h4 { font-size: 0.85rem; color: #2d4a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
   .checkpoint { background: #f0f7ff; border: 1px solid #b8d4f0; border-radius: 8px; padding: 0.8rem 1.1rem; margin: 1.2rem 0; font-size: 0.92rem; }
-  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; } .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; } .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; }
+  .derivation { background: #fafaf7; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.3rem 0; font-size: 0.95rem; } .derivation h4 { font-size: 0.88rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; } .derivation .step { margin: 0.5rem 0; } .derivation .reason { color: var(--muted); font-size: 0.85rem; font-style: italic; display: block; margin-top: 0.15rem; }
   .formula-block { text-align: center; margin: 1.4rem 0; } code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.9em; }
-  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; } th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); } td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); }
+  table { border-collapse: collapse; width: 100%; margin: 1.3rem 0; font-size: 0.92rem; } th { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); } td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
   .retrieval { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.8rem 0; } .retrieval h3 { margin-top: 0; color: #2d4a8a; }
-  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; } .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; } .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
-  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; } .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; } .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; } .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
-  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; } .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; } .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; } .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); } .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; } .concept-card .cc-section { margin-top: 0.7rem; } .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; } .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; } .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
-  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; } .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
-  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); } .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
+  .problem { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; } .problem .ptitle { font-weight: 700; }
+  .problem .plevel { display: inline-block; font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; font-family: 'Inter',sans-serif; }
+  .problem .plevel.l1 { background: #e6f4ea; color: #2d6a4f; } .problem .plevel.l2 { background: #fff3cd; color: #8a6a10; } .problem .plevel.l3 { background: #fce8e8; color: #c1121f; }
+  .problem .pbody { margin-top: 0.6rem; } .problem details { margin-top: 0.8rem; }
+  .problem summary { cursor: pointer; font-size: 0.88rem; color: var(--accent); font-family: 'Inter',sans-serif; }
+  .problem .sol { background: #fafaf7; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.1rem; margin-top: 0.6rem; font-size: 0.92rem; }
+  .problem .hint { background: #f0f4ff; border: 1px solid #b8c8f0; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-size: 0.88rem; color: #2d4a8a; }
+  .concept-card { background: #fffdfb; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; transition: box-shadow 0.2s; }
+  .concept-card:hover { box-shadow: 0 3px 16px rgba(0,0,0,0.07); } .concept-card .cc-header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .concept-card .cc-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2em 0.65em; border-radius: 4px; color: white; background: #2d6a4f; }
+  .concept-card .cc-header h3 { font-size: 1.1rem; color: #1a1a1a; margin: 0; border: none; } .concept-card .cc-aliases { font-size: 0.8rem; color: var(--muted); }
+  .concept-card .cc-essence { background: var(--light-accent); border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.7rem 0; border-radius: 0 5px 5px 0; font-size: 0.9rem; }
+  .concept-card .cc-section { margin-top: 0.7rem; } .concept-card .cc-section h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; }
+  .concept-card .cc-connections { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .concept-card .conn-badge { font-size: 0.75rem; padding: 0.15em 0.55em; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); color: var(--accent); }
+  .primary-source { background: #fffdf5; border-left: 4px solid #e6c030; padding: 1rem 1.3rem; margin: 2.5rem 0 1.5rem; font-size: 0.95rem; }
+  .reminder { background: #f5f7fa; border: 1px solid #dde; border-radius: 8px; padding: 1.1rem 1.3rem; margin: 2.5rem 0; font-size: 0.92rem; color: #445; }
+  .lesson-footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  .lesson-footer a { color: var(--accent); text-decoration: none; } .en { color: var(--muted); font-size: 0.88em; }
+  .quiz { margin: 1.5rem 0; } .quiz-question { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem; margin-bottom: 0.8rem; }
+  .quiz-question h4 { font-size: 0.95rem; margin-bottom: 0.4rem; } .quiz-options { display: flex; flex-direction: column; gap: 0.3rem; }
+  .quiz-option { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; } .quiz-feedback { font-size: 0.85rem; padding: 0.4rem 0.6rem; margin-top: 0.4rem; border-radius: 4px; display: none; }
+  .deadlock-viz { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin: 1.3rem 0; text-align: center; }
+  .deadlock-viz canvas { border: 1px solid var(--border); border-radius: 6px; background: #fcfcf9; }
+  .dl-controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 0.8rem 0; }
+  .dl-controls button { padding: 0.3rem 0.8rem; border: 1px solid var(--border); background: var(--code-bg); border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+  .dl-controls button:hover { background: #eaeaea; } .dl-status { font-size: 0.9rem; margin-top: 0.5rem; color: var(--muted); }
 </style>
 </head>
 <body>
 
 <h1>Lesson 0006 · 管程·死锁·无锁</h1>
-<div class="subtitle">信号量太底层易出错——管程提供结构化并发；死锁是四个条件的逻辑必然；无锁编程用 CAS 绕开锁本身——并发工具的第二代 · 阅读时间 ~50 分钟</div>
+<div class="subtitle">信号量太底层易出错——管程提供结构化并发；死锁是四个条件的逻辑必然；无锁编程用 CAS 绕开锁本身。加上 RCU 这个"读端零开销"的魔法——并发工具的第二代 · 阅读时间 ~50 分钟</div>
 
 <div class="toc"><strong>目录</strong><br>
-  <a href="#s1">1. 管程与条件变量</a><br>
-  <a href="#s2">2. 死锁：四个必要条件的逻辑必然性</a><br>
-  <a href="#s3">3. 银行家算法与死锁应对</a><br>
-  <a href="#s4">4. 无锁编程：CAS 构建栈</a><br>
-  <a href="#s5">5. RCU：读端零开销的魔法</a><br>
-  <a href="#s6">6. 推导与自测</a>
+  <a href="#s1">1. 管程与条件变量：更结构化的并发</a><br>
+  <a href="#s2">2. 读者-写者问题：饥饿陷阱</a><br>
+  <a href="#s3">3. 死锁：四个必要条件的逻辑必然性</a><br>
+  <a href="#s4">4. 死锁的预防/避免/检测/恢复</a><br>
+  <a href="#s5">5. 无锁编程：CAS 构建栈与 ABA 问题</a><br>
+  <a href="#s6">6. RCU：读端零开销的魔法</a><br>
+  <a href="#s7">7. 自测题</a><br>
+  <a href="#s8">8. 习题</a>
 </div>
 
 <p>上一课 0005 给了锁和信号量——它们是并发原语的"汇编层"。这节课讲更高层的抽象（管程）以及要避免的灾难（死锁）以及终极武器（无锁）。</p>
 
 <div class="retrieval"><h3>🔁 回忆</h3><ol>
-  <li>0005 §5：信号量解生产者-消费者——`sem_wait(full)` 和 `sem_wait(empty)` 的语义是什么？</li>
+  <li>0005 §9：信号量解生产者-消费者——<code>sem_wait(full)</code> 和 <code>sem_wait(empty)</code> 的语义是什么？</li>
   <li>0005 §4：自旋锁 vs mutex——什么场景用哪个？</li>
-  <li>持锁睡眠会导致什么？（提示：0005 §5 的 warning）</li>
+  <li>0005 §10：持锁睡眠会导致什么？（提示：死锁陷阱）</li>
+  <li>0003 §5：PTE 的 D (Dirty) bit 是硬件还是软件置的？这和 RCU 有什么关系？</li>
 </ol></div>
 
-<h2 id="s1">1. 管程与条件变量</h2>
+<h2 id="s1">1. 管程与条件变量：更结构化的并发</h2>
+
+<p>信号量太底层了——P 和 V 可以放在任何地方，编译器和工具链无法帮你检查"是不是每个 P 都有对应的 V"、"P 和 V 的顺序是否正确"。管程（Monitor）把锁和条件封装到一起，编译器/运行时可以保证<strong>同一时刻最多一个线程在管程中</strong>。</p>
+
 <div class="concept-card"><div class="cc-header"><span class="cc-tag">同步原语</span><h3>管程 · Monitor</h3></div>
-<div class="cc-essence"><strong>一个管程 = 一个互斥锁 + 0 或多个条件变量 + 一组过程。</strong>编译器/运行时保证：同一时刻最多一个线程在管程的某个过程中。管程把锁的 acquire/release 隐藏起来——程序员只写"条件不满足就 wait"，不用管锁。</div>
+<div class="cc-essence"><strong>一个管程 = 一个互斥锁 + 0 或多个条件变量 + 一组过程（函数）。</strong>编译器/运行时保证：同一时刻最多一个线程在管程的某个过程中。锁的 acquire/release 自动发生——程序员不用（也不能）手动操作锁。<br>
+历史：C. A. R. Hoare 1974 年提出。Java 的 <code>synchronized</code> 关键字、Python 的 <code>with lock</code>、Go 的 channel 底层都受管程思想影响。</div>
 <div class="cc-section"><h4>条件变量（Condition Variable）</h4>
-<p><strong>wait()</strong>：原子地释放锁 + 让当前线程睡眠。<strong>signal()</strong>：唤醒一个在 wait 的线程。</p>
-<p><strong>Mesa 语义</strong>（Java/Pthread）：signal 只建议"条件可能变了"，被唤醒者必须<strong>重新检查</strong>条件（while 而非 if）。<strong>Hoare 语义</strong>（理论）：signal 立即把 CPU 让给被唤醒者——唤醒者不用重检查。后者理论上更优雅但实现极难——所有实际系统都用 Mesa。</p>
+<p>当线程进入管程但发现"条件不满足"（比如缓冲区空），它不能继续执行。条件变量给了它一个<strong>在管程内安全等待</strong>的方式：</p>
+<ul>
+  <li><strong>wait(cv, lock)</strong>：原子地释放锁 + 把调用线程挂入条件变量的等待队列 + 睡眠。被唤醒时重新获取锁。</li>
+  <li><strong>signal(cv)</strong>（或 notify）：唤醒一个在该条件变量上等待的线程（如果有）。</li>
+  <li><strong>broadcast(cv)</strong>：唤醒所有等待者。</li>
+</ul>
+</div>
+<div class="cc-section"><h4>Mesa vs Hoare 语义</h4>
+<table>
+  <tr><th></th><th>Hoare 语义（理论）</th><th>Mesa 语义（实际）</th></tr>
+  <tr><td>signal 行为</td><td>立即切换上下文给被唤醒者，信号发出者阻塞</td><td>只是把被唤醒者移到就绪队列，signal 发出者继续执行</td></tr>
+  <tr><td>被唤醒者如何</td><td>条件一定满足——可以直接继续</td><td>条件<strong>可能</strong>不满足了——必须用 <code>while</code> 重新检查</td></tr>
+  <tr><td>实现复杂度</td><td>极高——需要额外的上下文切换</td><td>简单——把抢占权交给调度器</td></tr>
+  <tr><td>实际使用</td><td>几乎无人实现</td><td>所有现实系统（Java <code>wait()</code>/<code>notify()</code>、pthread_cond_wait、C++ <code>condition_variable</code>）</td></tr>
+</table>
 </div></div>
 
-<p><strong>读者-写者问题</strong>用管程：读者可以同时读（共享锁），写者独占。条件变量 `okToRead` 和 `okToWrite` 协调等待者。这个问题的"饥饿"变体揭示了调度公平是并发原语之上的额外要求——锁本身不保证"先等的先进"。</p>
+<div class="checkpoint"><strong>停下来想一想：</strong>Mesa 语义要求用 <code>while(condition) wait(cv)</code> 而非 <code>if(condition) wait(cv)</code>。为什么？<br>答案：signal 只建议"条件可能变了"——在信号发出者和被唤醒者之间，可能有第三个线程抢先进入管程，消耗了资源，让条件再次不满足。用 if 的话，被唤醒者直接假设条件满足——可能已过时。while 确保再次检查，这是 Mesa 语义的强制要求。</div>
 
-<h2 id="s2">2. 死锁：四个必要条件的逻辑必然性</h2>
+<h2 id="s2">2. 读者-写者问题：饥饿陷阱</h2>
+
+<p>读者-写者问题是管程的经典应用：读者只能读，可以并发读；写者独占。用两个条件变量 <code>okToRead</code> 和 <code>okToWrite</code> 协调：</p>
+
+<div class="derivation"><h4>读者-写者的管程方案（伪代码）</h4>
+<div class="step"><strong>读者进入：</strong>if (writers &gt; 0 || waitingWriters &gt; 0) → wait(okToRead)。然后 readers++，signal(okToRead)。<span class="reason">连锁唤醒：前一个读者唤醒下一个读者，让多个读者同时进入而不干扰写者。</span></div>
+<div class="step"><strong>读者离开：</strong>readers--。if (readers == 0) → signal(okToWrite)。<span class="reason">最后一个读者离开时唤醒一个写者。</span></div>
+<div class="step"><strong>写者进入：</strong>if (readers &gt; 0 || writers &gt; 0) → wait(okToWrite)。然后 writers++。</div>
+<div class="step"><strong>写者离开：</strong>writers--。if (waitingWriters &gt; 0) → signal(okToWrite) else signal(okToRead)。</div>
+</div>
+
+<p>但这里有一个<strong>饥饿陷阱</strong>：如果读者源源不断——读者一进入就 <code>signal(okToRead)</code> 唤醒下一个读者——读者可以"背靠背"地连续进入，写者永远等不到 <code>readers == 0</code> 的时刻。这是<strong>写者饥饿</strong>（writer starvation）。</p>
+
+<p><strong>解决方案</strong>：给写者优先级。当有写者在等时，新读者不能进入——等已有的读者退出后让写者先走。牺牲一点读者延迟，换写者的有界等待。这是"公平性"的经典 tradeoff：无饥饿保证通常以吞吐量为代价。</p>
+
+<div class="meta-box"><h4>范式 #5 · 机制/策略分离（读者-写者版）</h4>
+<p><strong>机制：</strong>条件变量 wait/signal + 共享 reader count。提供"读者-写者模式"的基本构件——多个读者并发，写者互斥。<strong>策略：</strong>读者优先还是写者优先？哪个带饥饿缓解？这些都是可替换的策略，在同一套条件变量机制上实现。Linux 的 <code>rwlock</code> 和 <code>rwsem</code> 就分别提供了不同的读写公平策略。</p></div>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>如果你设计一个文件缓存系统，读请求是写的 1000 倍。应该用读者优先还是写者优先？<br>答案：读者优先——写者饥饿的概率极低（排一下队就能得到写锁）。但如果文件系统有日志（journaling），日志写必须尽快完成——那就需要写者优先，让写者不因密集读请求而无限期阻塞。</div>
+
+<h2 id="s3">3. 死锁：四个必要条件的逻辑必然性</h2>
+
 <div class="concept-card"><div class="cc-header"><span class="cc-tag">灾难</span><h3>死锁 · Deadlock</h3></div>
 <div class="cc-essence"><strong>四个条件全部满足 → 死锁必然发生。</strong>缺一不可——这就是死锁应对的逻辑基础：<strong>打破任何一个条件即可预防死锁。</strong></div>
-<div class="cc-section"><h4>四个必要条件</h4>
-<ol><li><strong>互斥</strong>：资源不能同时被多个线程使用</li><li><strong>持有并等待</strong>：持有一个资源的同时等待另一个</li><li><strong>不可抢占</strong>：不能强行抢走别人持有的资源</li><li><strong>循环等待</strong>：A 等 B，B 等 C，...，Z 等 A——资源分配图中有环</li></ol>
+<div class="cc-section"><h4>四个必要条件（Coffman 条件，1971）</h4>
+<ol>
+  <li><strong>互斥</strong>：资源不能同时被多个线程使用（锁天然是这个性质）</li>
+  <li><strong>持有并等待</strong>：线程持有一个资源的同时等待另一个</li>
+  <li><strong>不可抢占</strong>：不能强行抢走别人持有的资源（持锁不能被夺走）</li>
+  <li><strong>循环等待</strong>：存在循环链——A 等 B，B 等 C，...，Z 等 A</li>
+</ol>
 </div></div>
 
-<div class="insight"><strong>打破任何一个条件就可以预防死锁。</strong>打破条件 1（互斥）→ 无锁数据结构（CAS 造的无锁栈不持锁——没有"互斥"这回事）。打破条件 2（持有并等待）→ 一次性申请所有需要的锁。打破条件 3（不可抢占）→ 拿不到锁就释放已持锁（`try_lock` + 回退）。打破条件 4（循环等待）→ 按固定顺序加锁（所有代码先锁 A 再锁 B——永远不会形成环）。</div>
+<h3>3.1 死锁检测：资源分配图</h3>
 
-<h2 id="s3">3. 银行家算法与死锁应对</h2>
-<p><strong>银行家算法（Banker's Algorithm）</strong>——死锁<strong>避免</strong>（avoidance，有别于预防 prevention）：系统跟踪每个线程的"最大资源需求"和"当前持有"，在每次分配前判断"分完后还存在一个安全序列（所有线程都能完成）吗？"如果不存在 → 不让分——即使资源空闲。</p>
-<p>实际上很少用——因为需要提前知道最大需求（和 STCF 调度一样不现实）。更实用的做法是预防 + 检测恢复（周期性检查资源分配图是否有环 → 有环就杀一个线程释放资源）。</p>
+<p>资源分配图（Resource Allocation Graph）是可视化死锁的工具。圆形 = 线程，方形 = 资源。从线程到资源的边 = "线程请求该资源"。从资源到线程的边 = "资源已分配给该线程"。<strong>有环 → 可能死锁。</strong></p>
 
-<div class="checkpoint"><strong>停下来想一想：</strong>数据库系统经常检测到死锁后回滚一个事务——为什么 OS 很少用检测恢复？因为数据库事务可以回滚（undo log），OS 线程很难"回滚"——它已经做了副作用（写了 pipe、发了网络包、改了共享内存）。</div>
+<div class="deadlock-viz">
+  <strong style="font-size:0.9rem;">死锁检测交互图</strong>
+  <canvas id="deadlockCanvas" width="560" height="240"></canvas>
+  <div class="dl-controls">
+    <button onclick="dlReset()">↺ 重置（安全）</button>
+    <button onclick="dlDeadlock()">⛓ 添加锁 B → 死锁</button>
+    <button onclick="dlResolve()">✓ 打破循环</button>
+  </div>
+  <div class="dl-status" id="dlStatus">状态：无死锁（无环）</div>
+</div>
 
-<h2 id="s4">4. 无锁编程：CAS 构建栈</h2>
+<script>
+(function(){
+  const c = document.getElementById('deadlockCanvas');
+  const ctx = c.getContext('2d');
+  const ds = document.getElementById('dlStatus');
+
+  // 状态定义
+  let nodes = [
+    { type: 'thread', id: 'T1', x: 140, y: 100 },
+    { type: 'thread', id: 'T2', x: 420, y: 100 },
+    { type: 'resource', id: 'Lock A', x: 140, y: 200 },
+    { type: 'resource', id: 'Lock B', x: 420, y: 200 },
+  ];
+  let edges = [
+    { from: 0, to: 2, label: 'h_A' },  // T1 holds A
+    { from: 1, to: 3, label: 'h_B' },  // T2 holds B
+    { from: 0, to: 3, label: 'r_B' },  // T1 requests B
+    { from: 1, to: 2, label: 'r_A' },  // T2 requests A
+  ];
+
+  function draw() {
+    ctx.clearRect(0, 0, 560, 240);
+    // 边
+    ctx.strokeStyle = '#6b6b6b';
+    ctx.lineWidth = 1.5;
+    edges.forEach(e => {
+      const f = nodes[e.from], t = nodes[e.to];
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y);
+      ctx.lineTo(t.x, t.y);
+      ctx.stroke();
+      // 箭头
+      const dx = t.x - f.x, dy = t.y - f.y;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      const nx = dx/len, ny = dy/len;
+      const ax = t.x - nx*12, ay = t.y - ny*12;
+      ctx.beginPath();
+      ctx.moveTo(ax - ny*5, ay + nx*5);
+      ctx.lineTo(t.x, t.y);
+      ctx.lineTo(ax + ny*5, ay - nx*5);
+      ctx.stroke();
+    });
+    // 节点
+    nodes.forEach(n => {
+      ctx.beginPath();
+      if (n.type === 'thread') {
+        ctx.arc(n.x, n.y, 18, 0, 2*Math.PI);
+        ctx.fillStyle = '#e6f4ea';
+        ctx.strokeStyle = '#2d6a4f';
+        ctx.lineWidth = 2;
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#2d6a4f';
+        ctx.font = 'bold 12px Palatino, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(n.id, n.x, n.y+4);
+      } else {
+        ctx.rect(n.x-22, n.y-12, 44, 24);
+        ctx.fillStyle = '#fff3cd';
+        ctx.strokeStyle = '#8a6a10';
+        ctx.lineWidth = 2;
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#8a6a10';
+        ctx.font = '12px Palatino, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(n.id, n.x, n.y+4);
+      }
+    });
+    // 检查环
+    const hasCycle = edges.length === 4;
+    ds.textContent = hasCycle ? '⛓ 检测到环！T1 持 A 等 B，T2 持 B 等 A → 死锁' : '✓ 无死锁（无环）';
+    ds.style.color = hasCycle ? '#c1121f' : '#2d6a4f';
+  }
+
+  window.dlReset = function() {
+    edges = [
+      { from: 0, to: 2, label: 'h_A' },
+      { from: 1, to: 3, label: 'h_B' },
+    ];
+    draw();
+  };
+
+  window.dlDeadlock = function() {
+    edges = [
+      { from: 0, to: 2, label: 'h_A' },
+      { from: 1, to: 3, label: 'h_B' },
+      { from: 0, to: 3, label: 'r_B' },
+      { from: 1, to: 2, label: 'r_A' },
+    ];
+    draw();
+  };
+
+  window.dlResolve = function() {
+    edges = [
+      { from: 0, to: 2, label: 'h_A' },
+      { from: 1, to: 3, label: 'h_B' },
+      { from: 0, to: 3, label: 'r_B' },
+      // T2 不再等 A，环打破
+    ];
+    draw();
+  };
+
+  draw();
+})();
+</script>
+
+<h3>3.2 哲学家就餐问题（Dining Philosophers）</h3>
+
+<p>五位哲学家围桌而坐，每人左右各有一根筷子。只有同时拿到两根筷子才能吃饭。最直接的解法——每位哲学家先拿左边筷子、再拿右边筷子——会死锁：所有人同时拿起左边的筷子，然后同时等右边的筷子，永远等不到。</p>
+
+<p><strong>解法 1（打破条件 4 循环等待）</strong>：给筷子编号，要求所有哲学家先拿<strong>较小编号</strong>的筷子。哲学家 4（左边 4 号，右边 5 号）先拿 4 号——和以前一样。但哲学家 0（左边 0 号，右边 1 号）先拿 0 号。唯一的改变是哲学家 4（左 4 右 5）：他先拿 4 号（较小），再拿 5 号。如果所有人同时拿较小的——0、1、2、3、4 各拿左边——哲学家 4 左边是 4 号、右边是 5 号——他拿了 4 号后需要 5 号，但 5 号没人抢（5 号不可能被"先拿"因为没有人左右分别是 5 和 0——不存在 5 号是较小的场景）。所以一定有人能拿到两根筷子——环被打破。</p>
+
+<div class="insight"><strong>哲学家就餐问题的本质：</strong>它不是关于"怎么拿筷子"的——它是关于<strong>对称性</strong>（symmetry）和<strong>循环依赖</strong>的。所有哲学家执行完全相同的代码 = 所有人在同一时间做完全相同的事 = 齐步走 = 死锁。打破对称性给任意一个哲学家不同的行为（反过来拿、等待随机时间）就能破坏循环等待。</div>
+
+<h2 id="s4">4. 死锁的预防/避免/检测/恢复</h2>
+
+<p>死锁有四种应对策略，每种对应不同的前提假设和代价：</p>
+
+<div class="derivation"><h4>四种策略对比</h4>
+<div class="step"><strong>① 预防（Prevention）——在设计层面打破某个 Coffman 条件</strong><br>
+打破"互斥"→ 无锁数据结构（§5）。打破"持有并等待"→ 一次性申请所有锁。打破"不可抢占"→ <code>try_lock</code> + 失败释放已持锁。打破"循环等待"→ 强制固定加锁顺序。<br>
+<span class="reason">代价最小，但对代码结构约束大——有时无法在一次调用中申请所有资源。</span></div>
+<div class="step"><strong>② 避免（Avoidance）——运行时判断"这次分配是否安全"</strong><br>
+系统跟踪每个线程的最大需求（需提前声明）。银行家算法（下文详述）。<br>
+<span class="reason">代价：需要先知——知道每个线程的最大资源需求。大多数场景做不到。</span></div>
+<div class="step"><strong>③ 检测 + 恢复（Detection + Recovery）——允许死锁发生，发现后解除</strong><br>
+定期检查资源分配图是否有环。有环 → 杀一个线程（释放它的所有资源）。<br>
+<span class="reason">代价：无法回滚 OS 线程的副作用（写了文件、发了网络包）。数据库用得多（事务可回滚）。</span></div>
+<div class="step"><strong>④ 忽略——"鸵鸟算法"</strong><br>
+假设死锁极其罕见 → 重启机器。Windows/早期 Linux 的实践。<br>
+<span class="reason">代价：用户数据可能丢失。现代系统至少会做检测（lockdep）。</span></div>
+</div>
+
+<h3>银行家算法（Banker's Algorithm）的详细推演</h3>
+
+<p>Dijkstra 1965 年提出。名字来源于银行家不会把所有现金贷出去——留一部分储备。系统跟踪四个向量：</p>
+<ul>
+  <li><strong>Available</strong>：每种资源的剩余量</li>
+  <li><strong>Max</strong>：每个线程对每种资源的最大需求（需提前声明）</li>
+  <li><strong>Allocation</strong>：每个线程当前持有量</li>
+  <li><strong>Need = Max - Allocation</strong>：每个线程还需要多少</li>
+</ul>
+
+<p>算法的核心：<strong>在每次分配前，检查"分配后还能找到一条安全序列吗？"</strong>安全序列 = 所有线程都能完成的执行顺序（即使它们突然都要最大量）。只有当存在至少一个安全序列时，才允许分配。</p>
+
+<div class="checkpoint"><strong>停下来想一想：</strong>为什么银行家算法实际上很少用？<br>答案：需要线程提前声明最大资源需求——这在实践中不现实。线程的执行路径取决于输入数据，无法预先知道最大内存/文件/锁的用量。而且线程可能动态创建子线程——执行前谁知道"最大"是多少？STCF 调度（0002 §7.2）也有同样的问题——需要预知执行时间。</div>
+
+<h2 id="s5">5. 无锁编程：CAS 构建栈与 ABA 问题</h2>
+
 <p>锁有代价：持锁线程被切走 → 等锁线程全部空转/阻塞 → 优先反转 → 死锁可能。无锁（lock-free）数据结构用 CAS 避免所有这些问题。</p>
 
-<div class="derivation"><h4>CAS 构建无锁栈（Treiber Stack）</h4>
-<div class="step"><strong>push(node)：</strong>do { node->next = top; } while (!CAS(&top, node->next, node));<span class="reason">"把新节点的 next 设为当前 top，然后 CAS 尝试把 top 改成新节点——如果这期间 top 被别人改了，重试。"</span></div>
-<div class="step"><strong>pop()：</strong>do { node = top; if (node==NULL) return NULL; next = node->next; } while (!CAS(&top, node, next)); return node;<span class="reason">"读 top → 读它的 next → CAS(top, old_top, next)。如果 CAS 失败——重试。"</span></div>
+<h3>5.1 Treiber 栈（无锁栈）</h3>
+
+<div class="derivation"><h4>CAS 构建无锁栈</h4>
+<div class="step"><strong>push(node)：</strong>do { node->next = top; } while (!CAS(&amp;top, node->next, node));<span class="reason">"把新节点的 next 设为当前 top，然后 CAS 尝试把 top 改成新节点——如果这期间 top 被别人改了，重试。"</span></div>
+<div class="step"><strong>pop()：</strong>do { node = top; if (node==NULL) return NULL; } while (!CAS(&amp;top, node, node->next)); return node;<span class="reason">"读 top → 读它的 next → CAS(top, old_top, next)。如果 CAS 失败——重试。"</span></div>
 <div class="step">关键：<strong>没有"锁"，没有"临界区"</strong>——CAS 失败就 retry。retry 次数 = 竞争度——低竞争时几乎总是一次成功。</div>
 </div>
+
+<h3>5.2 ABA 问题</h3>
+
+<p>CAS 有一个致命弱点：它只比较值，不比较"身份"。假设两个线程并发 pop()：</p>
+<ol>
+  <li>线程 1 读 top → 节点 A（top=A）。线程 1 读 node->next → B。</li>
+  <li>线程 1 被调度走。线程 2 完整 pop A（top→B）。线程 2 再 push A 回去（top→A）。<strong>但 A 的 next 已经变了！</strong></li>
+  <li>线程 1 的 CAS(&amp;top, A, B) 成功——因为 top 确实等于 A（A 被 push 回来了）。但 A->next 现在指向另一个东西——不是原来的 B。栈的结构被破坏。</li>
+</ol>
+
+<div class="warning"><strong>ABA 的值等于 A→B→A，CAS 看到"还是 A"，以为没变过。</strong>解决方案：用带版本号（tag）的指针——<code>CAS(&amp;top, (A, ver1), (B, ver2))</code> ——即使地址 A 回来了，版本号不同，CAS 失败。x86-64 上 <code>LOCK CMPXCHG16B</code> 支持 16 字节的 2 字 CAS（指针 + 版本号）。这是下一课更深入的无锁内容的基础。</div>
 
 <div class="meta-box"><h4>范式 #3 · 惰性求值（无锁版）</h4>
 <p>无锁 = 乐观并发控制（optimistic concurrency）——"假设没有冲突，先去做了，如果冲突就重试"。这是惰性求值的并发版：不做冲突预防（锁），冲突发生了才补救（retry）。数据库的 OCC（乐观并发控制）也是同样的思路。</p></div>
 
-<h2 id="s5">5. RCU：读端零开销的魔法</h2>
+<h2 id="s6">6. RCU：读端零开销的魔法</h2>
+
 <div class="concept-card"><div class="cc-header"><span class="cc-tag" style="background:#c44d4d;">无锁</span><h3>RCU · Read-Copy-Update</h3></div>
-<div class="cc-essence"><strong>对于"读极多、写极少"的数据（路由表、文件系统目录缓存……），RCU 让读端完全不拿锁、不写共享变量、不需要原子操作——零开销。</strong></div>
-<div class="cc-section"><h4>三步流程</h4>
-<ol><li><strong>Copy</strong>：写者复制数据结构，在副本上修改</li><li><strong>Update</strong>：原子指针 `rcu_assign_pointer` 把全局指针从旧版切到新版</li><li><strong>Reclaim</strong>：等所有已存在的读者都结束后（通过 `synchronize_rcu` 或宽限期回调），释放旧版内存</li></ol>
+<div class="cc-essence"><strong>对于"读极多、写极少"的数据（路由表、文件系统目录缓存、进程列表……），RCU 让读端完全不拿锁、不写共享变量、不需要原子操作——零开销。</strong></div>
+<div class="cc-section"><h4>三步流程（范式 #3 惰性求值的并发极致）</h4>
+<ol>
+  <li><strong>Copy</strong>：写者复制一份数据结构，在副本上做所有修改。原数据不变。</li>
+  <li><strong>Update</strong>：用 <code>rcu_assign_pointer()</code> 原子地更新指向数据结构的全局指针——从旧版切换到新版。这是 O(1) 的操作——一个原子赋值。</li>
+  <li><strong>Reclaim</strong>：等所有正在读旧版本的读者都离开后再释放旧版内存。需要"宽限期"（grace period）。</li>
+</ol>
+</div>
+<div class="cc-section"><h4>怎么知道"所有读者都结束了"？</h4>
+<p>RCU 利用了 OS 调度器的事实：<strong>上下文切换点 = 读者的结束点</strong>。Linux 内核中，RCU 读者在 <code>rcu_read_lock()</code> 和 <code>rcu_read_unlock()</code> 之间<strong>不能睡眠</strong>（不能调 schedule()）。所以：</p>
+<ul>
+  <li>如果每个 CPU 都经历了一次上下文切换——该 CPU 上所有 RCU 读者（如果开始过）必然已经结束</li>
+  <li><code>synchronize_rcu()</code> 的实现：等所有 CPU 都至少经历一次 quiescent state（上下文切换或 idle 或用户态执行）</li>
+  <li>现代 RCU 实现（Tree RCU）用内核线程 <code>rcuc</code> 处理回调——不必每次同步等待，可以异步回收</li>
+</ul>
 </div></div>
 
-<p><strong>怎么知道"所有读者都结束了"？</strong>RCU 利用了 OS 的一个事实：<strong>上下文切换点 = 读者的结束点</strong>。Linux 内核中，读者在 RCU 读临界区中不能睡眠（不能调 `schedule()`）。所以：只要每个 CPU 都经历了一次上下文切换，该 CPU 上所有 RCU 读者都已结束。`synchronize_rcu` = 等所有 CPU 都经历过一次 quiescent state（通常是上下文切换）。</p>
+<div class="insight"><strong>RCU 的优雅：</strong>读端在 x86 上 <code>rcu_read_lock</code> / <code>rcu_read_unlock</code> 是<strong>空操作</strong>（只禁止抢占——但禁止抢占本身不是内存操作）。这意味着读一个 RCU 保护的数据结构——没有任何原子指令、没有锁、没有内存屏障——和普通指针访问一样快。回想 0005 §8 的读写锁：读端需要两次原子操作（获取读锁 + 释放读锁）。RCU 把这两次原子操作降到了零。代价是写端更复杂（copy + synchronize_rcu）。</div>
 
-<div class="insight"><strong>RCU 是惰性求值（范式 #3）在并发中的终极应用。</strong>写者不改原数据——它造一份新的，然后"切指针"这个 O(1) 原子操作完成更新。旧数据的回收推迟到"确定没人看了"——可能是几 ms 到几秒后。这期间新旧版本同时存在——空间换并发。</div>
+<div class="checkpoint"><strong>停下来想一想：</strong>RCU 能在用户态用吗？<br>答案：可以——但无法利用"上下文切换 = quiescent state"这个内核特性。用户态需要自己提供 quiescent state 机制，比如定期调用 <code>rcu_quiescent_state()</code> 或使用用户态调度器协作。Urcu（Userspace RCU）库提供了这个功能，在用户态锁竞争极高的场景（如共享内存数据库）有使用。</div>
 
-<h2 id="s6">6. 推导与自测</h2>
-<div class="problem"><div class="ptitle">P1 · 死锁四条件分析 <span class="plevel l1">L1</span></div><div class="pbody"><p>两个线程各持一个锁等对方另一个锁——经典死锁。逐一确认四个条件是否满足。如果改成 `try_lock` + 失败就释放已有锁，打破了哪个条件？</p></div>
-<details><summary>▸ 解答</summary><div class="sol"><div class="step">① 互斥 ✓（锁不能共享）。② 持有并等待 ✓（各持一把等另一把）。③ 不可抢占 ✓（不能夺锁）。④ 循环等待 ✓（A 等 B，B 等 A）。`try_lock` + 释放 = 打破<strong>条件 3（不可抢占）</strong>——主动放弃自己持有的锁，让等待链断开。</div></div></details></div>
+<h2 id="s7">7. 自测题</h2>
+
+<p style="color:var(--muted); font-size:0.9rem;">10 题覆盖本课每节核心点。做完后若某题答错，回到对应节重读。</p>
+
+<div class="quiz">
+
+<div class="quiz-question"><h4>Q1（§1 管程）· 条件变量的 Mesa 语义和 Hoare 语义的关键区别是什么？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。','incorrect-fb')"><label>A. Mesa 需要锁，Hoare 不需要</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','对。Mesa 语义中 signal 只把被唤醒者移到就绪队列，条件可能已变化，必须 while 重检。Hoare 语义中 signal 立即切换给被唤醒者，条件一定满足。','correct-fb')"><label>B. Mesa 中 signal 只是建议，被唤醒者必须 while 重检条件；Hoare 中 signal 立即移交 CPU</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。反过来——Mesa 是实际系统使用的。','incorrect-fb')"><label>C. Hoare 语义是实际系统使用的，Mesa 是理论</label></div>
+</div>
+<div class="quiz-feedback" id="q1fb"></div></div>
+
+<div class="quiz-question"><h4>Q2（§2 读者-写者）· 读者-写者问题中"写者饥饿"的根本原因是什么？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>A. 写者太慢</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','对。读者可以背靠背连续进入（读者进入时唤醒下一个读者），readers 永远不为 0，写者永远等不到。','correct-fb')"><label>B. 读者可以连锁唤醒让 readers 永远不为 0</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>C. 写者优先级比读者低</label></div>
+</div>
+<div class="quiz-feedback" id="q2fb"></div></div>
+
+<div class="quiz-question"><h4>Q3（§3 死锁）· 哲学家就餐问题的本质是？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>A. 筷子不够</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','对。所有哲学家执行完全相同的代码 → 同时做完全相同的事 → 对称性 → 死锁。打破对称性即可解。','correct-fb')"><label>B. 对称性导致所有人同时拿起同一支筷子</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>C. 哲学家不会释放筷子</label></div>
+</div>
+<div class="quiz-feedback" id="q3fb"></div></div>
+
+<div class="quiz-question"><h4>Q4（§3 死锁）· 以下哪个不是死锁的四个必要条件之一？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。这是 Coffman 条件之一。','incorrect-fb')"><label>A. 持有并等待</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','对。死锁四个条件是：互斥、持有并等待、不可抢占、循环等待。','correct-fb')"><label>B. 资源数量有限</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。这是 Coffman 条件之一。','incorrect-fb')"><label>C. 不可抢占</label></div>
+</div>
+<div class="quiz-feedback" id="q4fb"></div></div>
+
+<div class="quiz-question"><h4>Q5（§4 银行家）· 银行家算法为什么不常用？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。算法本身很快。','incorrect-fb')"><label>A. 计算量太大</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','对。需要线程提前声明最大资源需求——这在实践中（动态执行路径）几乎不可能做到。','correct-fb')"><label>B. 需要提前知道每个线程的最大需求，现实中做不到</label></div>
+<div class="quiz-option"><input type="radio" name="q5" onchange="quizFB(this,'q5fb','错。','incorrect-fb')"><label>C. 不安全——不是正确的算法</label></div>
+</div>
+<div class="quiz-feedback" id="q5fb"></div></div>
+
+<div class="quiz-question"><h4>Q6（§5 无锁）· 无锁栈（Treiber Stack）的 pop 为什么可能遇到 ABA 问题？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','错。CAS 不能区别。','incorrect-fb')"><label>A. CAS 不能检测指针值变化</label></div>
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','对。节点 A 被 pop 后又被 push 回栈顶，top 值是相同的 A，但 A->next 已不同。CAS 只看 top 值没变就成功了——破坏了栈。','correct-fb')"><label>B. 节点被弹出后又被推回，CAS 认为 top 没变，但节点结构已变</label></div>
+<div class="quiz-option"><input type="radio" name="q6" onchange="quizFB(this,'q6fb','错。','incorrect-fb')"><label>C. 两个线程同时 pop 导致 race</label></div>
+</div>
+<div class="quiz-feedback" id="q6fb"></div></div>
+
+<div class="quiz-question"><h4>Q7（§6 RCU）· RCU 的读端在 x86 上的开销几乎为零，为什么？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q7" onchange="quizFB(this,'q7fb','错。rcu_read_lock 在 x86 上是空操作或只关抢占。','incorrect-fb')"><label>A. 因为读端用了优化的 mutex</label></div>
+<div class="quiz-option"><input type="radio" name="q7" onchange="quizFB(this,'q7fb','对。rcu_read_lock 在 x86 上是空操作（只禁止抢占，无内存操作）。完全不需要原子指令或内存屏障。','correct-fb')"><label>B. rcu_read_lock 只是禁止抢占——在 x86 上无原子操作，零开销</label></div>
+<div class="quiz-option"><input type="radio" name="q7" onchange="quizFB(this,'q7fb','错。','incorrect-fb')"><label>C. RCU 只能在单核上使用</label></div>
+</div>
+<div class="quiz-feedback" id="q7fb"></div></div>
+
+<div class="quiz-question"><h4>Q8（§6 RCU）· RCU 怎么知道"所有读者都结束了"？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q8" onchange="quizFB(this,'q8fb','错。RCU 读者不能睡眠。','incorrect-fb')"><label>A. 跟踪读者的引用计数</label></div>
+<div class="quiz-option"><input type="radio" name="q8" onchange="quizFB(this,'q8fb','对。RCU 读者不能睡眠（不能调 schedule()）。等所有 CPU 都经过一次上下文切换 = 所有读者结束。 ','correct-fb')"><label>B. 利用"RCU 读者不能睡眠"的约束——等所有 CPU 经历一次上下文切换</label></div>
+<div class="quiz-option"><input type="radio" name="q8" onchange="quizFB(this,'q8fb','错。','incorrect-fb')"><label>C. 用定时器，等 1ms 认为读者都结束了</label></div>
+</div>
+<div class="quiz-feedback" id="q8fb"></div></div>
+
+</div>
+
+<h2 id="s8">8. 习题</h2>
+
+<div class="problem"><div class="ptitle">P1 · 死锁四条件分析 <span class="plevel l1">L1</span></div><div class="pbody"><p>两个线程各持一个锁等对方另一个锁——经典死锁。逐一确认四个条件是否满足。如果改成 <code>try_lock</code> + 失败就释放已有锁，打破了哪个条件？</p></div>
+<details><summary>▸ 提示</summary><div class="hint">画出资源分配图。每个条件在图中对应什么？</div></details>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">① 互斥 ✓（锁不能共享）。② 持有并等待 ✓（各持一把等另一把）。③ 不可抢占 ✓（不能夺锁）。④ 循环等待 ✓（A 等 B，B 等 A）。</div><div class="step"><code>try_lock</code> + 释放 = 打破<strong>条件 3（不可抢占）</strong>——主动放弃自己持有的锁，让等待链断开。资源分配图的环被打破。</div></div></details></div>
 
 <div class="problem"><div class="ptitle">P2 · 银行家算法推演 <span class="plevel l2">L2</span></div><div class="pbody"><p>系统 12 单位资源。P1（max=10, held=5）、P2（max=4, held=2）、P3（max=9, held=2）。当前分配后剩余 3 单位。问：当前状态安全吗？如果 P2 再申请 1 单位，能分配吗？</p></div>
+<details><summary>▸ 提示</summary><div class="hint">Need = Max - Held。安全序列 = 存在一个顺序，每个进程在获得所需额外资源后都能完成释放。</div></details>
 <details><summary>▸ 解答</summary><div class="sol"><div class="step">当前：剩余 3。P1 need 5（不可满足）、P2 need 2（可满足）→ 先给 P2 完成释放 4 → 剩余 7 → P3 need 7 可满足 → P3 释放 9 → 剩余 16 → P1 need 5 可满足。<strong>安全序列 P2→P3→P1 = 安全。</strong></div><div class="step">P2 再申请 1 → P2 held=3, need=1, 剩余 2。检查：P2 need 1 可满足 → P2 完成释放 4 → 剩余 6 → P3 need 7 不可满足 → P1 need 5 可满足 → P1 释放 10 → 剩余 16 → P3 need 7 可满足。<strong>安全序列 P2→P1→P3 = 安全。可以分配。</strong></div></div></details></div>
 
-<div class="problem"><div class="ptitle">P3 · RCU vs 读写锁 <span class="plevel l3">L3</span></div><div class="pbody"><p>比较 RCU 和读写锁（rwlock）在读极多写极少的场景。(a) rwlock 的读端需要什么原子操作？RCU 呢？(b) 在读者有 10000 个、每秒 100 万次读、写者每秒 1 次的场景下，估算 rwlock 和 RCU 的性能差异。(c) 写者较多（每秒 1000 次）时 RCU 有什么问题？</p></div>
-<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) rwlock 读端：获取读锁（原子递减 reader count）→ 读 → 释放读锁（原子递增）。两次原子操作每次 ~几十 cycle。RCU 读端：`rcu_read_lock()` + 读 + `rcu_read_unlock()`——在 x86 上这两个函数是<strong>空操作</strong>（只禁止抢占——不写任何共享变量）。零原子操作。(b) rwlock 读者：2×1M×30 cycles = 60M cycles/s；RCU 读者：0。写者 1 次/s 的 `synchronize_rcu` 等所有 CPU 经历一次 quiescent state——~几到几十 ms——可以接受。(c) 写者多 → 每次写都要等所有 CPU 进 quiescent state → 延迟高。而且旧版本在 grace period 期间不能释放 → 内存积压。RCU 不适合写密集型。</div></div></details></div>
+<div class="problem"><div class="ptitle">P3 · 管程解哲学家就餐 <span class="plevel l2">L2</span></div><div class="pbody"><p>用管程（互斥锁 + 条件变量）实现哲学家就餐问题。每个哲学家的状态可以是 THINKING / HUNGRY / EATING。只允许相邻哲学家都不在 EATING 时，当前哲学家才能开始 EATING。写出 <code>pickup(i)</code> 和 <code>putdown(i)</code> 的伪代码，并说明为什么不会死锁。</p></div>
+<details><summary>▸ 提示</summary><div class="hint">维护 state[5] 数组。pickup(i) 让自己 HUNGRY → 检查左右是否 EATING → 不是则改为 EATING 并 signal 自己。是则 wait。putdown(i) 改为 THINKING → 检查左右邻居——如果可以，signal 它们。</div></details>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step"><strong>pickup(i)：</strong>lock(mutex); state[i]=HUNGRY; test(i); while(state[i]!=EATING) wait(cond[i], mutex); unlock(mutex)。</div><div class="step"><strong>putdown(i)：</strong>lock(mutex); state[i]=THINKING; test(LEFT); test(RIGHT); unlock(mutex)。</div><div class="step"><strong>test(i)：</strong>if (state[i]==HUNGRY &amp;&amp; state[LEFT]!=EATING &amp;&amp; state[RIGHT]!=EATING) { state[i]=EATING; signal(cond[i]); }</div><div class="step"><strong>为什么不死锁：</strong>每次 pickup 检查左右是否都在吃——这个检查是在管程锁保护下的。一个哲学家不能"超过自己邻居的状态"。test(i) 的检查防止了"所有人同时拿筷子"的情况。管程锁保证 state 数组的读写原子性。这和 0005 §10 教训相反——这里条件变量在做互斥之外的工作（检查条件），而条件变量的 wait 在管程锁之外阻塞——不会出现"持锁睡眠"。</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P4 · CAS 与 ABA 的模拟 <span class="plevel l2">L2</span></div><div class="pbody"><p>无锁栈初始 top→A→B→NULL。线程 1 准备 pop A：读取 top=A，读取→next=B。线程 2 完整 pop A（当前 top→B），再 pop B（top→NULL），再 push A（top→A，但 A→next 不是原来的 B）。假设线程 1 的 CAS(&amp;top, A, B) 在这时执行——它成功还是失败？为什么？栈的最终状态是什么？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">线程 1 的 CAS(&amp;top, A, B) <strong>成功</strong>——因为 top 当前确实等于 A（被线程 2 push 回来的那个 A）。top 被设为 B（线程 1 原先读到的 A->next）。</div><div class="step">但问题：push 回来的 A 的 next 指向的是另一个东西（假设指向 C），而不是原来的 B。所以 top 被设为 B 后，B 的 next 可能指向 NULL（原本栈只有 A→C→…，但 top 指向了 B，B 不在栈中……）。栈的结构彻底乱了。</div><div class="step>总结：CAS 只比较值（地址），不比较"版本"。即使地址值相同，数据结构的内容可能已完全不同。</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P5 · RCU vs 读写锁 <span class="plevel l3">L3</span></div><div class="pbody"><p>比较 RCU 和读写锁（rwlock）在读极多写极少的场景。(a) rwlock 的读端需要什么原子操作？RCU 呢？(b) 在读者有 10000 个、每秒 100 万次读、写者每秒 1 次的场景下，估算 rwlock 和 RCU 的性能差异。(c) 写者较多（每秒 1000 次）时 RCU 有什么问题？</p></div>
+<details><summary>▸ 解答</summary><div class="sol"><div class="step">(a) rwlock 读端：获取读锁（原子递减 reader count）→ 读 → 释放读锁（原子递增）。两次原子操作每次 ~几十 cycle。RCU 读端：<code>rcu_read_lock()</code> + 读 + <code>rcu_read_unlock()</code>——在 x86 上这两个函数是<strong>空操作</strong>（只禁止抢占——不写任何共享变量）。零原子操作。</div><div class="step">(b) rwlock 读者：2×1M×30 cycles = 60M cycles/s；RCU 读者：0。写者 1 次/s 的 <code>synchronize_rcu</code> 等所有 CPU 经历一次 quiescent state——~几到几十 ms——可以接受。</div><div class="step">(c) 写者多 → 每次写都要等所有 CPU 进 quiescent state → 延迟高。而且旧版本在 grace period 期间不能释放 → 内存积压。RCU 不适合写密集型。读多写少的"写"也不能太多。（提示：回想 0004 的"抖动"——当回收跟不上分配时，内存会被旧版本撑爆。）</div></div></details></div>
+
+<div class="problem"><div class="ptitle">P6 · 设计一个无饥饿的读者-写者锁 <span class="plevel l3">L3</span></div><div class="pbody"><p>使用管程（互斥锁 + 条件变量）设计一个读者-写者锁，保证<strong>写者不被饥饿</strong>（即有界等待）。提示：需要一个计数器跟踪"有多少读者正在读"，一个标志位"有写者在等待"，以及两个条件变量 okToRead 和 okToWrite。</p></div>
+<details><summary>▸ 提示</summary><div class="hint">关键设计决策：新读者进入前检查是否有写者在等——如果有，读者等待而不是进入；写者进入前检查是否有读者在读——如果有，写者等待；写者离开时，先唤醒写者（如果有），再唤醒读者。</div></details>
+<details><summary>▸ 完整解答</summary><div class="sol"><div class="step"><strong>数据结构：</strong>int readers=0, writers=0, waitingWriters=0; Condition okToRead, okToWrite; Lock mutex。</div><div class="step"><strong>readerEnter()：</strong>lock(mutex); while(writers &gt; 0 || waitingWriters &gt; 0) wait(okToRead, mutex); readers++; unlock(mutex)。</div><div class="step"><strong>readerExit()：</strong>lock(mutex); readers--; if(readers == 0) signal(okToWrite); unlock(mutex)。</div><div class="step"><strong>writerEnter()：</strong>lock(mutex); waitingWriters++; while(readers &gt; 0 || writers &gt; 0) wait(okToWrite, mutex); waitingWriters--; writers++; unlock(mutex)。</div><div class="step"><strong>writerExit()：</strong>lock(mutex); writers--; if(waitingWriters &gt; 0) signal(okToWrite); else broadcast(okToRead); unlock(mutex)。</div><div class="step"><strong>为什么无饥饿：</strong>写者进入前设 waitingWriters++，新读者看到这个标志就不会进入——等已有读者退出。写者一定能排到所有在它之前、和那些看它标志后不进的读者之前。等待有界。</div><div class="step"><strong>代价：</strong>读者吞吐量下降——即使没有写者竞争，新读者也要先检查 waitingWriters 的值（一次原子读），但相比可能被写者打断的好处，这个代价可接受。</div></div></details></div>
 
 <div class="primary-source"><h3>📖 延伸阅读</h3><ul>
   <li><strong>OSTEP</strong>：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-cv.pdf">Ch 30 (Condition Variables)</a>、<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/threads-deadlock.pdf">Ch 32 (Deadlock)</a></li>
-  <li><strong>Linux</strong>：<a href="https://www.kernel.org/doc/html/latest/RCU/">RCU Documentation</a> — Paul McKenney 的 RCU 详解</li>
+  <li><strong>xv6</strong>：<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/kernel/spinlock.c">kernel/spinlock.c</a>、<a href="https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/sleeplock.c">kernel/sleeplock.c</a></li>
+  <li><strong>Linux</strong>：<code>kernel/locking/mutex.c</code>、<code>kernel/rcu/</code> — RCU 实现；<code>kernel/locking/rwsem.c</code> — 读写信号量</li>
+  <li><strong>RCU</strong>：<a href="https://www.kernel.org/doc/html/latest/RCU/">Linux Kernel RCU Documentation</a> — Paul McKenney 的 RCU 详解</li>
+  <li><strong>无锁</strong>：Treiber Stack 原论文 "Systems Programming: Coping with Parallelism" (1986)；ABA 问题的经典分析</li>
 </ul></div>
 
-<div class="reminder"><h3>🔄 间隔复习</h3><ul><li><strong>24h</strong>：Mesa vs Hoare 条件变量语义——为什么 Java 用 `while` 而非 `if` 检查条件？</li><li><strong>72h</strong>：RCU 三步——怎么知道"所有读者都结束了"？</li></ul></div>
+<div class="reminder"><h3>🔄 间隔复习</h3><ul>
+  <li><strong>24h</strong>：Mesa vs Hoare 条件变量语义——为什么 Java 用 <code>while</code> 而非 <code>if</code> 检查条件？死锁四个条件——默写一遍。</li>
+  <li><strong>72h</strong>：RCU 三步——怎么知道"所有读者都结束了"？Treiber 栈 push 的 CAS 循环怎么写？</li>
+  <li><strong>7d</strong>：哲学家就餐的管程解——为什么用 test() 函数 + 条件变量？无锁栈和 ABA 问题——在有版本号的 CAS 下怎么修复？</li>
+</ul></div>
 
-<div class="lesson-footer"><p><a href="../index.html">🏠</a> · <a href="./0005-threads-locks.html">← 0005</a> · <a href="./0007-filesystem.html">0007 文件系统 →</a></p></div>
+<div class="lesson-footer"><p><a href="../index.html">🏠</a> · <a href="./0005-threads-locks.html">← 0005</a> · <a href="./0007-filesystem.html">0007 文件系统 →</a></p>
+<p>基石：0005（锁+信号量的基础上建管程）· 范式 #3（惰性·无锁/RCU）· #5（机制/策略·读者-写者公平性）</p></div>
+
+<script>
+function quizFB(el, fbId, msg, cls) {
+  const fb = document.getElementById(fbId);
+  fb.textContent = msg;
+  fb.className = 'quiz-feedback ' + cls;
+  fb.style.display = 'block';
+  // 同一题内的其他选项取消选中？
+}
+</script>
 <script>window.MathJax.startup.promise.then(function(){ MathJax.typesetPromise(); });</script>
 </body>
 </html>
