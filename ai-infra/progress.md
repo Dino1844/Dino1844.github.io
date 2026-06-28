@@ -11,7 +11,10 @@
 - [~] 0.1b Python 并发(threading/multiprocessing/asyncio/GIL)+ 多进程数据 pipeline
        ├ lesson 0003 (Python 并发) — 已生成, TODO 练习待填
        └ gate: 多进程 pipeline 跑通
-- [ ] 0.2 分布式系统概念 + 通信原语
+- [~] 0.2 分布式系统概念 + 通信原语
+       ├ lesson 0004 (broadcast / reduce / all-reduce + ring all-reduce 算法) — 已生成
+       ├ lesson 0005 (一致性模型 + Lamport clock / Vector clock) — 已生成
+       └ gate: 待过
 - [ ] 0.3 GPU 架构 + 工具链
 
 ## Phase 1:CUDA & Kernel

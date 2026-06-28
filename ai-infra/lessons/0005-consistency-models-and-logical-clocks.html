@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0005 — 一致性模型 &amp; 逻辑时钟：分布式系统的秩序</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --rule:#d2d2d2; --bg:#fdfdfb;
+    --accent:#8a1538; --code-bg:#f4f1ec; --hilite:#fffbe6; --green:#2a6f2a;
+    --red:#b22222; --blue:#2a5f8a; }
+  *, ::before, ::after { box-sizing:border-box; margin:0; padding:0; }
+  html { font-size:17px; line-height:1.6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC","Helvetica Neue",sans-serif; color:var(--ink); background:var(--bg); }
+  body { padding:2rem 1rem 4rem; }
+  .wrap { max-width:720px; margin:0 auto; }
+  header { margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid var(--accent); }
+  .kicker { font-size:.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:.3rem; }
+  h1 { font-size:1.7rem; line-height:1.25; margin-bottom:.4rem; }
+  .meta { font-size:.9rem; color:var(--muted); }
+  h2 { font-size:1.25rem; margin:2rem 0 .6rem; color:var(--accent); }
+  h3 { font-size:1.05rem; margin:1.5rem 0 .4rem; }
+  p { margin-bottom:.8rem; }
+  ul, ol { margin:.4rem 0 .8rem 1.4rem; }
+  li { margin-bottom:.3rem; }
+  code { background:var(--code-bg); padding:.1em .35em; border-radius:3px; font-size:.88em; }
+  pre { background:var(--code-bg); padding:.8rem 1rem; border-radius:5px; overflow-x:auto; font-size:.82rem; line-height:1.45; margin:.6rem 0 1rem; }
+  pre code { background:none; padding:0; }
+  table { width:100%; border-collapse:collapse; margin:.6rem 0 1rem; font-size:.9rem; }
+  th, td { border:1px solid var(--rule); padding:.4rem .6rem; text-align:left; vertical-align:top; }
+  th { background:var(--code-bg); font-weight:600; }
+  .ascii { font-family:"JetBrains Mono","Fira Code","Cascadia Code",monospace; font-size:.78rem; line-height:1.3; background:var(--code-bg); padding:.6rem .8rem; border-radius:5px; white-space:pre; overflow-x:auto; margin:.4rem 0 .8rem; }
+  .analogy { background:#f0f7fb; border-left:4px solid var(--blue); padding:.5rem .8rem; margin:.6rem 0 1rem; border-radius:0 5px 5px 0; font-size:.92rem; }
+  .warning { background:#fff5f5; border-left:4px solid var(--red); padding:.5rem .8rem; margin:.6rem 0 1rem; border-radius:0 5px 5px 0; font-size:.92rem; }
+  .q { padding:.3rem .5rem; margin:.4rem 0; border-left:3px solid var(--accent); background:var(--hilite); font-size:.95rem; }
+  details { margin:.4rem 0 .8rem; padding:.4rem .6rem; background:var(--code-bg); border-radius:5px; }
+  details summary { cursor:pointer; font-weight:600; }
+  footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.85rem; color:var(--muted); }
+  footer a { color:var(--accent); }
+  .gate { background:#eef6ee; border:2px solid var(--green); border-radius:5px; padding:.6rem .8rem; margin:1rem 0; font-size:.92rem; }
+  .gate h3 { margin-top:0; color:var(--green); }
+  .step { background:var(--code-bg); border-left:4px solid var(--accent); padding:.5rem .8rem; margin:.6rem 0 1rem; border-radius:0 5px 5px 0; font-size:.92rem; }
+  .step .label { font-weight:700; color:var(--accent); font-size:.85rem; }
+  @media (max-width:600px) { html { font-size:15px; } body { padding:1rem .6rem 3rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Phase 0 · Lesson 0005 · AI Infra</div>
+  <h1>一致性模型 &amp; 逻辑时钟：分布式系统的秩序</h1>
+  <p class="meta">训练集群里 64 张 GPU 同时读写同一批权重——如果没有"秩序"，每张卡看到的可能是不同的世界。这节课讲两件事：一致性模型（数据何时可见）和逻辑时钟（事件如何排序）。它们是理解 ZeRO 状态同步、NCCL 通信语义的理论地基。</p>
+</header>
+
+<h2>0. 为什么 AI Infra 需要"秩序"</h2>
+
+<p>前两节课你学了进程间通信（socket/epoll）和通信原语（broadcast/reduce/all-reduce）。但这只解决了"怎么传"，没解决"传完之后大家看到的东西一致吗"。</p>
+
+<div class="ascii">
+  分布式训练的一个 nightmare 场景：
+
+  GPU 0: 算完 backward, 做 all-reduce → 更新参数 → 发下一轮 forward
+  GPU 1: 算完 backward, 做 all-reduce → 更新参数 → 发下一轮 forward
+  GPU 2: （网络延迟）还没收到 all-reduce 的 chunk
+  GPU 3: 收到了部分 chunk，用不完整的梯度更新参数
+
+  ❌ step N+1: 四张卡的参数副本不同！梯度下降变成"梯度布朗运动"
+</div>
+
+<p><strong>一致性模型</strong>告诉我们"什么情况下数据是安全的"，<strong>逻辑时钟</strong>让我们在"没有全局钟"的分布式系统里给事件排序——这两个概念是所有分布式系统（包括分布式训练）的理论地基。</p>
+
+<h2>1. 一致性模型：数据多久可见</h2>
+
+<h3>1.1 强一致性 (Strong Consistency)</h3>
+
+<p><strong>任何读操作都能看到最新写入</strong>。看起来就像单机一样——节点之间没有"过时数据"的窗口。</p>
+
+<div class="ascii">
+  强一致性的行为：
+
+  时间 →
+  ┌─────────┐     ┌─────────┐
+  │ 写入 X=1 │     │ 读 X → 1│  ← 立刻看到
+  │ Node A  │     │ Node B  │
+  └─────────┘     └─────────┘
+  ┌─────────┐     ┌─────────┐
+  │         │     │ 读 X → 1│  ← 也立刻看到
+  │ Node C  │     │ Node D  │
+  └─────────┘     └─────────┘
+
+  代价：写操作需要等所有节点确认（高延迟）
+</div>
+
+<div class="analogy">
+  🚦 <strong>类比：红绿灯</strong><br>
+  红灯停绿灯行——规则全城统一，没有"这条街的红灯别的街不知道"的情况。强一致性就是这种"瞬间全网统一"。
+</div>
+
+<h3>1.2 最终一致性 (Eventual Consistency)</h3>
+
+<p><strong>写完之后不保证马上一致，但保证如果没有新写入，最终所有节点会达成一致</strong>。——跟强一致性的区别是"有个不一致的窗口"。</p>
+
+<div class="ascii">
+  最终一致性的行为：
+
+  时间 →
+  ┌─────────┐     ┌─────────┐
+  │ 写入 X=1 │     │ 读 X → 0│  ← 还没同步到
+  │ Node A  │     │ Node B  │
+  └─────────┘     └─────────┘
+       │
+       │ 几毫秒后 ...
+       ▼
+  ┌─────────┐     ┌─────────┐
+  │ 同步完成 │     │ 读 X → 1│  ← 终于看到了
+  │ Node A  │     │ Node B  │
+  └─────────┘     └─────────┘
+
+  代价：短时间读到的可能是旧数据
+  好处：响应快，不需要等所有节点
+</div>
+
+<div class="analogy">
+  📱 <strong>类比：微信朋友圈评论</strong><br>
+  你发了一条评论，你的朋友可能需要 1-2 秒才看到它出现在评论区——但最终它一定会出现。这期间你和朋友看到的朋友圈评论区内容可能不同（你看到有自己的评论，他还没看到）。这就是最终一致性。
+</div>
+
+<h3>1.3 分布式训练用的什么模型？</h3>
+
+<p>答案是 <strong>最终一致性 + 全局同步点</strong> 的混合体：</p>
+
+<ul>
+  <li><strong>同步训练 (Sync SGD)</strong>：每个 step 结尾做 all-reduce 同步梯度 -> 所有 GPU 得到完全相同的梯度 -> 更新后参数一致。行为上等价于<strong>批量强一致性</strong>（每个 step 内最终一致，step 边界强一致）</li>
+  <li><strong>异步训练 (Async SGD)</strong>：GPU 算完梯度直接更新参数，不等人 -> <strong>最终一致性</strong>（参数副本存在短暂不一致）—— 训练可能不稳定，但吞吐更高</li>
+</ul>
+
+<div class="ascii">
+  同步训练：step N 大家一起 all-reduce → 全员一致 → 一起进 step N+1
+  异步训练：step N 各跑各的，偶尔一卡拿到的参数比别人旧
+
+  面试高频：问"同步训练为什么需要 all-reduce？"
+  答案：all-reduce 是实现"批量强一致"的核心机制——不 all-reduce 就没人拿到全局梯度
+</div>
+
+<h2>2. 逻辑时钟：没有全球钟，怎么排事件？</h2>
+
+<h3>2.1 为什么物理时钟不靠谱</h3>
+
+<p>分布式系统里每个节点都有自己的物理时钟。但：</p>
+<ul>
+  <li>NTP 同步误差 ~1-50ms</li>
+  <li>不同机器的晶振频率不同</li>
+  <li>VM / 容器的时钟漂移更明显</li>
+</ul>
+
+<p>你在机器 A 看到"事件发生在 10:00:01.000"，机器 B 看到"事件发生在 10:00:01.001"——你无法判断哪个先发生，因为时钟差可能比事件间隔还大。</p>
+
+<div class="analogy">
+  ⏰ <strong>类比：考试对表</strong><br>
+  四个考场的时钟都不一样。A 考场时钟快 3 分钟，B 考场慢 2 分钟。A 监考老师说"10:00 收卷"，B 老师看到自己时钟显示 9:57，实际差了 5 分钟。物理时钟在分布式环境里不可靠。
+</div>
+
+<h3>2.2 Lamport Clock — 逻辑上的先后</h3>
+
+<p>Leslie Lamport 1978 年提出：<strong>不用物理时间，用计数器来记录"事件发生的先后顺序"</strong>。</p>
+
+<p>规则只有三条：</p>
+<ol>
+  <li>每个进程维护一个计数器 <code>lc</code>，从 0 开始</li>
+  <li>进程内部每发生一个事件，<code>lc += 1</code></li>
+  <li>进程 A 给 B 发消息时，带上自己的 <code>lc</code>；B 收到后把自己的 <code>lc</code> 设成 <code>max(lc_self, lc_msg) + 1</code></li>
+</ol>
+
+<div class="ascii">
+  Lamport Clock 示例（P1 发消息给 P2）：
+
+  时间 →
+  P1: lc=0   lc=1         lc=2
+       │      │  send(lc=1)│
+       │      │    ↓       │
+  P2: lc=0         lc=max(0,1)+1=2   lc=3
+                    ↑收到消息         ↑回复
+
+  核心：如果 A → B（A 发生在 B 之前），则 lc(A) &lt; lc(B)
+  反向不一定：lc(A) &lt; lc(B) 不能推出 A → B（可能只是并发事件）
+</div>
+
+<p><strong>Lamport clock 的关键 insight</strong>：它只保证<strong> happened-before（因果序）</strong>——如果你的事件影响了我的事件，那么你的 lc 一定比我小。但它不能区分"真正有因果关系的事件"和"凑巧 lc 更小的事件"。</p>
+
+<h3>2.3 Vector Clock — 谁导致了谁？</h3>
+
+<p>Lamport clock 的局限在于：如果 lc(A) &lt; lc(B)，你不知道 A 和 B 有没有因果关系。Vector clock 解决了这个问题——每个进程维护一个 <strong>向量</strong>（长度 = 进程数），记录自己对每个进程可见事件的"最新了解"。</p>
+
+<div class="ascii">
+  Vector Clock 示例（3 个进程）：
+
+         P1         P2         P3
+  vc = [0,0,0]  [0,0,0]  [0,0,0]
+
+  事件 1: P1 内部事件
+  P1: vc = [1,0,0]  ← vc[自己]++
+
+  事件 2: P1 → P2 发消息 (带上 vc=[1,0,0])
+  P2 收到后: vc = [1,1,0]  ← max(vc_self, vc_msg) 对每位做 max
+
+  事件 3: P2 → P3 发消息 (带上 vc=[1,1,0])
+  P3 收到后: vc = [1,1,1]
+
+  最终 vc 向量:
+  P1: [1,0,0]  → 知道"自己发生了一个事件"，不知道别的进程
+  P2: [1,1,0]  → 知道"P1 有 1 个事件，自己有 1 个"
+  P3: [1,1,1]  → 知道所有进程的状态
+
+  比较因果：
+  vc(A) ≤ vc(B)（每个维度都不大于）→ A 是 B 的因果前驱
+  vc(A) 和 vc(B) 互不包含 → 并发事件（没有因果关系）
+</div>
+
+<h3>2.4 在 AI Infra 里怎么用？</h3>
+
+<p>逻辑时钟在训练 infra 里最常见的应用是 <strong>检测训练环上的消息顺序</strong>：</p>
+
+<ul>
+  <li><strong>NCCL 通信</strong>：NCCL 在 ring all-reduce 里用 CUDA stream 的同步语义保证同一 ring 上消息的 happened-before 关系——这就是 Lamport clock 思想在 GPU 上的体现</li>
+  <li><strong>All-reduce 的 chunk 顺序</strong>：ring 上的 chunk 必须按固定顺序发送/接收，否则会出现"第 3 轮收到的 chunk 是第 4 轮该收的"——逻辑时钟保证了每个 chunk 的因果序</li>
+  <li><strong>Checkpoint 状态一致性</strong>：训练中断后恢复时需要知道"哪些 step 的参数已经写入磁盘了"——用 vector clock 可以精确追踪每个 worker 的进度</li>
+</ul>
+
+<div class="warning">
+  <strong>⚠ 面试注意</strong>：不用背 vector clock 的更新公式。你需要的是：<br>
+  1. 能讲清"分布式系统没有全局时钟，所以需要逻辑时钟"<br>
+  2. 理解 happened-before 关系<br>
+  3. 知道 NCCL 的 stream 同步本质上就是 Lamport clock<br>
+  4. 异步训练的参数不一致问题本质上就是最终一致性的一个实例
+</div>
+
+<h2>3. 两个概念如何交织：以 All-Reduce 为例</h2>
+
+<p>把 Lesson 0004 和这节课串在一起：</p>
+
+<div class="ascii">
+  一次带一致性语义的 all-reduce：
+
+  时间 →
+  P0 ──send chunk──→ P1 ──send chunk──→ P2 ──send chunk──→ P3 ──send chunk──→ P0
+  │                   │                   │                   │
+  lc=1               lc=2               lc=3               lc=4
+  │                                                                          ↑
+  └──────────────────────（all-gather phase）─────────────────────────────────┘
+
+  scatter-reduce 阶段：Lamport clock 自然递增，保证每轮的因果序
+  all-gather 阶段：同样的逻辑
+  最后所有 rank 的 lc 相同 = 大家都拿到了完整 all-reduce 结果
+  
+  这就是"逻辑时钟保证了一致性"的具体体现
+</div>
+
+<h2>4. 面试高频追问</h2>
+
+<h3>Q1: 同步训练 vs 异步训练，一致性上有什么区别？</h3>
+<p>同步训练：all-reduce 后所有参数强一致（每个 step 边界）。异步训练：每张卡用自己当前能拿到的梯度更新参数，参数副本最终一致。同步更稳定，异步吞吐更高但收敛可能更差。Megatron-LM 用同步，部分大厂训练用异步+去噪技巧。</p>
+
+<h3>Q2: 为什么 NCCL 不需要 Lamport clock？</h3>
+<p>实际上 NCCL 内部<strong>用了等价机制</strong>——CUDA stream 的默认同步语义保证 kernel launch 按 happened-before 顺序执行。NCCL 在同一个 CUDA stream 里 launch send/recv kernel，stream 的执行顺序就是逻辑时钟顺序。NCCL 不叫它 Lamport clock，但本质一样。</p>
+
+<h3>Q3: ZeRO 跟一致性有什么关系？</h3>
+<p>ZeRO-3 把模型参数分片到各 GPU，forward 时通过 all-gather 拿回需要的参数。这要求"所有 GPU 对参数分片的视图最终一致"——如果某个 GPU 的 all-gather 还没完成就做 forward，拿到的是旧值（最终一致性的一个实例）。ZeRO 通过在 all-gather 之前插入 barrier 来确保"我拿到的参数是最新的"。</p>
+
+<h3>Q4: 一致性模型面试还考什么？</h3>
+<p>高频还有：CAP 定理（一致性 vs 可用性 vs 分区容错性 三者只能选二）、Raft/Paxos 共识算法。但在 LLM Infra 面试中，问到 CAP 的概率低于"同步训练 vs 异步训练的一致性含义"。优先掌握本节内容。</p>
+
+<h2>5. 参考资源</h2>
+
+<ul>
+  <li><a href="https://lamport.azurewebsites.net/pubs/time-clocks.pdf">[论文] Lamport, "Time, Clocks, and the Ordering of Events in a Distributed System" (1978)</a> — 分布式系统基石论文，7 页，必须读</li>
+  <li><a href="https://en.wikipedia.org/wiki/Vector_clock">Wikipedia: Vector clock</a> — 简洁定义 + 因果比较规则</li>
+  <li><a href="https://en.wikipedia.org/wiki/Consistency_model">Wikipedia: Consistency model</a> — 一致性模型全景（含最终/因果/线性一致性等）</li>
+  <li><a href="https://github.com/NVIDIA/nccl/blob/master/src/collectives/device/all_reduce.h">NCCL 源码: all_reduce kernel</a> — 看到 ring all-reduce 真正的 CUDA kernel 实现</li>
+  <li><a href="https://arxiv.org/abs/1910.02054">[论文] ZeRO: Memory Optimizations Toward Training Trillion Parameter Models</a> — ZeRO-3 的状态分片本质上是一种一致性管理</li>
+</ul>
+
+<h2>6. 接下来</h2>
+
+<ul>
+  <li><strong>Gate 自测</strong>：向自己讲清"同步训练为什么是批量强一致性？"</li>
+  <li><strong>白板练习</strong>：画 3 进程的 Lamport clock 和 vector clock 事件序列</li>
+  <li><strong>课外</strong>：读 Lamport 1978 论文前 5 页（非常好读，还有"面包店算法"彩蛋）</li>
+  <li><strong>下一篇预告</strong>：Phase 0.2 最后一课 —— 分布式容错 + CAP 定理，为 Phase 4 的 checkpoint/容错做铺垫</li>
+</ul>
+
+<div class="gate">
+  <h3>🏁 Gate: Phase 0.2 一致性 &amp; 时钟</h3>
+  <p>
+    1. ✅ 讲清强一致性 vs 最终一致性的区别和各自代价<br>
+    2. ✅ 指出分布式训练用的是一致性模型<br>
+    3. ✅ 画 2 进程 Lamport clock 更新过程<br>
+    4. ✅ 能说"分布式系统为什么不能依赖物理时钟排序"<br>
+    5. ✅ 挑一个错：NCCL 的 stream 同步和 Lamport clock 的关系
+  </p>
+</div>
+
+<footer>
+  <p>AI Infra · Lesson 0005 · 有任何疑问直接问你的 AI teacher</p>
+  <p>下一课预告：容错 + CAP 定理——如果训练到一半一台 GPU 挂了怎么办？</p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0004 — 分布式通信原语：broadcast / reduce / all-reduce</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --rule:#d2d2d2; --bg:#fdfdfb;
+    --accent:#8a1538; --code-bg:#f4f1ec; --hilite:#fffbe6; --green:#2a6f2a;
+    --red:#b22222; --blue:#2a5f8a; }
+  *, ::before, ::after { box-sizing:border-box; margin:0; padding:0; }
+  html { font-size:17px; line-height:1.6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC","Helvetica Neue",sans-serif; color:var(--ink); background:var(--bg); }
+  body { padding:2rem 1rem 4rem; }
+  .wrap { max-width:720px; margin:0 auto; }
+  header { margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid var(--accent); }
+  .kicker { font-size:.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:.3rem; }
+  h1 { font-size:1.7rem; line-height:1.25; margin-bottom:.4rem; }
+  .meta { font-size:.9rem; color:var(--muted); }
+  h2 { font-size:1.25rem; margin:2rem 0 .6rem; color:var(--accent); }
+  h3 { font-size:1.05rem; margin:1.5rem 0 .4rem; }
+  p { margin-bottom:.8rem; }
+  ul, ol { margin:.4rem 0 .8rem 1.4rem; }
+  li { margin-bottom:.3rem; }
+  code { background:var(--code-bg); padding:.1em .35em; border-radius:3px; font-size:.88em; }
+  pre { background:var(--code-bg); padding:.8rem 1rem; border-radius:5px; overflow-x:auto; font-size:.82rem; line-height:1.45; margin:.6rem 0 1rem; }
+  pre code { background:none; padding:0; }
+  table { width:100%; border-collapse:collapse; margin:.6rem 0 1rem; font-size:.9rem; }
+  th, td { border:1px solid var(--rule); padding:.4rem .6rem; text-align:left; vertical-align:top; }
+  th { background:var(--code-bg); font-weight:600; }
+  .ascii { font-family:"JetBrains Mono","Fira Code","Cascadia Code",monospace; font-size:.78rem; line-height:1.3; background:var(--code-bg); padding:.6rem .8rem; border-radius:5px; white-space:pre; overflow-x:auto; margin:.4rem 0 .8rem; }
+  .analogy { background:#f0f7fb; border-left:4px solid var(--blue); padding:.5rem .8rem; margin:.6rem 0 1rem; border-radius:0 5px 5px 0; font-size:.92rem; }
+  .warning { background:#fff5f5; border-left:4px solid var(--red); padding:.5rem .8rem; margin:.6rem 0 1rem; border-radius:0 5px 5px 0; font-size:.92rem; }
+  .q { padding:.3rem .5rem; margin:.4rem 0; border-left:3px solid var(--accent); background:var(--hilite); font-size:.95rem; }
+  details { margin:.4rem 0 .8rem; padding:.4rem .6rem; background:var(--code-bg); border-radius:5px; }
+  details summary { cursor:pointer; font-weight:600; }
+  footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.85rem; color:var(--muted); }
+  footer a { color:var(--accent); }
+  .gate { background:#eef6ee; border:2px solid var(--green); border-radius:5px; padding:.6rem .8rem; margin:1rem 0; font-size:.92rem; }
+  .gate h3 { margin-top:0; color:var(--green); }
+  .step { background:var(--code-bg); border-left:4px solid var(--accent); padding:.5rem .8rem; margin:.6rem 0 1rem; border-radius:0 5px 5px 0; font-size:.92rem; }
+  .step .label { font-weight:700; color:var(--accent); font-size:.85rem; }
+  .grid { display:grid; gap:1rem; margin:.6rem 0 1rem; }
+  @media (min-width:600px) { .grid-2 { grid-template-columns:1fr 1fr; } }
+  .card { background:var(--code-bg); border:1px solid var(--rule); border-radius:5px; padding:.5rem .7rem; }
+  .card h4 { font-size:.95rem; color:var(--accent); margin-bottom:.3rem; }
+  @media (max-width:600px) { html { font-size:15px; } body { padding:1rem .6rem 3rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Phase 0 · Lesson 0004 · AI Infra</div>
+  <h1>分布式通信原语：broadcast / reduce / all-reduce</h1>
+  <p class="meta">分布式训练就是一堆 GPU 在赛跑时互相传消息。这节课讲透最核心的三个通信模式：broadcast、reduce、all-reduce——以及它们为什么是"分布式训练的数据总线"。</p>
+</header>
+
+<h2>0. 为什么 AI Infra 面试会考通信原语</h2>
+
+<p>分布式训练中，N 张 GPU 并行算同一批数据的不同部分，算完后需要把梯度<strong>汇总</strong>（reduce），再把结果<strong>分发给所有人</strong>（broadcast）。这两个操作合在一起就是 all-reduce——<strong>梯度同步</strong>就是靠它做的：</p>
+
+<div class="ascii">
+   ┌─────────────────────────────────────────────────────┐
+   │ 每个 step:                                           │
+   │                                                     │
+   │   GPU 0 算梯度 g₀          GPU 1 算梯度 g₁          │
+   │   GPU 2 算梯度 g₂          GPU 3 算梯度 g₃          │
+   │                                                     │
+   │           ┌──── all-reduce ──────┐                   │
+   │           ▼                     ▼                    │
+   │   GPU 0 收到 g₀+g₁+g₂+g₃  GPU 1 收到 g₀+g₁+g₂+g₃  │
+   │   GPU 2 收到 g₀+g₁+g₂+g₃  GPU 3 收到 g₀+g₁+g₂+g₃  │
+   │                                                     │
+   │   每张卡用平均梯度更新自己的参数副本 — 大家保持同步   │
+   └─────────────────────────────────────────────────────┘
+</div>
+
+<p>面试可能直接问：<strong>"all-reduce 怎么实现的？为什么训练用 all-reduce 而不是 broadcast + reduce？"</strong> 这篇文章给你完整答案。</p>
+
+<h2>1. 三种基本通信模式</h2>
+
+<p>想象你在一个 4 人小组里：A/B/C/D 各有一张写着不同数字的纸条。</p>
+
+<h3>1.1 Broadcast — 一传多</h3>
+
+<p><strong>一个节点把自己的数据发给所有其他节点</strong>。</p>
+
+<div class="ascii">
+  ╔══════════╗    ┌────────┐    ┌────────┐    ┌────────┐
+  ║ A: [42]  ║───→│ B: [42]│    │ C: [42]│    │ D: [42]│
+  ╚══════════╝    └────────┘    └────────┘    └────────┘
+      发送方          接收方        接收方        接收方
+</div>
+
+
+
+<p><strong>用途</strong>：训练开始时把初始参数发给所有 GPU；数据并行中 rank 0 把学习率/训练配置广播给所有人。</p>
+
+<div class="analogy">
+  🏢 <strong>类比：公司邮件</strong><br>
+  CEO（root）发了一封全员邮件"Q3 OKR 已更新"——<br>
+  broadcast 就是她把邮件发到所有人的收件箱，大家都收到一模一样的副本。
+</div>
+
+<h3>1.2 Reduce — 多到一</h3>
+
+<p><strong>所有节点的数据通过某种操作（求和、求 max、求 min）汇总到一个节点</strong>。</p>
+
+<div class="ascii">
+  ┌────────┐
+  │ A: 2   │──┐
+  └────────┘  │  ┌────────────────────────────┐
+  ┌────────┐  ├──│ reduce(SUM) → ┌──────────┐ │
+  │ B: 5   │──┤  │               │ root: 19 │ │
+  └────────┘  │  │              └──────────┘ │
+  ┌────────┐  │  └────────────────────────────┘
+  │ C: 3   │──┤
+  └────────┘  │
+  ┌────────┐  │
+  │ D: 9   │──┘
+  └────────┘
+</div>
+
+<p><strong>用途</strong>：梯度汇总——每张 GPU 算出自己的梯度后，通过 reduce(SUM) 把所有梯度加到一起汇总到 rank 0。</p>
+
+<div class="analogy">
+  🏦 <strong>类比：四个分行上报存款</strong><br>
+  四个分行各算出自己今天存款增量（2、5、3、9 万），汇报到总行汇总。<br>
+  reduce(SUM) 就是总行把这四个数加起来得到 19 万——只有总行知道最终结果。
+</div>
+
+<h3>1.3 All-Reduce — 多到多</h3>
+
+<p><strong>所有节点都执行 reduce，最终每个节点都得到相同的聚合结果</strong>。</p>
+
+<div class="ascii">
+       输入                输出
+   ┌────────┐         ┌────────┐
+   │ A: 2   │────     │ A: 19  │
+   └────────┘    │    └────────┘
+   ┌────────┐    │    ┌────────┐
+   │ B: 5   │────├─── │ B: 19  │
+   └────────┘    │    └────────┘
+   ┌────────┐    │    ┌────────┐
+   │ C: 3   │────├─── │ C: 19  │
+   └────────┘    │    └────────┘
+   ┌────────┐    │    ┌────────┐
+   │ D: 9   │────     │ D: 19  │
+   └────────┘         └────────┘
+   各有各的数     每个人都拿到总和 19
+</div>
+
+<p><strong>用途</strong>：梯度同步——每张 GPU 算完自己的 local 梯度后，all-reduce 让每张卡都拿到 <code>sum(local_grad)</code>，然后每张卡用 <code>sum / world_size</code> 更新自己的参数副本。</p>
+
+<div class="analogy">
+  📊 <strong>类比：小组作业互评</strong><br>
+  全班 4 个成员各自给自己打分（2、5、3、9）。<br>
+  all-reduce = 每个人最终都知道全班平均分——不需要问班长"总分多少"。
+</div>
+
+<h2>2. All-Reduce 的朴素实现：Reduce + Broadcast</h2>
+
+<p>最直观的做法：先 reduce(SUM) 到 rank 0，再 broadcast 给所有人。这样两轮通信就能搞定：</p>
+
+<div class="ascii">
+  Step 1: reduce(SUM) → rank 0         Step 2: broadcast → everyone
+
+  A:2  ──────────────────────────────────────  A:19
+       ↘                 ↗
+  B:5  ──── rank 0 ────  B:19
+       ↗    (2+5+3+9)    ↘
+  C:3  ────   = 19  ────  C:19
+       ↘                 ↗
+  D:9  ────────────────────────────────────  D:19
+      2 次通信（1 reduce + 1 broadcast）
+</div>
+
+<p><strong>优点</strong>：简单直观，N 个节点只需 2 轮。</p>
+
+<p><strong>缺点</strong>：rank 0 是通信热点——所有流量都经过它。N 越大 rank 0 的带宽越成瓶颈。</p>
+
+<h2>3. Ring All-Reduce — 训练中真正的实现</h2>
+
+<p>实际训练库里（NCCL、Horovod、BytePS）用的是 <strong>ring all-reduce</strong>，把数据分成 K 个 chunk，在节点间排成一个环，每个节点只跟左右邻居通信。总通信量与节点数 <strong>无关</strong>，完美解决了热点问题。</p>
+
+<h3>3.1 核心思想</h3>
+
+<p>假设有 4 个 GPU（rank 0-3），每张卡上有 4 个值要 all-reduce。先把数据分成 K 个 chunk（这里 K=4，每个 chunk 1 个值）：</p>
+
+<div class="ascii">
+  输入数据：
+  rank 0: [2] [0] [0] [0]     ← 每个方括号 = 1 个 chunk
+  rank 1: [0] [5] [0] [0]
+  rank 2: [0] [0] [3] [0]
+  rank 3: [0] [0] [0] [9]
+</div>
+
+<p>Ring all-reduce 分两步：<strong>scatter-reduce</strong> → <strong>all-gather</strong>。</p>
+
+<h3>3.2 Step 1: Scatter-Reduce（分散-归约）</h3>
+
+<p>每张卡把自己的 chunk i 发给右邻居，同时从左邻居收 chunk i-1，累加。</p>
+
+<div class="ascii">
+  初始（卡上只有自己的原始 chunk）：
+  rank 0: [2] [0] [0] [0]
+  rank 1: [0] [5] [0] [0]
+  rank 2: [0] [0] [3] [0]
+  rank 3: [0] [0] [0] [9]
+
+  ── Round 1: 每个 rank 把自己的 chunk i 发给右邻居 ──
+              send →                     send →
+  rank 0: [2] [0] [0] [0]  ──→  rank 1: [0] [5] [0] [0]  ──→
+              ← recv                       ← recv
+             rank 3 发来的 chunk 3         rank 0 发来的 chunk 0
+
+  round 1 之后（每位累加收到的 chunk）：
+  rank 0: [2] [0] [0] [9]  ← 收了 rank 3 的 9
+  rank 1: [2] [5] [0] [0]  ← 收了 rank 0 的 2
+  rank 2: [0] [5] [3] [0]  ← 收了 rank 1 的 5
+  rank 3: [0] [0] [3] [9]  ← 收了 rank 2 的 3
+
+  ── Round 2: 转发累加过的 chunk ──
+
+  rank 0: [2] [5] [0] [9]  ← 收了 rank 3 发来的累加过的 chunk 3
+  rank 1: [2] [5] [3] [0]  ← 收了 rank 0 发来的累加过的 chunk 0
+  rank 2: [0] [5] [3] [9]  ← 收了 rank 1 发来的累加过的 chunk 1
+  rank 3: [2] [0] [3] [9]  ← 收了 rank 2 发来的累加过的 chunk 2
+
+  ── Round 3: ──
+
+  rank 0: [2] [5] [3] [9]  ← 完整 chunk 1（已含所有人贡献）
+  rank 1: [2] [5] [3] [9]  ← 完整 chunk 2
+  rank 2: [2] [5] [3] [9]  ← 完整 chunk 3
+  rank 3: [2] [5] [3] [9]  ← 完整 chunk 0
+
+  现在：每个 rank 的本地 chunk 已经等于"所有人的该 chunk 之和"
+  但分散在不同的卡上 —— 需要 all-gather 让所有人都拿到全部 chunk
+</div>
+
+<h3>3.3 Step 2: All-Gather（全收集）</h3>
+
+<p>与 scatter-reduce 对称：每张卡把自己已有的完整 chunk 传给左邻居（这次不累加，直接覆盖），直到每个人都拥有所有 chunk。</p>
+
+<div class="ascii">
+  从 scatter-reduce 的结果开始（每张卡有 1 个完整 chunk）：
+  rank 0: [2] [5] [3] [9]     ← 完整 chunk 0
+  rank 1: [2] [5] [3] [9]     ← 完整 chunk 1
+  rank 2: [2] [5] [3] [9]     ← 完整 chunk 2
+  rank 3: [2] [5] [3] [9]     ← 完整 chunk 3
+
+  ── Round 1: 把自己的完整 chunk 传给左邻居 ──
+  rank 0 收 chunk 3 ← rank 3
+  rank 1 收 chunk 0 ← rank 0
+  rank 2 收 chunk 1 ← rank 1
+  rank 3 收 chunk 2 ← rank 2
+
+  ── Round 2: ──
+  rank 0 收 chunk 2 ← rank 3
+  rank 1 收 chunk 3 ← rank 0
+  rank 2 收 chunk 0 ← rank 1
+  rank 3 收 chunk 1 ← rank 2
+
+  ── Round 3: ──
+  rank 0 收 chunk 1 ← rank 3
+  rank 1 收 chunk 2 ← rank 0
+  rank 2 收 chunk 3 ← rank 1
+  rank 3 收 chunk 0 ← rank 2
+
+  结果：所有人都拿到 [2,5,3,9] ✓
+  ──→ all-reduce 完成！
+</div>
+
+<h3>3.4 为什么 Ring All-Reduce 优于 Reduce+Broadcast</h3>
+
+<table>
+  <tr><th>方案</th><th>通信量</th><th>瓶颈</th></tr>
+  <tr><td>Reduce + Broadcast</td><td>O(N) ⨉ 数据量</td><td>rank 0 带宽饱和（热点）</td></tr>
+  <tr><td>Ring All-Reduce</td><td>O(1) ⨉ 数据量</td><td>无热点，每个节点只跟邻居通信</td></tr>
+</table>
+
+<p><strong>关键 insight</strong>：Ring all-reduce 的总通信量 = 2(N-1) × (数据量/N) = 2 × 数据量 × (1 - 1/N)。当 N 很大时，通信量 ≈ 2 × 数据量——<strong>与节点数 N 无关</strong>。而 reduce+broadcast 的通信量 = 2(N-1) × 数据量，随着 N 线性增长。</p>
+
+<div class="warning">
+  <strong>⚠ 实际 caveat（面试加分点）</strong>：ring all-reduce 在小集群（≤4 卡）上性能不如 reduce+broadcast，因为有额外的消息切分开销。NCCL 会根据集群拓扑自动选择 ring tree 或 double binary tree。别在所有场景吹 ring——它在大规模时才真正碾压。
+</div>
+
+<h2>4. 验真：手撕 Ring All-Reduce（Python 模拟）</h2>
+
+<p>下面用纯 Python 模拟 4 个进程的 ring all-reduce。不依赖 MPI/NCCL，纯 Python 就能跑。逐行看懂它，你就真的懂了：</p>
+
+<pre><code>def ring_all_reduce(data, rank, world_size):
+    """
+    模拟 ring all-reduce。
+    data: list[float] — 这个 rank 本地的数据
+    rank: int — 当前进程编号 (0, 1, ..., world_size-1)
+    world_size: int — 总进程数
+    
+    返回: list[float] — all-reduce 之后每个元素 = sum(所有 rank 的对应元素)
+    """
+    n = len(data)  # 把数据分成 world_size 个 chunk
+    chunk_size = n // world_size  # 假设 n 能被 world_size 整除
+    
+    # Step 1: scatter-reduce (N-1 轮)
+    buf = data[:]  # 复制一份做累加
+    
+    for round_i in range(world_size - 1):
+        # 发：把第 (rank - round_i) % world_size 个 chunk 发给右邻居
+        send_chunk_id = (rank - round_i) % world_size
+        send_data = buf[send_chunk_id * chunk_size : (send_chunk_id + 1) * chunk_size]
+        
+        # 收：从右邻居收第 (rank - round_i - 1) % world_size 个 chunk
+        recv_chunk_id = (rank - round_i - 1) % world_size
+        recv_buf = [0.0] * chunk_size  # 模拟从网络接收到 chunk
+        
+        # 模拟"从左邻居收到的值来自右邻居经过 round-1 步转发"
+        # 在真正分布式里这是异步 send/recv
+        # 我们用左邻居的值来模拟——因为这就是环的语义
+        left_rank = (rank - 1) % world_size
+        # 实际上应该从左邻居收，但在这个纯本地模拟里：
+        # 我们假设左邻居的值就是我们需要累加的
+        
+        # 为了简化模拟，直接暴力算：收的 chunk 应该等于
+        # 左邻居的 chunk recv_chunk_id 经过 round_i 轮累加后的值
+        # 鉴于这是教学演示，我们用更简单的方式：
+        # 对 chunk k，经过 scatter-reduce 后它会被 world_size 个 rank 累加
+        pass
+    
+    # 上面的 send/recv 模拟太复杂了，看下面的简化版理解即可
+    # 真实 NCCL 的实现远比这复杂——用异步 CUDA stream 做通信与计算 overlap
+    return buf  # 简化版
+
+# ── 下面是一个可运行的理解版 ──
+
+def ring_all_reduce_demo(world_size=4):
+    """纯 Python 演示 ring all-reduce 的语义结果"""
+    import copy
+    
+    # 每个 rank 的初始数据（各一张卡上的梯度向量）
+    local_data = {
+        0: [2, 0, 0, 0],  # rank 0 的梯度
+        1: [0, 5, 0, 0],  # rank 1 的梯度
+        2: [0, 0, 3, 0],  # rank 2 的梯度
+        3: [0, 0, 0, 9],  # rank 3 的梯度
+    }
+    
+    print("输入（每张卡各自的梯度）：")
+    for r in range(world_size):
+        print(f"  rank {r}: {local_data[r]}")
+    
+    # 验证：sum by position
+    expected = [sum(local_data[r][i] for r in range(world_size))
+                for i in range(world_size)]
+    print(f"\n期望输出（逐位求和）: {expected}")
+    
+    # ring all-reduce 的数学等价实现
+    buf = copy.deepcopy(local_data)
+    n = len(buf[0])
+    
+    # scatter-reduce：累计 K-1 轮
+    for round_i in range(world_size - 1):
+        for rank in range(world_size):
+            src = (rank - 1) % world_size
+            chunk = (rank - round_i - 1) % world_size
+            # 收到 src 的 chunk，累加到自己对应位置
+            for i in range(n):
+                if i // (n // world_size) == chunk:
+                    buf[rank][i] += buf[src][i]
+    
+    print("\nscatter-reduce 之后（每卡有一个完整 chunk）：")
+    for r in range(world_size):
+        print(f"  rank {r}: {buf[r]}")
+    
+    # all-gather：转发 K-1 轮
+    for round_i in range(world_size - 1):
+        for rank in range(world_size):
+            src = (rank - 1) % world_size
+            chunk = (rank - round_i - 1) % world_size
+            for i in range(n):
+                if i // (n // world_size) == chunk:
+                    buf[rank][i] = buf[src][i]
+    
+    print("\nall-gather 之后（每人拿到全部结果）：")
+    for r in range(world_size):
+        print(f"  rank {r}: {buf[r]}")
+    
+    print(f"\n结果正确: {all(buf[r] == expected for r in range(world_size))}")
+    return buf
+
+if __name__ == "__main__":
+    ring_all_reduce_demo(4)
+</code></pre>
+
+<div class="step">
+  <span class="label">💻 动手</span><br>
+  把上面代码保存到 <code>ring_all_reduce_demo.py</code>，直接 <code>python ring_all_reduce_demo.py</code> 跑一下。<br>
+  看到输出中每个 rank 都变成 <code>[2, 5, 3, 9]</code> 就对了——这就是 all-reduce(SUM) 的结果。
+</div>
+
+<h2>5. 面试高频追问 & 加分回答</h2>
+
+<h3>Q1: 为什么分布式训练必须用 all-reduce？</h3>
+<p><strong>核心回答</strong>：数据并行中每张 GPU 算的是<strong>不同的 mini-batch</strong>，梯度是统计量——需要全局聚合才能保证参数同步。用 all-reduce(SUM) 后每张卡自己 <code>param -= lr * (sum_grad / world_size)</code>，参数永远一致。</p>
+
+<h3>Q2: Ring all-reduce 的通信量为什么是 O(1) 而不是 O(N)？</h3>
+<p>因为每轮每张卡只跟左右邻居传一个 chunk，总带宽消耗 = 2 × 数据量。每个 chunk 经过 N-1 轮转发完成累加 + 分发。总传输量 = 2(N-1) × (数据量/N) ≈ 2 × 数据量（N 大时）。</p>
+
+<h3>Q3: NCCL 在 A100 集群里真的用 ring 吗？</h3>
+<p>不全是。NCCL 会检测拓扑：NVLink 环内用 ring，跨节点用 tree all-reduce（也称 double binary tree）。Tree 在跨节点时延迟更低（log N vs N）。面试中说"NCCL 根据拓扑选择 ring 或 tree"是加分项。</p>
+
+<h3>Q4: All-reduce 能 overlap 计算吗？</h3>
+<p>可以。把梯度切成 K 个 chunk，算完第 1 个 chunk 的 backward 就立刻发起它的 all-reduce——这就是 <strong>gradient all-reduce overlap</strong>，PyTorch DDP <code>bucket_cap_mb</code> 参数就是控制这个 chunk 大小的。面试如果能讲出用 CUDA stream 做 async all-reduce 叠加计算，是很好的信号。</p>
+
+<h2>6. 参考资源</h2>
+
+<ul>
+  <li><a href="https://tech.preferred.jp/en/blog/technologies-behind-distributed-deep-learning-allreduce/">[博客] Technologies behind Distributed Deep Learning: AllReduce</a> — Preferred Networks 讲 ring all-reduce 最清楚的文章之一，配动画</li>
+  <li><a href="https://github.com/NVIDIA/nccl">NCCL 源码 (GitHub)</a> — NVIDIA 官方集合通信库</li>
+  <li><a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage.html">NCCL 文档: Usage</a> — all-reduce API 与性能调优</li>
+  <li><a href="https://arxiv.org/abs/1904.01541">论文: Megatron-LM</a> — TP 原论文，大量使用 all-reduce 做行/列并行通信</li>
+  <li><a href="https://arxiv.org/abs/1910.02054">论文: ZeRO</a> — ZeRO 用 reduce-scatter 替代 all-reduce 节省显存</li>
+</ul>
+
+<h2>7. 接下来</h2>
+
+<ul>
+  <li><strong>Gate 检验</strong>：拿张纸画出 4 个 GPU 的 ring all-reduce 完整过程（包括 scatter-reduce 和 all-gather 两阶段）</li>
+  <li><strong>口试自测</strong>：用 2 分钟向别人（或向自己）讲清"训练为什么用 all-reduce 而不是 broadcast + reduce"</li>
+  <li><strong>动手</strong>：跑上面 Python demo，把 world_size 改成 8 试试</li>
+  <li><strong>下一篇预告</strong>：Phase 0.2 续 —— 一致性模型（eventual vs strong）和逻辑时钟（Lamport / vector clock），为后面理解 ZeRO 的状态一致性做铺垫</li>
+</ul>
+
+<div class="gate">
+  <h3>🏁 Gate: Phase 0.2</h3>
+  <p>
+    1. ✅ 画出 ring all-reduce 两阶段（scatter-reduce + all-gather）4 卡版本的通信过程<br>
+    2. ✅ 口述："all-reduce 比 reduce+broadcast 好在哪？"<br>
+    3. ✅ 跑通 Python demo 并理解每轮在做什么<br>
+    4. ✅ 能回答"NCCL 在实际集群里只用 ring 吗？"
+  </p>
+</div>
+
+<footer>
+  <p>AI Infra · Lesson 0004 · 有任何疑问直接问你的 AI teacher</p>
+  <p>推荐先跑上面 Python demo 再继续——把抽象的概念对准实际输出。</p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -26,5 +26,12 @@
 - 新的 0003 = Python 并发 (Phase 0.1b)，跟 roadmap 对齐
 - 原则：000x 按 roadmap 主线排，调研/扩展内容往后放
 
+## Lesson 0005 feedback (2026-06-28)
+- Phase 0.2 第二课「一致性模型 & 逻辑时钟」已生成
+  - §1: 强一致性 vs 最终一致性 + 训练用哪种（同步SGD = 批量强一致）
+  - §2: Lamport clock + Vector clock 原理与应用（NCCL stream 同步 = Lamport思想的体现）
+  - §3: 以 all-reduce 为例把通信原语和逻辑时钟串起来
+- 下一步：Phase 0.2 最后一课 —— 容错 + CAP 定理
+
 ## What doesn't
 - (记录无效手法)
