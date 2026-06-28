@@ -3,69 +3,585 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 0002 — 手写 epoll echo server</title>
+<title>Lesson 0002 — IO 多路复用与 epoll：从 select 到手写 echo server</title>
 <style>
   :root { --ink:#1a1a1a; --muted:#6b6b6b; --rule:#d2d2d2; --bg:#fdfdfb;
-    --accent:#8a1538; --code-bg:#f4f1ec; }
-  * { box-sizing: border-box; } html { font-size: 17px; }
-  body { margin:0; background:var(--bg); color:var(--ink);
-    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif; line-height:1.55; }
-  .wrap { max-width:720px; margin:0 auto; padding:4rem 1.5rem 6rem; }
-  header { margin-bottom:2.5rem; border-bottom:1px solid var(--rule); padding-bottom:1rem; }
-  .kicker { font-family:ui-monospace,Menlo,monospace; font-size:.72rem;
-    letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
-  h1 { font-size:1.9rem; margin:.4rem 0 .2rem; line-height:1.2; }
-  .meta { color:var(--muted); font-size:.9rem; margin:0; }
-  h2 { font-size:1.25rem; margin:2.4rem 0 .6rem; }
-  h3 { font-size:1.02rem; margin:1.6rem 0 .4rem; }
-  p,li { margin:0 0 .7rem; } ul,ol { padding-left:1.3rem; }
-  code,pre { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
-  code { background:var(--code-bg); padding:.08em .35em; border-radius:3px; font-size:.85em; }
-  pre { background:var(--code-bg); padding:.9rem 1rem; border-radius:5px; overflow-x:auto;
-    font-size:.82rem; line-height:1.5; border:1px solid var(--rule); }
-  pre code { background:none; padding:0; }
-  .note { border-left:3px solid var(--accent); padding:.2rem 0 .2rem 1rem;
-    margin:1rem 0; color:#444; font-size:.94rem; }
-  .gate { background:#f7f3ec; border:1px solid var(--rule); border-radius:5px;
-    padding:.8rem 1rem; margin:1.4rem 0; }
-  .gate::before { content:"GATE"; font-family:ui-monospace,Menlo,monospace; font-size:.7rem;
-    letter-spacing:.14em; color:var(--accent); display:block; margin-bottom:.3rem; }
+    --accent:#8a1538; --code-bg:#f4f1ec; --hilite:#fffbe6; --green:#2a6f2a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 17px; scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+    line-height: 1.65; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 740px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+
+  header { margin-bottom: 2.2rem; border-bottom: 1px solid var(--rule); padding-bottom: 1rem; }
+  .kicker {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  h1 { font-size: 1.8rem; margin: .4rem 0 .2rem; line-height: 1.22; }
+  .meta { color: var(--muted); font-size: .9rem; }
+
+  h2 { font-size: 1.22rem; margin: 2.6rem 0 .7rem;
+       padding-bottom: .35rem; border-bottom: 1px solid var(--rule); }
+  h3 { font-size: 1.04rem; margin: 1.8rem 0 .5rem; }
+  p  { margin: 0 0 .85rem; }
+  ul, ol { margin: 0 0 .85rem 1.4rem; }
+  li { margin-bottom: .35rem; }
+
+  code, pre, .ascii {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  code {
+    background: var(--code-bg); padding: .1em .4em;
+    border-radius: 3px; font-size: .86em;
+  }
+  pre {
+    background: var(--code-bg); padding: .9rem 1.1rem;
+    border-radius: 6px; overflow-x: auto; font-size: .82rem;
+    line-height: 1.5; border: 1px solid var(--rule);
+    margin: .85rem 0;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .ascii {
+    font-size: .75rem; line-height: 1.35;
+    white-space: pre; background: var(--code-bg);
+    padding: .9rem 1.1rem; border-radius: 6px;
+    overflow-x: auto; border: 1px solid var(--rule);
+    margin: .85rem 0;
+  }
+
+  .analogy {
+    border-left: 3px solid var(--accent);
+    background: var(--hilite);
+    padding: .65rem 1rem; margin: 1rem 0; font-size: .94rem;
+  }
+  .analogy::before {
+    content: "类比";
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .1em;
+    color: var(--accent); display: block; margin-bottom: .3rem;
+  }
+
+  .note {
+    border-left: 3px solid #5a7fb5;
+    padding: .55rem 0 .55rem 1rem;
+    margin: 1rem 0; color: #444; font-size: .93rem;
+  }
+  .note::before {
+    content: "面试链接";
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .1em;
+    color: #5a7fb5; display: block; margin-bottom: .2rem;
+  }
+
+  .warning {
+    border: 1px solid #e0c060; background: #fffdf0;
+    padding: .55rem 1rem; margin: 1rem 0;
+    border-radius: 4px; font-size: .93rem;
+  }
+  .warning::before {
+    content: "常见误区";
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .1em;
+    color: #9a6a00; display: block; margin-bottom: .2rem;
+  }
+
   .step { background:#fff; border:1px solid var(--rule); border-radius:5px;
     padding:.6rem 1rem; margin:1rem 0; }
   .step::before { content:attr(data-label); font-family:ui-monospace,Menlo,monospace;
     font-size:.72rem; letter-spacing:.12em; color:var(--accent); display:block; margin-bottom:.3rem; }
-  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
-  footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule);
-    color:var(--muted); font-size:.82rem; }
-  .q { margin:1rem 0 .3rem; font-weight:600; }
+
+  .gate {
+    background: #f7f3ec; border: 1px solid var(--rule);
+    border-radius: 5px; padding: .8rem 1rem; margin: 1.6rem 0;
+  }
+  .gate::before {
+    content: "GATE（完成标准）";
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .7rem; letter-spacing: .12em;
+    color: var(--accent); display: block; margin-bottom: .35rem;
+  }
+
+  .q { margin: 1.2rem 0 .3rem; font-weight: 600; }
+  details {
+    margin: 1rem 0; border: 1px solid var(--rule);
+    border-radius: 5px; padding: .6rem 1rem; background: #fff;
+  }
+  summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: .6rem; }
+
+  table {
+    border-collapse: collapse; width: 100%;
+    margin: 1rem 0; font-size: .9rem;
+  }
+  th, td {
+    border-bottom: 1px solid var(--rule);
+    padding: .45rem .6rem; text-align: left; vertical-align: top;
+  }
+  th {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .76rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .07em;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  footer {
+    margin-top: 3.5rem; padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    color: var(--muted); font-size: .84rem;
+  }
+  footer a { color: var(--muted); text-decoration: underline; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <div class="kicker">Phase 0 · Session 0.1a · AI Infra</div>
-  <h1>手写 epoll echo server</h1>
-  <p class="meta">把 0001 的概念兑现成代码 — Python selectors + C 裸 epoll 两版</p>
+  <div class="kicker">Phase 0 · Lesson 0002 · AI Infra</div>
+  <h1>IO 多路复用与 epoll：从 select 到手写 echo server</h1>
+  <p class="meta">读完这一页，你会知道为什么需要 epoll、它内部怎么工作、跟 select 差在哪里——然后亲手写出来。</p>
 </header>
 
-<p>上一节(<a href="./0001-io-multiplexing-epoll.html">0001</a>)讲了 epoll 为什么快。这一节把它<strong>写出来</strong>。写不出正好暴露概念缺口——这就是 gate 的意义。</p>
+<!-- ============================================================ -->
+<!-- PART A: 概念 -->
+<!-- ============================================================ -->
 
-<p>两版骨架已放到 <code>exercises/0002-epoll-echo/</code>:</p>
+<h2>0. 回顾：0001 的 server 为什么一次只能处理一个连接</h2>
+
+<p>上一课的 echo server 长这样：</p>
+
+<pre><code>while True:
+    conn, addr = sock.accept()     # 阻塞：没新连接就等
+    data = conn.recv(4096)         # 阻塞：没数据就等
+    conn.sendall(data)
+    conn.close()</code></pre>
+
+<p>问题在于：<code>recv()</code> 是<strong>阻塞</strong>的。当你在跟客户端 A 等数据的时候，客户端 B 已经完成了三次握手、在内核 backlog 里排队了——但你的程序根本不知道 B 的存在，因为你还卡在 <code>recv()</code> 那里。</p>
+
+<div class="ascii">
+时间线：
+
+server:  accept(A) ──── recv(A) ──── send(A) ──── close(A) ──── accept(B) ...
+                           ↑                                              ↑
+                    B 已经到 backlog 了                              终于轮到 B
+                    但 server 不知道                                  等了一整个 A 的时间
+</div>
+
+<p>直觉反应：给每个连接开一个线程不就行了？</p>
+
+<!-- ============================================================ -->
+<h2>1. 第一反应：多线程 —— 为什么不够</h2>
+
+<pre><code>while True:
+    conn, addr = sock.accept()
+    threading.Thread(target=handle, args=(conn,)).start()</code></pre>
+
+<p>一个连接一个线程，看起来很自然。问题是：</p>
+
+<table>
+  <tr><th>问题</th><th>为什么严重</th></tr>
+  <tr>
+    <td><strong>线程开销</strong></td>
+    <td>每个线程至少占 1-8 MB 栈空间 + 内核调度开销。1 万个连接 = 1 万个线程 = 几十 GB 内存，光栈就撑爆了。</td>
+  </tr>
+  <tr>
+    <td><strong>上下文切换</strong></td>
+    <td>CPU 在 1 万个线程之间来回切换，大部分时间花在"换人"而不是"干活"。</td>
+  </tr>
+  <tr>
+    <td><strong>大部分线程在等</strong></td>
+    <td>一个 LLM 推理 server 可能有 1000 个并发连接，但同一毫秒内只有几个连接真正有数据要处理。其他 990+ 个线程全在阻塞等 IO，白占资源。</td>
+  </tr>
+</table>
+
+<div class="analogy">
+一个餐厅有 100 张桌子。多线程方案 = 每张桌子配一个服务员，专门盯这一桌。问题是大部分桌子这时候没在点菜——客人在吃饭、在聊天——但服务员就站那等着。100 个服务员，工资谁付？
+<br><br>
+更好的方案：<strong>一个服务员盯所有桌子</strong>，哪桌举手了就去哪桌。这就是 IO 多路复用。
+</div>
+
+<div class="note">
+C10k 问题：2000 年前后，业界发现"用线程模型扛 1 万个并发连接"在当时的硬件上根本不可行。这催生了 IO 多路复用技术：用一个线程管理成千上万个 fd。nginx、Redis、Node.js、vLLM 的 event loop 全都是这个模型。
+</div>
+
+<!-- ============================================================ -->
+<h2>2. IO 多路复用：一个线程盯多个 fd</h2>
+
+<p>核心思想很简单：你不主动去 <code>recv()</code> 某个特定的连接（因为不知道谁有数据），而是告诉内核：</p>
+
+<blockquote>
+<p>"我这里有 N 个 fd，<strong>你帮我盯着</strong>，谁有数据了（或 listen fd 有新连接了），<strong>叫我一声</strong>。"</p>
+</blockquote>
+
+<p>然后你的程序阻塞在一个统一的"等"操作上，而不是阻塞在某个具体的 <code>recv()</code> 上。内核叫你的时候，会告诉你<strong>哪些 fd 就绪了</strong>，你只处理这些。</p>
+
+<div class="ascii">
+你的程序                          内核
+─────────                        ──────
+
+"帮我盯这 100 个 fd"    ──→    记录到内核数据结构
+                                  │
+  阻塞等待（睡觉）...              │  内核在后台监控所有 fd
+                                  │  ... fd 37 有数据了！
+                                  │  ... listen fd 有新连接了！
+                                  │
+         ←── "醒醒！fd 37 和 listen fd 就绪了"
+
+  只处理 fd 37 和 listen fd
+  其他 98 个 fd 根本不看
+
+  处理完了，继续等...     ──→    继续监控
+</div>
+
+<p>这个"帮我盯着 + 叫我"的机制，经历了三次迭代：<strong>select → poll → epoll</strong>。每一代都在解决上一代的性能瓶颈。</p>
+
+<!-- ============================================================ -->
+<h2>3. select：最朴素的实现</h2>
+
+<h3>它怎么工作</h3>
+
+<p>select 是 1983 年在 BSD Unix 里引入的。它的接口设计非常直白：</p>
+
+<pre><code># Python 伪代码（帮你理解概念，不是真 API）
+ready_to_read, _, _ = select.select(
+    [fd3, fd4, fd5, listen_fd],   # "帮我盯这些 fd 的可读事件"
+    [],                            # "帮我盯这些 fd 的可写事件"（暂不管）
+    [],                            # "帮我盯这些 fd 的异常"（暂不管）
+    timeout=None                   # 没有就绪就永远等
+)</code></pre>
+
+<p>调用后，你的程序阻塞。内核逐个检查你传进来的 fd 列表，发现有就绪的就返回。返回后你拿到一个"就绪 fd 列表"。</p>
+
+<h3>内核内部在干什么</h3>
+
+<p>select 的内核实现很朴素——用 <strong>fd_set 位图</strong>：</p>
+
+<div class="ascii">
+fd_set（一个固定长度的位数组，通常 1024 bit）：
+
+bit 位置:  0  1  2  3  4  5  6  7  ... 1023
+           ─  ─  ─  ─  ─  ─  ─  ─       ─
+           1  1  1  0  1  1  0  0   ...  0
+           ↑  ↑  ↑     ↑  ↑
+        stdin stdout stderr  fd4 fd5     (fd3=1, fd4=1, fd5=1)
+</div>
+
+<p>每次调 <code>select()</code>，内核做三件事：</p>
+
+<ol>
+  <li><strong>拷贝</strong>：把你传进来的 fd 列表从用户空间拷到内核空间</li>
+  <li><strong>遍历</strong>：从头到尾扫一遍 fd_set（1024 个 bit），对每个设了 1 的 fd 检查"有没有数据"</li>
+  <li><strong>修改</strong>：把没有数据的 fd 对应 bit 清零，整个 fd_set 拷回用户空间</li>
+</ol>
+
+<h3>三个致命缺陷</h3>
+
+<table>
+  <tr><th>缺陷</th><th>说明</th><th>后果</th></tr>
+  <tr>
+    <td><strong>O(N) 遍历</strong></td>
+    <td>每次调用都要扫全部 1024 个 bit，不管有几个就绪</td>
+    <td>fd 越多越慢，即使只有 1 个活跃</td>
+  </tr>
+  <tr>
+    <td><strong>重复拷贝</strong></td>
+    <td>每次调用都要把 fd_set 从用户空间拷到内核、再拷回来</td>
+    <td>1024 bit = 128 字节，每次系统调用都拷贝，高频调用时开销大</td>
+  </tr>
+  <tr>
+    <td><strong>1024 上限</strong></td>
+    <td>fd_set 固定大小，默认最多盯 1024 个 fd</td>
+    <td>超过 1024 个连接？不行。要改内核宏重新编译。</td>
+  </tr>
+</table>
+
+<div class="analogy">
+select 就像老师点名：每次上课，老师从 1 号叫到 1024 号，每个名字都喊一遍"张三在吗？李四在吗？王五在吗？"，即使全班只有 3 个人举手。班里人越多，点名越慢——哪怕真正有事的人只有几个。
+</div>
+
+<!-- ============================================================ -->
+<h2>4. poll：链表替代位图，但本质没变</h2>
+
+<p>poll（1986 年，System V Unix）把 fd_set 位图换成了一个<strong>动态数组</strong>（<code>struct pollfd</code> 的数组）：</p>
+
+<pre><code>struct pollfd {
+    int fd;         // 要盯的 fd
+    short events;   // 我关心什么事件（可读？可写？）
+    short revents;  // 内核填回来的：实际发生了什么事件
+};</code></pre>
+
+<p>好处：没有 1024 上限了，想盯多少个 fd 都行。</p>
+
+<p>坏处：<strong>O(N) 遍历和重复拷贝的问题完全没解决</strong>。每次调用还是要把整个数组拷进内核、从头扫到尾、再拷回来。</p>
+
+<div class="warning">
+面试时不要说 "poll 比 select 快很多"。poll 只是去掉了 fd 数量上限，性能瓶颈（O(N) 遍历 + 拷贝）完全一样。真正快的是 epoll。
+</div>
+
+<!-- ============================================================ -->
+<h2>5. epoll：内核替你记住"谁在盯谁"</h2>
+
+<p>epoll 是 2002 年 Linux 2.6 引入的。它的设计哲学是：<strong>把"盯 fd"这件事交给内核持久化保存，不要每次都从头来。</strong></p>
+
+<h3>核心设计：三个 syscall 分离</h3>
+
+<p>select/poll 只有一个 syscall，"盯 + 等" 全塞在一起。epoll 把它拆成三步：</p>
+
+<table>
+  <tr><th>syscall</th><th>做什么</th><th>调用频率</th></tr>
+  <tr>
+    <td><code>epoll_create()</code></td>
+    <td>在内核建一个 epoll 实例（一个"监控中心"）</td>
+    <td>程序启动时调<strong>一次</strong></td>
+  </tr>
+  <tr>
+    <td><code>epoll_ctl()</code></td>
+    <td>往监控中心<strong>注册 / 修改 / 删除</strong> fd</td>
+    <td>新连接来时调一次，连接断开时调一次</td>
+  </tr>
+  <tr>
+    <td><code>epoll_wait()</code></td>
+    <td>阻塞等事件，返回<strong>只有就绪的 fd</strong></td>
+    <td>事件循环里反复调</td>
+  </tr>
+</table>
+
+<div class="analogy">
+select = 每次上课都从头点名。<br>
+epoll  = 老师在开学时拿到一份花名册（epoll_ctl 注册），之后只喊举手的同学（epoll_wait 只返回就绪的）。新同学来了？加到花名册上。退课了？划掉。花名册一直保留，不用每次重建。
+</div>
+
+<h3>epoll 内部数据结构</h3>
+
+<p>这是面试高频题。epoll 实例在内核里维护两个东西：</p>
+
+<div class="ascii">
+epoll 实例（内核中）
+┌─────────────────────────────────────────────────┐
+│                                                  │
+│  1. 红黑树 (rbtree)                              │
+│     存所有被监控的 fd + 关心的事件                    │
+│     插入/删除/查找 = O(log N)                      │
+│                                                  │
+│     ┌──┐                                         │
+│    /    \                                        │
+│  fd3    fd7                                      │
+│  /  \   /  \                                     │
+│ fd4 fd5 fd8 fd12     ← 所有注册过的 fd            │
+│                                                  │
+│  2. 就绪链表 (ready list / doubly-linked list)     │
+│     只存有事件的 fd                                │
+│                                                  │
+│     fd5 → fd12 → NULL   ← epoll_wait 只返回这些   │
+│                                                  │
+└─────────────────────────────────────────────────┘
+</div>
+
+<p>关键机制：</p>
+
+<ol>
+  <li>你调 <code>epoll_ctl(ADD, fd5)</code> → fd5 插入红黑树</li>
+  <li>内核在后台监控红黑树里所有 fd。当 fd5 的 socket 缓冲区来了数据，内核的网卡中断处理程序把 fd5 <strong>挂到就绪链表上</strong></li>
+  <li>你调 <code>epoll_wait()</code> → 内核<strong>只看就绪链表</strong>，把上面的 fd 填到你给的数组里返回</li>
+</ol>
+
+<p>这就是 epoll 为什么是 <strong>O(就绪数)</strong>：10000 个连接里只有 3 个活跃？epoll_wait 只返回这 3 个，不碰其他 9997 个。</p>
+
+<div class="note">
+面试问 "epoll 为什么比 select 快"，标准答案三条：<br>
+1. <strong>注册持久化</strong>：fd 注册一次，不用每次调用都拷贝<br>
+2. <strong>O(就绪数)</strong>：只返回活跃的 fd，不遍历全部<br>
+3. <strong>无 fd 数量限制</strong>：红黑树动态分配，上限是系统内存<br>
+<br>
+追问 "epoll 内部用什么数据结构"，答：红黑树（存注册的 fd）+ 双向链表（存就绪的 fd）。
+</div>
+
+<h3>三个 syscall 逐个看</h3>
+
+<p><strong>第一步：<code>epoll_create</code> — 建监控中心</strong></p>
+
+<pre><code>int epfd = epoll_create1(0);   // 返回一个 fd，代表这个 epoll 实例本身
+// epfd 也是一个文件描述符！用完要 close(epfd)</code></pre>
+
+<p><code>epoll_create1(0)</code> 在内核分配一个 epoll 实例，返回一个 fd 让你引用它。这个 fd 不是 socket、不是文件——它代表的是<strong>内核里的那个红黑树 + 就绪链表</strong>。</p>
+
+<p><strong>第二步：<code>epoll_ctl</code> — 注册 / 修改 / 删除</strong></p>
+
+<pre><code>struct epoll_event ev;
+ev.events  = EPOLLIN;       // 关心"可读"事件
+ev.data.fd = listen_fd;     // 把这个 fd 存进去，返回时能拿回来
+
+epoll_ctl(epfd, EPOLL_CTL_ADD, listen_fd, &amp;ev);
+//              ^^^^^^^^^^^^^
+//              ADD = 新增    MOD = 修改    DEL = 删除</code></pre>
+
+<p>关键：<code>ev.data</code> 是一个 <code>union</code>，可以存一个 fd 整数，也可以存一个指针。epoll_wait 返回时会<strong>原样还给你</strong>。这样你不用自己维护"这个就绪的 fd 是哪个连接"的映射。</p>
+
+<p><strong>第三步：<code>epoll_wait</code> — 等事件</strong></p>
+
+<pre><code>struct epoll_event events[64];     // 你提供的输出缓冲区
+int n = epoll_wait(epfd, events, 64, -1);
+//                            ^^  ^^
+//                       最多返回几个  超时(-1=永远等)
+
+// 返回后，events[0] .. events[n-1] 就是就绪的事件
+for (int i = 0; i &lt; n; i++) {
+    int fd = events[i].data.fd;     // 你注册时存的 fd
+    uint32_t revents = events[i].events;  // EPOLLIN / EPOLLOUT / ...
+    // 处理这个 fd ...
+}</code></pre>
+
+<div class="warning">
+<code>epoll_wait</code> 的第二个参数 <code>events</code> 是<strong>你分配</strong>的数组，内核往里填。第三个参数是数组大小（最多填多少）。返回值 <code>n</code> 是实际就绪数。如果 <code>n == 64</code>（等于你的上限），说明可能还有就绪事件没返回完——下次 <code>epoll_wait</code> 会继续给你，不会丢。
+</div>
+
+<!-- ============================================================ -->
+<h2>6. LT vs ET：两种触发模式</h2>
+
+<p>注册 fd 时，你可以在 <code>ev.events</code> 上加一个标志位 <code>EPOLLET</code>：</p>
+
+<pre><code>ev.events = EPOLLIN;             // Level Triggered（水平触发，默认）
+ev.events = EPOLLIN | EPOLLET;   // Edge Triggered（边沿触发）</code></pre>
+
+<p>区别非常大：</p>
+
+<table>
+  <tr><th></th><th>Level Triggered (LT)</th><th>Edge Triggered (ET)</th></tr>
+  <tr>
+    <td><strong>触发条件</strong></td>
+    <td>缓冲区<strong>有数据</strong>就通知（状态）</td>
+    <td>缓冲区<strong>从空变非空</strong>时通知一次（变化）</td>
+  </tr>
+  <tr>
+    <td><strong>重复通知</strong></td>
+    <td>如果你没读完，下次 epoll_wait <strong>还会返回这个 fd</strong></td>
+    <td>只通知一次，没读完的数据<strong>不会再次通知</strong></td>
+  </tr>
+  <tr>
+    <td><strong>read 策略</strong></td>
+    <td>读一次就行，没读完下次还会叫你</td>
+    <td><strong>必须循环读到 EAGAIN</strong>，否则数据卡住</td>
+  </tr>
+  <tr>
+    <td><strong>必须非阻塞？</strong></td>
+    <td>建议但非必须</td>
+    <td><strong>必须</strong>（循环读要靠 EAGAIN 判断读完）</td>
+  </tr>
+  <tr>
+    <td><strong>性能</strong></td>
+    <td>略低（可能重复唤醒）</td>
+    <td>略高（减少无效唤醒）</td>
+  </tr>
+</table>
+
+<div class="analogy">
+你邮箱里有 3 封未读邮件。
+<br><br>
+<strong>LT</strong> = 每次你问"有没有邮件"，邮递员都说"有！3 封！"。你读走 1 封，下次问"还有 2 封！"。一直到你全读完。
+<br><br>
+<strong>ET</strong> = 只有<strong>新邮件到达那一刻</strong>，邮递员叫你一次"来邮件了！"。如果你去取了 1 封但没取完，剩下的邮递员<strong>不会再叫你</strong>——你得自己记着去取。
+</div>
+
+<div class="warning">
+ET 模式下忘记循环读到 EAGAIN = <strong>数据永久卡在内核缓冲区</strong>，客户端以为你收了但你程序不知道。这是 epoll 最常见的 bug。面试问 "ET 有什么坑" 就是在问这个。
+<br><br>
+初学建议：先用 <strong>LT（默认）</strong>，稳了再切 ET。生产环境（nginx、Redis）通常用 ET 减少无效唤醒。
+</div>
+
+<!-- ============================================================ -->
+<h2>7. 把概念串起来：一个完整的 epoll server 事件循环</h2>
+
+<p>现在把所有概念拼成一个完整的流程图：</p>
+
+<div class="ascii">
+程序启动
+  │
+  ├─ socket() → listen_fd
+  ├─ bind() + listen()
+  ├─ epfd = epoll_create1(0)              ← 建监控中心
+  ├─ epoll_ctl(epfd, ADD, listen_fd)      ← 注册 listen fd
+  │
+  ▼
+┌─────────────── 事件循环 ──────────────────┐
+│                                            │
+│  n = epoll_wait(epfd, events, 64, -1)     │  ← 阻塞等事件
+│  │                                         │
+│  ├─ events[i].fd == listen_fd ?            │
+│  │   ├─ YES: conn = accept(listen_fd)      │  ← 取新连接
+│  │   │       set_nonblock(conn)            │
+│  │   │       epoll_ctl(epfd, ADD, conn)    │  ← 注册到监控
+│  │   │                                     │
+│  │   └─ NO:  conn 有数据                   │
+│  │           data = recv(conn)             │
+│  │           ├─ data 为空: 对端关闭         │
+│  │           │   epoll_ctl(DEL, conn)      │  ← 从监控移除
+│  │           │   close(conn)               │
+│  │           └─ 有数据: 处理 + sendall      │
+│  │                                         │
+│  └─ 继续循环...                             │
+└────────────────────────────────────────────┘
+</div>
+
+<div class="note">
+这个模式就是<strong>Reactor 模式</strong>——单线程 + 事件循环 + IO 多路复用。nginx、Redis、Node.js、vLLM 的 AsyncLLMEngine 底层都是这个形状。区别只是"处理"那一步做的事不同：nginx 反代、Redis 执行命令、vLLM 调度推理。
+</div>
+
+<!-- ============================================================ -->
+<h2>8. epoll 与 AI Infra 面试</h2>
+
+<ol>
+  <li><b>vLLM 的 AsyncLLMEngine</b> 用 asyncio event loop，底层就是 epoll（Linux 上 Python asyncio 默认用 epoll）。理解 epoll 是读懂 vLLM 并发模型的前提。</li>
+  <li><b>系统设计题</b> "设计一个 LLM 推理平台"：负载均衡 → 推理 server（epoll 事件循环接请求）→ GPU 调度。epoll 是入口层的基础。</li>
+  <li><b>面试常问</b>：select vs poll vs epoll 区别？epoll 内部数据结构？LT vs ET？为什么 ET 必须非阻塞？</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2>9. 概念检查（确认你跟上了再写代码）</h2>
+
+<div class="q">Q1. 1000 个连接，只有 2 个活跃。select 每次调用要看多少个 fd？epoll_wait 每次返回多少个？</div>
+
+<div class="q">Q2. epoll_ctl 的 <code>ev.data.fd</code> 字段为什么存在？如果 epoll 没有这个字段，你的程序要怎么知道"就绪的 fd 7 对应哪个客户端"？</div>
+
+<div class="q">Q3. ET 模式下，你 <code>read(fd, buf, 1024)</code> 读了 1024 字节，但客户端实际发了 3000 字节。剩下 1976 字节会怎样？LT 模式下呢？</div>
+
+<details>
+<summary>点击展开答案（先自己答再看）</summary>
+
+<p><strong>A1</strong>：select 每次要看全部 1000 个 fd（O(N)），即使只有 2 个有数据。epoll_wait 只返回 2 个（O(就绪数)）。这就是 epoll 在高并发场景下的核心优势。</p>
+
+<p><strong>A2</strong>：<code>ev.data</code> 让你在注册时"存一个标记"，epoll_wait 返回时"原样拿回"。如果没有它，你需要自己维护一个 <code>fd → connection_info</code> 的字典。有这个字段就省了这一步——你可以直接把连接对象的指针（C）或对象本身（Python selectors 的 data=conn）存进去。</p>
+
+<p><strong>A3</strong>：ET 模式下，剩下 1976 字节<strong>卡在内核缓冲区</strong>。因为 epoll 只在"空→非空"时通知一次，缓冲区里还有数据不算"新事件"，下次 epoll_wait 不会返回这个 fd。你必须循环 read 直到返回 EAGAIN 才安全。LT 模式下，因为缓冲区还有数据（"有数据"这个状态持续），下次 epoll_wait <strong>还会返回这个 fd</strong>，你可以继续读，不会丢数据。</p>
+</details>
+
+<!-- ============================================================ -->
+<!-- PART B: 实践 -->
+<!-- ============================================================ -->
+
+<h2>10. 实践：手写 epoll echo server</h2>
+
+<p>概念搞清楚了，现在兑现成代码。两版骨架已放到 <code>exercises/0002-epoll-echo/</code>:</p>
 <ul>
   <li><code>echo_server_py.py</code> — Python <code>selectors</code> 版,先做这个</li>
   <li><code>echo_server_c.c</code> — C 裸 epoll 版,面试白板级</li>
 </ul>
 
-<h2>为什么先 Python 再 C</h2>
+<h3>为什么先 Python 再 C</h3>
 <p>Python <code>selectors</code> 把 epoll 包了一层,不用管 <code>struct epoll_event</code>、不用管 fd 整数,10 分钟能跑通——先建立"多路复用 server 长什么样"的<strong>整体形状</strong>。然后 C 版把同一形状<strong>裸</strong>写一遍,fd 就是个 int,这才是面试要你白板写的。</p>
 
-<h2>Python 版 — 要填的 5 处</h2>
+<h3>Python 版 — 要填的 5 处</h3>
 
 <div class="step" data-label="TODO 1 · register conn">
 <p>accept 出 <code>conn</code> 后,要告诉 epoll"以后帮我盯这个 fd 的可读事件"。</p>
 <pre><code>sel.register(conn, selectors.EVENT_READ, data=conn)</code></pre>
-<p>关键:<code>data=conn</code> 是你塞给 epoll 的私货。等会 <code>sel.select()</code> 返回时,它会原样还给你(<code>key.data</code>),这样你不用自己维护 fd→conn 的映射。这就是 epoll <code>ev.data</code> 字段的用途。</p>
+<p>关键:<code>data=conn</code> 是你塞给 epoll 的私货（就是上面讲的 <code>ev.data</code>）。等会 <code>sel.select()</code> 返回时,它会原样还给你(<code>key.data</code>),这样你不用自己维护 fd→conn 的映射。</p>
 </div>
 
 <div class="step" data-label="TODO 2 · echo back">
@@ -80,7 +596,7 @@
 
 <div class="step" data-label="TODO 4 · wait">
 <pre><code>events = sel.select(timeout=None)</code></pre>
-<p>阻塞到任一 fd 就绪,返回 <code>[(key, mask), ...]</code>。只有就绪的,不遍历全部——这就是 0001 讲的"O(就绪数)"。</p>
+<p>阻塞到任一 fd 就绪,返回 <code>[(key, mask), ...]</code>。只有就绪的,不遍历全部——这就是上面讲的"O(就绪数)"。</p>
 </div>
 
 <div class="step" data-label="TODO 5 · dispatch">
@@ -91,7 +607,7 @@ else:
 <p>listen fd 可读 = 有新连接 → <code>accept</code>。conn fd 可读 = 有数据 → <code>recv</code>。同一个线程,同一个循环,靠 <code>key.fileobj</code> 分流。这就是"单线程扛多连接"的全部秘密。</p>
 </div>
 
-<h2>跑起来验证</h2>
+<h3>跑起来验证</h3>
 <pre><code>python3 echo_server_py.py
 # 终端 2:
 nc 127.0.0.1 9000
@@ -99,51 +615,62 @@ hello        # 应回显 hello
 # 终端 3 (同时):
 nc 127.0.0.1 9000
 world        # 也回显 world, 互不影响</code></pre>
-<p>两个 nc 同时连、同时 echo = 多路复用成功 = gate 过。</p>
+<p>两个 nc 同时连、同时 echo = 多路复用成功。</p>
 
-<h2>C 版 — 同样的形状,裸写</h2>
+<h3>C 版 — 同样的形状,裸写</h3>
 <p>填 5 处 TODO,对应 Python 的 5 步,只是没了抽象:</p>
 <ol>
-  <li><code>epoll_create1(0)</code> — 建 epoll 实例</li>
-  <li><code>epoll_ctl(epfd, EPOLL_CTL_ADD, lfd, &amp;ev)</code> — 注册 listen fd</li>
-  <li><code>epoll_wait(epfd, events, MAX_EVENTS, -1)</code> — 等事件</li>
+  <li><code>epoll_create1(0)</code> — 建 epoll 实例（监控中心）</li>
+  <li><code>epoll_ctl(epfd, EPOLL_CTL_ADD, lfd, &amp;ev)</code> — 注册 listen fd 到红黑树</li>
+  <li><code>epoll_wait(epfd, events, MAX_EVENTS, -1)</code> — 从就绪链表取事件</li>
   <li>fd==lfd 分支:<code>accept</code> + <code>set_nonblock</code> + <code>epoll_ctl ADD</code></li>
   <li>else 分支:<code>read</code> → &gt;0 <code>write</code> 回去 / ==0 关连接 / &lt;0 看 <code>errno</code></li>
 </ol>
 <pre><code>gcc -O2 -Wall echo_server_c.c -o echo_server_c
 ./echo_server_c</code></pre>
 
-<div class="note">C 版几个会卡你的点:<code>struct epoll_event</code> 的 <code>.events</code> 是位掩码(EPOLLIN | EPOLLET),<code>.data.fd</code> 是个 union,你存 fd 进去,返回时 <code>events[i].data.fd</code> 取回。LT 模式下 <code>read</code> 一次就行;切 ET 要循环 read 到 <code>EAGAIN</code>。</p>
-
-<div class="gate">
-  本节 gate:<br>
-  1. Python 版:两个 nc 同时连都能 echo<br>
-  2. C 版:同上,且 <code>gcc -Wall</code> 无 warning<br>
-  3. 能口头讲清:为什么 <code>data=conn</code> / <code>ev.data.fd</code> 这字段存在(省掉自己维护 fd→对象映射)<br>
-  4. 加分:把 C 版切到 ET,循环 read 到 EAGAIN,讲清不这么干会怎样(数据卡住)
+<div class="warning">
+C 版几个会卡你的点:<code>struct epoll_event</code> 的 <code>.events</code> 是位掩码(EPOLLIN | EPOLLET),<code>.data.fd</code> 是个 union,你存 fd 进去,返回时 <code>events[i].data.fd</code> 取回。LT 模式下 <code>read</code> 一次就行;切 ET 要循环 read 到 <code>EAGAIN</code>。
 </div>
 
-<h2>概念检查(写代码前先答)</h2>
-<p class="q">Q1. Python 版里,如果不传 <code>data=conn</code>,<code>sel.select()</code> 返回时你怎么知道是哪个连接?</p>
-<p class="q">Q2. C 版 <code>epoll_wait</code> 的第二个参数 <code>events</code> 数组和 <code>MAX_EVENTS</code> 各是什么角色?数组开太大有坏处吗?</p>
-<p class="q">Q3. 为什么 <code>accept</code> 出来的 conn_fd 也要 <code>set_nonblock</code>?LT 模式下不设会死吗?</p>
+<!-- ============================================================ -->
+<h2>11. 代码级概念检查</h2>
+
+<p class="q">Q4. Python 版里,如果不传 <code>data=conn</code>,<code>sel.select()</code> 返回时你怎么知道是哪个连接?</p>
+<p class="q">Q5. C 版 <code>epoll_wait</code> 的第二个参数 <code>events</code> 数组和 <code>MAX_EVENTS</code> 各是什么角色?数组开太大有坏处吗?</p>
+<p class="q">Q6. 为什么 <code>accept</code> 出来的 conn_fd 也要 <code>set_nonblock</code>?LT 模式下不设会死吗?</p>
 
 <details>
 <summary>答案(先想再展开)</summary>
-<p><strong>Q1</strong>：<code>key.fileobj</code> 仍能拿到 fd/socket 对象(Python 自动维护),所以不传 data 也能用 <code>key.fileobj</code> 区分。但生产代码里一个 fd 上可能挂多种状态(待发缓冲、peer addr 等),<code>data</code> 让你把这些一起塞进去,省掉自己维护 dict。这就是 <code>ev.data</code> 的设计意图。</p>
-<p><strong>Q2</strong>：<code>events</code> 是你提供的输出缓冲,<code>epoll_wait</code> 把就绪事件填进去;<code>MAX_EVENTS</code> 是告诉它"最多填这么多"。返回值 n = 实际就绪数。数组开太大只是浪费一点栈/堆,没别的坏处;开太小会一次拿不完(下次 <code>epoll_wait</code> 还会返回剩下的,不会丢)。</p>
-<p><strong>Q3</strong>：非阻塞是为了 <code>recv</code>/<code>read</code> 没数据时返回 <code>EAGAIN</code> 而不是<strong>阻塞整个事件循环</strong>——一个慢连接把全 server 卡死。LT 模式下不设非阻塞也能跑(读到没数据时阻塞一下再返回),但会拖累其他连接;ET 模式下<strong>必须</strong>非阻塞,否则循环 read 到没数据时会阻塞死。所以无论如何都设。</p>
+<p><strong>Q4</strong>：<code>key.fileobj</code> 仍能拿到 fd/socket 对象(Python 自动维护),所以不传 data 也能用 <code>key.fileobj</code> 区分。但生产代码里一个 fd 上可能挂多种状态(待发缓冲、peer addr 等),<code>data</code> 让你把这些一起塞进去,省掉自己维护 dict。这就是 <code>ev.data</code> 的设计意图。</p>
+<p><strong>Q5</strong>：<code>events</code> 是你提供的输出缓冲,<code>epoll_wait</code> 把就绪事件填进去;<code>MAX_EVENTS</code> 是告诉它"最多填这么多"。返回值 n = 实际就绪数。数组开太大只是浪费一点栈/堆,没别的坏处;开太小会一次拿不完(下次 <code>epoll_wait</code> 还会返回剩下的,不会丢)。</p>
+<p><strong>Q6</strong>：非阻塞是为了 <code>recv</code>/<code>read</code> 没数据时返回 <code>EAGAIN</code> 而不是<strong>阻塞整个事件循环</strong>——一个慢连接把全 server 卡死。LT 模式下不设非阻塞也能跑(读到没数据时阻塞一下再返回),但会拖累其他连接;ET 模式下<strong>必须</strong>非阻塞,否则循环 read 到没数据时会阻塞死。所以无论如何都设。</p>
 </details>
 
+<!-- ============================================================ -->
+<div class="gate">
+  本节 gate:<br>
+  1. 能口头讲清 select vs poll vs epoll 三个核心区别<br>
+  2. 能画出 epoll 内部数据结构（红黑树 + 就绪链表）<br>
+  3. 能讲清 LT vs ET 的区别,以及 ET 下不循环读到 EAGAIN 的后果<br>
+  4. Python 版:两个 nc 同时连都能 echo<br>
+  5. C 版:同上,且 <code>gcc -Wall</code> 无 warning<br>
+  6. 加分:把 C 版切到 ET,循环 read 到 EAGAIN,讲清不这么干会怎样
+</div>
+
+<!-- ============================================================ -->
 <h2>推荐一手源</h2>
 <ul>
+  <li><a href="https://man7.org/linux/man-pages/man7/epoll.7.html">man 7 epoll</a> — epoll 一手定义,LT/ET、签名、语义,最权威。</li>
+  <li><a href="https://man7.org/tlpi/">《The Linux Programming Interface》ch.63</a> (Kerrisk) — epoll 章节深读,含完整示例。</li>
+  <li><a href="http://kegel.com/c10k.html">"The C10k problem"</a> (Dan Kegel) — IO 多路复用的历史动机。</li>
   <li><a href="https://docs.python.org/3/library/selectors.html">Python selectors 文档</a> — 含 echo server 官方示例,可对照你的实现。</li>
-  <li><a href="https://man7.org/linux/man-pages/man2/epoll_wait.2.html">man 2 epoll_wait</a> — events/maxevents/返回值语义。</li>
 </ul>
 
 <footer>
-  <p>上一节:<a href="./0001-io-multiplexing-epoll.html">0001 — IO 多路复用与 epoll</a> ·
-  下一节:<a href="./0003-python-concurrency.html">0003 — Python 并发 (threading/multiprocessing/asyncio/GIL)</a></p>
+  <p>上一节：<a href="./0001-socket-to-accept.html">0001 — 从 socket() 到 accept()</a></p>
+  <p>下一节：<a href="./0003-python-concurrency.html">0003 — Python 并发 (threading/multiprocessing/asyncio/GIL)</a></p>
+  <p>术语见 <a href="../GLOSSARY.md">GLOSSARY</a> · 路线见 <a href="../roadmap.md">roadmap</a></p>
   <p>填完代码贴给我 review,或卡住了直接问。这是你的课。</p>
 </footer>
 

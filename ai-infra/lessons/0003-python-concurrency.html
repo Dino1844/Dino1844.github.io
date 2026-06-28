@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0003 — Python 并发：threading / GIL / multiprocessing / asyncio</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --rule:#d2d2d2; --bg:#fdfdfb;
+    --accent:#8a1538; --code-bg:#f4f1ec; --hilite:#fffbe6; --green:#2a6f2a;
+    --red:#b22222; --blue:#2a5f8a; }
+  *, ::before, ::after { box-sizing:border-box; margin:0; padding:0; }
+  html { font-size:17px; line-height:1.6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC","Helvetica Neue",sans-serif; color:var(--ink); background:var(--bg); }
+  body { padding:2rem 1rem 4rem; }
+  .wrap { max-width:700px; margin:0 auto; }
+  header { margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid var(--accent); }
+  .kicker { font-size:.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:.3rem; }
+  h1 { font-size:1.7rem; line-height:1.25; margin-bottom:.4rem; }
+  .meta { font-size:.9rem; color:var(--muted); }
+  h2 { font-size:1.25rem; margin:2rem 0 .6rem; color:var(--accent); }
+  h3 { font-size:1.05rem; margin:1.5rem 0 .4rem; }
+  p { margin-bottom:.8rem; }
+  ul, ol { margin:.4rem 0 .8rem 1.4rem; }
+  li { margin-bottom:.3rem; }
+  code { background:var(--code-bg); padding:.1em .35em; border-radius:3px; font-size:.88em; }
+  pre { background:var(--code-bg); padding:.8rem 1rem; border-radius:5px; overflow-x:auto; font-size:.82rem; line-height:1.45; margin:.6rem 0 1rem; }
+  pre code { background:none; padding:0; }
+  table { width:100%; border-collapse:collapse; margin:.6rem 0 1rem; font-size:.9rem; }
+  th, td { border:1px solid var(--rule); padding:.4rem .6rem; text-align:left; vertical-align:top; }
+  th { background:var(--code-bg); font-weight:600; }
+  .ascii { font-family:"JetBrains Mono","Fira Code","Cascadia Code",monospace; font-size:.78rem; line-height:1.3; background:var(--code-bg); padding:.6rem .8rem; border-radius:5px; white-space:pre; overflow-x:auto; margin:.4rem 0 .8rem; }
+  .analogy, .note { background:#f0f7fb; border-left:4px solid var(--blue); padding:.5rem .8rem; margin:.6rem 0 1rem; border-radius:0 5px 5px 0; font-size:.92rem; }
+  .warning { background:#fff5f5; border-left:4px solid var(--red); padding:.5rem .8rem; margin:.6rem 0 1rem; border-radius:0 5px 5px 0; font-size:.92rem; }
+  .q { padding:.3rem .5rem; margin:.4rem 0; border-left:3px solid var(--accent); background:var(--hilite); font-size:.95rem; }
+  details { margin:.4rem 0 .8rem; padding:.4rem .6rem; background:var(--code-bg); border-radius:5px; }
+  details summary { cursor:pointer; font-weight:600; }
+  footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.85rem; color:var(--muted); }
+  footer a { color:var(--accent); }
+  .gate { background:#eef6ee; border:2px solid var(--green); border-radius:5px; padding:.6rem .8rem; margin:1rem 0; font-size:.92rem; }
+  .gate h3 { margin-top:0; color:var(--green); }
+  .step { background:var(--code-bg); border-left:4px solid var(--accent); padding:.5rem .8rem; margin:.6rem 0 1rem; border-radius:0 5px 5px 0; font-size:.92rem; }
+  .step .label { font-weight:700; color:var(--accent); font-size:.85rem; }
+  @media (max-width:600px) { html { font-size:15px; } body { padding:1rem .6rem 3rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Phase 0 · Lesson 0003 · AI Infra</div>
+  <h1>Python 并发：threading / GIL / multiprocessing / asyncio</h1>
+  <p class="meta">Python 的并发为什么这么麻烦？读完这一页你会彻底搞清 GIL 是什么、为什么不是所有并发都需要多线程、以及 asyncio 在 vLLM 里怎么用。</p>
+</header>
+
+<h2>0. 为什么 AI Infra 面试会考 Python 并发</h2>
+
+<p>所有主流推理引擎的核心组件都是 Python 写的——而它们必须同时处理大量请求：</p>
+
+<ul>
+  <li><b>vLLM</b> 的 <code>AsyncLLMEngine</code> 用 asyncio event loop 管理请求的生命周期</li>
+  <li><b>SGLang</b> 用 asyncio + multiprocessing 做推理 worker 池</li>
+  <li><b>数据加载</b>（DataLoader）用 multiprocessing 预取数据</li>
+  <li><b>训练中</b>用单独的进程做 checkpoint 保存 / 日志写入</li>
+</ul>
+
+<p>面试可能直接问："Python GIL 怎么影响推理引擎？为什么 vLLM 用 asyncio 而不是多线程作请求调度？"</p>
+
+<p>回答这些问题的前提，就是搞清楚 Python 的四种并发武器：<strong>threading · multiprocessing · asyncio · Queue</strong>。</p>
+
+<h2>1. threading — 轻量但有个大坑</h2>
+
+<p>线程（thread）是操作系统调度的最小单位。同一进程里的线程<strong>共享内存地址空间</strong>——这意味着它们可以读写同一个变量（方便但也危险）。</p>
+
+<h3>开线程很简单</h3>
+
+<pre><code>import threading, time
+
+def worker(n):
+    for i in range(3):
+        print(f"worker {n}: step {i}")
+        time.sleep(0.1)
+
+threads = []
+for i in range(3):
+    t = threading.Thread(target=worker, args=(i,))
+    t.start()
+    threads.append(t)
+for t in threads:
+    t.join()
+print("all done")</code></pre>
+
+<p>几个要点：</p>
+<ul>
+  <li><code>.start()</code> → 告诉 OS 启动这个线程。线程立即开始跑 <code>worker()</code>。</li>
+  <li><code>.join()</code> → 主线程阻塞在这里，等这个线程结束才继续往下走。</li>
+  <li>线程间共享变量需要 <code>threading.Lock</code> 保护——否则两个线程同时写同一个列表会出错（data race）。</li>
+</ul>
+
+<div class="analogy">
+  <b>类比：</b>主线程是"店长"，<code>.start()</code> 是给员工分配任务，<code>.join()</code> 是等员工干完再下班。员工之间共用同一个货架（共享内存）——如果两个人同时往同一格放东西，东西就乱套了（data race），需要一把锁（Lock），一次只让一个人碰货架。
+</div>
+
+<p>但 Python 的线程有一个致命限制——<b>GIL</b>。</p>
+
+<h2>2. GIL — 为什么 Python 线程不能并行做 CPU 计算</h2>
+
+<h3>GIL 是什么</h3>
+
+<p><b>GIL = Global Interpreter Lock（全局解释器锁）</b>。CPython（标准 Python）的实现中，整个解释器在执行 Python 字节码时，只允许<strong>同时只有一个线程</strong>持有这把锁。</p>
+
+<div class="ascii">         时间轴 →
+线程 A:  ██████████░░░░░░░░░░██████████████████
+线程 B:  ░░░░░██████████████░░░░░░░░░░████████
+         ^                       ^
+         A 持有 GIL              A 释放 GIL，B 拿到</div>
+
+<p>这意味着：<strong>两个 Python 线程不能同时在两个 CPU 核上跑 Python 代码</strong>。它们只是在"快速轮流"（时间片轮转），不是真正的并行。</p>
+
+<h3>那 threading 有什么用？</h3>
+
+<p>答案是——<b>IO 密集型任务有用，CPU 密集型没用</b>。</p>
+
+<table>
+  <tr><th>任务类型</th><th>举例</th><th>GIL 影响</th></tr>
+  <tr><td><b>IO 密集型</b></td><td>网络请求、文件读写、数据库查询</td><td>线程等 IO 时会<strong>主动释放 GIL</strong>，其他线程可以跑</td></tr>
+  <tr><td><b>CPU 密集型</b></td><td>矩阵乘法、解析数据、字符串处理</td><td>线程一直占着 GIL 不放，其他线程干等——<b>等于单核</b></td></tr>
+  <tr><td><b>混合型</b></td><td>先读数据、再计算、再写结果</td><td>计算部分串行，IO 部分可以 overlap</td></tr>
+</table>
+
+<p>关键机制：Python 的执行器在 IO 操作（<code>read()</code>、<code>write()</code>、<code>send()</code>、<code>time.sleep()</code>）之前会<strong>释放 GIL</strong>，因为 IO 等待不涉及 Python 对象操作。这跟 Lesson 0002 的 epoll 很像——等 IO 时不占 CPU，把 CPU 让给别人。</p>
+
+<div class="warning">
+  <b>面试必问：</b>"Python 开 10 个线程做矩阵乘法，比 1 个线程快吗？"<br>
+  答案：<strong>不快</strong>，甚至更慢（因为 GIL 切换开销）。矩阵乘法是 CPU 密集的 NumPy 操作。但注意：NumPy 和一些 C 扩展（如 PyTorch）的内部计算会<strong>释放 GIL</strong>，它们调用 C/Fortran 库时不受 GIL 限制。所以 PyTorch 的 tensor 运算可以多线程加速，但 <i>Python 层的控制逻辑</i>不行。
+</div>
+
+<h2>3. multiprocessing — 真并行，但代价大</h2>
+
+<p>如果 threading 因为 GIL 不能并行跑 CPU 计算，那怎么办？答案：<strong>不开线程，开进程</strong>。</p>
+
+<p>每个进程有自己独立的内存空间、自己独立的 Python 解释器、自己独立的 GIL。N 个进程可以真正跑在 N 个 CPU 核上。</p>
+
+<pre><code>from multiprocessing import Process
+
+def worker(n):
+    # 每个进程有自己的 GIL → 真并行
+    result = sum(i * i for i in range(10_000_000))
+    print(f"process {n}: done")
+
+if __name__ == "__main__":
+    procs = []
+    for i in range(4):
+        p = Process(target=worker, args=(i,))
+        p.start()
+        procs.append(p)
+    for p in procs:
+        p.join()</code></pre>
+
+<h3>进程 vs 线程：权衡</h3>
+
+<table>
+  <tr><th></th><th>threading</th><th>multiprocessing</th></tr>
+  <tr><td><b>内存</b></td><td>共享（省内存，但容易 data race）</td><td>独立（每个进程拷贝一遍，内存开销大）</td></tr>
+  <tr><td><b>启动速度</b></td><td>快（ms 级）</td><td>慢（需要 fork/exec 整个解释器，百 ms 级）</td></tr>
+  <tr><td><b>通信</b></td><td>直接读写共享变量（需 Lock）</td><td>需要 IPC 机制（Queue / Pipe / shared memory）</td></tr>
+  <tr><td><b>GIL</b></td><td>受 GIL 限制</td><td><b>不受</b> GIL 限制（真并行）</td></tr>
+  <tr><td><b>适用</b></td><td>IO 密集型、调用 C 扩展</td><td>CPU 密集型、隔离任务</td></tr>
+</table>
+
+<div class="analogy">
+  <b>类比：</b>threading = 几个店员共用同一本账本（共享内存），需要轮流用（GIL），但传话快（共享变量）。multiprocessing = 几家分店各自独立记账（独立进程），可以同时算（真并行），但互相传话需要打电话/送文件（IPC）。
+</div>
+
+<h3>进程间通信：Queue</h3>
+
+<p>最常用的 IPC 方式：一个进程往 Queue 放数据，另一个取。底层用 pipe + pickle 序列化。</p>
+
+<pre><code>from multiprocessing import Process, Queue
+
+def producer(q):
+    for i in range(10):
+        q.put(i)         # 放进队列
+    q.put(None)          # 哨兵：告诉 consumer 结束了
+
+def consumer(q):
+    while True:
+        item = q.get()   # 阻塞等数据
+        if item is None:  # 哨兵检测
+            break
+        print(f"got {item}")
+
+if __name__ == "__main__":
+    q = Queue()
+    p1 = Process(target=producer, args=(q,))
+    p2 = Process(target=consumer, args=(q,))
+    p1.start(); p2.start()
+    p1.join(); p2.join()</code></pre>
+
+<p>这就是<strong>生产者-消费者模式</strong>——AI Infra 里随处可见：</p>
+<ul>
+  <li>数据加载进程（producer）→ 训练进程（consumer）</li>
+  <li>日志写入进程（consumer）← 推理进程（producer）</li>
+  <li>请求分发进程（producer）→ GPU worker 进程（consumer）</li>
+</ul>
+
+<h2>4. asyncio — 单线程里的协作式并发</h2>
+
+<p>如果只是等 IO，连线程的开销都嫌大怎么办？Python 的 asyncio 提供了一个<strong>单线程内协作式多任务</strong>的方案。</p>
+
+<h3>核心概念</h3>
+
+<table>
+  <tr><th>概念</th><th>是什么</th></tr>
+  <tr><td><b>async def</b></td><td>定义一个"协程函数"。调用它不会立即执行，而是返回一个 <b>coroutine object</b>。</td></tr>
+  <tr><td><b>await</b></td><td>交还控制权。"这个操作可能要等，你先去干别的，等操作完了再回来叫我。"</td></tr>
+  <tr><td><b>event loop</b></td><td>一个调度器，管理所有协程的切换。阻塞时切走，就绪时切回。</td></tr>
+  <tr><td><b>asyncio.run()</b></td><td>创建一个 event loop，把协程丢进去跑，跑完收尾。</td></tr>
+</table>
+
+<pre><code>import asyncio
+
+async def fetch_data(url):
+    print(f"fetching {url}...")
+    await asyncio.sleep(1)  # 模拟网络请求
+    print(f"done {url}")
+    return f"data from {url}"
+
+async def main():
+    # 并发发起 3 个请求
+    tasks = [
+        asyncio.create_task(fetch_data("url1")),
+        asyncio.create_task(fetch_data("url2")),
+        asyncio.create_task(fetch_data("url3")),
+    ]
+    results = await asyncio.gather(*tasks)
+    print(results)
+
+asyncio.run(main())</code></pre>
+
+<h3>执行过程（关键！）</h3>
+
+<div class="ascii">线程 1 (唯一线程):
+时间 →
+█═fetch═1═sleep═░░░═done1═█═fetch═2═sleep═░░░═done2═█═...
+█═fetch═3═sleep═░░═done3═══█
+         ^^^^^   ^^^^
+         await 切走    1 秒后回来
+三个请求总共耗时 ~1 秒，不是 3 秒</div>
+
+<p>关键认知：<strong>整个程序只有一个线程，一个 GIL</strong>。asyncio 的并发不是"同时做"，而是"不等时切走，好了再回来"。但这对于 IO 密集场景来说效果和并发一样——因为等待 IO 不消耗 CPU。</p>
+
+<div class="note">
+  <b>asyncio vs threading：</b><br>
+  threading：OS 内核决定什么时候切换（抢占式），切换开销大（涉及内核态）。<br>
+  asyncio：Python 代码在 <code>await</code> 处主动让出（协作式），切换在用户态完成，开销小得多。<br>
+  <br>
+  结论：IO 密集且连接数多 → asyncio（数万连接都没有问题，epoll 底层支持）。<br>
+  CPU 密集或需要真并行 → multiprocessing。
+</div>
+
+<h2>5. 四种并发武器怎么选</h2>
+
+<table>
+  <tr><th>场景</th><th>选哪个</th><th>原因</th></tr>
+  <tr><td>大量网络请求（HTTP 推理请求、API 调用）</td><td><b>asyncio</b></td><td>单线程 + epoll 底层，数万连接无压力。GIL 不影响（等网络 IO 时释放）。</td></tr>
+  <tr><td>CPU 计算（tokenize、detokenize、后处理）</td><td><b>multiprocessing</b></td><td>需要真并行。GIL 下 threading 等于单核。</td></tr>
+  <tr><td>GPU 计算 + CPU 控制混合</td><td><b>asyncio + multiprocessing</b></td><td>asyncio 管请求调度（IO），multiprocessing 管 GPU worker 池（计算）。<br>vLLM 就是这样。</td></tr>
+  <tr><td>简单的定时任务、轻量后台</td><td><b>threading</b></td><td>启动快，够用。但要小心 data race。</td></tr>
+  <tr><td>进程间数据传递</td><td><b>Queue</b></td><td>multiprocessing.Queue 是标准方式。底层 pipe，自动处理锁和序列化。</td></tr>
+</table>
+
+<h2>6. 在 AI Infra 里的实战</h2>
+
+<h3>vLLM 的架构（简化）</h3>
+
+<div class="ascii">┌─────────────────────────────────────────┐
+│          主进程 (asyncio event loop)      │
+│  asyncio HTTP server (aiohttp)           │
+│  ├─ 接收推理请求                         │
+│  └─ 通过 Queue 发给 GPU worker          │
+├─────────────────────────────────────────┤
+│         GPU Worker 进程 (multiprocessing) │
+│  while True:                             │
+│    request = queue.get()                 │
+│    result = model.forward(request)  ← 跑在 GPU │
+│    queue_out.put(result)                 │
+└─────────────────────────────────────────┘</div>
+
+<p>为什么这么设计？</p>
+<ul>
+  <li><b>主进程用 asyncio</b>：同时处理成千上万的 HTTP 连接，不阻塞。如果有请求在等 GPU 计算结果，asyncio 可以先去接其他请求。</li>
+  <li><b>GPU Worker 用独立进程</b>：PyTorch 模型跑在 GPU 上时释放 GIL，但为了隔离显存和避免 GIL 干扰控制流，单独开进程更安全。每个进程绑定一块 GPU。</li>
+  <li><b>Queue 做桥梁</b>：主进程放请求，worker 取；worker 放结果，主进程取。</li>
+</ul>
+
+<h3>SGLang 的多 worker 模式</h3>
+
+<p>类似设计：一个 router 进程（asyncio）接收请求，分发到多个推理 worker 进程（multiprocessing），每个 worker 管理自己的 GPU。</p>
+
+<h3>数据加载的 Pipeline</h3>
+
+<p>训练时常见模式：</p>
+<ul>
+  <li>2-4 个 prefetch 进程（producer）：从磁盘读数据，预处理，放进 <code>multiprocessing.Queue</code></li>
+  <li>1 个训练进程（consumer）：从 Queue 取已经预处理好的 batch，直接送 GPU</li>
+  <li>效果：磁盘 IO 和 GPU 计算重叠——<b>气泡（bubble）</b>缩小了</li>
+</ul>
+
+<h2>7. 概念检查</h2>
+
+<div class="q">Q1. 线程 A 在执行 <code>time.sleep(1)</code> 时，线程 B 能跑吗？为什么？</div>
+<div class="q">Q2. 为什么 asyncio 能在单线程里实现"同时"处理几百个连接？这和 threading 的区别是什么？</div>
+<div class="q">Q3. 推理引擎里，为什么用 multiprocessing 而不是 threading 来做 GPU 推理 worker？</div>
+<div class="q">Q4. 下面这段代码的结果是什么？（考察 GIL 对 CPU 计算的影响）</div>
+<pre><code>import threading, time
+
+def count():
+    for i in range(50_000_000):
+        pass
+
+t1 = threading.Thread(target=count)
+t2 = threading.Thread(target=count)
+start = time.time()
+t1.start(); t2.start()
+t1.join(); t2.join()
+print(time.time() - start)
+# 和串行的比：更快？更慢？差不多？</code></pre>
+
+<details>
+<summary>点击展开答案（先自己答再看）</summary>
+<p><strong>A1</strong>：能。<code>sleep()</code> 是 IO 操作，Python 执行器在进入 IO 前释放 GIL，线程 B 可以拿到 GIL 运行。这是 GIL 的关键行为——IO 操作不占 GIL。</p>
+
+<p><strong>A2</strong>：asyncio 单线程里不是"同时做"，而是"不等待"——协程在 <code>await</code> 处主动让出控制权，event loop 切到另一个就绪的协程。区别：threading 是 OS 在任意时刻抢占切换（不可预测，开销大）；asyncio 是代码在 await 处主动让出（可预测，开销小）。asyncio 底层用 epoll 监视 fd——跟 Lesson 0002 一样。</p>
+
+<p><strong>A3</strong>：两个原因。(1) GPU 显存隔离——每个进程有自己的 CUDA context，一个进程崩了不影响其他 worker。(2) GIL——model.forward() 虽然释放 GIL，但 Python 层的调度逻辑、response 组装等 CPU 操作受 GIL 限制，用独立进程可以真并行。</p>
+
+<p><strong>A4</strong>：<strong>和串行差不多，甚至略慢</strong>。因为 <code>count()</code> 是纯 CPU 密集的 Python 代码，不释放 GIL。两个线程轮流持有 GIL，每个时刻只有一个人跑——实际效果和单线程一样，加上线程切换开销反而更慢。把 <code>threading</code> 换成 <code>multiprocessing.Process</code> 才会真正变快（约 2 倍）。</p>
+</details>
+
+<h2>8. 实践：手写多进程数据 Pipeline</h2>
+
+<p>下面是一个 skeleton：实现 "producer 进程读数据 → worker 进程处理 → consumer 进程写结果" 的三阶段 pipeline。填上 TODO 跑通。</p>
+
+<pre><code># data_pipeline.py — 多进程数据 pipeline skeleton
+from multiprocessing import Process, Queue
+
+def load_data(in_q: Queue, out_q: Queue):
+    """从 in_q 拿原始数据, 处理后放入 out_q"""
+    while True:
+        item = in_q.get()
+        if item is None:   # 哨兵
+            out_q.put(None)
+            break
+        # TODO: 对 item 做某种处理（比如 item * 2）
+        # out_q.put(...)
+
+def write_result(out_q: Queue):
+    """从 out_q 拿处理后的数据, 打印"""
+    while True:
+        item = out_q.get()
+        if item is None:
+            break
+        print(f"result: {item}")
+
+if __name__ == "__main__":
+    in_q = Queue()
+    out_q = Queue()
+
+    # 放 10 个原始数据
+    for i in range(10):
+        in_q.put(i)
+
+    loader = Process(target=load_data, args=(in_q, out_q))
+    writer = Process(target=write_result, args=(out_q,))
+    loader.start()
+    writer.start()
+
+    # 等 loader 结束
+    loader.join()
+    # 给 writer 发哨兵
+    in_q.put(None)  # 这里有问题——loader 已经结束了！想想怎么改
+    writer.join()</code></pre>
+
+<div class="step">
+  <div class="label">✏️ 任务</div>
+  <ol>
+    <li>填上 <code>load_data</code> 的 TODO（把 item 翻倍）</li>
+    <li>发现上面 <code>in_q.put(None)</code> 的 bug 了吗？loader 已经 join 了，再往 in_q 放哨兵没用。正确的做法是：<code>load_data</code> 收到 None 后放 None 到 out_q，writer 收到 None 后退出。不需要主线程再放哨兵。</li>
+    <li>(加分) 改成 producer 不自动结束：让 <code>write_result</code> 在打印完 10 个结果后主动 break</li>
+  </ol>
+</div>
+
+<h2>9. Gate 检查</h2>
+
+<div class="gate">
+  <h3>✓ 本节 gate</h3>
+  <ol>
+    <li>能口头讲清 GIL 是什么、什么时候是瓶颈、什么时候不是</li>
+    <li>能说出 threading vs multiprocessing vs asyncio 的适用场景（对照 AI Infra 场景）</li>
+    <li>能解释 vLLM 为什么用 asyncio 做请求调度 + multiprocessing 做 GPU worker</li>
+    <li>手写多进程 pipeline 跑通（producer → worker → consumer 三阶段）</li>
+  </ol>
+</div>
+
+<h2>推荐一手源</h2>
+<ul>
+  <li><a href="https://docs.python.org/3/library/asyncio.html">Python asyncio 官方文档</a> — event loop 完整参考</li>
+  <li><a href="https://docs.python.org/3/library/multiprocessing.html">Python multiprocessing 官方文档</a> — Process / Queue / Pool</li>
+  <li><a href="https://realpython.com/python-gil/">Real Python: 什么是 Python GIL?</a> — 通俗深入的 GIL 解释</li>
+  <li><a href="https://github.com/vllm-project/vllm">vLLM 源码</a> — <code>vllm/entrypoints/</code> 看 asyncio 调度, <code>vllm/worker/</code> 看 multiprocessing worker</li>
+</ul>
+
+<footer>
+  <p>上一节：<a href="./0002-epoll-echo-server.html">0002 — IO 多路复用与 epoll</a></p>
+  <p>下一节：<a href="./0004-distributed-basics.html">0004 — 分布式系统概念</a></p>
+  <p>术语见 <a href="../GLOSSARY.md">GLOSSARY</a> · 路线见 <a href="../roadmap.md">roadmap</a></p>
+  <p>填完代码贴给我 review，或卡住了直接问。这是你的课。</p>
+</footer>
+
+</div>
+</body>
+</html>

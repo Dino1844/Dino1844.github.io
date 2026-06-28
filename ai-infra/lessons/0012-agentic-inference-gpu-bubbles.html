@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0012 — Agentic AI 推理的 GPU 气泡：3 种方法</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --rule:#d2d2d2; --bg:#fdfdfb;
+    --accent:#8a1538; --code-bg:#f4f1ec; --hilite:#fffbe6; --green:#2a6f2a;
+    --red:#b22222; --blue:#2a5f8a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 17px; scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+    line-height: 1.65; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 740px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+
+  header { margin-bottom: 2.2rem; border-bottom: 1px solid var(--rule); padding-bottom: 1rem; }
+  .kicker {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  h1 { font-size: 1.8rem; margin: .4rem 0 .2rem; line-height: 1.22; }
+  .meta { color: var(--muted); font-size: .9rem; }
+
+  h2 { font-size: 1.22rem; margin: 2.6rem 0 .7rem;
+       padding-bottom: .35rem; border-bottom: 1px solid var(--rule); }
+  h3 { font-size: 1.04rem; margin: 1.8rem 0 .5rem; }
+  p  { margin: 0 0 .85rem; }
+  ul, ol { margin: 0 0 .85rem 1.4rem; }
+  li { margin-bottom: .35rem; }
+
+  code, pre, .ascii {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  code {
+    background: var(--code-bg); padding: .1em .4em;
+    border-radius: 3px; font-size: .86em;
+  }
+  pre {
+    background: var(--code-bg); padding: .9rem 1.1rem;
+    border-radius: 6px; overflow-x: auto; font-size: .82rem;
+    line-height: 1.5; border: 1px solid var(--rule);
+    margin: .85rem 0;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .ascii {
+    display: block; background: var(--code-bg);
+    padding: .9rem 1.1rem; border-radius: 6px;
+    border: 1px solid var(--rule); margin: .85rem 0;
+    font-size: .78rem; line-height: 1.4; white-space: pre;
+    overflow-x: auto;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: .85rem 0; font-size: .89rem; }
+  th, td { text-align: left; padding: .5rem .7rem; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; border-bottom-width: 2px; }
+
+  .checkpoint {
+    background: var(--hilite); border-left: 3px solid var(--accent);
+    padding: 1rem 1.1rem; border-radius: 4px; margin: 1.8rem 0;
+  }
+  .checkpoint h3 { margin-top: 0; }
+  .checkpoint p:last-child { margin-bottom: 0; }
+
+  .transfer {
+    background: #eef6ee; border-left: 3px solid var(--green);
+    padding: 1rem 1.1rem; border-radius: 4px; margin: 1.8rem 0;
+  }
+  .transfer h3 { margin-top: 0; }
+
+  .method-box {
+    border: 1px solid var(--rule); border-radius: 6px;
+    padding: 1rem 1.1rem; margin: 1.2rem 0;
+  }
+  .method-box h3 { margin-top: 0; color: var(--accent); }
+  .method-box .sub { color: var(--muted); font-size: .85rem; margin-bottom: .6rem; }
+
+  .var-row { margin: .5rem 0; font-size: .89rem; }
+  .var-row .dim { font-style: italic; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">AI Infra · Lesson 0012 · 调研扩展</div>
+  <h1>Agentic AI 推理的 GPU 气泡：4 种方法 + 大小集群分岔</h1>
+  <p class="meta">2026-06-23 · 两轮搜索，精读 10+ 篇论文后提炼</p>
+</header>
+
+<h2>1. 问题：tool call 造成的 GPU 两难</h2>
+
+<div class="ascii">
+LLM Decode → 生成 tool_call → GPU 空闲 (CPU tool exec 50ms~5s) → Tool Result Prefill → Decode → ...
+     ↑                              ↑                                         ↑
+    GPU 忙                        GPU 气泡                                   GPU 忙
+                          x 5~100 次 = 严重累积
+</div>
+
+<p>每个气泡期间，GPU 上的 KV-cache 处于两难：</p>
+<ul>
+  <li><strong>保留</strong> → 占着显存不做计算 → 其他请求可用显存减少</li>
+  <li><strong>淘汰</strong> → tool 返回需要重新 prefill → TTFT 增加 + 显存带宽浪费</li>
+</ul>
+
+<p>目前生产引擎（SGLang、vLLM）<strong>没有专门针对此场景的机制</strong>。经审阅 scheduler 源码确认：GPU 填不满时通用 batching 会塞其他请求，但 KV-cache 的淘汰/保留决策只是 LRU，不知道 "这个 request 等会就回来"。</p>
+
+<h2>2. 大 vs 小集群的分岔点</h2>
+
+<p>你的集群规模决定了<strong>哪个问题更痛</strong>：</p>
+
+<table>
+<tr><th></th><th>大集群（几十~几千 GPU）</th><th>小集群（1~4 GPU）/ 单用户</th></tr>
+<tr><td>核心瓶颈</td><td>KV-cache 显存压力：太多 agent 并发，KV 互相竞争</td><td>GPU 空转：tool 执行时没有其他请求可填</td></tr>
+<tr><td>KV 淘汰错误代价</td><td>高——淘汰错了，prefill 重新计算的延迟拖慢整个集群</td><td>低——显存不紧张，几乎不需要淘汰</td></tr>
+<tr><td>GPU 空闲时能做什么</td><td>已经跑满其他请求，无需额外操作</td><td><strong>没有其他请求</strong>——必须创造计算</td></tr>
+<tr><td>适合的方法</td><td>A/B/C（状态管理 + 调度）</td><td><strong>D</strong>（投机计算）</td></tr>
+</table>
+
+<h2>3. 大集群方案：状态管理（方法 A/B/C）</h2>
+
+<p>方法之间<strong>正交可叠加</strong>。</p>
+
+<!-- ═══════ 方法 A ═══════ -->
+
+<div class="method-box">
+<h3>方法 A：Tool-Call 感知的 KV 淘汰决策</h3>
+<div class="sub">核心：把淘汰优先级函数从 LRU 替换为一个知道 "这个 request 等一下要回来" 的函数。</div>
+
+<div class="ascii">
+现有：evict_priority = max(now - last_access_time)        ← 谁最久没被访问就淘汰谁
+方法A：evict_priority = g(agent_state, workflow_structure)  ← 谁离下次被访问最远就淘汰谁
+</div>
+
+<p>不同论文本质上只是 <code>g()</code> 的输入信号不同：</p>
+
+<table>
+<tr><th>论文</th><th>信号源</th><th>怎么算淘汰优先级</th></tr>
+<tr><td>Continuum</td><td>tool call duration 的统计分布</td><td><code>TTL = f(reload_cost, queue_delay)</code>；Bernstein 不等式定界；小于 TTL 则保留，过期则淘汰</td></tr>
+<tr><td>KVFlow</td><td>Agent Step Graph（预先知道 agent 调用顺序）</td><td><code>steps_to_execution</code>：离下次激活还剩几步，越小越不淘汰</td></tr>
+<tr><td>PBKV</td><td>历史 workflow trace + 当前上下文</td><td><code>predicted_reuse_probability</code>：机器学习预测复用概率，只保留高概率的</td></tr>
+<tr><td>SAGA</td><td>Agent Execution Graph（显式声明或 87% 推断）</td><td>WA-LRU：用 workflow 图优化标准 LRU 的 competitive ratio（1.31× vs 2.84×）</td></tr>
+<tr><td>Astraea</td><td>请求历史状态 + 系统显存压力</td><td><code>state × memory_pressure</code>：状态感知的自适应阈值</td></tr>
+</table>
+
+<p><strong>本质</strong>：把 agent workflow 的结构信息编码进 KV 淘汰决策，替代盲目的 LRU。</p>
+</div>
+
+<!-- ═══════ 方法 B ═══════ -->
+
+<div class="method-box">
+<h3>方法 B：Tool 间隙的主动 KV 搬迁</h3>
+<div class="sub">核心：检测到 tool call → 异步搬运 KV 到便宜存储 → 预测 tool 快回来 → 提前搬回 GPU。</div>
+
+<div class="ascii">
+方法A：决定<em>是否</em>淘汰                —— 做决定，不动
+方法B：决定<em>搬到哪里、什么时候搬</em>    —— 真的搬数据
+</div>
+
+<p>不同论文本质上只是搬迁策略的<strong>触发条件</strong>和<strong>搬迁目标</strong>不同：</p>
+
+<table>
+<tr><th>论文</th><th>触发：GPU→CPU</th><th>目标 tier</th><th>触发：CPU→GPU</th></tr>
+<tr><td>Tokencake</td><td>检测到 "function call start" 事件</td><td>CPU DRAM</td><td>预测 tool 完成时间，提前启动 H2D</td></tr>
+<tr><td>MORI</td><td>agent 的空闲度排名越过动态分界线</td><td>GPU HBM ↔ CPU DRAM ↔ SSD 之间动态移动分界</td><td>排名重新进入"忙"区间时</td></tr>
+</table>
+
+<p><strong>关键参数</strong>：<code>offload_stride</code>（每次搬多少）、<code>prediction_horizon</code>（提前多久预测回传）。</p>
+
+<p><strong>本质</strong>：把 tool call 间隙当作免费的数据搬运窗口——不是在 GPU 上空等就是在传数据，选后者。</p>
+</div>
+
+<!-- ═══════ 方法 C ═══════ -->
+
+<div class="method-box">
+<h3>方法 C：Workflow 级调度（非 Request 级）</h3>
+<div class="sub">核心：调度器看到的不是独立 request，而是整个 agent workflow。同一个 workflow 的多步放入同一 GPU，保持 KV 亲和性。</div>
+
+<div class="ascii">
+现有：scheduler 看到 [req1, req2, req3, ...] 一堆独立请求，不知道 req1→req2 属于同一个 agent
+方法C：scheduler 看到 [workflow_A: req_a1→req_a2, workflow_B: req_b1→req_b2→req_b3, ...]
+</div>
+
+<p>论文的区分只在 <strong>"workflow 结构怎么来"</strong>：</p>
+
+<table>
+<tr><th>论文</th><th>workflow 信息源</th><th>调度策略</th></tr>
+<tr><td>SAGA</td><td>Agent Execution Graph（显式/推断）</td><td>同 workflow request → 同 GPU（session-affinity batching）+ work-stealing 平衡负载</td></tr>
+<tr><td>ThunderAgent</td><td>用户用 API 声明 LLM Program</td><td>program-aware scheduler 最大化 KV 命中率</td></tr>
+<tr><td>Cortex</td><td>预定义的 stage 划分</td><td>每个 stage 独立 GPU 资源池，消除跨 stage 干扰</td></tr>
+<tr><td>Halo</td><td>多个 workflow 合并成 Query Plan DAG</td><td>跨 workflow 找公共子表达式消除 + KV 共享</td></tr>
+</table>
+
+<p><strong>补充</strong>：MARS 在此基础上把 CPU tool execution 也纳入统一 admission control，防止 GPU+CPU 异构资源同时超额申请。</p>
+
+<p><strong>本质</strong>：调度粒度从 request → workflow，保持因果依赖链上的 KV 局部性。</p>
+</div>
+
+<!-- ═══════ 不属于以上三类的 ═══════ -->
+
+<h2>4. 小集群方案：投机计算（方法 D）</h2>
+
+<div class="method-box">
+<h3>方法 D：Tool 空闲里的投机计算</h3>
+<div class="sub">核心：没有其他请求可跑 → 空闲时间里提前计算未来可能需要的，观察回来后再决定用不用。</div>
+
+<div class="ascii">
+大集群：GPU 空闲 → 其他 request 填上（方法 C）
+小集群：GPU 空闲 → 没有其他 request → 投机计算 next step（方法 D）
+</div>
+
+<p>这个方向和大集群完全不同：不管理状态<em>（KV 放哪）</em>，管理计算<em>（GPU 有闲就算什么）</em>。</p>
+
+<p>本质上是对 CPU 分支预测和 speculative decoding 的思想在 agent 层面的应用——预测下一个 tool call 是什么，提前执行。</p>
+
+<p>论文的区分在<strong>"猜什么、怎么猜"</strong>：</p>
+
+<table>
+<tr><th>论文</th><th>猜什么</th><th>怎么猜</th><th>结果</th></tr>
+<tr><td>PASTE<br>2603.18897</td><td>未来的 tool call</td><td>挖掘应用级控制流模式（"search→summarize" 等重复序列）和数据依赖（跨 tool 的参数传递）</td><td>JCT -48.5%，tool 吞吐 1.8×</td></tr>
+<tr><td>IdleSpec<br>2605.22154</td><td>下一步的多种 plan</td><td>两种互补 draft 策略（progressive 继续推理 / recovery 回溯），从后验反馈学来的分布中采样</td><td>GAIA +5.1%，MLE-Bench +9.1%</td></tr>
+<tr><td>Speculative Tool Calls<br>2512.15834</td><td>当前 decode 还没完成时的 tool call</td><td>从部分 decode 预测最可能的 tool，并行执行，匹配上了跳过重执行</td><td>几百 tok/s 吞吐提升</td></tr>
+<tr><td>B-PASTE<br>2604.16469</td><td>多个未来执行分支（beam）</td><td>维护有限 beam 的执行子图，按 critic-path reduction 排名，只投机执行高价值分支的前缀；显式建模资源争抢和状态安全性</td><td>边缘 Thor 环境 1.4×</td></tr>
+<tr><td>Asynchronous I/O<br>2605.13360</td><td>不等信息就继续推理</td><td>把 agent 推理和 I/O 等待解耦，异步接收；用小模型做 clock-based 训练适应流输入</td><td>云端 1.3-1.7×，边缘 3B 1.6-2.2×</td></tr>
+<tr><td>SPAgent<br>2511.20048</td><td>搜索 agent 的下一步 action</td><td>两阶段自适应：安全时可省略验证；两级调度器根据引擎负载调节投机激进程度</td><td>1.65× 加速，准确率不降</td></tr>
+<tr><td>SpecCache<br>2510.16276</td><td>tool 调用结果</td><td>投机缓存：web 环境开销可占 agent 延迟的 53.7%，缓存命中率比随机高 58×</td><td>web 开销 -3.2×</td></tr>
+<tr><td>TVCACHE<br>2602.10986</td><td>tool 调用结果（状态感知）</td><td>维护 tool-call 序列的树，最长前缀匹配查缓存。同一 tool 参数在相同环境状态下返回相同结果时才命中</td><td>命中率 70%，tool 执行 -6.9×</td></tr>
+</table>
+
+<p><strong>本质</strong>：把 CPU 的 branch prediction + speculative execution 搬到了 agent 层。和投机解码的区别：投机解码猜的是 token，方法 D 猜的是 <em>tool call 本身</em>。</p>
+</div>
+
+<h2>5. 算子层：CUDA Stream 怎么做数据传输-计算重叠</h2>
+
+<div class="method-box">
+<h3>上三层管策略，这一层管实现</h3>
+
+<p>方法 B（主动 KV 搬迁）和方法 D（投机计算）需要在 GPU 上同时跑两件事：<strong>数据传输</strong> 和 <strong>计算</strong>。CUDA 的 copy engine 和 SM 是独立硬件，可以并行。</p>
+
+<div class="ascii">
+GPU Copy Engine:  [KV D2H] .......... [KV H2D] .......... [KV D2H] ..........
+GPU SM (compute):  [decode] [投机计算] [decode] [投机计算] [decode] [投机计算] ...
+                         ↑ 两条 hardware pipeline 独立运行 ↑
+</div>
+
+<h3>SGLang 的 Two-Batch Overlap (TBO)</h3>
+
+<p>源码 <code>batch_overlap/two_batch_overlap.py</code> 和 <code>operations.py</code>：把一个 batch 拆成两个 sub-batch，用 <code>execute_overlapped_operations</code> 错开 delta 个 stage 交错执行。</p>
+
+<div class="ascii">
+Sub-batch A:  [stage 1] [stage 2] [stage 3] [stage 4]
+Sub-batch B:             [stage 1] [stage 2] [stage 3] [stage 4]
+                              ↑ delta=1，B 比 A 晚一个 stage 开始
+A 的 compute 和 B 的数据准备重叠
+</div>
+
+<p>但对 agent 场景，TBO 是通用优化——它不区分 "这是 tool call 间隙"，只是让任意两个 batch 的计算和数据准备重叠。</p>
+
+<h3>KV 搬迁的 Pipeline 重叠</h3>
+
+<p><strong>KVDrive</strong>（2605.18071）直接解决了这个问题。它把 decode pipeline 拆成三个阶段并流水线化：</p>
+
+<div class="ascii">
+          Time →
+Stage 1:  [I/O: fetch KV N] [I/O: fetch KV N+1] [I/O: fetch KV N+2]
+Stage 2:  [Transfer N to GPU] [Transfer N+1]     [Transfer N+2]
+Stage 3:  [Compute decode N]   [Compute decode N+1] [Compute decode N+2]
+          ↑ 三个 stage 流水线，互不阻塞 ↑
+</div>
+
+<p>对 agent tool calling：tool 返回后需要 prefill 大段 tool result → KVDrive 把 prefill 的 KV fetch 和 transfer 作为前两个 stage，和已有 decode compute 重叠。</p>
+
+<p><strong>HillInfer</strong>（2602.18750）针对边缘设备：KV cache 跨 GPU/CPU/SmartSSD 三层，自适应预取 pipeline 重叠计算和数据传输。</p>
+
+<p><strong>PipeMax</strong>（2605.02189）：pipeline parallelism 让每张 GPU 一次只跑一个 batch 的 active 部分，其余 KV 卸载到 CPU。协调计算和搬迁的时序来扩大有效 batch size。</p>
+
+<h3>Agent 场景的完整 Stream 规划</h3>
+
+<p>把 B + D + 算子重叠拼在一起，一个单 GPU 部署的 agent 在 tool 执行期间的完整时间线：</p>
+
+<div class="ascii">
+Default Stream (SM):     [decode] [投机 plan] [投机 plan] [投机 plan] [合并结果→decode]
+Copy Engine (DMA):       [KV→CPU]              [KV←CPU prefetch]
+CPU (tool):              [tool exec..............................] tool returns
+</div>
+
+<p><strong>没有 CUDA stream 重叠</strong>：投机计算和 KV 搬迁依次串行 → 气泡变大。</p>
+<p><strong>有 CUDA stream 重叠</strong>：KV 搬迁走 copy engine，投机计算走 SM，两者并行 → 零开销。</p>
+
+<p>和 vLLM/SGLang 现状对比：当前引擎不知道 "tool call 开始了"，所以也不会启动 KV 搬迁和投机计算的 stream pipeline——气泡就这么空着。</p>
+</div>
+
+<h2>6. 已被现有引擎覆盖的方法</h2>
+
+<p><strong>Stateful Inference</strong>（2605.26289）：核心是 "KV-cache 跨 turn persistent + 只 prefill 增量 token"。SGLang RadixAttention 已经做到了前缀复用，这篇文章只是强调 agent 自身多轮之间的连续性——不是一个新方法。</p>
+
+<h2>7. 方法关系与叠加</h2>
+
+<div class="ascii">
+方法 A (淘汰决策)         方法 B (KV 搬迁)            方法 C (workflow 调度)
+─────────────────────    ─────────────────────      ─────────────────────
+作用层：KV-cache 管理器   作用层：内存 hierarchy 管理   作用层：调度器
+输出：  淘汰/保留         输出：  GPU↔CPU 搬迁指令     输出：  哪个 GPU 跑哪个 req
+
+可以叠加：
+  A+B：先用 A 决定保留哪些 KV，再用 B 把保留的搬到 CPU
+  B+C：C 把同 workflow 放同 GPU，B 在 tool 间隙搬迁
+  A+C：C 保证同 workflow 的 KV 在一台机器上，A 决定在这台机器上淘汰谁
+</div>
+
+<!-- ═══════ Checkpoint ═══════ -->
+
+<div class="checkpoint">
+<h3>Active-Recall Checkpoint</h3>
+<ol>
+  <li>方法 A 和 D 的区别是什么？为什么说 A 是"管态"、D 是"管计算"？</li>
+  <li>小集群为什么不需要 A/B，但非常需要 D？反过来，大集群为什么 D 的价值有限？</li>
+  <li>PASTE 的"控制流模式挖掘"和 IdleSpec 的"两种 draft 策略"本质区别是什么？</li>
+  <li>如果把 D 的投机 tool call 做错了（预测了错误的 tool，已经执行了），会产生什么副作用？B-PASTE 怎么解决这个问题？</li>
+</ol>
+</div>
+
+<div class="transfer">
+<h3>Transfer Task</h3>
+<p>选一个你关心的 agent 场景（比如 SWE-bench 的 code fix agent），设计一个<strong>小集群（1 GPU）方案</strong>：</p>
+<ol>
+  <li>画出你的 agent 的典型 tool call 序列</li>
+  <li>哪些 tool 之间可能存在投机空间？（提示：file_read → search 有依赖吗？test → fix 呢？）</li>
+  <li>画投机执行的时间线对比无优化版本</li>
+  <li>如果投机预测错了，代价是什么？在你的场景里能接受吗？</li>
+</ol>
+</div>
+
+<h2>8. 论文快速索引</h2>
+
+<table>
+<tr><th>方法</th><th>论文</th><th>arXiv</th><th>备注</th></tr>
+<tr><td>A</td><td>Continuum</td><td>2511.02230</td><td>ICLR 2026 · UCB · <a href="https://github.com/Hanchenli/vllm-continuum">code</a></td></tr>
+<tr><td>A</td><td>KVFlow</td><td>2507.07400</td><td>Agent Step Graph · 26 citations</td></tr>
+<tr><td>A</td><td>PBKV</td><td>2605.06472</td><td>预测型，动态 workflow 鲁棒</td></tr>
+<tr><td>A</td><td>Astraea</td><td>2512.14142</td><td>状态+内存压力自适应</td></tr>
+<tr><td>A+C</td><td>SAGA</td><td>2605.00528</td><td>HPDC '26 · 64-GPU</td></tr>
+<tr><td>B</td><td>Tokencake</td><td>2510.18586</td><td>事件驱动搬迁</td></tr>
+<tr><td>B</td><td>MORI</td><td>2606.00866</td><td>排名驱动搬迁 · Claude Code</td></tr>
+<tr><td>C</td><td>ThunderAgent</td><td>2602.13692</td><td>LLM Programs · <a href="https://github.com/Agentic-Kinetics/ThunderAgent">code</a></td></tr>
+<tr><td>C</td><td>Cortex</td><td>2510.14126</td><td>Stage isolation</td></tr>
+<tr><td>C</td><td>Halo</td><td>2509.02121</td><td>Query-plan optimization</td></tr>
+<tr><td>C 补充</td><td>MARS</td><td>2604.26963</td><td>GPU+CPU 联合 admission</td></tr>
+<tr><td style="background:var(--hilite)"><strong>D</strong></td><td style="background:var(--hilite)"><strong>PASTE</strong></td><td style="background:var(--hilite)"><strong>2603.18897</strong></td><td style="background:var(--hilite)">控制流模式挖掘 · JCT -48.5%</td></tr>
+<tr><td style="background:var(--hilite)"><strong>D</strong></td><td style="background:var(--hilite)"><strong>IdleSpec</strong></td><td style="background:var(--hilite)"><strong>2605.22154</strong></td><td style="background:var(--hilite)">双 draft 策略 · +9.1% MLE-Bench</td></tr>
+<tr><td style="background:var(--hilite)"><strong>D</strong></td><td style="background:var(--hilite)"><strong>Spec. Tool Calls</strong></td><td style="background:var(--hilite)"><strong>2512.15834</strong></td><td style="background:var(--hilite)">部分 decode 预测 tool</td></tr>
+<tr><td style="background:var(--hilite)"><strong>D</strong></td><td style="background:var(--hilite)"><strong>B-PASTE</strong></td><td style="background:var(--hilite)"><strong>2604.16469</strong></td><td style="background:var(--hilite)">Beam 分支投机 · 边缘部署</td></tr>
+<tr><td style="background:var(--hilite)"><strong>D</strong></td><td style="background:var(--hilite)"><strong>Async I/O</strong></td><td style="background:var(--hilite)"><strong>2605.13360</strong></td><td style="background:var(--hilite)">推理-I/O 解耦 · 边缘 3B</td></tr>
+<tr><td style="background:var(--hilite)"><strong>D</strong></td><td style="background:var(--hilite)"><strong>SPAgent</strong></td><td style="background:var(--hilite)"><strong>2511.20048</strong></td><td style="background:var(--hilite)">搜索 agent 两阶段投机</td></tr>
+<tr><td>D (cache)</td><td>SpecCache</td><td>2510.16276</td><td>投机 web 缓存</td></tr>
+<tr><td>D (cache)</td><td>TVCACHE</td><td>2602.10986</td><td>状态感知 tool cache</td></tr>
+<tr><td style="background:var(--code-bg)"><strong>overlap</strong></td><td style="background:var(--code-bg)"><strong>KVDrive</strong></td><td style="background:var(--code-bg)"><strong>2605.18071</strong></td><td style="background:var(--code-bg)">三阶段 decode pipeline 重叠 · 1.74×</td></tr>
+<tr><td style="background:var(--code-bg)"><strong>overlap</strong></td><td style="background:var(--code-bg)"><strong>HillInfer</strong></td><td style="background:var(--code-bg)"><strong>2602.18750</strong></td><td style="background:var(--code-bg)">SmartSSD 三层 KV + 预取 pipeline · 8.56×</td></tr>
+<tr><td style="background:var(--code-bg)"><strong>overlap</strong></td><td style="background:var(--code-bg)"><strong>PipeMax</strong></td><td style="background:var(--code-bg)"><strong>2605.02189</strong></td><td style="background:var(--code-bg)">PP + offload 时序协调 · 8-GPU 2.51×</td></tr>
+<tr><td>—</td><td>Stateful Inf.</td><td>2605.26289</td><td>已被 RadixAttention 覆盖</td></tr>
+</table>
+
+<p style="margin-top: 1rem; color: var(--muted); font-size: .85rem;">15 篇完整 PDF 在 <code>~/agentic-inference-research/papers/</code>。</p>
+
+</div>
+</body>
+</html>

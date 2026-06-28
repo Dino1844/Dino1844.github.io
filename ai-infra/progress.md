@@ -6,8 +6,11 @@
 
 - [~] 0.1a Linux 进程/fd/socket/IO 多路复用
        ├ lesson 0001 (socket → accept 全链路) — 已讲, HTML 已重写为自包含版
-       └ lesson 0002 (select 详解) — 下一节
-- [ ] 0.1b Python 并发(threading/multiprocessing/asyncio/GIL)+ 多进程数据 pipeline
+       ├ lesson 0002 (epoll echo server) — 已讲, HTML 已生成, TODO 练习待填
+       └ gate: 练习跑通且能讲清 epoll vs select
+- [~] 0.1b Python 并发(threading/multiprocessing/asyncio/GIL)+ 多进程数据 pipeline
+       ├ lesson 0003 (Python 并发) — 已生成, TODO 练习待填
+       └ gate: 多进程 pipeline 跑通
 - [ ] 0.2 分布式系统概念 + 通信原语
 - [ ] 0.3 GPU 架构 + 工具链
 

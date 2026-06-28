@@ -21,5 +21,10 @@
 - 调整: 重写为 "socket→accept 全链路", 不讲 select。
 - 原则: 一个 lesson = 一个可跑通的心智模型。不赶进度。
 
+## Renumbering (2026-06-28)
+- 0003 (agentic inference GPU bubbles) → 0012（调研扩展，不在 roadmap 主线）
+- 新的 0003 = Python 并发 (Phase 0.1b)，跟 roadmap 对齐
+- 原则：000x 按 roadmap 主线排，调研/扩展内容往后放
+
 ## What doesn't
 - (记录无效手法)
