@@ -571,53 +571,43 @@ window.MathJax = {
 <h2 id="s7">7. 自测</h2>
 
 <div class="quiz">
-  <div class="quiz-question" id="q1">
-    <h4>Q1 · 三条幻象共同依赖的基础设施是什么？</h4>
-    <div class="quiz-options">
-      <div class="quiz-option"><input type="radio" name="q1" value="a" onchange="checkQ('q1','a',false)"><label>A. CPU 的多核架构</label></div>
-      <div class="quiz-option"><input type="radio" name="q1" value="b" onchange="checkQ('q1','b',true)"><label>B. 间接层——虚拟地址、文件描述符、进程状态</label></div>
-      <div class="quiz-option"><input type="radio" name="q1" value="c" onchange="checkQ('q1','c',false)"><label>C. 硬盘的存储能力</label></div>
-      <div class="quiz-option"><input type="radio" name="q1" value="d" onchange="checkQ('q1','d',false)"><label>D. 网络协议栈</label></div>
-    </div>
-    <div class="quiz-feedback correct-fb" id="q1-correct"><strong>✓ 正确。</strong>三条幻象（CPU/内存/I/O）都是通过间接层实现的：CPU 幻象靠进程状态和调度（间接使用物理 CPU）、内存幻象靠页表（虚拟地址映射到物理地址）、I/O 幻象靠文件描述符和 inode（文件名映射到磁盘块）。间接层是全书第一范式。</div>
-    <div class="quiz-feedback incorrect-fb" id="q1-incorrect"><strong>✗ 再想想。</strong>提示：哪样东西让 CPU 虚拟化、内存虚拟化和 I/O 虚拟化都有了可能？</div>
-  </div>
 
-  <div class="quiz-question" id="q2">
-    <h4>Q2 · 机制/策略分离的核心价值是什么？</h4>
-    <div class="quiz-options">
-      <div class="quiz-option"><input type="radio" name="q2" value="a" onchange="checkQ('q2','a',false)"><label>A. 让内核代码更短</label></div>
-      <div class="quiz-option"><input type="radio" name="q2" value="b" onchange="checkQ('q2','b',false)"><label>B. 让用户程序可以绕过内核</label></div>
-      <div class="quiz-option"><input type="radio" name="q2" value="c" onchange="checkQ('q2','c',true)"><label>C. 让内核稳定提供基元，策略可以随场景更换而不改内核</label></div>
-      <div class="quiz-option"><input type="radio" name="q2" value="d" onchange="checkQ('q2','d',false)"><label>D. 让硬件更快</label></div>
-    </div>
-    <div class="quiz-feedback correct-fb" id="q2-correct"><strong>✓ 正确。</strong>内核是长期运行的基础设施，不能因策略变化而频繁改动。机制/策略分离让内核提供"怎么做"的稳定基元（上下文切换、页表操作），策略作为可替换模块存在。Linux 的调度类（CFS/RT/DEADLINE 共存）是典范。</div>
-    <div class="quiz-feedback incorrect-fb" id="q2-incorrect"><strong>✗ 再想想。</strong>提示：OS 内核写完了就不能随便改，但调度偏好因人而异。</div>
-  </div>
+<div class="quiz-question"><h4>Q1 · 三条幻象共同依赖的基础设施是什么？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。三条幻象不依赖多核架构——时分复用恰恰为单核设计。','incorrect-fb')"><label>A. CPU 的多核架构</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','对。三条幻象（CPU/内存/I/O）都是通过间接层实现的：虚拟CPU、虚拟地址、文件描述符——全是间接层。','correct-fb')"><label>B. 间接层——虚拟地址、文件描述符、进程状态</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。','incorrect-fb')"><label>C. 硬盘的存储能力</label></div>
+<div class="quiz-option"><input type="radio" name="q1" onchange="quizFB(this,'q1fb','错。','incorrect-fb')"><label>D. 网络协议栈</label></div>
+</div>
+<div class="quiz-feedback" id="q1fb"></div></div>
 
-  <div class="quiz-question" id="q3">
-    <h4>Q3 · 为什么单核 CPU 也需要锁？</h4>
-    <div class="quiz-options">
-      <div class="quiz-option"><input type="radio" name="q3" value="a" onchange="checkQ('q3','a',false)"><label>A. 不需要——单核上代码是顺序执行的</label></div>
-      <div class="quiz-option"><input type="radio" name="q3" value="b" onchange="checkQ('q3','b',true)"><label>B. 需要——中断可以打断两条指令之间，修改共享数据</label></div>
-      <div class="quiz-option"><input type="radio" name="q3" value="c" onchange="checkQ('q3','c',false)"><label>C. 需要——因为编译器可能重排指令</label></div>
-      <div class="quiz-option"><input type="radio" name="q3" value="d" onchange="checkQ('q3','d',false)"><label>D. 不需要——中断处理程序不能访问内核数据</label></div>
-    </div>
-    <div class="quiz-feedback correct-fb" id="q3-correct"><strong>✓ 正确。</strong>单核上时钟中断可以在任意两条指令之间到来。如果内核正在修改进程链表而中断处理程序也修改它，就会产生竞态条件。单核的解法是关中断（禁用中断），但这只对单核有效——多核还需要原子指令。</div>
-    <div class="quiz-feedback incorrect-fb" id="q3-incorrect"><strong>✗ 再想想。</strong>提示：中断什么时候可以发生？被打断的代码执行到一半会怎样？</div>
-  </div>
+<div class="quiz-question"><h4>Q2 · 机制/策略分离的核心价值是什么？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>A. 让内核代码更短</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>B. 让用户程序可以绕过内核</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','对。内核提供稳定基元（上下文切换、页表操作），策略作为可替换模块存在——Linux 调度类（CFS/RT/DEADLINE）是典范。','correct-fb')"><label>C. 让内核稳定提供基元，策略可以随场景更换而不改内核</label></div>
+<div class="quiz-option"><input type="radio" name="q2" onchange="quizFB(this,'q2fb','错。','incorrect-fb')"><label>D. 让硬件更快</label></div>
+</div>
+<div class="quiz-feedback" id="q2fb"></div></div>
 
-  <div class="quiz-question" id="q4">
-    <h4>Q4 · 以下哪项不是系统调用？</h4>
-    <div class="quiz-options">
-      <div class="quiz-option"><input type="radio" name="q4" value="a" onchange="checkQ('q4','a',false)"><label>A. read(fd, buf, n)</label></div>
-      <div class="quiz-option"><input type="radio" name="q4" value="b" onchange="checkQ('q4','b',false)"><label>B. fork()</label></div>
-      <div class="quiz-option"><input type="radio" name="q4" value="c" onchange="checkQ('q4','c',false)"><label>C. mmap(addr, len, prot, flags, fd, off)</label></div>
-      <div class="quiz-option"><input type="radio" name="q4" value="d" onchange="checkQ('q4','d',true)"><label>D. printf("hello")</label></div>
-    </div>
-    <div class="quiz-feedback correct-fb" id="q4-correct"><strong>✓ 正确。</strong>`printf` 是 libc 库函数，不是系统调用。它内部会调用 `write`（这才是系统调用），但 `printf` 本身只在用户态运行——做格式化、缓冲等工作。类似地，`malloc` 也不是系统调用——它管理用户态堆，只在不够时调 `brk`/`mmap`。</div>
-    <div class="quiz-feedback incorrect-fb" id="q4-incorrect"><strong>✗ 再想想。</strong>提示：这个函数在格式化字符串——格式化发生在哪一层？</div>
-  </div>
+<div class="quiz-question"><h4>Q3 · 为什么单核 CPU 也需要锁？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>A. 不需要——单核上代码是顺序执行的</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','对。中断可以在任意两条指令之间到来，修改共享数据。单核的解法是关中断——但对多核无效。','correct-fb')"><label>B. 需要——中断可以打断两条指令之间，修改共享数据</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>C. 需要——因为编译器可能重排指令</label></div>
+<div class="quiz-option"><input type="radio" name="q3" onchange="quizFB(this,'q3fb','错。','incorrect-fb')"><label>D. 不需要——中断处理程序不能访问内核数据</label></div>
+</div>
+<div class="quiz-feedback" id="q3fb"></div></div>
+
+<div class="quiz-question"><h4>Q4 · 以下哪项不是系统调用？</h4>
+<div class="quiz-options">
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。read 是系统调用。','incorrect-fb')"><label>A. read(fd, buf, n)</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。fork 是系统调用。','incorrect-fb')"><label>B. fork()</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','错。mmap 是系统调用。','incorrect-fb')"><label>C. mmap(addr, len, prot, flags, fd, off)</label></div>
+<div class="quiz-option"><input type="radio" name="q4" onchange="quizFB(this,'q4fb','对。printf 是 libc 库函数——做格式化+缓冲，内部调 write 才是系统调用。','correct-fb')"><label>D. printf("hello")</label></div>
+</div>
+<div class="quiz-feedback" id="q4fb"></div></div>
+
 </div>
 
 <p style="font-size:0.85rem; color:var(--muted);">以上 4 题考的是概念理解而非记忆。如果有答错的，不要只是"记住正确答案"——回到对应节重新走一遍逻辑链，理解错在哪里。</p>
@@ -819,21 +809,11 @@ window.MathJax = {
 
 <script src="../reference/popup-cards.js"></script>
 <script>
-// Inline quiz logic
-function checkQ(qid, ans, correct){
-  var q = document.getElementById(qid);
-  q.querySelectorAll('.quiz-option').forEach(function(o){ o.style.border = '1px solid transparent'; });
-  if (correct) {
-    q.classList.add('correct');
-    q.classList.remove('incorrect');
-    document.getElementById(qid+'-correct').classList.add('show');
-    document.getElementById(qid+'-incorrect').classList.remove('show');
-  } else {
-    q.classList.add('incorrect');
-    q.classList.remove('correct');
-    document.getElementById(qid+'-incorrect').classList.add('show');
-    document.getElementById(qid+'-correct').classList.remove('show');
-  }
+function quizFB(el, fbId, msg, cls) {
+  const fb = document.getElementById(fbId);
+  fb.textContent = msg;
+  fb.className = 'quiz-feedback ' + cls;
+  fb.style.display = 'block';
 }
 </script>
 <script>
