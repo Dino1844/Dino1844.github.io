@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build && pagefind --site dist && node scripts/copy-pagefind.mjs",
+    "build": "astro check && astro build --force && pagefind --site dist && node scripts/copy-pagefind.mjs",
     "preview": "astro preview",
     "new": "node scripts/new-post.mjs",
     "publish": "node scripts/publish.mjs",

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+      }
+      body {
+        background: #fefbfb;
+        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      }
+      .back {
+        position: absolute;
+        top: -1px;
+        right: -1px;
+        width: 88%;
+        height: 80%;
+        margin: 2.5rem;
+        border: 4px solid #000;
+        border-radius: 4px;
+        background: #ecebeb;
+        opacity: 0.9;
+      }
+      .card {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 88%;
+        height: 80%;
+        margin: 2rem;
+        border: 4px solid #000;
+        border-radius: 4px;
+        background: #fefbfb;
+        display: flex;
+        justify-content: center;
+      }
+      .inner {
+        width: 90%;
+        height: 90%;
+        margin: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .title-block {
+        height: 90%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+      h1 {
+        font-size: 72px;
+        font-weight: 700;
+      }
+      .desc {
+        font-size: 28px;
+        margin-top: 12px;
+      }
+      .host {
+        width: 100%;
+        margin-bottom: 8px;
+        font-size: 28px;
+        font-weight: 700;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="back"></div>
+    <div class="card">
+      <div class="inner">
+        <div class="title-block">
+          <h1>Alfred 的博客</h1>
+          <p class="desc">记录编译器、系统与机器学习工程中的折腾。</p>
+        </div>
+        <div class="host">dino1844.github.io</div>
+      </div>
+    </div>
+  </body>
+</html>

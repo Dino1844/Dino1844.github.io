@@ -61,20 +61,11 @@ tags:
 description: ${title}
 ---
 
-## 目录
-
-正文从这里开始写。
-
-> [!NOTE]
-> 上面 \`draft: true\` 表示草稿，不会发布上线。写完后把它改成 \`false\`。
-
-## 小标题
-
-正文内容。
 `;
 
 mkdirSync(POSTS_DIR, { recursive: true });
 writeFileSync(target, frontmatter, "utf8");
 
 console.log(`\n已创建：${target}`);
-console.log(`预览：npm run dev   然后打开 http://localhost:4321\n`);
+console.log("draft: true 表示草稿，不会发布；写完后改成 false。");
+console.log("预览：npm run dev   然后打开 http://localhost:4321\n");

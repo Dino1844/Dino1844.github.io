@@ -8,8 +8,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   /* 正文字体：Google Sans Code 只含拉丁字母，中文回落到系统中文字体 */
-  --font-app: var(--font-google-sans-code), "PingFang SC", "Microsoft YaHei",
-    "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+  --font-app: var(--font-google-sans-code, monospace), "PingFang SC",
+    "Microsoft YaHei", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Light theme values */
